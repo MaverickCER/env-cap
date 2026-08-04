@@ -1,0 +1,19 @@
+{
+  "name": "env-cap-example-aws-secrets-manager",
+  "private": true,
+  "type": "module",
+  "description": "Standalone example: a liveRotationDates implementation backed by AWS Secrets Manager rotation metadata, wired into generateEnvArtifacts().",
+  "scripts": {
+    "generate:env": "tsx scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.600.0",
+    "@maverickcer/env-cap": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

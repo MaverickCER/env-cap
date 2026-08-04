@@ -1,0 +1,129 @@
+{
+  "name": "@maverickcer/env-cap",
+  "version": "0.1.0",
+  "description": "Secure, type-safe, framework-agnostic environment contracts. Capabilities own the environment variables they consume; the package provides runtime validation and build-time contract discovery.",
+  "keywords": [
+    "environment",
+    "env",
+    "config",
+    "configuration",
+    "documentation",
+    "validation",
+    "typescript",
+    "schema",
+    "secrets",
+    "dotenv"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maverickcer/env-cap.git"
+  },
+  "homepage": "https://github.com/maverickcer/env-cap#readme",
+  "bugs": {
+    "url": "https://github.com/maverickcer/env-cap/issues"
+  },
+  "author": "MaverickCER",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./build": {
+      "types": "./dist/build.d.ts",
+      "import": "./dist/build.js",
+      "require": "./dist/build.cjs"
+    },
+    "./helpers": {
+      "types": "./dist/helpers.d.ts",
+      "import": "./dist/helpers.js",
+      "require": "./dist/helpers.cjs"
+    },
+    "./eslint-plugin": {
+      "types": "./dist/eslint-plugin/index.d.ts",
+      "import": "./dist/eslint-plugin/index.js",
+      "require": "./dist/eslint-plugin/index.cjs"
+    },
+    "./schema": "./schemas/env-cap-report.schema.json",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "env-cap": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.build.json && node scripts/emit-dts-shims.mjs && node scripts/fix-eslint-plugin-cjs-interop.mjs",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "setup": "npm install && npm run build && npm run schema",
+    "size": "node scripts/check-size.mjs",
+    "schema": "node scripts/generate-json-schema.mjs",
+    "examples:update-golden": "node scripts/update-example-goldens.mjs",
+    "benchmark": "node scripts/run-benchmarks.mjs",
+    "docs:api": "typedoc",
+    "stage": "npm run typecheck && npm run build && npm run test && npm run size",
+    "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size",
+    "prepublishOnly": "npm run verify",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "peerDependencies": {
+    "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    },
+    "eslint": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.1",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/types": "^8.65.0",
+    "@typescript-eslint/utils": "^8.65.0",
+    "@vitest/coverage-v8": "^3.2.7",
+    "ajv": "^8.20.0",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "^17.9.0",
+    "prettier": "3.9.6",
+    "ts-json-schema-generator": "^2.9.0",
+    "tsup": "^8.0.0",
+    "typedoc": "^0.28.20",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

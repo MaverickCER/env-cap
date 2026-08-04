@@ -1,0 +1,19 @@
+{
+  "name": "env-cap-example-split-generators",
+  "private": true,
+  "type": "module",
+  "description": "basic-node's exact contract, generated via three separate standalone calls (generateEnvManifest/generateDocumentation/generateUsageReport) instead of one generateEnvArtifacts() call.",
+  "scripts": {
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "start": "npm run generate:env && tsx --env-file=.env src/server.ts"
+  },
+  "dependencies": {
+    "@maverickcer/env-cap": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

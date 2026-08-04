@@ -1,0 +1,23 @@
+# Mirrors .gitignore for build output / installed deps.
+node_modules
+dist
+coverage
+docs/coverage-badge.json
+docs/size-badge.json
+
+# examples/ are separate, self-contained npm projects with their own
+# tooling -- not part of this package's own format scope, same rationale
+# eslint.config.js already uses to exclude them from lint.
+examples
+
+# Generated, never hand-authored -- reformatting drifts it from its
+# generator instead of the other way around.
+schemas/env-cap-report.schema.json
+docs/benchmark-history/*.json
+
+# Changesets-managed; reformatting past entries creates noise unrelated to
+# the actual change.
+CHANGELOG.md
+
+# Lockfile -- npm owns its formatting.
+package-lock.json

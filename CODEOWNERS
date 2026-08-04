@@ -1,0 +1,5 @@
+# See specs/decisions/ for the reasoning behind changes to build/runtime
+# boundaries -- a PR touching src/build, src/runtime, or specs/decisions/
+# should generally reference or add an ADR (see CONTRIBUTING.md).
+
+* @maverickcer

@@ -1,0 +1,162 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`serializeFailure > matches the documented failure shape (snapshot) 1`] = `
+{
+  "error": {
+    "issues": [
+      {
+        "files": [
+          "features/db-a/env.schema.ts",
+          "features/db-b/env.schema.ts",
+        ],
+        "reason": "Two active contracts share this exclusive group.",
+        "severity": "error",
+        "variable": "Exclusive group "database"",
+      },
+    ],
+    "message": "Project generation failed.
+
+1 blocking issue found:
+
+Exclusive group "database"
+--------------------------
+[error] Two active contracts share this exclusive group.
+
+Declared in:
+features/db-a/env.schema.ts
+features/db-b/env.schema.ts",
+    "name": "EnvProjectGenerationError",
+  },
+  "kind": "env-cap-report",
+  "ok": false,
+  "schemaVersion": 1,
+  "toolVersion": "0.1.0",
+}
+`;
+
+exports[`serializeSuccess > includes an additive checkResult field when --check finds stale artifacts (snapshot) 1`] = `
+{
+  "checkResult": {
+    "ok": false,
+    "stale": [
+      "docs",
+    ],
+  },
+  "docs": undefined,
+  "kind": "env-cap-report",
+  "manifest": undefined,
+  "ok": true,
+  "schemaVersion": 1,
+  "toolVersion": "0.1.0",
+  "usage": undefined,
+}
+`;
+
+exports[`serializeSuccess > matches the documented success shape (snapshot) 1`] = `
+{
+  "docs": {
+    "catalog": [
+      {
+        "active": true,
+        "category": "Payments",
+        "contractName": "payments",
+        "documented": true,
+        "exclusiveGroup": undefined,
+        "expiresAt": undefined,
+        "exportName": "paymentsEnv",
+        "file": "/repo/features/payments/env.schema.ts",
+        "metadata": {
+          "criticality": "Production-critical",
+          "service": "Payment Processing API",
+        },
+        "owner": "payments-team",
+        "variables": {
+          "STRIPE_KEY": {
+            "description": "Stripe secret API key.",
+            "documented": true,
+            "expiresAt": "2027-01-01",
+            "extra": {
+              "compliance": "PCI DSS",
+              "rotationCadence": "90 days",
+              "storageProvider": "AWS Secrets Manager",
+            },
+            "hasDefault": false,
+            "hasProcessor": false,
+            "hasValidator": true,
+            "owner": "sysadmin@example.com",
+            "processorReturnType": undefined,
+            "refreshInstructions": "Rotate the key in the Stripe Dashboard.",
+            "required": true,
+          },
+        },
+      },
+    ],
+    "contracts": [
+      {
+        "active": true,
+        "contractName": "payments",
+        "documented": true,
+        "exportName": "paymentsEnv",
+        "file": "features/payments/env.schema.ts",
+        "variableCount": 1,
+      },
+    ],
+    "docsPath": "/repo/docs/ENVIRONMENT.md",
+    "documentation": {
+      "expiringSoon": [],
+      "staleDocEntries": [],
+      "undocumentedContracts": [],
+      "undocumentedVariables": [],
+      "unresolvedLinks": [],
+    },
+    "envExample": undefined,
+    "parseWarnings": [],
+  },
+  "kind": "env-cap-report",
+  "manifest": {
+    "changes": {
+      "addedContracts": [],
+      "addedVariables": [],
+      "removedContracts": [],
+      "removedVariables": [],
+      "updatedContracts": [],
+      "updatedVariables": [],
+    },
+    "contracts": [
+      {
+        "active": true,
+        "contractName": "payments",
+        "documented": true,
+        "exportName": "paymentsEnv",
+        "file": "features/payments/env.schema.ts",
+        "variableCount": 1,
+      },
+    ],
+    "outputPath": "/repo/src/generated/env.manifest.ts",
+    "parseWarnings": [],
+    "warnings": [],
+  },
+  "ok": true,
+  "schemaVersion": 1,
+  "toolVersion": "0.1.0",
+  "usage": {
+    "abandonedContracts": [],
+    "dependencyOwnership": [
+      {
+        "consumers": [
+          "src/app.ts",
+        ],
+        "contractName": "payments",
+        "file": "features/payments/env.schema.ts",
+        "owner": "payments-team",
+        "variableCount": 1,
+      },
+    ],
+    "indeterminate": [],
+    "parseWarnings": [],
+    "reportPath": "/repo/docs/OWNERSHIP.md",
+    "unconsumedOwnedVariables": [],
+    "unresolvedConsumers": [],
+  },
+}
+`;

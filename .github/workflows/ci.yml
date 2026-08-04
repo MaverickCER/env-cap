@@ -1,0 +1,268 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Explicit least-privilege default so every job's GITHUB_TOKEN scope is a
+# property of this file, not an assumption about the repo/org's ambient
+# default. Jobs that need more (`deploy` below) override this at the job
+# level -- a job-level `permissions:` block replaces, not adds to, this one.
+permissions:
+  contents: read
+
+# Runtime and helpers each carry a hard 3 KB gzip budget (scripts/check-size.mjs) --
+# this workflow is what turns that budget from a script someone could forget
+# to run into a check every change actually has to pass.
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 22.x, 24.x]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm run test:coverage
+      - run: npm run size
+
+  verify-current:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 26.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - run: npm run size
+
+  cross-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+      - run: bun test test/cross-runtime/bun.test.ts
+
+      - uses: denoland/setup-deno@4606d5cc6fb3f673efd4f594850e3f4b3e9d29cd # v2
+        with:
+          deno-version: v2.x
+      # --no-check: Deno's type-checker doesn't resolve the sibling .d.ts for
+      # a bare relative-path .js import the way tsc/vitest do, and instead
+      # infers a type from dist/index.js's own static JS shape -- a Deno
+      # import-resolution nuance, not a defect in the shipped declarations
+      # (see test/cross-runtime/deno.test.ts's header comment). This job's
+      # job is proving execution conformance, which --no-check still fully
+      # exercises; type-declaration correctness is already checked by
+      # `npm run typecheck` against source in the `verify` job above.
+      - run: deno test --no-check --allow-read test/cross-runtime/deno.test.ts
+
+  # Proves the reference examples still install and generate cleanly against
+  # the real, just-built package -- each depends on the root package via
+  # `file:../..`, which needs `dist/` to already exist. Without this job, an
+  # API change could silently break every example's env.schema.ts with
+  # nothing to catch it until a human runs one by hand.
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: basic-node
+        working-directory: examples/basic-node
+        run: |
+          npm install
+          npm run typecheck
+
+      # Same contract as basic-node, generated via the packaged env-cap CLI
+      # binary instead of a custom .mjs script -- proves the real bin entry
+      # resolves and behaves as documented (see test/examples/cli-usage.test.ts).
+      - name: cli-usage
+        working-directory: examples/cli-usage
+        run: |
+          npm install
+          npm run typecheck
+
+      - name: composable-boilerplates
+        working-directory: examples/composable-boilerplates
+        run: |
+          npm install
+          npm run typecheck
+
+      # paypal-consumer installs paypal-addon from a real packed tarball, not
+      # a workspace/symlink reference (see both examples' READMEs for why) --
+      # paypal-addon must be built and packed before paypal-consumer installs.
+      - name: paypal-addon (typecheck, build, pack)
+        working-directory: examples/paypal-addon
+        run: |
+          npm install
+          npm run typecheck
+          npm run pack:local
+
+      - name: paypal-consumer (installs paypal-addon's packed tarball)
+        working-directory: examples/paypal-consumer
+        run: |
+          npm install
+          npm run typecheck
+
+      # Deliberately, permanently broken by design (see its README) -- a
+      # missing required variable, asserted on by
+      # test/examples/missing-env-var.test.ts below. `typecheck` succeeds here
+      # (static discovery never reads .env values); only `start`, which
+      # actually calls validateEnv(), is expected to fail.
+      - name: missing-env-var
+        working-directory: examples/missing-env-var
+        run: |
+          npm install
+          npm run typecheck
+
+      # Not broken -- two independently-owned, both-active contracts document
+      # the same variable name differently, always a warning (never an
+      # error) by default. See test/examples/duplicate-variable-metadata.test.ts.
+      - name: duplicate-variable-metadata
+        working-directory: examples/duplicate-variable-metadata
+        run: |
+          npm install
+          npm run typecheck
+
+      # Deliberately, permanently broken by design (see its README) -- two
+      # active contracts sharing an exclusiveGroup, asserted on by
+      # test/examples/multiple-active-exclusive-capabilities.test.ts below.
+      # `generate:env` (and therefore `typecheck`/`start`, which both run it
+      # first) always fails here, so -- unlike every other example in this
+      # job -- there is no typecheck step: it would never get past
+      # generation to reach `tsc` anyway.
+      - name: multiple-active-exclusive-capabilities
+        working-directory: examples/multiple-active-exclusive-capabilities
+        run: npm install
+
+      # No AWS credentials are configured in this job on purpose: a failed
+      # DescribeSecretCommand call is caught per-variable and falls back to
+      # the static expiresAt (see live-expirations.ts) -- generate:env, and
+      # therefore typecheck, is designed to still succeed without them.
+      - name: aws-secrets-manager
+        working-directory: examples/aws-secrets-manager
+        run: |
+          npm install
+          npm run typecheck
+
+      # basic-node's exact contract, generated via three separate standalone
+      # calls (generateEnvManifest/generateDocumentation/generateUsageReport)
+      # instead of one generateEnvArtifacts() call -- see
+      # test/examples/split-generators.test.ts.
+      - name: split-generators
+        working-directory: examples/split-generators
+        run: |
+          npm install
+          npm run typecheck
+
+      # Runs each example's real npm scripts against its own committed,
+      # fake-but-plausible `.env` file and asserts on real stdout -- the
+      # actual runtime path (validateEnv -> read a validated value), not just
+      # that the schema typechecks -- and golden-compares every generated
+      # artifact byte-for-byte against its committed expected/ copy. One file
+      # per example, mirroring examples/ 1:1 -- see test/examples/support.ts.
+      - run: npx vitest run test/examples/
+
+  # Coverage/bundle-size badges (item B) -- only on a push to main, never on a
+  # PR run (a job whose `if` is false is skipped, and everything downstream
+  # via `needs:` is skipped with it, so `deploy` below never runs for a PR).
+  # Deliberately depends on `verify` and `cross-runtime`, NOT `verify-current`
+  # (the Node-"current" signal job), since that job is intentionally
+  # `continue-on-error: true` and non-blocking -- gating the docs deploy on it
+  # would contradict its own documented purpose.
+  badges:
+    needs: [verify, cross-runtime]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:coverage
+      - run: npm run size -- --json coverage/size-summary.json
+      - name: Generate badge data
+        run: node scripts/generate-badges.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docs-badges
+          path: |
+            docs/coverage-badge.json
+            docs/size-badge.json
+          retention-days: 14
+
+  # Deploys docs/ (the GitHub Pages site) plus the badge JSON `badges` above
+  # just produced, in the same run -- no cross-run artifact download, no
+  # extra `actions: read` permission, no second workflow file to keep in
+  # sync with this one. Only this job needs the `pages`/`id-token`
+  # permissions and the `pages` concurrency group -- job-level `permissions`/
+  # `concurrency` override the workflow-level default, so `verify`/
+  # `verify-current`/`cross-runtime`/`badges` keep running with the
+  # workflow's existing minimal default permissions.
+  deploy:
+    needs: badges
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify site entry point exists
+        run: test -f docs/index.html
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: docs-badges
+          path: docs
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

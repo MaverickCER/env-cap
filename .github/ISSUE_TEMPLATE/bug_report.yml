@@ -1,0 +1,66 @@
+name: Bug report
+description: Something behaves differently than the docs/specs say it should
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of env-cap is affected?
+      options:
+        - "Runtime (createEnv / validateEnv / documentEnv)"
+        - "Build (generateEnvManifest / generateDocumentation / generateUsageReport / generateEnvArtifacts)"
+        - "CLI (env-cap / --json)"
+        - "Helpers (processors / validators)"
+        - "GitHub Action (action.yml)"
+        - "Docs / website"
+        - "Something else"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: env-cap version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version (run `node -v`)
+      placeholder: "v22.11.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen? Quote the README/spec/ADR section you expected this to match, if you know it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Paste the full error, including which error class it was (e.g. `EnvValidationError`, `EnvManifestGenerationError`, `EnvDocumentationGenerationError`, `EnvUsageAnalysisError`, `EnvProjectGenerationError`, `EnvNotReadyError`) if applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A schema file + the call that triggers the issue is usually enough. If it only reproduces with cross-package discovery (the `packages` option), please say so explicitly and include the relevant `envCap.schema` package.json field.
+      render: ts
+    validations:
+      required: true
+
+  - type: input
+    id: adr
+    attributes:
+      label: Related ADR (optional)
+      description: If this touches a documented design boundary in specs/decisions/, link it here — it saves a round trip figuring out whether the behavior is intentional.
+      placeholder: "e.g. specs/decisions/0002-static-analysis-never-execution.md"

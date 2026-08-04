@@ -1,0 +1,1043 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maverickcer.github.io/env-cap/schema/env-cap-report.schema.json",
+  "title": "env-cap --json report",
+  "description": "Machine-readable envelope emitted by `env-cap --json` (see README's --json section and ADR 0013). Generated from src/cli/json.ts's JsonReportPayload type -- never hand-authored.",
+  "$ref": "#/definitions/JsonReportPayload",
+  "definitions": {
+    "JsonReportPayload": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JsonSuccessPayload"
+        },
+        {
+          "$ref": "#/definitions/JsonErrorPayload"
+        }
+      ],
+      "description": "The complete `--json` envelope shape, success or failure -- the target type the published JSON Schema (`schemas/env-cap-report.schema.json`, `npm run schema`) is generated from. See ADR 0019."
+    },
+    "JsonSuccessPayload": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "$ref": "#/definitions/GenerateEnvManifestResult",
+          "description": "Set only when `options.manifest` wasn't `false`."
+        },
+        "docs": {
+          "$ref": "#/definitions/GenerateDocumentationResult",
+          "description": "Set only when `options.docs` wasn't `false`."
+        },
+        "usage": {
+          "$ref": "#/definitions/GenerateUsageReportResult",
+          "description": "Set only when `options.usage` wasn't `false`."
+        },
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "kind": {
+          "type": "string",
+          "const": "env-cap-report"
+        },
+        "toolVersion": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "checkResult": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "stale": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "ok",
+            "stale"
+          ],
+          "additionalProperties": false,
+          "description": "Present only when invoked with --check. Governs --check's own pass/fail exit code, independent of this envelope's top-level `ok` (which keeps its existing, unrelated meaning: \"did generation complete without throwing\"). See ADR 0016."
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "toolVersion",
+        "ok"
+      ],
+      "additionalProperties": false,
+      "description": "The `--json` envelope for a successful run (generation completed without throwing)."
+    },
+    "GenerateEnvManifestResult": {
+      "type": "object",
+      "properties": {
+        "outputPath": {
+          "type": "string",
+          "description": "Absolute path the manifest file was written to."
+        },
+        "contracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiscoveredContractSummary"
+          },
+          "description": "Root-relative summary of every discovered contract, active or not."
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CompatibilityIssue"
+          },
+          "description": "Non-blocking compatibility/exclusive-group issues (severity `\"warning\"`)."
+        },
+        "parseWarnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ParseWarning"
+          },
+          "description": "Parse-time warnings collected across every analyzed file (including allow-listed package resolution)."
+        },
+        "changes": {
+          "$ref": "#/definitions/ManifestChangeReport",
+          "description": "`documentEnv()` metadata added, removed, or changed since the last time this manifest was generated -- see ADR 0021."
+        }
+      },
+      "required": [
+        "outputPath",
+        "contracts",
+        "warnings",
+        "parseWarnings",
+        "changes"
+      ],
+      "additionalProperties": false,
+      "description": "The result of a completed generateEnvManifest run."
+    },
+    "DiscoveredContractSummary": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated file path."
+        },
+        "exportName": {
+          "type": "string",
+          "description": "The binding name the `createEnv()` result is exported as."
+        },
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        },
+        "variableCount": {
+          "type": "number",
+          "description": "Number of variables declared in this contract's schema."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether this contract was included in the generated manifest (`active` defaults to true)."
+        },
+        "documented": {
+          "type": "boolean",
+          "description": "Whether a `documentEnv()` call is linked to this contract."
+        }
+      },
+      "required": [
+        "file",
+        "exportName",
+        "contractName",
+        "variableCount",
+        "active",
+        "documented"
+      ],
+      "additionalProperties": false,
+      "description": "Root-relative projection of a DiscoveredContract, as returned by generateEnvManifest / generateDocumentation."
+    },
+    "CompatibilityIssue": {
+      "type": "object",
+      "properties": {
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "description": "`\"error\"` blocks generation regardless of `onIncompatibility`; `\"warning\"` blocks only when `onIncompatibility: \"throw\"`."
+        },
+        "variable": {
+          "type": "string",
+          "description": "The environment variable name, or `\"(contract) <name>\"` for a contract-level (e.g. exclusive-group) issue."
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Every file declaring a conflicting definition."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation of the conflict."
+        },
+        "code": {
+          "type": "string",
+          "description": "Stable, machine-readable identifier for CI filtering / doc-linking / GitHub Action annotations / IDE integration -- `undefined` for every check that predates this field. Currently populated only by the duplicate-documentation check below (`\"duplicate-variable-documentation\"`); an opt-in field other checks can adopt incrementally, not a retrofit of every existing issue at once."
+        }
+      },
+      "required": [
+        "severity",
+        "variable",
+        "files",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "One compatibility problem found between two or more declarations of the same variable, or an exclusive-group violation."
+    },
+    "ParseWarning": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Absolute path of the file the warning applies to."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable explanation of what was skipped and why."
+        }
+      },
+      "required": [
+        "file",
+        "message"
+      ],
+      "additionalProperties": false,
+      "description": "A recoverable issue found while statically parsing or linking one schema file -- never fatal, always surfaced to the caller as data."
+    },
+    "ManifestChangeReport": {
+      "type": "object",
+      "properties": {
+        "addedContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestContractRef"
+          },
+          "description": "Contracts present now but not in the previous snapshot."
+        },
+        "removedContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestContractRef"
+          },
+          "description": "Contracts present in the previous snapshot but not now."
+        },
+        "addedVariables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestVariableRef"
+          },
+          "description": "Variables present now but not in the previous snapshot."
+        },
+        "removedVariables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestVariableRef"
+          },
+          "description": "Variables present in the previous snapshot but not now."
+        },
+        "updatedContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestContractUpdate"
+          },
+          "description": "Contracts present in both snapshots with at least one changed field."
+        },
+        "updatedVariables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestVariableUpdate"
+          },
+          "description": "Variables present in both snapshots with at least one changed field."
+        }
+      },
+      "required": [
+        "addedContracts",
+        "removedContracts",
+        "addedVariables",
+        "removedVariables",
+        "updatedContracts",
+        "updatedVariables"
+      ],
+      "additionalProperties": false,
+      "description": "The result of diffing two manifest snapshots -- see `result.manifest.changes` (ADR 0021)."
+    },
+    "ManifestContractRef": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string",
+          "description": "Stable identity: `${file}#${exportName}`."
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated file path."
+        },
+        "exportName": {
+          "type": "string",
+          "description": "The binding name the `createEnv()` result is exported as."
+        },
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        }
+      },
+      "required": [
+        "identity",
+        "file",
+        "exportName",
+        "contractName"
+      ],
+      "additionalProperties": false,
+      "description": "Identifies one contract for ManifestChangeReport purposes."
+    },
+    "ManifestVariableRef": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string",
+          "description": "Stable identity: `${contractIdentity}#${key}`."
+        },
+        "contractIdentity": {
+          "type": "string",
+          "description": "The owning contract's ManifestContractRef.identity."
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated file path of the owning contract."
+        },
+        "exportName": {
+          "type": "string",
+          "description": "The owning contract's exported binding name."
+        },
+        "contractName": {
+          "type": "string",
+          "description": "The owning contract's resolved display name."
+        },
+        "key": {
+          "type": "string",
+          "description": "The environment variable name."
+        }
+      },
+      "required": [
+        "identity",
+        "contractIdentity",
+        "file",
+        "exportName",
+        "contractName",
+        "key"
+      ],
+      "additionalProperties": false,
+      "description": "Identifies one variable for ManifestChangeReport purposes."
+    },
+    "ManifestContractUpdate": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string",
+          "description": "Stable identity: `${file}#${exportName}`."
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated file path."
+        },
+        "exportName": {
+          "type": "string",
+          "description": "The binding name the `createEnv()` result is exported as."
+        },
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestFieldChange"
+          },
+          "description": "Every field that changed between the previous and current snapshot."
+        }
+      },
+      "required": [
+        "changes",
+        "contractName",
+        "exportName",
+        "file",
+        "identity"
+      ],
+      "additionalProperties": false,
+      "description": "A contract present in both snapshots, with at least one changed field."
+    },
+    "ManifestFieldChange": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "The changed field's name (dotted, e.g. `metadata.runbook`, for a per-key record change)."
+        },
+        "previous": {
+          "type": "string",
+          "description": "The value from the previous snapshot, or `undefined` if the field was unset."
+        },
+        "current": {
+          "type": "string",
+          "description": "The value in the current run, or `undefined` if the field is now unset."
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false,
+      "description": "One field's before/after value in a ManifestContractUpdate or ManifestVariableUpdate."
+    },
+    "ManifestVariableUpdate": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string",
+          "description": "Stable identity: `${contractIdentity}#${key}`."
+        },
+        "contractIdentity": {
+          "type": "string",
+          "description": "The owning contract's ManifestContractRef.identity."
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated file path of the owning contract."
+        },
+        "exportName": {
+          "type": "string",
+          "description": "The owning contract's exported binding name."
+        },
+        "contractName": {
+          "type": "string",
+          "description": "The owning contract's resolved display name."
+        },
+        "key": {
+          "type": "string",
+          "description": "The environment variable name."
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestFieldChange"
+          },
+          "description": "Every field that changed between the previous and current snapshot."
+        }
+      },
+      "required": [
+        "changes",
+        "contractIdentity",
+        "contractName",
+        "exportName",
+        "file",
+        "identity",
+        "key"
+      ],
+      "additionalProperties": false,
+      "description": "A variable present in both snapshots, with at least one changed field."
+    },
+    "GenerateDocumentationResult": {
+      "type": "object",
+      "properties": {
+        "docsPath": {
+          "type": "string",
+          "description": "Absolute path the Markdown docs artifact was written to."
+        },
+        "envExample": {
+          "$ref": "#/definitions/EnvExampleResult",
+          "description": "Set only when `options.envExample` was passed."
+        },
+        "contracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiscoveredContractSummary"
+          },
+          "description": "Root-relative summary of every discovered contract, active or not."
+        },
+        "catalog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CatalogContract"
+          },
+          "description": "Same descriptive content as the generated Markdown Catalog, reshaped for programmatic consumers -- see `buildCatalog()` in `docs.ts`."
+        },
+        "parseWarnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ParseWarning"
+          },
+          "description": "Parse-time warnings collected across every analyzed file (including allow-listed package resolution)."
+        },
+        "documentation": {
+          "$ref": "#/definitions/DocumentationFindings",
+          "description": "Everything found that isn't fully documented or up to date."
+        }
+      },
+      "required": [
+        "docsPath",
+        "contracts",
+        "catalog",
+        "parseWarnings",
+        "documentation"
+      ],
+      "additionalProperties": false,
+      "description": "The result of a completed generateDocumentation run."
+    },
+    "EnvExampleResult": {
+      "type": "object",
+      "properties": {
+        "writtenPath": {
+          "type": "string",
+          "description": "Where the example file actually got written. `undefined` only when `onExisting: \"skip\"` left an existing file untouched and nothing was written."
+        },
+        "skippedExistingPath": {
+          "type": "string",
+          "description": "Set when a file already existed at the requested location and was left untouched: with the default `\"keep-sibling\"`, `writtenPath` is a fresh timestamped sibling instead; with `\"skip\"`, this is the only outcome and `writtenPath` is `undefined`. Always `undefined` with `\"overwrite\"`."
+        },
+        "staleVariables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Variable names (live or already commented-out) in an existing example file that no discovered contract declares anymore."
+        },
+        "variablesToComment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Variables live in an existing example file whose feature is no longer active, and that no other active feature still needs -- safe to comment out."
+        },
+        "variablesToAdd": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Variables the current (active) configuration requires that aren't yet a live entry in an existing example file."
+        }
+      },
+      "required": [
+        "staleVariables",
+        "variablesToComment",
+        "variablesToAdd"
+      ],
+      "additionalProperties": false,
+      "description": "The result of a completed writeEnvExample call."
+    },
+    "CatalogContract": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "exportName": {
+          "type": "string"
+        },
+        "contractName": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "documented": {
+          "type": "boolean"
+        },
+        "category": {
+          "type": "string"
+        },
+        "exclusiveGroup": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "variables": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/CatalogVariable"
+          },
+          "description": "Keyed by variable name -- unique within one contract (a schema object-literal property name), unlike `contractName` at the top level."
+        }
+      },
+      "required": [
+        "file",
+        "exportName",
+        "contractName",
+        "active",
+        "documented",
+        "variables"
+      ],
+      "additionalProperties": false
+    },
+    "CatalogVariable": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "refreshInstructions": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "hasDefault": {
+          "type": "boolean"
+        },
+        "hasProcessor": {
+          "type": "boolean"
+        },
+        "processorReturnType": {
+          "type": "string"
+        },
+        "hasValidator": {
+          "type": "boolean"
+        },
+        "documented": {
+          "type": "boolean"
+        },
+        "extra": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Arbitrary documentEnv() fields beyond the ones above (compliance, rotationCadence, storageProvider,...) -- always its own nested property, never spread onto this object, so an author-chosen key can never silently override a reserved field above."
+        }
+      },
+      "required": [
+        "hasDefault",
+        "hasProcessor",
+        "hasValidator",
+        "documented",
+        "extra"
+      ],
+      "additionalProperties": false
+    },
+    "DocumentationFindings": {
+      "type": "object",
+      "properties": {
+        "undocumentedContracts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Absolute path of the file declaring the contract."
+              },
+              "exportName": {
+                "type": "string",
+                "description": "The contract's exported binding name."
+              }
+            },
+            "required": [
+              "file",
+              "exportName"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Contracts with no linked `documentEnv()` call at all."
+        },
+        "undocumentedVariables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Absolute path of the file declaring the contract."
+              },
+              "exportName": {
+                "type": "string",
+                "description": "The contract's exported binding name."
+              },
+              "key": {
+                "type": "string",
+                "description": "The undocumented environment variable name."
+              }
+            },
+            "required": [
+              "file",
+              "exportName",
+              "key"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Schema variables with no matching entry in their contract's linked documentation."
+        },
+        "staleDocEntries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Absolute path of the file declaring the contract."
+              },
+              "exportName": {
+                "type": "string",
+                "description": "The contract's exported binding name."
+              },
+              "key": {
+                "type": "string",
+                "description": "The stale documented variable name."
+              }
+            },
+            "required": [
+              "file",
+              "exportName",
+              "key"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Documented variable entries with no matching schema variable (the schema key was removed or renamed)."
+        },
+        "expiringSoon": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExpiringEntry"
+          },
+          "description": "Variables whose `expiresAt` falls within the configured window."
+        },
+        "unresolvedLinks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Absolute path of the file containing the unlinkable call."
+              },
+              "reason": {
+                "type": "string",
+                "description": "Human-readable explanation of why the link couldn't be resolved."
+              }
+            },
+            "required": [
+              "file",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "description": "`documentEnv()` calls that couldn't be statically linked to a schema."
+        }
+      },
+      "required": [
+        "undocumentedContracts",
+        "undocumentedVariables",
+        "staleDocEntries",
+        "expiringSoon",
+        "unresolvedLinks"
+      ],
+      "additionalProperties": false,
+      "description": "Everything generateDocumentation found that isn't fully documented or up to date, regardless of `onUndocumented`."
+    },
+    "ExpiringEntry": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Absolute path of the file declaring the contract."
+        },
+        "exportName": {
+          "type": "string",
+          "description": "The contract's exported binding name."
+        },
+        "key": {
+          "type": "string",
+          "description": "`undefined` for a contract-level `expiresAt`, set for a per-variable one."
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "The raw ISO date string, unparsed."
+        },
+        "daysRemaining": {
+          "type": "number",
+          "description": "Days from `now` until expiry; negative when already expired."
+        }
+      },
+      "required": [
+        "file",
+        "exportName",
+        "expiresAt",
+        "daysRemaining"
+      ],
+      "additionalProperties": false,
+      "description": "One contract- or variable-level `expiresAt` falling within the configured \"expiring soon\" window."
+    },
+    "GenerateUsageReportResult": {
+      "type": "object",
+      "properties": {
+        "dependencyOwnership": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OwnershipDependencyEntry"
+          },
+          "description": "Every contract's ownership/dependency summary."
+        },
+        "abandonedContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AbandonedContractFinding"
+          },
+          "description": "Contracts never imported anywhere in the scanned repository."
+        },
+        "unresolvedConsumers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnresolvedConsumerFinding"
+          },
+          "description": "Advisory only, never gates `onOwnershipIssue` -- a contract only reaches here when an ambiguous barrel re-export makes \"abandoned\" or \"consumed\" both unprovable."
+        },
+        "unconsumedOwnedVariables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnconsumedOwnedVariableFinding"
+          },
+          "description": "Owned variables with no consumer found in the scanned repository."
+        },
+        "indeterminate": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IndeterminateOwnershipFinding"
+          },
+          "description": "Variables accessed only via dynamic (computed) property access."
+        },
+        "parseWarnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ParseWarning"
+          },
+          "description": "Schema-discovery parse warnings plus, since ADR 0014, any `packages` resolution failures -- surfaced here too (not just from `generateEnvManifest`/`generateDocumentation`) so a team relying only on `--ownership` output still learns when a cross-package contract failed to resolve."
+        },
+        "reportPath": {
+          "type": "string",
+          "description": "Absolute path the report was written to, or `undefined` if `options.report` wasn't passed."
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "abandonedContracts",
+        "dependencyOwnership",
+        "indeterminate",
+        "parseWarnings",
+        "unconsumedOwnedVariables",
+        "unresolvedConsumers"
+      ],
+      "description": "Public result of generateUsageReport."
+    },
+    "OwnershipDependencyEntry": {
+      "type": "object",
+      "properties": {
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative path of the file declaring the contract."
+        },
+        "owner": {
+          "type": "string",
+          "description": "Contract-level default owner, if set."
+        },
+        "variableCount": {
+          "type": "number",
+          "description": "Number of variables declared in this contract's schema."
+        },
+        "consumers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Files coupled to this contract (imported it, referenced it, or read a member from it) -- contract-level \"who depends on this,\" NOT proof any specific variable was read. Blast radius if this contract changes is `consumers.length`, computed by callers/renderers on demand rather than stored redundantly here."
+        }
+      },
+      "required": [
+        "contractName",
+        "file",
+        "variableCount",
+        "consumers"
+      ],
+      "additionalProperties": false,
+      "description": "One contract's dependency-ownership summary: who owns it, and who depends on it."
+    },
+    "AbandonedContractFinding": {
+      "type": "object",
+      "properties": {
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative path of the file declaring the contract."
+        },
+        "owner": {
+          "type": "string",
+          "description": "Contract-level default owner, if set."
+        }
+      },
+      "required": [
+        "contractName",
+        "file"
+      ],
+      "additionalProperties": false,
+      "description": "A contract never imported anywhere in the scanned repository."
+    },
+    "UnresolvedConsumerFinding": {
+      "type": "object",
+      "properties": {
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative path of the file declaring the contract."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation of why usage couldn't be resolved."
+        }
+      },
+      "required": [
+        "contractName",
+        "file",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "A contract reachable only through an unresolved barrel re-export -- can't be proven abandoned or consumed."
+    },
+    "UnconsumedOwnedVariableFinding": {
+      "type": "object",
+      "properties": {
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        },
+        "owner": {
+          "type": "string",
+          "description": "The owning contract's default owner, if set."
+        },
+        "key": {
+          "type": "string",
+          "description": "The unconsumed environment variable name."
+        }
+      },
+      "required": [
+        "contractName",
+        "key"
+      ],
+      "additionalProperties": false,
+      "description": "An owned variable with no consumer found in the scanned repository."
+    },
+    "IndeterminateOwnershipFinding": {
+      "type": "object",
+      "properties": {
+        "contractName": {
+          "type": "string",
+          "description": "Resolved display name (see DiscoveredContract.contractName)."
+        },
+        "key": {
+          "type": "string",
+          "description": "The environment variable name."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation of why usage couldn't be determined."
+        }
+      },
+      "required": [
+        "contractName",
+        "key",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "A variable accessed only via dynamic (computed) property access -- usage cannot be determined statically."
+    },
+    "JsonErrorPayload": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "kind": {
+          "type": "string",
+          "const": "env-cap-report"
+        },
+        "toolVersion": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean",
+          "const": false
+        },
+        "error": {
+          "$ref": "#/definitions/JsonErrorInfo"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "toolVersion",
+        "ok",
+        "error"
+      ],
+      "additionalProperties": false,
+      "description": "The `--json` envelope for a failed run (generation threw)."
+    },
+    "JsonErrorInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CompatibilityIssue"
+          },
+          "description": "Populated only when the thrown error carries a `CompatibilityIssue[]` (the generator errors in `build/errors.ts` all do)."
+        }
+      },
+      "required": [
+        "name",
+        "message"
+      ],
+      "additionalProperties": false,
+      "description": "A thrown error's shape in the `--json` envelope."
+    }
+  }
+}

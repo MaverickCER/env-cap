@@ -1,0 +1,32 @@
+{
+  "name": "@examples/paypal-addon",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reusable internal package wrapping the PayPal SDK. It owns its own environment contract as a capability, independent of any application's feature folders -- see examples/paypal-consumer for the application that consumes it, discovered across the real package boundary via ADR 0014's cross-package schema discovery (Experimental).",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "src/env.schema.ts"
+  ],
+  "envCap": {
+    "schema": "./src/env.schema.ts"
+  },
+  "scripts": {
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "pack:local": "npm run build && npm pack --pack-destination . && mv examples-paypal-addon-*.tgz paypal-addon.tgz"
+  },
+  "dependencies": {
+    "@maverickcer/env-cap": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  }
+}

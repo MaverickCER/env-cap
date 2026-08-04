@@ -1,0 +1,20 @@
+{
+  "name": "env-cap-example-paypal-consumer",
+  "private": true,
+  "type": "module",
+  "description": "Application that installs @examples/paypal-addon from a real packed tarball (not a monorepo sibling) and discovers its environment contract across the package boundary via generateEnvArtifacts()'s packages option -- see ADR 0014.",
+  "scripts": {
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "start": "npm run generate:env && tsx --env-file=.env src/main.ts"
+  },
+  "dependencies": {
+    "@maverickcer/env-cap": "file:../..",
+    "@examples/paypal-addon": "file:../paypal-addon/paypal-addon.tgz"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

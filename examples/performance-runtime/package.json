@@ -1,0 +1,12 @@
+{
+  "name": "env-cap-example-performance-runtime",
+  "private": true,
+  "type": "module",
+  "description": "Runtime cold-start benchmark: createEnv()/validateEnv() cost as contract/variable count scales.",
+  "scripts": {
+    "benchmark": "node scripts/run-benchmark.mjs"
+  },
+  "dependencies": {
+    "@maverickcer/env-cap": "file:../.."
+  }
+}

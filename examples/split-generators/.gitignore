@@ -1,0 +1,3 @@
+node_modules
+# only node_modules should be ignored in this example repo because we want to show the output of the package.
+!.env

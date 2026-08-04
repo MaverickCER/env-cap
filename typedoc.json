@@ -1,0 +1,25 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/runtime/index.ts",
+    "src/build/index.ts",
+    "src/helpers/index.ts",
+    "src/eslint-plugin/index.ts"
+  ],
+  "out": "api-docs",
+  "readme": "none",
+  "validation": {
+    "notExported": true,
+    "notDocumented": true,
+    "invalidLink": true
+  },
+  "intentionallyNotExported": [
+    "UnwrapDefault",
+    "RawCreateEnvCall",
+    "RawDocumentEnvCall",
+    "ImportResolutionContext",
+    "DiscoverOptions",
+    "CatalogContract",
+    "RuleOptions"
+  ]
+}
