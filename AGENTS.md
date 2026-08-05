@@ -26,10 +26,10 @@ and aggregated at build time. There is no global `env` object.
    Access always goes through the owning contract — `paymentsEnv.STRIPE_KEY`, never
    `env.payments.STRIPE_KEY`. Never introduce a merged/global wrapper object.
 3. **Runtime config and documentation are separate calls on the same schema object.**
-   `createEnv(schema, options)` reads only `default`/`processor`/`validator` — that is the
-   runtime's entire vocabulary. `documentEnv(schema, docs)` is a second, inert call over
-   the same object; it returns `void` and exists only as a build-time AST marker. Never
-   put `description`/`owner`/`expiresAt` fields inside `createEnv()`; never expect
+   `createEnv(schema, options)` reads only `default`/`processor`/`validator`/`context` —
+   that is the runtime's entire vocabulary. `documentEnv(schema, docs)` is a second, inert
+   call over the same object; it returns `void` and exists only as a build-time AST marker.
+   Never put `description`/`owner`/`expiresAt` fields inside `createEnv()`; never expect
    `documentEnv()` to affect runtime behavior.
 4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`,
    `./helpers`, `./eslint-plugin`, `./schema`, and `./package.json`. Import only from
@@ -44,6 +44,18 @@ and aggregated at build time. There is no global `env` object.
    from variable name, contract name/source, failure kind, and the developer's own error
    message — never raw or processed values. Never write a processor/validator error
    message that embeds the raw value.
+7. **Validation contexts are participation filters, not security or detection.** A schema
+   entry may set `context: "server"` (or any application-defined string); `validateEnv({
+activeContexts })` skips any variable whose `context` isn't in that list — no default/
+   processor/validator runs for it, and reading it throws `EnvNotReadyError`. env-cap never
+   detects or infers `activeContexts` (no `window`/`NODE_ENV` sniffing inside the package —
+   the application always computes and passes it explicitly), `context` never restricts who
+   can read a resolved value, and it is **not** a bundling boundary: a `context: "server"`
+   variable in the same manifest as `context: "client"` variables still ships its
+   definition to a client bundle that imports that manifest. Use separate discovery/
+   manifests per contract when a variable must never reach client-bound code at all (see
+   `specs/decisions/0004-no-client-server-package-split.md` and
+   `specs/decisions/0022-validation-contexts.md`).
 
 ## Avoid
 

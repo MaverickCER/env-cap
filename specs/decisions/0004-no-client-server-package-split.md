@@ -100,3 +100,17 @@ server-only modules should not be imported into client code.
   the smallest and most security-sensitive part of the package. The package
   should remain environment-agnostic and allow the application's build
   system to define the correct boundary.
+
+## Update (see ADR 0022)
+
+[ADR 0022](0022-validation-contexts.md) later added a generic
+`context`/`activeContexts` mechanism to `createEnv()`/`validateEnv()`.
+This is _not_ the `runtime: "server" | "client"` option rejected above:
+that alternative was a closed, client/server-specific enum that implied a
+bundling boundary the runtime can't actually enforce. `context` is an
+open, application-defined string (never interpreted by env-cap, never
+limited to client/server) that only gates whether `validateEnv()`
+processes a variable in a given run -- it makes no claim about, and is not
+a substitute for, the module-boundary decision made above. Separate
+discovery/manifests remain the only real mechanism for keeping
+server-only source out of client-bound code.

@@ -179,15 +179,6 @@ describe("validators: string content/length checks", () => {
     ["minLength(3)", validators.minLength(3), "ab", "Expected a minimum length of 3."],
     ["maxLength(3)", validators.maxLength(3), "abc", true],
     ["maxLength(3)", validators.maxLength(3), "abcd", "Expected a maximum length of 3."],
-    ["notDefault('CHANGE_ME')", validators.notDefault("CHANGE_ME"), "real-value", true],
-    [
-      "notDefault('CHANGE_ME')",
-      validators.notDefault("CHANGE_ME"),
-      "CHANGE_ME",
-      "Value cannot use a default placeholder.",
-    ],
-    ["notOneOf(['a','b'])", validators.notOneOf(["a", "b"]), "c", true],
-    ["notOneOf(['a','b'])", validators.notOneOf(["a", "b"]), "a", "Value is not allowed."],
   ])("%s against %j -> %j", (_label, validator, input, expected) => {
     expect(validator(input, {})).toBe(expected)
   })

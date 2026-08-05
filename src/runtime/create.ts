@@ -39,7 +39,14 @@ export function createEnv<S extends EnvSchema>(
         const error = getContractError(internals.id)
         if (error) throw error
         const values = getContractValues(internals.id)
-        if (!values) throw new EnvNotReadyError(name, key)
+        // Checking key presence, not just `values` presence, matters once
+        // validation contexts exist: a variable whose context didn't match
+        // this run's activeContexts is never written into `values` (see
+        // validate.ts), so it must throw exactly like an unvalidated
+        // contract, not silently resolve to `undefined`.
+        if (!values || !Object.prototype.hasOwnProperty.call(values, key)) {
+          throw new EnvNotReadyError(name, key)
+        }
         return values[key]
       },
     })

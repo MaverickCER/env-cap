@@ -2,7 +2,7 @@
 
 # Environment Variables
 
-_Generated 2026-08-04T19:37:41.192Z_
+_Generated 2026-08-05T21:46:45.585Z_
 
 ## Changes since last report
 
@@ -117,7 +117,7 @@ One row per unique variable name; more than one location means more than one fea
 | [`PORT`](#app-port) | platform-team | -- | -- |
 | [`LOG_LEVEL`](#app-log_level) | platform-team | -- | -- |
 | [`PAYMENT_PROVIDER`](#app-payment_provider) | platform-team | -- | -- |
-| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-01 (**28d remaining**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
+| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-01 (**27d remaining**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
 
 ## Security review
 

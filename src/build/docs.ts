@@ -121,6 +121,8 @@ export interface CatalogVariable {
   readonly processorReturnType: string | undefined
   readonly hasValidator: boolean
   readonly documented: boolean
+  /** The variable's declared validation context, if any -- see ADR 0022. Participation data, not documentation: describes when `validateEnv()` processes this variable, not who may access it or what a bundler includes. */
+  readonly context: string | undefined
   /** Arbitrary documentEnv() fields beyond the ones above (compliance,
    *  rotationCadence, storageProvider, ...) -- always its own nested
    *  property, never spread onto this object, so an author-chosen key can
@@ -163,6 +165,7 @@ export function buildCatalog(contracts: readonly DiscoveredContract[]): CatalogC
         processorReturnType: variable.processorReturnType,
         hasValidator: variable.hasValidator,
         documented: variable.documented,
+        context: variable.context,
         extra: variable.extra,
       }
     }
@@ -390,6 +393,19 @@ function renderCatalog(
   const lines: string[] = ["## Catalog", "", '<a id="catalog"></a>', ""]
   const undocumentedByIdentity = new Set(undocumented.map((u) => `${u.file}#${u.exportName}`))
 
+  // Only shown when at least one variable actually declares a context --
+  // keeps generated docs byte-identical for every project not using this
+  // feature, and avoids explaining a concept that doesn't appear below.
+  const usesValidationContexts = contracts.some((c) => c.variables.some((v) => v.context))
+  if (usesValidationContexts) {
+    lines.push(
+      "> Validation contexts describe when validation participates. They do not restrict " +
+        "access to values, and they do not remove a variable's schema (or its `default` " +
+        "value) from wherever this manifest is imported.",
+      "",
+    )
+  }
+
   for (const contract of sortedContracts(contracts)) {
     const relativeFile = relativeTo(root, contract.file)
     lines.push(`<a id="${anchors.for(contract, `contract-${contract.contractName}`)}"></a>`)
@@ -427,6 +443,7 @@ function renderCatalog(
         `- Processor: ${variable.hasProcessor ? "yes" : "no"}`,
         `- Validator: ${variable.hasValidator ? "yes" : "no"}`,
       )
+      if (variable.context !== undefined) lines.push(`- Validation context: ${variable.context}`)
       const owner = effectiveOwner(contract, variable)
       if (owner !== undefined) lines.push(`- Owner: ${owner}`)
       if (variable.expiresAt !== undefined) lines.push(`- Expires: ${variable.expiresAt}`)

@@ -17,13 +17,13 @@ Non-negotiable. Verify any change respects these before finishing.
 
 2. **Capability ownership — never a global env object.** (ADR 0003) Each `createEnv()` call is scoped to, and exported by, the module that owns it (`paymentsEnv`, `databaseEnv`). There is no merge step. Access always goes through the owning contract — `paymentsEnv.STRIPE_KEY`, never `env.payments.STRIPE_KEY`.
 
-3. **Runtime config and documentation are separate calls on the same schema object.** (ADR 0001) `createEnv(schema, options)` reads only `default`/`processor`/`validator` — that's the runtime's entire vocabulary. `documentEnv(schema, docs)` is a second, inert call over the same object; it returns `void` and exists only as an AST marker for the build system. Never put description/owner/expiresAt fields in `createEnv()`; never expect `documentEnv()` to affect runtime behavior.
+3. **Runtime config and documentation are separate calls on the same schema object.** (ADR 0001) `createEnv(schema, options)` reads only `default`/`processor`/`validator`/`context` — that's the runtime's entire vocabulary. `documentEnv(schema, docs)` is a second, inert call over the same object; it returns `void` and exists only as an AST marker for the build system. Never put description/owner/expiresAt fields in `createEnv()`; never expect `documentEnv()` to affect runtime behavior.
 
 4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`, `./helpers`, `./eslint-plugin`, `./schema`, and `./package.json`. Import only from these entry points — never `dist/*.cjs` internals, `src/**/*.ts` paths, or unexported build internals (e.g. the dependency-graph engine).
 
 5. **Runtime and build are strictly separated and mechanically enforced.** (ADR 0001, 0002) `src/build` uses `node:fs`/`node:path`/`typescript` and must never be imported from runtime/browser code. `src/runtime` has zero filesystem access and zero dependencies. Enforced by `test/helpers/tree-shaking.test.ts` and the gzip budget below — not just convention.
 
-6. **Runtime size and vocabulary stay minimal.** (ADR 0004, 0007, 0008) `dist/index.js` and `dist/helpers.js` are held to a 3072-byte gzip budget each (`npm run size`). No `/client` vs `/server` split. `EnvDefinition` has exactly three optional fields — `default`, `processor`, `validator` — no `required` flag, no environment-marker field.
+6. **Runtime size and vocabulary stay minimal.** (ADR 0004, 0007, 0008, 0022) `dist/index.js` and `dist/helpers.js` are held to a 3072-byte gzip budget each (`npm run size`). No `/client` vs `/server` split. `EnvDefinition` has exactly four optional fields — `default`, `processor`, `validator`, `context` — no `required` flag. `context` is a generic, application-defined validation-context string (e.g. `"server"`, `"production"`, `"worker"`) that a `validateEnv({ activeContexts })` run may or may not activate — env-cap never interprets, detects, or infers it, it is not a bundling/security boundary, and it is not an authorization mechanism (see ADR 0022).
 
 7. **Contracts self-redact; errors never carry values.** (ADR 0006) `createEnv()`'s return object overrides inspect/toString/toJSON to print only `EnvContract("name") { N variable(s) }`, and is frozen. Validation errors are built from variable name, contract name/source, failure kind, and the developer's own error message — never raw or processed values. This protects the _object_ only: once a value is extracted (`paymentsEnv.STRIPE_KEY`, spread, destructure), the extracting code is responsible for it.
 
@@ -33,7 +33,7 @@ Non-negotiable. Verify any change respects these before finishing.
 - **Importing `@maverickcer/env-cap/build` into runtime or browser code** — it's Node-only, dev/CI-only.
 - **Calling any `generate*()` at application startup or on a request path** — build-time only; wire it into an npm script or CI step.
 - **Dynamically constructed schemas** — `createEnv(buildSchema())`, `createEnv({ ...shared })`, re-exporting a contract from another module. AST discovery can't resolve these; write the schema as a literal directly in the call.
-- **Documentation fields inside `createEnv()`'s schema** — `EnvDefinition` only has `default`/`processor`/`validator`. `description`/`owner`/`expiresAt`/`category` belong in `documentEnv()` only.
+- **Documentation fields inside `createEnv()`'s schema** — `EnvDefinition` only has `default`/`processor`/`validator`/`context`. `description`/`owner`/`expiresAt`/`category` belong in `documentEnv()` only.
 - **The field name `transformer`** — renamed to `processor` (ADR 0007), no alias.
 - **Hand-rolling a global merged env object** by spreading multiple contracts together — defeats the ownership model.
 - **Reading a contract before `validateEnv()` has run** — throws `EnvNotReadyError`.
@@ -45,6 +45,8 @@ Non-negotiable. Verify any change respects these before finishing.
 - **Trying to relax an exclusive-group violation** — always a hard error (ADR 0009), no throw/warn knob. Set the old contract's `active: false` first.
 - **Manually constructing a contract collection when a generated manifest is available** — regenerate it instead: run the project's `generate:env` script if one exists; otherwise call `generateEnvManifest({ location })` (or `generateEnvArtifacts()` for multiple artifacts) from `@maverickcer/env-cap/build`, or run `npx env-cap --location <path>` from the CLI (see Consumer Usage below for the full call shape and options). Consume the resulting manifest — never hand-assemble the collection it produces.
 - **Introducing validation managers, service locators, providers, registries, or other initialization frameworks around `validateEnv()`** — call it directly from the application's existing startup path; env-cap does not need a bootstrapping layer.
+- **Treating `context` as authorization, or as something env-cap detects itself** — it's a plain, application-defined string that only gates whether `validateEnv()` processes a variable; the application always computes `activeContexts` explicitly (never `window`/`NODE_ENV` sniffed inside env-cap), and reading a resolved value is never access-controlled by its `context` (ADR 0022).
+- **Assuming `context`/`activeContexts` is a bundling or security boundary** — it isn't. A `context: "server"` variable in the same schema/manifest as `context: "client"` variables still ships its definition (and any literal `default`) to a client bundle that imports that manifest. Use separate discovery/manifests per contract (ADR 0004) when a variable must never reach client-bound code at all.
 
 ## AI Workflow
 

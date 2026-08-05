@@ -72,6 +72,7 @@ exports[`serializeSuccess > matches the documented success shape (snapshot) 1`] 
         "owner": "payments-team",
         "variables": {
           "STRIPE_KEY": {
+            "context": undefined,
             "description": "Stripe secret API key.",
             "documented": true,
             "expiresAt": "2027-01-01",

@@ -72,6 +72,7 @@ const FULL_RESULT: GenerateEnvArtifactsResult = {
             processorReturnType: undefined,
             hasValidator: true,
             documented: true,
+            context: undefined,
             extra: {
               rotationCadence: "90 days",
               storageProvider: "AWS Secrets Manager",

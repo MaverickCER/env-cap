@@ -23,6 +23,7 @@ function makeVariable(
     processorReturnType: undefined,
     hasValidator: false,
     validatorSource: undefined,
+    context: undefined,
     description: undefined,
     owner: undefined,
     expiresAt: undefined,
@@ -472,6 +473,31 @@ describe("renderDocs", () => {
     })
   })
 
+  describe("validation contexts", () => {
+    it("renders a variable's validation context and the non-boundary disclaimer", () => {
+      const contract = makeContract({
+        file: "/repo/x/env.schema.ts",
+        exportName: "xEnv",
+        variables: [makeVariable({ key: "DATABASE_URL", context: "server" })],
+      })
+      const docs = renderDocs([contract], "/repo", options())
+
+      expect(docs).toContain("- Validation context: server")
+      expect(docs).toContain("Validation contexts describe when validation participates")
+    })
+
+    it("omits both the per-variable line and the disclaimer when no variable declares a context", () => {
+      const contract = makeContract({
+        file: "/repo/x/env.schema.ts",
+        exportName: "xEnv",
+        variables: [makeVariable({ key: "LOG_LEVEL" })],
+      })
+      const docs = renderDocs([contract], "/repo", options())
+
+      expect(docs).not.toContain("Validation context")
+    })
+  })
+
   describe("sorting and anchor stability across the whole document", () => {
     it("sorts contracts by name regardless of input order (descending input)", () => {
       const zeta = makeContract({
@@ -674,6 +700,7 @@ describe("buildCatalog", () => {
           refreshInstructions: "Rotate the key in the Stripe Dashboard.",
           required: true,
           hasValidator: true,
+          context: "server",
           extra: {
             rotationCadence: "90 days",
             storageProvider: "AWS Secrets Manager",
@@ -703,6 +730,7 @@ describe("buildCatalog", () => {
     expect(variable.refreshInstructions).toBe("Rotate the key in the Stripe Dashboard.")
     expect(variable.required).toBe(true)
     expect(variable.hasValidator).toBe(true)
+    expect(variable.context).toBe("server")
     expect(variable.extra).toEqual({
       rotationCadence: "90 days",
       storageProvider: "AWS Secrets Manager",

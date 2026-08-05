@@ -29,6 +29,7 @@ function makeVariable(
     processorReturnType: undefined,
     hasValidator: false,
     validatorSource: undefined,
+    context: undefined,
     description: undefined,
     owner: undefined,
     expiresAt: undefined,
@@ -145,6 +146,31 @@ describe("renderEnvExample", () => {
     expect(output).toContain("# Expires At: 2030-01-01")
     expect(output).toContain("# Refresh Instructions: Rotate via the vault CLI.")
     expect(output).toContain("# Required: yes")
+  })
+
+  it("renders a variable's validation context and the file-level non-boundary caveat", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [makeVariable({ key: "DATABASE_URL", context: "server" })],
+    })
+    const output = renderEnvExample([contract])
+
+    expect(output).toContain("# Validation context: server")
+    expect(output).toContain(
+      "# Validation context annotations describe when validation participates.",
+    )
+  })
+
+  it("omits the validation-context comment and caveat entirely when no variable declares a context", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [makeVariable({ key: "LOG_LEVEL" })],
+    })
+    const output = renderEnvExample([contract])
+
+    expect(output).not.toContain("Validation context")
   })
 
   it("renders a string and a boolean literal default, and falls back to empty for a non-primitive default", () => {

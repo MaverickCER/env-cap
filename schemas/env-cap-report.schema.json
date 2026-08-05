@@ -623,6 +623,10 @@
         "documented": {
           "type": "boolean"
         },
+        "context": {
+          "type": "string",
+          "description": "The variable's declared validation context, if any -- see ADR 0022. Participation data, not documentation: describes when `validateEnv()` processes this variable, not who may access it or what a bundler includes."
+        },
         "extra": {
           "type": "object",
           "additionalProperties": {

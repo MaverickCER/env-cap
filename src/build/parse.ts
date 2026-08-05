@@ -269,6 +269,8 @@ export interface DiscoveredSchemaVariable {
   readonly hasValidator: boolean
   /** The validator function's source text, normalized to single-line, if `hasValidator`. */
   readonly validatorSource: string | undefined
+  /** The variable's statically-resolved `context`, if set to a non-empty string literal (see ADR 0022). `undefined` when absent, non-literal, or empty. */
+  readonly context: string | undefined
 }
 
 /**
@@ -313,7 +315,7 @@ export function extractSchemaVariables(
       continue
     }
 
-    variables.push(extractSchemaVariable(key, prop.initializer))
+    variables.push(extractSchemaVariable(key, prop.initializer, filePath, contextLabel, warnings))
   }
 
   return variables
@@ -322,6 +324,9 @@ export function extractSchemaVariables(
 function extractSchemaVariable(
   key: string,
   definition: ts.ObjectLiteralExpression,
+  filePath: string,
+  contextLabel: string,
+  warnings: ParseWarning[],
 ): DiscoveredSchemaVariable {
   let hasDefault = false
   let defaultValue: DiscoveredSchemaVariable["defaultValue"]
@@ -330,6 +335,7 @@ function extractSchemaVariable(
   let processorReturnType: string | undefined
   let hasValidator = false
   let validatorSource: string | undefined
+  let context: string | undefined
 
   for (const prop of definition.properties) {
     if (!ts.isPropertyAssignment(prop)) continue
@@ -345,6 +351,22 @@ function extractSchemaVariable(
     } else if (name === "validator") {
       hasValidator = true
       validatorSource = normalizeSource(prop.initializer.getText())
+    } else if (name === "context") {
+      // Never executed (ADR 0002) -- a non-literal (e.g. `context:
+      // getContext()`) is skipped entirely, same "warn/skip, never guess,
+      // never execute" policy as every other field here.
+      const evaluated = evaluateLiteral(prop.initializer)
+      if (evaluated.ok && typeof evaluated.value === "string" && evaluated.value.length > 0) {
+        context = evaluated.value
+      } else {
+        warnings.push({
+          file: filePath,
+          message:
+            evaluated.ok && evaluated.value === ""
+              ? `"context" for "${key}" in "${contextLabel}" is an empty string; ignoring it -- validation contexts must be non-empty.`
+              : `"context" for "${key}" in "${contextLabel}" is not a statically-resolvable string literal; ignoring it.`,
+        })
+      }
     }
   }
 
@@ -357,6 +379,7 @@ function extractSchemaVariable(
     processorReturnType,
     hasValidator,
     validatorSource,
+    context,
   }
 }
 

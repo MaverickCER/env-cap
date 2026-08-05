@@ -256,6 +256,44 @@ describe("extractSchemaVariables", () => {
     expect(variables[0]?.hasProcessor).toBe(true)
     expect(variables[0]?.processorReturnType).toBe("string")
   })
+
+  it("extracts a variable's validation context from a string literal", () => {
+    const warnings: { file: string; message: string }[] = []
+    const variables = extractSchemaVariables(
+      literal(`{ DATABASE_URL: { context: "server", processor: (v) => v } }`),
+      "/repo/x.ts",
+      "testEnv",
+      warnings,
+    )
+    expect(warnings).toHaveLength(0)
+    expect(variables[0]?.context).toBe("server")
+  })
+
+  it("warns and ignores an empty-string validation context", () => {
+    const warnings: { file: string; message: string }[] = []
+    const variables = extractSchemaVariables(
+      literal(`{ DATABASE_URL: { context: "" } }`),
+      "/repo/x.ts",
+      "testEnv",
+      warnings,
+    )
+    expect(variables[0]?.context).toBeUndefined()
+    expect(warnings.some((w) => w.message.includes("empty string"))).toBe(true)
+  })
+
+  it("treats a non-literal validation context (e.g. a function call) as unresolvable: warns and leaves context undefined, same ADR 0002 'never execute' policy as every other field", () => {
+    const warnings: { file: string; message: string }[] = []
+    const variables = extractSchemaVariables(
+      literal(`{ DATABASE_URL: { context: getContext() } }`),
+      "/repo/x.ts",
+      "testEnv",
+      warnings,
+    )
+    expect(variables[0]?.context).toBeUndefined()
+    expect(
+      warnings.some((w) => w.message.includes("not a statically-resolvable string literal")),
+    ).toBe(true)
+  })
 })
 
 describe("extractContractDocs", () => {

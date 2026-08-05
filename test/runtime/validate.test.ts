@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { createEnv } from "../../src/runtime/create.js"
-import { EnvValidationError } from "../../src/runtime/errors.js"
+import { EnvNotReadyError, EnvValidationError } from "../../src/runtime/errors.js"
 import { resetEnvCache } from "../../src/runtime/reset.js"
 import { validateEnv } from "../../src/runtime/validate.js"
 
@@ -339,5 +339,204 @@ describe("validateEnv idempotency", () => {
 
     expect(callCount).toBe(1)
     expect(a).toEqual(b)
+  })
+})
+
+describe("validation contexts", () => {
+  it("participates by default when no context is set, regardless of activeContexts", async () => {
+    const contract = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { LOG_LEVEL: { processor: (v) => String(v ?? "info") } },
+      { name: "no-context" },
+    )
+    await validateEnv({ values: {}, manifest: [contract] })
+    expect(contract.LOG_LEVEL).toBe("info")
+  })
+
+  it("skips a context-scoped variable when activeContexts is omitted entirely", async () => {
+    const contract = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { DATABASE_URL: { context: "server", processor: (v) => String(v ?? "") } },
+      { name: "no-active-contexts" },
+    )
+    await validateEnv({ values: { DATABASE_URL: "postgres://x" }, manifest: [contract] })
+    expect(() => contract.DATABASE_URL).toThrow(EnvNotReadyError)
+  })
+
+  it("validates a variable whose context is in a single active context", async () => {
+    const contract = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { DATABASE_URL: { context: "server", processor: (v) => String(v ?? "") } },
+      { name: "single-context" },
+    )
+    await validateEnv({
+      values: { DATABASE_URL: "postgres://x" },
+      manifest: [contract],
+      activeContexts: ["server"],
+    })
+    expect(contract.DATABASE_URL).toBe("postgres://x")
+  })
+
+  it("validates a variable whose context matches one of several simultaneously active contexts", async () => {
+    const contract = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { DATABASE_URL: { context: "server", processor: (v) => String(v ?? "") } },
+      { name: "multi-context" },
+    )
+    await validateEnv({
+      values: { DATABASE_URL: "postgres://x" },
+      manifest: [contract],
+      activeContexts: ["client", "server"],
+    })
+    expect(contract.DATABASE_URL).toBe("postgres://x")
+  })
+
+  it("skips a variable whose context doesn't match any active context", async () => {
+    const contract = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { DATABASE_URL: { context: "server", processor: (v) => String(v ?? "") } },
+      { name: "unmatched-context" },
+    )
+    await validateEnv({
+      values: { DATABASE_URL: "postgres://x" },
+      manifest: [contract],
+      activeContexts: ["client"],
+    })
+    expect(() => contract.DATABASE_URL).toThrow(EnvNotReadyError)
+  })
+
+  it("treats a duplicated entry in activeContexts identically to a single entry (Set-based matching, not array scanning)", async () => {
+    const contract = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { DATABASE_URL: { context: "production", processor: (v) => String(v ?? "") } },
+      { name: "duplicate-active-context" },
+    )
+    await validateEnv({
+      values: { DATABASE_URL: "x" },
+      manifest: [contract],
+      activeContexts: ["production", "production"],
+    })
+    expect(contract.DATABASE_URL).toBe("x")
+  })
+
+  it("skips the entire pipeline for an out-of-context variable: default/processor/validator never run", async () => {
+    let processorCalled = false
+    let validatorCalled = false
+    const contract = createEnv(
+      {
+        DATABASE_URL: {
+          context: "server",
+          default: "should-not-apply",
+          processor: () => {
+            processorCalled = true
+            return "processed"
+          },
+          validator: () => {
+            validatorCalled = true
+            return true
+          },
+        },
+      },
+      { name: "skip-pipeline" },
+    )
+    await validateEnv({ values: {}, manifest: [contract], activeContexts: ["client"] })
+    expect(processorCalled).toBe(false)
+    expect(validatorCalled).toBe(false)
+    expect(() => contract.DATABASE_URL).toThrow(EnvNotReadyError)
+  })
+
+  it("excludes skipped variables from variableCount", async () => {
+    const contract = createEnv(
+      {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+        LOG_LEVEL: { processor: (v) => String(v ?? "info") },
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+        DATABASE_URL: { context: "server", processor: (v) => String(v ?? "") },
+      },
+      { name: "variable-count" },
+    )
+    const result = await validateEnv({
+      values: {},
+      manifest: [contract],
+      activeContexts: ["client"],
+    })
+    expect(result.variableCount).toBe(1)
+  })
+
+  it("applies independent context filtering per contract within one manifest", async () => {
+    const server = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { DATABASE_URL: { context: "server", processor: (v) => String(v ?? "") } },
+      { name: "server-contract" },
+    )
+    const client = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { PUBLIC_API_URL: { context: "client", processor: (v) => String(v ?? "") } },
+      { name: "client-contract" },
+    )
+    const shared = createEnv(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+      { LOG_LEVEL: { processor: (v) => String(v ?? "info") } },
+      { name: "shared-contract" },
+    )
+    await validateEnv({
+      values: { DATABASE_URL: "postgres://x", PUBLIC_API_URL: "https://api.example.com" },
+      manifest: [server, client, shared],
+      activeContexts: ["server"],
+    })
+    expect(server.DATABASE_URL).toBe("postgres://x")
+    expect(shared.LOG_LEVEL).toBe("info")
+    expect(() => client.PUBLIC_API_URL).toThrow(EnvNotReadyError)
+  })
+
+  it("does not include a skipped variable in the aggregated failure report of its own contract", async () => {
+    const contract = createEnv(
+      {
+        DATABASE_URL: {
+          context: "server",
+          processor: () => {
+            throw new Error("bad database url")
+          },
+        },
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+        PUBLIC_API_URL: { context: "client", processor: (v) => String(v ?? "") },
+      },
+      { name: "failure-with-skip" },
+    )
+
+    try {
+      await validateEnv({ values: {}, manifest: [contract], activeContexts: ["server"] })
+      throw new Error("expected validateEnv to throw")
+    } catch (error) {
+      const validationError = error as EnvValidationError
+      expect(validationError.failures).toHaveLength(1)
+      expect(validationError.failures[0]?.variable).toBe("DATABASE_URL")
+    }
+  })
+
+  it("isolates context participation across independent validateEnv runs, each simulating a separate process", async () => {
+    const contract = createEnv(
+      {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+        DATABASE_URL: { context: "server", processor: (v) => String(v ?? "") },
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+        PUBLIC_API_URL: { context: "client", processor: (v) => String(v ?? "") },
+      },
+      { name: "isolation" },
+    )
+    const values = { DATABASE_URL: "postgres://x", PUBLIC_API_URL: "https://api.example.com" }
+
+    await validateEnv({ values, manifest: [contract], activeContexts: ["server"] })
+    expect(contract.DATABASE_URL).toBe("postgres://x")
+    expect(() => contract.PUBLIC_API_URL).toThrow(EnvNotReadyError)
+
+    // Simulates a fresh process (server and client never share one in
+    // practice) -- validateEnv() itself stays one-shot per process; this
+    // is not a supported "switch contexts mid-process" API.
+    resetEnvCache()
+
+    await validateEnv({ values, manifest: [contract], activeContexts: ["client"] })
+    expect(contract.PUBLIC_API_URL).toBe("https://api.example.com")
+    expect(() => contract.DATABASE_URL).toThrow(EnvNotReadyError)
   })
 })

@@ -63,6 +63,7 @@ Its core concepts are limited to:
 - `default`
 - `processor`
 - `validator`
+- `context` (a variable's validation context, see below and ADR 0022)
 
 These are the only pieces of information required to transform raw
 environment values into validated application configuration.
@@ -70,7 +71,47 @@ environment values into validated application configuration.
 `createEnv()` (`runtime/create.ts`) creates a feature-owned environment
 contract. `validateEnv()` (`runtime/validate.ts`) executes every registered
 contract's processing pipeline against the provided environment values and
-caches successful results through `runtime/cache.ts`.
+caches successful results through `runtime/cache.ts`. Before running that
+pipeline for a given variable, it first checks whether the variable's
+`context` (if any) is in the run's `activeContexts` -- a variable that
+doesn't match is skipped entirely (no default/processor/validator runs) and
+stays in its not-ready state, exactly as if this run had never happened for
+it.
+
+### Validation context invariants
+
+A **validation context** is an application-defined string a variable may
+declare (`context`) and a validation run may activate (`activeContexts`).
+env-cap never interprets, detects, or infers these strings itself -- the
+application always computes and passes `activeContexts` explicitly. The
+following invariants are load-bearing; none should be relaxed without a new
+ADR (see [ADR 0022](decisions/0022-validation-contexts.md)):
+
+1. **Matching.** A variable without a `context` participates in every
+   validation run. A variable with a `context` participates only when
+   `activeContexts` contains that exact string. No prefix matching, no
+   wildcards, no hierarchy, no inheritance.
+2. **Not runtime detection.** env-cap never infers, detects, or defaults
+   `activeContexts` from any ambient signal (`window`, `NODE_ENV`, a
+   bundler `define`, etc.). The application always computes and passes it
+   explicitly.
+3. **Not cache identity.** `validateEnv()` stays one-shot per process: a
+   second call while already `"ready"` returns the first call's result
+   outright, without inspecting the second call's `activeContexts`. There
+   is no per-context cache dimension.
+4. **Not a type-level concept.** Validation contexts affect participation
+   at `validateEnv()` time only -- they do not alter `EnvContract`'s
+   TypeScript shape, `InferEnvValue`, or any generated type. Every schema
+   key remains a property of `EnvContract<S>` regardless of `context`; an
+   out-of-context key throws `EnvNotReadyError` at access time, exactly
+   like any value read before `validateEnv()` has run.
+5. **Not authorization.** Validation contexts are not an authentication,
+   authorization, or access-control mechanism. They determine validation
+   participation only, never who may read a resolved value.
+6. **Not a bundling/security boundary.** Separate discovery/manifests (ADR 0004) remain the real mechanism for keeping server-only source out of
+   client-bound code. `activeContexts` filtering happens after the schema
+   is already wherever it's going to be -- it does not remove a variable's
+   definition (or its `default` value) from a bundle that imports it.
 
 `runtime/registry.ts` maintains the internal relationship between created
 contracts and their schemas using a private `WeakMap`. This keeps internal
@@ -248,13 +289,16 @@ validateEnv({ manifest, values: process.env })
 
 Validation happens once for the process lifetime.
 
-Each contract:
+Each contract, per variable:
 
-1. reads its raw values
-2. applies defaults
-3. runs processors
-4. runs validators
-5. stores frozen validated results
+1. checks whether the variable's `context` matches this run's
+   `activeContexts` -- if not, skips every remaining step entirely and
+   moves to the next variable (see "Validation context invariants" above)
+2. reads its raw value
+3. applies its default
+4. runs its processor
+5. runs its validator
+6. stores the frozen validated result
 
 Failures are aggregated into `EnvValidationError` rather than stopping at
 the first invalid variable.
@@ -298,3 +342,4 @@ contract.
 | The published `--json` schema is generated from types, never hand-authored                     | [0019](decisions/0019-published-json-schema-generated-from-types.md)            |
 | Declaration maps emitted by a separate `tsc` pass, not tsup's own `dts` pipeline               | [0020](decisions/0020-declaration-maps-via-separate-tsc-pass.md)                |
 | The manifest change report is a persisted, committed JSON sidecar snapshot                     | [0021](decisions/0021-manifest-change-report-persisted-snapshot.md)             |
+| Generic, declarative validation contexts (`context`/`activeContexts`)                          | [0022](decisions/0022-validation-contexts.md)                                   |

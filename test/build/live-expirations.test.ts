@@ -17,6 +17,7 @@ function makeVariable(
     processorReturnType: undefined,
     hasValidator: false,
     validatorSource: undefined,
+    context: undefined,
     description: undefined,
     owner: undefined,
     expiresAt: undefined,

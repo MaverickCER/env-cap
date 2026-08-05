@@ -67,4 +67,29 @@ describe("InferEnvValue / EnvContract generic inference", () => {
     expectTypeOf<typeof contract.STRIPE_KEY>().not.toBeAny()
     expectTypeOf<typeof contract.STRIPE_KEY>().toEqualTypeOf<string>()
   })
+
+  it("`context` never affects a resolved contract's per-key type (ADR 0022 invariant: validation contexts are runtime-only, never a type-level concept)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const contract = createEnv({
+      DATABASE_URL: {
+        context: "server",
+        default: 3000,
+        processor: (value): number => Number(value),
+      },
+      NAME: { context: "client", processor: (value): string => String(value) },
+      RAW: { context: "worker" },
+    })
+
+    expectTypeOf<typeof contract.DATABASE_URL>().toEqualTypeOf<number>()
+    expectTypeOf<typeof contract.NAME>().toEqualTypeOf<string>()
+    expectTypeOf<typeof contract.RAW>().toEqualTypeOf<string>()
+  })
+
+  it("`context` is an optional string on EnvDefinition, independent of processor/default", () => {
+    interface Def {
+      processor: (value: unknown) => number
+      context: "server"
+    }
+    expectTypeOf<InferEnvValue<Def>>().toEqualTypeOf<number>()
+  })
 })

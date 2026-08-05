@@ -39,6 +39,19 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
   }
 }
 
+/**
+ * Whether a variable participates in a validation run: unset `context`
+ * always participates; otherwise it participates only when `activeContexts`
+ * contains that exact string (no prefix matching, no wildcards, no
+ * hierarchy -- see ADR 0022's Formal Invariants).
+ */
+function matchesContext(
+  variableContext: string | undefined,
+  activeContexts: ReadonlySet<string> | undefined,
+): boolean {
+  return variableContext === undefined || (activeContexts?.has(variableContext) ?? false)
+}
+
 // `async` is load-bearing here despite no internal `await`: `validateEnv()`
 // assigns this call's return value directly to `state.inFlight` so
 // concurrent callers can share one in-flight run (see its own doc comment).
@@ -53,6 +66,12 @@ async function runValidation(
   const failures: VariableFailure[] = []
   let variableCount = 0
 
+  // Allocated only when contexts are actually in play, so the (overwhelmingly
+  // common, and every pre-existing) zero-context path does no extra work.
+  const activeContexts = options.activeContexts?.length
+    ? new Set(options.activeContexts)
+    : undefined
+
   const resolved: { id: symbol; values: Record<string, unknown> }[] = []
 
   for (const contract of options.manifest) {
@@ -60,9 +79,17 @@ async function runValidation(
     const values: Record<string, unknown> = {}
 
     for (const key of Object.keys(internals.schema)) {
+      const definition = internals.schema[key]
+
+      // A variable whose context isn't active is skipped entirely -- no
+      // default/processor/validator runs, it's never counted as validated,
+      // and it stays out of `values`, so `create.ts`'s getter finds it
+      // absent and throws EnvNotReadyError exactly as if this run had
+      // never happened for it. See ADR 0022.
+      if (!matchesContext(definition.context, activeContexts)) continue
+
       variableCount += 1
 
-      const definition = internals.schema[key]
       const raw = options.values[key]
 
       let working: unknown = raw

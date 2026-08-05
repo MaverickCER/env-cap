@@ -192,6 +192,15 @@ jobs:
           npm install
           npm run typecheck
 
+      # One schema/manifest, validated by two separate entry points
+      # (example:server/example:client) with different activeContexts --
+      # see test/examples/validation-contexts.test.ts and ADR 0022.
+      - name: validation-contexts
+        working-directory: examples/validation-contexts
+        run: |
+          npm install
+          npm run typecheck
+
       # Runs each example's real npm scripts against its own committed,
       # fake-but-plausible `.env` file and asserts on real stdout -- the
       # actual runtime path (validateEnv -> read a validated value), not just

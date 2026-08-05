@@ -74,6 +74,7 @@ function renderVariableLines(
   if (options.note) lines.push(`# ${options.note}`)
 
   if (variable.description) lines.push(`# ${variable.description}`)
+  if (variable.context) lines.push(`# Validation context: ${variable.context}`)
   if (variable.owner) lines.push(`# Owner: ${variable.owner}`)
   if (variable.expiresAt) lines.push(`# Expires At: ${variable.expiresAt}`)
   if (variable.refreshInstructions)
@@ -127,6 +128,16 @@ export function renderEnvExample(
     "# AUTO-GENERATED EXAMPLE FILE.",
     "# Copy to .env and fill in real values. Do not commit .env.",
   ]
+  // Only shown when at least one variable actually declares a context --
+  // keeps this file byte-identical for every project not using the
+  // feature.
+  if (sorted.some((c) => c.variables.some((v) => v.context))) {
+    lines.push(
+      "# Validation context annotations describe when validation participates.",
+      "# They do not restrict access to values, and every variable below is",
+      "# still written to this file regardless of its context.",
+    )
+  }
   if (reconciliationHeader.length > 0) lines.push(...reconciliationHeader)
   lines.push("")
 

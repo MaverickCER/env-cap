@@ -1,5 +1,25 @@
 import { defineConfig } from "tsup"
 
+// Every entry drops comments and collapses whitespace from its built output
+// (`minifyWhitespace`) -- esbuild's default, unminified behavior otherwise
+// preserves every comment verbatim, which meant each exported JSDoc comment
+// in src/helpers and src/runtime was shipping as dead weight inside
+// dist/*.js and counting against the gzip budget below for no reader
+// benefit: dts:false here means tsup emits no declarations of its own (see
+// the runtime entry's comment), so none of this text ever reaches a
+// consumer's editor -- IDE hover comes from the separate
+// `tsc -p tsconfig.build.json` pass's own .d.ts output, not from these .js
+// comments. Deliberately `minifyWhitespace`, not `minify`/`minifyIdentifiers`
+// -- this drops comments/whitespace only, leaving every identifier intact,
+// so a stack trace or a debugger stepping into dist/*.js still reads like
+// the source. (`legalComments: "none"` alone does *not* achieve this --
+// esbuild's legalComments option only ever governs `@license`/`@preserve`-
+// style comments; regular JSDoc is untouched by it and is only ever
+// stripped as a side effect of whitespace minification.)
+const esbuildOptions = (options: { minifyWhitespace?: boolean }): void => {
+  options.minifyWhitespace = true
+}
+
 export default defineConfig([
   {
     name: "runtime",
@@ -16,6 +36,7 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     treeshake: true,
+    esbuildOptions,
   },
   {
     name: "build",
@@ -26,6 +47,7 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     treeshake: true,
+    esbuildOptions,
   },
   {
     name: "helpers",
@@ -36,6 +58,7 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     treeshake: true,
+    esbuildOptions,
   },
   {
     name: "cli",
@@ -46,6 +69,7 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     banner: { js: "#!/usr/bin/env node" },
+    esbuildOptions,
   },
   {
     name: "eslint-plugin",
@@ -57,6 +81,7 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     treeshake: true,
+    esbuildOptions,
     // `@typescript-eslint/utils` (bundled -- see package.json's devDependency
     // comment) internally does a dynamic `require("eslint")` for its
     // FlatESLint/ESLint wrapper types, which esbuild's ESM output can't

@@ -48,6 +48,16 @@ Node.js 18+. TypeScript 5+ is only needed for build-time manifest generation (`n
 
 ---
 
+## AI-Assisted Integration
+
+Using an AI coding assistant can accelerate env-cap adoption, but successful integration requires understanding both your application's architecture and env-cap's design principles.
+
+For a repository-aware integration review prompt, see:
+
+[AI Integration Prompt](./PROMPT.md)
+
+---
+
 ## Quick start
 
 ```ts
@@ -450,6 +460,95 @@ EnvValidationError
 so applications receive the complete startup failure state instead of discovering missing or invalid variables one at a time.
 
 Runtime access can remain centralized for simpler applications or become capability-scoped as ownership boundaries grow. Validation remains application-wide.
+
+---
+
+## Validation contexts
+
+A schema entry may declare which **validation context** it belongs to. `validateEnv()` accepts the validation
+contexts active for a given run, and skips every variable that doesn't match:
+
+```ts
+DATABASE_URL: {
+  context: "server",
+  validator: validators.required(),
+}
+```
+
+```ts
+await validateEnv({
+  manifest,
+  values: process.env,
+  activeContexts: ["server"],
+})
+```
+
+**Matching rule:** a variable with no `context` participates in every run. A variable with a `context`
+participates only when `activeContexts` contains that exact string — no prefix matching, wildcards, or
+hierarchy. A skipped variable never runs its `default`/`processor`/`validator`, and reading it throws
+`EnvNotReadyError`, exactly as if `validateEnv()` had never run for it.
+
+`context` is entirely application-defined — env-cap never interprets, detects, or infers it. `"server"` and
+`"client"` are just one example; a validation context can represent anything a validation run needs to
+distinguish:
+
+```ts
+DATABASE_URL: { context: "server", validator: validators.required() }
+STRIPE_LIVE_KEY: { context: "production", validator: validators.required() }
+QUEUE_CONCURRENCY: { context: "worker", default: 4 }
+DEBUG_TRACE_ENDPOINT: { context: "development" }
+```
+
+A run may activate more than one context at once — `activeContexts: ["server", "production"]` matches a
+variable declaring either. This works the same regardless of framework: `env-cap` never inspects `window` or
+`NODE_ENV` itself, the application computes `activeContexts` once, explicitly, before calling `validateEnv()`:
+
+```ts
+// Works the same in a Next.js, TanStack Start, or plain Node app -- env-cap
+// never inspects window/NODE_ENV itself; the application does, once, before
+// calling validateEnv().
+await validateEnv({
+  values: typeof window === "undefined" ? process.env : window.__ENV__,
+  manifest,
+  activeContexts: [
+    typeof window === "undefined" ? "server" : "client",
+    process.env.NODE_ENV === "production" ? "production" : "development",
+  ],
+})
+```
+
+When at least one variable declares a `context`, the generated manifest also exports every context it found,
+named to match `activeContexts` itself so it can be passed straight through:
+
+```ts
+// src/generated/env.manifest.ts (generated)
+export const activeContexts = ["client", "server"]
+export const manifest = [/* ... */]
+```
+
+```ts
+import { activeContexts, manifest } from "./generated/env.manifest"
+
+await validateEnv({ manifest, values: process.env, activeContexts })
+```
+
+This is every context the manifest has — a convenient starting point, not a pre-scoped default. Importing it
+unmodified into every process defeats the point of scoping contexts per deployment target in the first place;
+narrow it (or import it under another name and filter it) the same way `src/server.ts`/`src/client.ts` in
+[`examples/validation-contexts`](examples/validation-contexts) each hand-write their own narrowed
+`activeContexts: ["server"]` / `["client"]` instead of using this export directly.
+
+> **Validation contexts are not a bundling or security boundary, and not authorization.** They control whether
+> `validateEnv()` processes a variable — nothing else. Putting a `context: "server"` variable in the same
+> schema as `context: "client"` variables, feeding one manifest that a client bundle imports, does **not**
+> keep the server-context variable's definition (including any literal `default`) out of that bundle —
+> `activeContexts` filtering happens after the schema is already wherever it's going to be. If a variable must
+> never reach a browser bundle at all, keep using separate discovery/generated manifests per contract (see
+> ["Runtime and build-time are intentionally separate"](#runtime-and-build-time-are-intentionally-separate)
+> and [ADR 0004](specs/decisions/0004-no-client-server-package-split.md)) — validation contexts are a
+> complement to that boundary, not a replacement for it. Likewise, a string like `context: "admin"` does not
+> restrict _who_ can read a value; it only decides whether a given run validates it. See
+> [ADR 0022](specs/decisions/0022-validation-contexts.md) for the full set of invariants this feature commits to.
 
 ---
 

@@ -10,7 +10,12 @@
  * entirely in {@link documentEnv} (see `document.ts`), not here -- this file is
  * the runtime's whole vocabulary, and every field in it is read by
  * `validate.ts`/`create.ts`/`errors.ts` at runtime. If a field is only ever
- * read by the generator, it belongs in `document.ts`, not here.
+ * read by the generator, it belongs in `document.ts`, not here. `context` is
+ * the one exception worth calling out: it's also read by the build package
+ * for documentation display (see ADR 0022), but it belongs here rather than
+ * in `documentEnv()` because `validate.ts` reads it too, to decide pipeline
+ * participation -- the same bar `default`/`processor`/`validator` already
+ * clear.
  */
 
 /** The raw, unprocessed source of environment values (e.g. `process.env`, a resolved secrets bag). */
@@ -48,6 +53,23 @@ export interface EnvDefinition<T> {
   processor?: Processor<T>
   /** Rejects an invalid processed value; return `true` to accept it. */
   validator?: Validator<T>
+  /**
+   * The validation context this variable belongs to (e.g. `"server"`,
+   * `"production"`, `"worker"`) -- entirely application-defined; env-cap
+   * never interprets, detects, or infers this string. Omitted (the
+   * default) means the variable participates in every {@link validateEnv}
+   * run regardless of `activeContexts`. A variable belongs to at most one
+   * validation context -- see ADR 0022 for why this is a single `string`
+   * and not `string[]`; do not widen it to an array to let one variable
+   * join multiple contexts, that reintroduces the AND/OR ambiguity this
+   * design deliberately avoids.
+   *
+   * @remarks
+   * Validation contexts are a participation filter only -- not
+   * authentication, authorization, or a bundling/security boundary. See
+   * ADR 0022's Formal Invariants.
+   */
+  context?: string
 }
 
 /**
@@ -124,6 +146,26 @@ export interface validateEnvOptions {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   manifest: readonly EnvContract<any>[]
+  /**
+   * The validation contexts active for this run (e.g. `["server",
+   * "production"]`) -- entirely application-defined; env-cap never
+   * detects or infers these, the caller always computes and passes them
+   * explicitly. A variable whose `context` isn't in this list is skipped
+   * entirely (no default/processor/validator runs for it, and it stays in
+   * its not-ready state, exactly as if this run had never happened for
+   * it) -- see ADR 0022. A variable with no `context` always participates,
+   * regardless of what's passed here. Omitted (the default) behaves as an
+   * empty list: only variables with no `context` participate.
+   *
+   * @remarks
+   * Not part of the validation cache's identity -- {@link validateEnv}
+   * remains one-shot per process exactly as before this option existed. A
+   * second call does not re-evaluate `activeContexts`; it returns the
+   * first call's result outright. Different active contexts belong to
+   * different processes (e.g. a server process and a browser bundle),
+   * never to two calls within the same one.
+   */
+  activeContexts?: readonly string[]
 }
 
 /** Aggregate counts from a completed {@link validateEnv} run. */

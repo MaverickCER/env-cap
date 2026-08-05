@@ -83,6 +83,21 @@ describe("createEnv", () => {
     expect(() => contract.PORT).toThrow(error as Error)
   })
 
+  it("throws EnvNotReadyError (not undefined) reading a key skipped by validation contexts, even after the rest of the contract validated successfully", async () => {
+    const contract = createEnv(
+      {
+        DATABASE_URL: { context: "server", processor: (v) => String(v) },
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- see the identical idiom in helpers/processors.ts
+        LOG_LEVEL: { processor: (v) => String(v ?? "info") },
+      },
+      { name: "context-skip" },
+    )
+    await validateEnv({ values: {}, manifest: [contract], activeContexts: ["client"] })
+
+    expect(contract.LOG_LEVEL).toBe("info")
+    expect(() => contract.DATABASE_URL).toThrow(EnvNotReadyError)
+  })
+
   it("only accepts name/source -- documentation fields live on documentEnv, not here", async () => {
     // CreateEnvOptions has no active/exclusiveGroup/category/metadata anymore --
     // this is a type-level guarantee (see types.test.ts), exercised here just

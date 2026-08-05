@@ -53,6 +53,7 @@ const EXAMPLES = {
   "missing-env-var": { artifacts: STANDARD_ARTIFACTS },
   "duplicate-variable-metadata": { artifacts: STANDARD_ARTIFACTS },
   "split-generators": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
+  "validation-contexts": { artifacts: STANDARD_ARTIFACTS },
 }
 
 function normalizeDocsForComparison(content) {

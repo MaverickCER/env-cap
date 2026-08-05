@@ -54,8 +54,6 @@ import {
   minLength,
   negative,
   not,
-  notDefault,
-  notOneOf,
   oneOf,
   optional,
   past,
@@ -149,10 +147,6 @@ export const validators = {
   negative,
   /** Inverts a validator: passes when the wrapped validator fails, and vice versa. */
   not,
-  /** Passes unless the value matches one of the given placeholder default values. */
-  notDefault,
-  /** Passes unless the value is one of the `blocked` values. */
-  notOneOf,
   /** Passes when the value is one of the `allowed` values. */
   oneOf,
   /** Passes when the value is undefined, otherwise delegates to the provided validator. */

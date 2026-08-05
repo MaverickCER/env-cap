@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { renderManifest } from "../../src/build/manifest.js"
-import type { DiscoveredContract } from "../../src/build/link.js"
+import { discoverValidationContexts, renderManifest } from "../../src/build/manifest.js"
+import type { DiscoveredContract, DiscoveredVariable } from "../../src/build/link.js"
 
 function contract(overrides: Partial<DiscoveredContract>): DiscoveredContract {
   return {
@@ -16,6 +16,27 @@ function contract(overrides: Partial<DiscoveredContract>): DiscoveredContract {
     variables: [],
     documented: false,
     packageOrigin: undefined,
+    ...overrides,
+  }
+}
+
+function variable(overrides: Partial<DiscoveredVariable> & { key: string }): DiscoveredVariable {
+  return {
+    hasDefault: false,
+    defaultValue: undefined,
+    hasProcessor: false,
+    processorSource: undefined,
+    processorReturnType: undefined,
+    hasValidator: false,
+    validatorSource: undefined,
+    context: undefined,
+    description: undefined,
+    owner: undefined,
+    expiresAt: undefined,
+    refreshInstructions: undefined,
+    required: undefined,
+    extra: {},
+    documented: false,
     ...overrides,
   }
 }
@@ -117,5 +138,103 @@ describe("renderManifest", () => {
     expect(output).toContain('import { pkgEnv } from "@acme/pkg";')
     expect(output).not.toContain("node_modules")
     expect(output).toContain('import { localEnv } from "../../features/local/env.schema";')
+  })
+
+  describe("activeContexts export", () => {
+    it("emits a sorted, deduplicated activeContexts export when any variable declares a context", () => {
+      const contracts = [
+        contract({
+          exportName: "serverEnv",
+          variables: [
+            variable({ key: "DATABASE_URL", context: "server" }),
+            variable({ key: "LOG_LEVEL" }),
+          ],
+        }),
+        contract({
+          file: "/repo/y/env.schema.ts",
+          exportName: "clientEnv",
+          variables: [variable({ key: "PUBLIC_API_URL", context: "client" })],
+        }),
+      ]
+
+      const output = renderManifest(contracts, "/repo/src/generated/env.manifest.ts")
+
+      expect(output).toContain("// all currently active validation contexts")
+      expect(output).toContain('export const activeContexts = ["client", "server"];')
+      // Placed after the imports, before the manifest array.
+      expect(output.indexOf("export const activeContexts")).toBeLessThan(
+        output.indexOf("export const manifest"),
+      )
+    })
+
+    it("dedupes a context declared by more than one variable/contract", () => {
+      const contracts = [
+        contract({
+          exportName: "serverEnv",
+          variables: [
+            variable({ key: "DATABASE_URL", context: "server" }),
+            variable({ key: "REDIS_URL", context: "server" }),
+          ],
+        }),
+      ]
+      const output = renderManifest(contracts, "/repo/src/generated/env.manifest.ts")
+      expect(output).toContain('export const activeContexts = ["server"];')
+    })
+
+    it("omits the comment and export entirely when no variable declares a context", () => {
+      const contracts = [contract({ variables: [variable({ key: "LOG_LEVEL" })] })]
+      const output = renderManifest(contracts, "/repo/src/generated/env.manifest.ts")
+      expect(output).not.toContain("activeContexts")
+      expect(output).not.toContain("validation context")
+    })
+
+    it("excludes contexts declared only by variables in an inactive (active: false) contract", () => {
+      const contracts = [
+        contract({
+          exportName: "serverEnv",
+          active: false,
+          variables: [variable({ key: "DATABASE_URL", context: "server" })],
+        }),
+        contract({
+          file: "/repo/y/env.schema.ts",
+          exportName: "clientEnv",
+          variables: [variable({ key: "PUBLIC_API_URL", context: "client" })],
+        }),
+      ]
+      const output = renderManifest(contracts, "/repo/src/generated/env.manifest.ts")
+      expect(output).toContain('export const activeContexts = ["client"];')
+      expect(output).not.toContain('"server"')
+    })
+  })
+})
+
+describe("discoverValidationContexts", () => {
+  it("returns an empty array when no contract has any variables", () => {
+    expect(discoverValidationContexts([])).toEqual([])
+  })
+
+  it("collects, dedupes, and sorts contexts across multiple active contracts", () => {
+    const contracts = [
+      contract({
+        exportName: "a",
+        variables: [variable({ key: "A", context: "worker" }), variable({ key: "B" })],
+      }),
+      contract({
+        file: "/repo/y/env.schema.ts",
+        exportName: "b",
+        variables: [
+          variable({ key: "C", context: "edge" }),
+          variable({ key: "D", context: "worker" }),
+        ],
+      }),
+    ]
+    expect(discoverValidationContexts(contracts)).toEqual(["edge", "worker"])
+  })
+
+  it("ignores variables belonging to an inactive contract", () => {
+    const contracts = [
+      contract({ active: false, variables: [variable({ key: "A", context: "server" })] }),
+    ]
+    expect(discoverValidationContexts(contracts)).toEqual([])
   })
 })

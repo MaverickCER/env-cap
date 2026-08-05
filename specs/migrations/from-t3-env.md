@@ -249,7 +249,32 @@ client.contract.ts
 
 The application build decides which contracts are included.
 
-This keeps the runtime small and avoids creating artificial package boundaries.
+This keeps the runtime small and avoids creating artificial package boundaries. This remains the
+recommended default, and the only mechanism that actually keeps a server-only variable's source out of a
+client bundle -- see [ADR 0004](../decisions/0004-no-client-server-package-split.md).
+
+If you'd rather keep `server`/`client` variables declared in one schema location instead of splitting into
+two contract files, `context`/`activeContexts` (see the README's ["Validation
+contexts"](../../README.md#validation-contexts) section, [ADR 0022](../decisions/0022-validation-contexts.md))
+is the closer analogue to t3-env's `server`/`client` grouping:
+
+```ts
+createEnv({
+  DATABASE_URL: { context: "server", processor: (v) => String(v) },
+  NEXT_PUBLIC_API_URL: { context: "client", processor: (v) => String(v) },
+})
+```
+
+```ts
+// Server process:
+await validateEnv({ manifest, values: process.env, activeContexts: ["server"] })
+// Browser bundle:
+await validateEnv({ manifest, values: window.__ENV__, activeContexts: ["client"] })
+```
+
+This only controls whether `validateEnv()` processes a variable, not whether its definition ships to the
+browser -- it's a convenience for teams that don't need a hard module boundary, not a substitute for one. If
+`DATABASE_URL` must never appear in a client bundle at all, use the two-manifest approach above instead.
 
 ## Migrating a Next.js application
 

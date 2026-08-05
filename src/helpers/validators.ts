@@ -122,16 +122,6 @@ export function not<T>(validator: Validator<T>): Validator<T> {
     validator(value, rawEnv) === true ? "Value must not satisfy this validation." : true
 }
 
-/** Passes unless the value matches one of the given placeholder default values. */
-export function notDefault(...values: (string | number | Date)[]): Validator<string> {
-  return (value, _rawEnv) => !values.includes(value) || "Value cannot use a default placeholder."
-}
-
-/** Passes unless the value is one of the `blocked` values. */
-export function notOneOf<T>(blocked: readonly T[]): Validator<T> {
-  return (value, _rawEnv) => !blocked.includes(value) || "Value is not allowed."
-}
-
 /** Passes when the value is one of the `allowed` values. */
 export function oneOf<T>(allowed: readonly T[]): Validator<T> {
   return (value, _rawEnv) => allowed.includes(value) || `Expected one of: ${allowed.join(", ")}.`
