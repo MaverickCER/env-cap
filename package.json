@@ -67,6 +67,7 @@
   ],
   "scripts": {
     "build": "tsup && tsc -p tsconfig.build.json && node scripts/emit-dts-shims.mjs && node scripts/fix-eslint-plugin-cjs-interop.mjs",
+    "prepare": "npm run build",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
