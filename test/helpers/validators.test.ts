@@ -116,6 +116,21 @@ describe("validators.refine", () => {
   })
 })
 
+describe("validators.optional", () => {
+  it("passes automatically when the value is undefined, without invoking the wrapped validator", () => {
+    const inner = vi.fn(() => "should not run")
+    const v = validators.optional<string>(inner)
+    expect(v(undefined, {})).toBe(true)
+    expect(inner).not.toHaveBeenCalled()
+  })
+
+  it("delegates to the wrapped validator when the value is defined", () => {
+    const v = validators.optional<string>(validators.email())
+    expect(v("a@b.com", {})).toBe(true)
+    expect(v("not-an-email", {})).toBe("Expected a valid email address.")
+  })
+})
+
 describe("validators: numeric range/shape checks", () => {
   it.each<[string, Validator<number>, number, true | string]>([
     ["min(5)", validators.min(5), 5, true],

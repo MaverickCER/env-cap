@@ -57,6 +57,7 @@ import {
   notDefault,
   notOneOf,
   oneOf,
+  optional,
   past,
   positive,
   range,
@@ -154,6 +155,8 @@ export const validators = {
   notOneOf,
   /** Passes when the value is one of the `allowed` values. */
   oneOf,
+  /** Passes when the value is undefined, otherwise delegates to the provided validator. */
+  optional,
   /** Passes when the date is strictly before the current time. */
   past,
   /** Passes when the number is strictly positive. */

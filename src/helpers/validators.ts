@@ -137,6 +137,14 @@ export function oneOf<T>(allowed: readonly T[]): Validator<T> {
   return (value, _rawEnv) => allowed.includes(value) || `Expected one of: ${allowed.join(", ")}.`
 }
 
+/** Passes when the value is undefined, otherwise delegates to the provided validator. */
+export function optional<T>(validator: Validator<T>): Validator<T | undefined> {
+  return (value, rawEnv) => {
+    if (value === undefined) return true
+    return validator(value, rawEnv)
+  }
+}
+
 /** Passes when the date is strictly before the current time. */
 export function past(): Validator<Date> {
   return (value, _rawEnv) => value < new Date() || "Expected a past date."

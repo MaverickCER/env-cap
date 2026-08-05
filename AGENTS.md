@@ -63,6 +63,34 @@ and aggregated at build time. There is no global `env` object.
 - Spreading or `Object.entries()`-ing a whole contract "just to inspect it" —
   `console.log(paymentsEnv)` is safe by design, but `{...paymentsEnv}` triggers every
   getter and produces a plain object with every real value.
+- Manually constructing a contract collection when a generated manifest is available —
+  regenerate it instead: run the project's `generate:env` script if one exists, or call
+  `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` from
+  `@maverickcer/env-cap/build`, or run `npx env-cap --location
+src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection it
+  produces.
+- Validation managers, service locators, providers, registries, or other initialization
+  frameworks around `validateEnv()` — call it directly from the application's existing
+  startup path.
+
+## Migrating an existing app onto env-cap
+
+- Generated manifests are meant to be consumed by `validateEnv()` at runtime, and
+  generated artifacts (manifest, docs, `.env.example`, ownership report) are meant to be
+  consumed by tooling — prefer them over anything manually maintained, and treat them as
+  the source of truth.
+- To generate a manifest: check for an existing `generate:env` (or similarly named) npm
+  script first and run that. If none exists, either call
+  `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` (import from
+  `@maverickcer/env-cap/build`) from a build script, or run the CLI directly —
+  `npx env-cap --location src/generated/env.manifest.ts` (add `--docs`, `--env-example`,
+  `--strict`, etc. as needed; see the Public API map and `skills/env-cap/SKILL.md` for the
+  full option set). Commit the generated file only if the project already commits
+  generated artifacts; otherwise wire the command into CI.
+- Prefer migrations that are small, reviewable PRs covering one capability at a time,
+  preserve existing validation and runtime behavior, and avoid new infrastructure unless
+  it's actually required. See [`specs/migrations/`](specs/migrations/) for guide-by-guide
+  detail.
 
 ## Public API map
 
@@ -87,6 +115,8 @@ and aggregated at build time. There is no global `env` object.
 
 ## Full reference
 
-For architecture rationale, the complete decision history, and maintainer-only notes on
-modifying `env-cap`'s own source, see [`specs/architecture.md`](specs/architecture.md),
-[`specs/decisions/`](specs/decisions/), and [`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md).
+For architecture rationale, the complete decision history, migration guides, and
+maintainer-only notes on modifying `env-cap`'s own source, see
+[`specs/architecture.md`](specs/architecture.md), [`specs/decisions/`](specs/decisions/),
+[`specs/migrations/`](specs/migrations/), and
+[`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md).

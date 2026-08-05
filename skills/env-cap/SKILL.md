@@ -43,6 +43,8 @@ Non-negotiable. Verify any change respects these before finishing.
 - **Fetching live values or metadata inside `env.schema.ts`** — static `expiresAt` goes in `documentEnv()`; dynamic data goes through the separate `liveExpirationDates` callback (ADR 0012), kept in its own module.
 - **Treating two capabilities declaring the same variable name as automatically wrong** — allowed and common; only provably conflicting processor/validator return types are a hard error.
 - **Trying to relax an exclusive-group violation** — always a hard error (ADR 0009), no throw/warn knob. Set the old contract's `active: false` first.
+- **Manually constructing a contract collection when a generated manifest is available** — regenerate it instead: run the project's `generate:env` script if one exists; otherwise call `generateEnvManifest({ location })` (or `generateEnvArtifacts()` for multiple artifacts) from `@maverickcer/env-cap/build`, or run `npx env-cap --location <path>` from the CLI (see Consumer Usage below for the full call shape and options). Consume the resulting manifest — never hand-assemble the collection it produces.
+- **Introducing validation managers, service locators, providers, registries, or other initialization frameworks around `validateEnv()`** — call it directly from the application's existing startup path; env-cap does not need a bootstrapping layer.
 
 ## AI Workflow
 
@@ -147,6 +149,35 @@ A package ships its own `src/env.schema.ts` exactly like an app feature (`exampl
 ### Live/external metadata
 
 Dynamic values (e.g. a secret's real rotation date) can't live in a schema file — it's only ever statically parsed. Pass a `liveExpirationDates` callback to `generateEnvArtifacts()`/`generateDocumentation()` instead; it's invoked once, after discovery, with every discovered variable name, and its ISO-date results become per-variable `expiresAt` overrides (`examples/aws-secrets-manager/src/live-expirations.ts`, ADR 0012). Auth/caching/retries for that call are the consumer's own responsibility.
+
+## Migration Guidance
+
+Guides for moving an existing application onto env-cap live in `specs/migrations/` (from `dotenv`, raw `process.env`, a centralized schema, Zod, envalid, t3-env). Generated manifests exist to be consumed by `validateEnv()` at runtime, and generated artifacts (manifest, docs, `.env.example`, ownership report) exist to be consumed by tooling — prefer them over anything manually maintained whenever possible, and keep them as the source of truth rather than a hand-rolled equivalent.
+
+To generate a manifest: check for an existing `generate:env` (or similarly named) npm script first and run that — most consuming projects already wire one up. If none exists:
+
+```ts
+import { generateEnvManifest } from "@maverickcer/env-cap/build"
+
+await generateEnvManifest({ location: "src/generated/env.manifest.ts" })
+```
+
+or via the CLI:
+
+```sh
+npx env-cap --location src/generated/env.manifest.ts
+```
+
+Add `--docs <path>`/`docs: { location }` and `--env-example <path>`/`envExample: { location }` to generate documentation and a `.env.example` alongside it in one pass (`generateEnvArtifacts()` — see Consumer Usage above), and `--strict`/`--strict-docs`/`--strict-ownership` to make CI fail on incompatibilities instead of warning. Never hand-edit the resulting file — it's marked `AUTO-GENERATED FILE. DO NOT EDIT.`
+
+Across every migration guide, prefer:
+
+- Small, reviewable pull requests.
+- One capability per migration whenever practical.
+- Preserving existing validation.
+- Preserving existing runtime behavior.
+- Generated artifacts remaining the source of truth.
+- Avoiding new infrastructure unless required — no validation managers, service locators, providers, registries, or initialization frameworks. Call `validateEnv()` directly from the application's existing startup path.
 
 ## Maintainer Notes (modifying env-cap's own source)
 
