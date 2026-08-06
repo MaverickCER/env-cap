@@ -343,3 +343,4 @@ contract.
 | Declaration maps emitted by a separate `tsc` pass, not tsup's own `dts` pipeline               | [0020](decisions/0020-declaration-maps-via-separate-tsc-pass.md)                |
 | The manifest change report is a persisted, committed JSON sidecar snapshot                     | [0021](decisions/0021-manifest-change-report-persisted-snapshot.md)             |
 | Generic, declarative validation contexts (`context`/`activeContexts`)                          | [0022](decisions/0022-validation-contexts.md)                                   |
+| TypeScript path-alias resolution, on by default (Experimental)                                 | [0023](decisions/0023-tsconfig-path-alias-resolution.md)                        |

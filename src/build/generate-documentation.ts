@@ -16,6 +16,7 @@ import type { ParseWarning } from "./parse.js"
 import type { ImportResolutionContext } from "./resolve-import.js"
 import { mergeLocalAndPackageFiles, resolveAllowlistedPackages } from "./resolve-package-schema.js"
 import type { PackageSchemaResolutionResult } from "./resolve-package-schema.js"
+import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
 import { resolveWithinRoot } from "./resolve-within-root.js"
 
 /** Options for {@link generateDocumentation}. */
@@ -30,6 +31,8 @@ export interface GenerateDocumentationOptions {
   exclude?: string[] | undefined
   /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; see ADR 0014. */
   packages?: readonly string[] | undefined
+  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; see ADR 0023. */
+  tsconfig?: string | false | undefined
   /**
    * "warn" (default): an undocumented `createEnv()`/variable is reported in
    * `result.documentation` but never blocks generation. "throw": escalates
@@ -273,8 +276,19 @@ export async function generateDocumentation(
     localFiles,
     packageFiles.map((f) => f.file),
   )
+  const { resolution: tsconfigPaths, warning: tsconfigWarning } = await loadTsconfigPaths(
+    root,
+    options.tsconfig,
+  )
+  const tsconfigWarnings = tsconfigWarning ? [tsconfigWarning] : []
 
-  const context: ImportResolutionContext = { root, packages, cache: packageCache }
+  const context: ImportResolutionContext = {
+    root,
+    packages,
+    cache: packageCache,
+    tsconfigPaths,
+    aliasCache: createAliasResolutionCache(),
+  }
   const linkResult = await linkFiles(
     files,
     (filePath) => fs.readFile(filePath, "utf8"),
@@ -312,7 +326,7 @@ export async function generateDocumentation(
     envExample,
     contracts: computed.contractSummaries,
     catalog: computed.catalog,
-    parseWarnings: [...packageWarnings, ...linkResult.warnings],
+    parseWarnings: [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     documentation: computed.documentation,
   }
 }

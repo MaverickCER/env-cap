@@ -15,6 +15,7 @@ import {
   resolveAllowlistedPackages,
   type PackageSchemaResolutionResult,
 } from "./resolve-package-schema.js"
+import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
 import { resolveWithinRoot } from "./resolve-within-root.js"
 import {
   renderUsageReport,
@@ -44,6 +45,8 @@ export interface GenerateUsageReportOptions {
   exclude?: string[] | undefined
   /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; see ADR 0014. */
   packages?: readonly string[] | undefined
+  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; see ADR 0023. */
+  tsconfig?: string | false | undefined
   /** Escalates `abandonedContracts`/`unconsumedOwnedVariables` to a hard
    *  error. Never escalates `unresolvedConsumers` or `indeterminate` --
    *  both are "we don't know" states, at any setting. */
@@ -230,8 +233,19 @@ export async function generateUsageReport(
     localSchemaFiles,
     packageFiles.map((f) => f.file),
   )
+  const { resolution: tsconfigPaths, warning: tsconfigWarning } = await loadTsconfigPaths(
+    root,
+    options.tsconfig,
+  )
+  const tsconfigWarnings = tsconfigWarning ? [tsconfigWarning] : []
 
-  const context: ImportResolutionContext = { root, packages, cache: packageCache }
+  const context: ImportResolutionContext = {
+    root,
+    packages,
+    cache: packageCache,
+    tsconfigPaths,
+    aliasCache: createAliasResolutionCache(),
+  }
   const linkResult = await linkFiles(
     schemaFiles,
     (filePath) => fs.readFile(filePath, "utf8"),
@@ -248,7 +262,7 @@ export async function generateUsageReport(
     (filePath) => fs.readFile(filePath, "utf8"),
     onOwnershipIssue,
     context,
-    [...packageWarnings, ...linkResult.warnings],
+    [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
   )
   if (computed.blocking.length > 0) throw new EnvUsageAnalysisError(computed.blocking)
 

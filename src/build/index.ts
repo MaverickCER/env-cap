@@ -24,6 +24,13 @@
  * allowlist of installed package names) for discovering a schema that ships
  * inside a separately-published dependency rather than the project's own
  * source tree -- see ADR 0014 and VERSIONING.md.
+ *
+ * Each generator also accepts an Experimental `tsconfig` option for resolving
+ * import specifiers written as TypeScript path aliases (e.g. `"@/lib/env"`)
+ * against a project's own `tsconfig.json` `paths`/`baseUrl` during static
+ * analysis. Unlike `packages`, this is on by default (auto-detecting
+ * `tsconfig.json` at `root`) since it never crosses a trust/versioning
+ * boundary -- see ADR 0023 and VERSIONING.md.
  */
 
 // Orchestrators -- the entire public build API.

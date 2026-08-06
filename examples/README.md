@@ -1,6 +1,6 @@
 # Examples
 
-Eleven runnable projects, each demonstrating a distinct part of `env-cap`. Read them in this
+Thirteen runnable projects, each demonstrating a distinct part of `env-cap`. Read them in this
 order — each one assumes the concepts the previous ones already covered:
 
 1. **[basic-node](basic-node/)** — the simplest possible starting point: one centralized
@@ -54,16 +54,31 @@ order — each one assumes the concepts the previous ones already covered:
    doesn't match this run throws `EnvNotReadyError` — the same failure as reading before
    `validateEnv()` has run at all (see [ADR 0022](../specs/decisions/0022-validation-contexts.md)).
 
-Every example's own README documents exactly how to run it. All eleven are validated in CI
+9. **[tsconfig-aliases](tsconfig-aliases/)** — a contract imported only through a `"@/*"`
+   `tsconfig.json` path alias, never a relative import, resolved automatically by both the
+   app's own runtime (`tsx`) and `env-cap`'s static analysis (Experimental, on by default,
+   see [ADR 0023](../specs/decisions/0023-tsconfig-path-alias-resolution.md)) — no `tsconfig`
+   option passed. Demonstrates the actual bug this fixes: the generated Dependency &
+   Ownership Report correctly shows the contract's real consumer instead of misreporting it
+   as abandoned. Also installable as its own package, the same way `paypal-addon` is.
+
+10. **[tsconfig-aliases-consumer](tsconfig-aliases-consumer/)** — installs `tsconfig-aliases`
+    from a real packed tarball, the same producer/consumer shape as `paypal-addon`/
+    `paypal-consumer` above, while organizing its *own* local contract through its *own*
+    `"@/*"` alias. Proves ADR 0023 and ADR 0014 compose correctly in one real install: both
+    the alias-only-imported local contract and the cross-package contract show up as
+    consumed, never abandoned, in the same generated report.
+
+Every example's own README documents exactly how to run it. All thirteen are validated in CI
 (see `.github/workflows/ci.yml`'s `examples` job and [`test/examples/`](../test/examples/),
 one file per example, mirroring this directory 1:1) against the real, currently-built
 `@maverickcer/env-cap` package, so they stay in sync with the API rather than drifting
-silently — the ten that succeed are asserted on for their expected runtime output, and
+silently — the twelve that succeed are asserted on for their expected runtime output, and
 `multiple-active-exclusive-capabilities` is asserted on for its expected failure.
 
 ## `expected/` — golden regression fixtures
 
-Ten of the eleven examples (every one except `multiple-active-exclusive-capabilities`, which by
+Twelve of the thirteen examples (every one except `multiple-active-exclusive-capabilities`, which by
 design never successfully generates anything) carry an `expected/` directory mirroring their
 own generated-artifact paths — e.g. `basic-node/expected/src/generated/env.manifest.ts`
 alongside the real `basic-node/src/generated/env.manifest.ts`. CI regenerates each example for
@@ -86,7 +101,7 @@ change the output, here's the new baseline" step, not something that should ever
 ## Performance benchmarks
 
 [`performance-runtime/`](performance-runtime/) and [`performance-buildtime/`](performance-buildtime/)
-are project confidence tooling, not "start here" adoption samples like the eleven above — they exist
+are project confidence tooling, not "start here" adoption samples like the thirteen above — they exist
 to answer "does this scale," "did this regress," and "did that architectural decision actually pay
 off," for maintainers and prospective adopters evaluating env-cap at monorepo scale. Run via
 `npm run benchmark` from the repo root, or `npm run benchmark` inside either directory.

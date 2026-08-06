@@ -26,6 +26,7 @@ import {
   resolveAllowlistedPackages,
   type PackageSchemaResolutionResult,
 } from "./resolve-package-schema.js"
+import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
 import { resolveWithinRoot } from "./resolve-within-root.js"
 
 /** Options for {@link generateEnvManifest}. */
@@ -47,6 +48,17 @@ export interface GenerateEnvManifestOptions {
    * exact name appears here. See ADR 0014.
    */
   packages?: readonly string[] | undefined
+  /**
+   * **Experimental** (see VERSIONING.md) -- path to a tsconfig.json (relative to `root`)
+   * whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.
+   * `"@/lib/env.schema.js"`) encountered during static analysis, so a contract or consumer
+   * reached only through an alias isn't misreported as abandoned/unresolved. Defaults to
+   * `"tsconfig.json"` at `root` -- on automatically, no opt-in required, since (unlike
+   * `packages`) this never crosses a trust/versioning boundary: every resolved file is
+   * already local, already-trusted project source. Pass `false` to disable entirely. See
+   * ADR 0023.
+   */
+  tsconfig?: string | false | undefined
   /**
    * "warn" (default): only provable incompatibilities (conflicting explicit processor
    * return type annotations) block generation; everything else is reported as a warning.
@@ -167,8 +179,19 @@ export async function generateEnvManifest(
     localFiles,
     packageFiles.map((f) => f.file),
   )
+  const { resolution: tsconfigPaths, warning: tsconfigWarning } = await loadTsconfigPaths(
+    root,
+    options.tsconfig,
+  )
+  const tsconfigWarnings = tsconfigWarning ? [tsconfigWarning] : []
 
-  const context: ImportResolutionContext = { root, packages, cache: packageCache }
+  const context: ImportResolutionContext = {
+    root,
+    packages,
+    cache: packageCache,
+    tsconfigPaths,
+    aliasCache: createAliasResolutionCache(),
+  }
   const linkResult = await linkFiles(
     files,
     (filePath) => fs.readFile(filePath, "utf8"),
@@ -193,8 +216,8 @@ export async function generateEnvManifest(
     contracts: computed.contractSummaries,
     warnings: computed.warnings,
     parseWarnings: readWarning
-      ? [...packageWarnings, ...linkResult.warnings, readWarning]
-      : [...packageWarnings, ...linkResult.warnings],
+      ? [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings, readWarning]
+      : [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     changes,
   }
 }

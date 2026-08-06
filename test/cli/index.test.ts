@@ -89,6 +89,16 @@ describe("parseArgs", () => {
     expect(args.packages).toEqual(["@acme/pkg-a", "@acme/pkg-b"])
   })
 
+  it("parses --tsconfig <path> (ADR 0023)", () => {
+    const args = parseArgs(["--location", "out.ts", "--tsconfig", "tsconfig.build.json"])
+    expect(args.tsconfig).toBe("tsconfig.build.json")
+  })
+
+  it("parses --no-tsconfig as false, and leaves tsconfig undefined when neither flag is given", () => {
+    expect(parseArgs(["--location", "out.ts", "--no-tsconfig"]).tsconfig).toBe(false)
+    expect(parseArgs(["--location", "out.ts"]).tsconfig).toBeUndefined()
+  })
+
   it("sets strict, strict-docs, strict-ownership, json, check, and help flags", () => {
     expect(parseArgs(["--location", "out.ts", "--strict"]).strict).toBe(true)
     expect(parseArgs(["--location", "out.ts", "--strict-docs"]).strictDocs).toBe(true)

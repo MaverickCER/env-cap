@@ -135,6 +135,16 @@ The build system:
   is parsed. It never calls `readdir` on any directory, named package or
   not, and a package's own transitive dependencies are never considered.
 
+  A second, separate **Experimental** mechanism resolves TypeScript path
+  aliases (`compilerOptions.paths`/`baseUrl` in `tsconfig.json`) during
+  static analysis, on by default (see
+  [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)).
+  Unlike `packages`, it never crosses into `node_modules`: any resolution
+  landing on a path containing a `node_modules` segment is discarded, so a
+  bare specifier can only ever resolve into `node_modules` through the
+  `packages` mechanism above, never through alias resolution. It only ever
+  resolves to a real `.ts`/`.tsx` file already inside the scanned project.
+
 ## Application responsibilities
 
 `env-cap` intentionally does not attempt to solve problems outside the

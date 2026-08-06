@@ -578,6 +578,61 @@ describe("main() -- --exclude and --package flow through to generateEnvArtifacts
   })
 })
 
+describe("main() -- --tsconfig/--no-tsconfig flow through to generateEnvArtifacts() (ADR 0023, Experimental)", () => {
+  beforeEach(async () => {
+    await write(
+      "tsconfig.json",
+      JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["features/*"] } } }),
+    )
+    await write(
+      "features/alias-billing/env.schema.ts",
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "alias-billing" });\n`,
+    )
+    await write(
+      "src/alias-consumer.ts",
+      `import { billingEnv } from "@/alias-billing/env.schema.js";\nbillingEnv.INVOICE_KEY;\n`,
+    )
+  })
+
+  it("default (auto-detected tsconfig.json): the aliased contract is not reported abandoned", async () => {
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--include",
+      "features/alias-billing/env.schema.ts",
+      "--ownership",
+      "docs/alias.OWNERSHIP.md",
+    ]
+
+    await main()
+
+    const output = writes.join("")
+    expect(output).not.toContain("abandoned contract(s)")
+  })
+
+  it("--no-tsconfig disables alias resolution -- the same contract is now reported abandoned", async () => {
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--include",
+      "features/alias-billing/env.schema.ts",
+      "--ownership",
+      "docs/alias-disabled.OWNERSHIP.md",
+      "--no-tsconfig",
+    ]
+
+    await main()
+
+    const output = writes.join("")
+    expect(output).toContain("abandoned contract(s) (never imported anywhere):")
+    expect(output).toContain("- alias-billing (")
+  })
+})
+
 describe("main() -- manifest.warnings (compatibility warnings, non-strict)", () => {
   it("prints the compatibility-warning section when two contracts declare the same variable with differing, unannotated processors", async () => {
     await write(

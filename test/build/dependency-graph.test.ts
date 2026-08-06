@@ -7,6 +7,10 @@ import type { DiscoveredContract } from "../../src/build/link.js"
 import { buildDependencyGraph, deriveOwnershipFindings } from "../../src/build/dependency-graph.js"
 import type { ImportResolutionContext } from "../../src/build/resolve-import.js"
 import type { PackageSchemaResolutionResult } from "../../src/build/resolve-package-schema.js"
+import {
+  createAliasResolutionCache,
+  loadTsconfigPaths,
+} from "../../src/build/resolve-tsconfig-paths.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-dependency-graph")
@@ -20,13 +24,17 @@ async function write(relativePath: string, content: string): Promise<string> {
 
 const readFile = (filePath: string) => fs.readFile(filePath, "utf8")
 
-// No test in this file exercises cross-package discovery (ADR 0014) --
-// `packages: []` means resolveImportSpecifier's package fallback is never
-// invoked, so one shared, never-populated cache is safe to reuse everywhere.
+// No test in this file (outside the ADR 0014/0023-specific describe blocks
+// below) exercises cross-package discovery or tsconfig alias resolution --
+// `packages: []`/`tsconfigPaths: undefined` means resolveImportSpecifier's
+// package/alias fallbacks are never invoked, so one shared, never-populated
+// context is safe to reuse everywhere else.
 const context: ImportResolutionContext = {
   root: fixtureRoot,
   packages: [],
   cache: new Map<string, Promise<PackageSchemaResolutionResult>>(),
+  tsconfigPaths: undefined,
+  aliasCache: createAliasResolutionCache(),
 }
 
 async function discover(schemaFiles: string[]): Promise<readonly DiscoveredContract[]> {
@@ -505,7 +513,13 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         `import { pkgAEnv } from "@fixtures/pkg-a";\npkgAEnv.API_KEY;`,
       )
 
-      const packageContext = { root: fixtureRoot, packages: ["@fixtures/pkg-a"], cache: new Map() }
+      const packageContext: ImportResolutionContext = {
+        root: fixtureRoot,
+        packages: ["@fixtures/pkg-a"],
+        cache: new Map(),
+        tsconfigPaths: undefined,
+        aliasCache: createAliasResolutionCache(),
+      }
       const linkResult = await linkFiles([packageSchemaFile], readFile, packageContext)
       expect(linkResult.contracts).toHaveLength(1)
 
@@ -522,6 +536,64 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       expect(contract.consumingFiles).toEqual([consumerFile])
       expect(contract.variables.get("API_KEY")?.status).toBe("used")
       expect(findings.abandoned).toEqual([])
+    })
+  })
+
+  describe("tsconfig path alias resolution (ADR 0023, Experimental)", () => {
+    it("a contract declared under an aliased path, imported by a local consumer via the alias, is marked imported -- never abandoned", async () => {
+      await write(
+        "tsconfig.json",
+        JSON.stringify({
+          compilerOptions: {
+            baseUrl: ".",
+            paths: { "@/*": ["src/*"] },
+            module: "ESNext",
+            moduleResolution: "Bundler",
+          },
+        }),
+      )
+      const schemaFile = await write(
+        "src/env.schema.ts",
+        `export const aliasEnv = createEnv({ ALIAS_KEY: {} }, { name: "alias" });`,
+      )
+      const consumerFile = await write(
+        "consumer-of-alias.ts",
+        `import { aliasEnv } from "@/env.schema.js";\naliasEnv.ALIAS_KEY;`,
+      )
+
+      const { resolution, warning } = await loadTsconfigPaths(fixtureRoot, undefined)
+      expect(warning).toBeUndefined()
+      const aliasContext: ImportResolutionContext = {
+        root: fixtureRoot,
+        packages: [],
+        cache: new Map(),
+        tsconfigPaths: resolution!,
+        aliasCache: createAliasResolutionCache(),
+      }
+
+      const linkResult = await linkFiles([schemaFile], readFile, aliasContext)
+      expect(linkResult.contracts).toHaveLength(1)
+
+      const graph = await buildDependencyGraph(
+        linkResult.contracts,
+        [schemaFile, consumerFile],
+        readFile,
+        aliasContext,
+      )
+      const findings = deriveOwnershipFindings(graph)
+
+      const contract = graph.contracts[0]
+      expect(contract.imported).toBe(true)
+      expect(contract.consumingFiles).toEqual([consumerFile])
+      expect(contract.variables.get("ALIAS_KEY")?.status).toBe("used")
+      expect(findings.abandoned).toEqual([])
+      // Not just "not abandoned" -- ALIAS_KEY was actually member-accessed
+      // (`aliasEnv.ALIAS_KEY` above), so it must never show up as
+      // unconsumed or indeterminate either. Both come from the same
+      // per-variable status computed off the same alias-resolved import, so
+      // this is a real, independent check, not a restatement of the above.
+      expect(findings.unconsumedOwned).toEqual([])
+      expect(findings.indeterminate).toEqual([])
     })
   })
 })

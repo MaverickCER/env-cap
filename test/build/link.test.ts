@@ -5,6 +5,10 @@ import fs from "node:fs/promises"
 import { linkFiles } from "../../src/build/link.js"
 import type { ImportResolutionContext } from "../../src/build/resolve-import.js"
 import type { PackageSchemaResolutionResult } from "../../src/build/resolve-package-schema.js"
+import {
+  createAliasResolutionCache,
+  loadTsconfigPaths,
+} from "../../src/build/resolve-tsconfig-paths.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-link")
@@ -18,11 +22,14 @@ async function write(relativePath: string, content: string): Promise<string> {
 
 const readFile = (filePath: string) => fs.readFile(filePath, "utf8")
 
-// No test in this file exercises cross-package discovery (ADR 0014).
+// No test in this file (outside the alias-resolution test below) exercises
+// cross-package discovery (ADR 0014) or tsconfig alias resolution (ADR 0023).
 const context: ImportResolutionContext = {
   root: fixtureRoot,
   packages: [],
   cache: new Map<string, Promise<PackageSchemaResolutionResult>>(),
+  tsconfigPaths: undefined,
+  aliasCache: createAliasResolutionCache(),
 }
 
 beforeEach(async () => {
@@ -73,6 +80,46 @@ describe("linkFiles", () => {
     expect(result.contracts[0]?.documented).toBe(true)
     expect(result.contracts[0]?.owner).toBe("payments-team")
     expect(result.contracts[0]?.variables[0]?.description).toBe("Stripe secret key.")
+  })
+
+  it("resolves a documentEnv() schema reference imported through a tsconfig path alias (ADR 0023, Experimental)", async () => {
+    await write(
+      "tsconfig.json",
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: ".",
+          paths: { "@/*": ["*"] },
+          module: "ESNext",
+          moduleResolution: "Bundler",
+        },
+      }),
+    )
+    const schemaFile = await write(
+      "shipping/env.schema.ts",
+      `
+      export const shippingSchema = { CARRIER_KEY: {} };
+      export const shippingEnv = createEnv(shippingSchema, { name: "shipping" });
+      `,
+    )
+    const docsFile = await write(
+      "docs/shipping.docs.ts",
+      `
+      import { shippingSchema } from "@/shipping/env.schema.js";
+      documentEnv(shippingSchema, { variables: { CARRIER_KEY: { description: "Carrier API key." } } });
+      `,
+    )
+
+    const { resolution, warning } = await loadTsconfigPaths(fixtureRoot, undefined)
+    expect(warning).toBeUndefined()
+    const aliasContext: ImportResolutionContext = {
+      ...context,
+      tsconfigPaths: resolution,
+      aliasCache: createAliasResolutionCache(),
+    }
+
+    const result = await linkFiles([schemaFile, docsFile], readFile, aliasContext)
+    expect(result.contracts[0]?.documented).toBe(true)
+    expect(result.contracts[0]?.variables[0]?.description).toBe("Carrier API key.")
   })
 
   it("resolves a cross-file import aliased with `as`", async () => {

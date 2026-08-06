@@ -9,6 +9,7 @@ import { computeUsage, generateUsageReport } from "../../src/build/generate-usag
 import { linkFiles } from "../../src/build/link.js"
 import type { ImportResolutionContext } from "../../src/build/resolve-import.js"
 import type { PackageSchemaResolutionResult } from "../../src/build/resolve-package-schema.js"
+import { createAliasResolutionCache } from "../../src/build/resolve-tsconfig-paths.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-usage-generate")
@@ -96,6 +97,8 @@ describe("generateUsageReport", () => {
       root: fixtureRoot,
       packages: [],
       cache: new Map<string, Promise<PackageSchemaResolutionResult>>(),
+      tsconfigPaths: undefined,
+      aliasCache: createAliasResolutionCache(),
     }
     const schemaFiles = await discoverSchemaFiles({
       root: fixtureRoot,
@@ -203,6 +206,63 @@ describe("generateUsageReport", () => {
     ])
     expect(result.indeterminate).toEqual([
       expect.objectContaining({ contractName: "payroll", key: "BONUS_KEY" }),
+    ])
+  })
+})
+
+// Isolated from `fixtureRoot` above (own root, own beforeAll/afterAll) so this
+// suite's tsconfig.json doesn't affect any other test's default auto-detection.
+describe("generateUsageReport -- tsconfig path alias resolution (ADR 0023, Experimental)", () => {
+  const aliasRoot = path.resolve(here, "fixtures-usage-generate-tsconfig-aliases")
+
+  async function writeAliased(relativePath: string, content: string): Promise<string> {
+    const filePath = path.join(aliasRoot, relativePath)
+    await fs.mkdir(path.dirname(filePath), { recursive: true })
+    await fs.writeFile(filePath, content, "utf8")
+    return filePath
+  }
+
+  beforeAll(async () => {
+    await fs.rm(aliasRoot, { recursive: true, force: true })
+    await writeAliased(
+      "tsconfig.json",
+      JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["src/*"] } } }),
+    )
+    await writeAliased(
+      "src/features/billing/env.schema.ts",
+      `const billingSchema = { INVOICE_KEY: {} };
+      export const billingEnv = createEnv(billingSchema, { name: "billing" });`,
+    )
+    await writeAliased(
+      "src/consumer.ts",
+      `import { billingEnv } from "@/features/billing/env.schema.js";\nbillingEnv.INVOICE_KEY;`,
+    )
+  })
+
+  afterAll(async () => {
+    await fs.rm(aliasRoot, { recursive: true, force: true })
+  })
+
+  it("a contract only ever consumed through a tsconfig path alias is not misreported as abandoned (default: auto-detected tsconfig.json)", async () => {
+    const result = await generateUsageReport({ root: aliasRoot })
+
+    expect(result.abandonedContracts).toEqual([])
+    // Not just "not abandoned" -- INVOICE_KEY was actually member-accessed
+    // (`billingEnv.INVOICE_KEY` above), so it must never show up as
+    // unconsumed or indeterminate either.
+    expect(result.unconsumedOwnedVariables).toEqual([])
+    expect(result.indeterminate).toEqual([])
+    const billing = result.dependencyOwnership.find((e) => e.contractName === "billing")
+    expect(billing?.consumers).toEqual([
+      path.relative(aliasRoot, path.join(aliasRoot, "src/consumer.ts")),
+    ])
+  })
+
+  it("tsconfig: false reproduces the pre-ADR-0023 gap, for contrast -- the same contract misreported as abandoned", async () => {
+    const result = await generateUsageReport({ root: aliasRoot, tsconfig: false })
+
+    expect(result.abandonedContracts).toEqual([
+      expect.objectContaining({ contractName: "billing" }),
     ])
   })
 })

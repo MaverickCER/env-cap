@@ -51,6 +51,14 @@ needs:
   before ever parsing it — see
   [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md) and the
   updated `SECURITY.md` section for the exact bounds.
+- **TypeScript path-alias resolution (ADR 0023, Experimental) never crosses
+  into `node_modules`.** Unlike cross-package discovery, this mechanism is on
+  by default (a project's own `tsconfig.json` never crosses a
+  trust/versioning boundary the way an installed package does), but the
+  boundary between the two stays strict: any resolution landing inside
+  `node_modules` is discarded, so bare package specifiers remain exclusively
+  governed by the explicit `packages` allowlist above — see
+  [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md).
 - **Supply-chain posture:** dependency-free at runtime; CI enforces
   typecheck, lint, tests with coverage thresholds, cross-runtime conformance
   (Node/Bun/Deno), and a hard gzip size budget on every change; releases
@@ -63,9 +71,10 @@ needs:
 Full detail: [`VERSIONING.md`](VERSIONING.md). The three-tier model —
 **Stable** (semver-covered public runtime/build APIs, CLI flags, the `--json`
 schema, the generated manifest format), **Experimental** (explicitly labeled
-new surfaces, currently just cross-package discovery, that may still change
-shape before being promoted), and **Private** (internal implementation,
-never covered) — is what the eventual 1.0 stability promise will cover.
+new surfaces, currently cross-package discovery and tsconfig path-alias
+resolution, that may still change shape before being promoted), and
+**Private** (internal implementation, never covered) — is what the eventual
+1.0 stability promise will cover.
 
 **The honest gap or long-term support question, answered directly:**
 `env-cap` has not reached a 1.0 release, and today, per `SECURITY.md`,

@@ -344,6 +344,49 @@ describe("generateEnvArtifacts", () => {
     })
   })
 
+  describe("tsconfig path alias resolution (ADR 0023, Experimental)", () => {
+    beforeEach(async () => {
+      await write(
+        "tsconfig.json",
+        JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["src/*"] } } }),
+      )
+      await write(
+        "src/features/billing/env.schema.ts",
+        `export const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "billing" });
+        documentEnv({ INVOICE_KEY: {} }, { owner: "billing-team" });`,
+      )
+      await write(
+        "src/consumer.ts",
+        `import { billingEnv } from "@/features/billing/env.schema.js";\nbillingEnv.INVOICE_KEY;`,
+      )
+    })
+
+    it("a contract only reachable through an alias is discovered, documented, and not abandoned -- one loaded tsconfig, shared across all three passes (ADR 0011)", async () => {
+      const result = await generateEnvArtifacts({
+        root: fixtureRoot,
+        manifest: { location: "src/generated/alias.manifest.ts" },
+        docs: { location: "docs/alias.ENVIRONMENT.md" },
+        usage: { report: { location: "docs/alias.OWNERSHIP.md" } },
+      })
+
+      // Two contracts: the outer beforeEach's relatively-imported "payments" plus this block's aliased "billing".
+      expect(result.manifest!.contracts).toHaveLength(2)
+      expect(result.docs!.contracts).toHaveLength(2)
+      expect(result.usage!.dependencyOwnership).toHaveLength(2)
+      expect(result.usage!.abandonedContracts).toEqual([])
+      // Not just "not abandoned" -- INVOICE_KEY was actually member-accessed
+      // (`billingEnv.INVOICE_KEY` above), so it must never show up as
+      // unconsumed or indeterminate either.
+      expect(result.usage!.unconsumedOwnedVariables).toEqual([])
+      expect(result.usage!.indeterminate).toEqual([])
+
+      const billing = result.usage!.dependencyOwnership.find((e) => e.contractName === "billing")
+      expect(billing?.consumers).toEqual([
+        path.relative(fixtureRoot, path.join(fixtureRoot, "src/consumer.ts")),
+      ])
+    })
+  })
+
   it("still rejects an absolute output path outside root when only one pass is requested", async () => {
     const outside = path.join(os.tmpdir(), `env-cap-project-escape-test-${Date.now()}.ts`)
     await fs.rm(outside, { force: true })

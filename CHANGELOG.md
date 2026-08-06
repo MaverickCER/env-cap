@@ -8,6 +8,22 @@ once it reaches 1.0. Before 1.0, minor versions may include breaking changes.
 
 ## [Unreleased]
 
+- Build: **Experimental** TypeScript path-alias resolution -- a new `tsconfig`
+  option (and CLI `--tsconfig <path>` / `--no-tsconfig`) on `generateEnvManifest()`/
+  `generateDocumentation()`/`generateUsageReport()`/`generateEnvArtifacts()` resolves
+  import specifiers written as `tsconfig.json` path aliases (`"@/lib/env"`) during
+  static analysis, so a contract or `documentEnv()` call reached only through an alias
+  isn't misreported as abandoned/unresolved in the manifest, docs, or Dependency &
+  Ownership Report. Unlike `packages` (ADR 0014), this is on by default -- `tsconfig.json`
+  at `root` is auto-detected, matching `tsc`'s own behavior, since a project's own
+  tsconfig never crosses the trust/versioning boundary an installed package does. See
+  [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md) and
+  [`VERSIONING.md`](VERSIONING.md) for the Experimental-surface policy this ships under.
+  `examples/tsconfig-aliases` demonstrates it end to end, including the ownership-report
+  false positive it fixes; `examples/tsconfig-aliases-consumer` additionally installs it as
+  a real package (a real packed tarball, same shape as `examples/paypal-consumer`) to prove
+  this composes correctly with cross-package discovery (ADR 0014) in one run.
+
 ## [0.1.0] - 2026-08-02
 
 Initial release.

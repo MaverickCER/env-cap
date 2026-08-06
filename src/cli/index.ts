@@ -29,6 +29,7 @@ export interface ParsedArgs {
   include: string[]
   exclude: string[]
   packages: string[]
+  tsconfig?: string | false
   docs?: string
   envExample?: string
   envExampleOnExisting?: EnvExampleOnExisting
@@ -77,6 +78,12 @@ export function parseArgs(argv: string[]): ParsedArgs {
         break
       case "--package":
         args.packages.push(nonEmpty(argv[++i], "--package"))
+        break
+      case "--tsconfig":
+        args.tsconfig = nonEmpty(argv[++i], "--tsconfig")
+        break
+      case "--no-tsconfig":
+        args.tsconfig = false
         break
       case "--docs":
         args.docs = nonEmpty(argv[++i], "--docs")
@@ -151,6 +158,8 @@ Options:
   --include <glob>                 Schema-discovery glob (repeatable, default: **/env.schema.ts)
   --exclude <glob>                  Glob pattern to exclude (repeatable)
   --package <name>                  [Experimental, see ADR 0014] Installed package name to also discover a schema from, via its "envCap.schema" package.json field (repeatable)
+  --tsconfig <path>                 [Experimental, see ADR 0023] Path to a tsconfig.json (relative to root) whose "paths"/"baseUrl" resolve aliased imports encountered during static analysis (default: auto-detected "tsconfig.json" at root)
+  --no-tsconfig                     Disable tsconfig path-alias resolution entirely
   --docs <path>                     Also emit the rich Markdown docs artifact at this path
   --env-example <path>              Also emit a .env.example file at this path (only meaningful alongside --docs)
   --env-example-on-existing <mode>  What to do when --env-example's target already exists: keep-sibling (default, never overwrites -- writes a timestamped sibling instead), overwrite, or skip (write nothing). No effect with --check, which never writes anything regardless.
@@ -255,6 +264,7 @@ export async function main(): Promise<void> {
         include,
         exclude,
         packages,
+        tsconfig: args.tsconfig,
         manifest: args.location
           ? { location: args.location, onIncompatibility: args.strict ? "throw" : "warn" }
           : false,
@@ -316,6 +326,7 @@ export async function main(): Promise<void> {
       include,
       exclude,
       packages,
+      tsconfig: args.tsconfig,
       manifest: args.location
         ? { location: args.location, onIncompatibility: args.strict ? "throw" : "warn" }
         : false,

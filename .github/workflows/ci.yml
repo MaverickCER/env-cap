@@ -201,6 +201,30 @@ jobs:
           npm install
           npm run typecheck
 
+      # A contract imported only through a "@/*" tsconfig.json path alias,
+      # never a relative import, resolved automatically (no `tsconfig` option
+      # passed) by both env-cap's static analysis and tsx at runtime -- see
+      # test/examples/tsconfig-aliases.test.ts and ADR 0023. Also installable
+      # as its own package (like paypal-addon) -- built and packed here so
+      # tsconfig-aliases-consumer below can install it from a real tarball.
+      - name: tsconfig-aliases (typecheck, build, pack)
+        working-directory: examples/tsconfig-aliases
+        run: |
+          npm install
+          npm run typecheck
+          npm run pack:local
+
+      # Installs tsconfig-aliases's packed tarball and discovers its contract
+      # via `packages` (ADR 0014), while this app's own local contract is
+      # organized through its own "@/*" alias (ADR 0023) -- proves the two
+      # mechanisms compose in one real install. See
+      # test/examples/tsconfig-aliases-consumer.test.ts.
+      - name: tsconfig-aliases-consumer (installs tsconfig-aliases's packed tarball)
+        working-directory: examples/tsconfig-aliases-consumer
+        run: |
+          npm install
+          npm run typecheck
+
       # Runs each example's real npm scripts against its own committed,
       # fake-but-plausible `.env` file and asserts on real stdout -- the
       # actual runtime path (validateEnv -> read a validated value), not just

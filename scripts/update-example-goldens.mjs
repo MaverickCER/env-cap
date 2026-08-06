@@ -54,6 +54,8 @@ const EXAMPLES = {
   "duplicate-variable-metadata": { artifacts: STANDARD_ARTIFACTS },
   "split-generators": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
   "validation-contexts": { artifacts: STANDARD_ARTIFACTS },
+  "tsconfig-aliases": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
+  "tsconfig-aliases-consumer": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
 }
 
 function normalizeDocsForComparison(content) {

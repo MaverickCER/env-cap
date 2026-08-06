@@ -44,6 +44,7 @@ import type { ParseWarning } from "./parse.js"
 import type { ImportResolutionContext } from "./resolve-import.js"
 import { mergeLocalAndPackageFiles, resolveAllowlistedPackages } from "./resolve-package-schema.js"
 import type { PackageSchemaResolutionResult } from "./resolve-package-schema.js"
+import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
 import { resolveWithinRoot } from "./resolve-within-root.js"
 
 /** Options for {@link generateEnvArtifacts}. */
@@ -56,22 +57,24 @@ export interface GenerateEnvArtifactsOptions {
   exclude?: string[] | undefined
   /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; shared across every requested pass. See ADR 0014. */
   packages?: readonly string[] | undefined
+  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; shared across every requested pass. See ADR 0023. */
+  tsconfig?: string | false | undefined
   /** Manifest pass options, or `false` to skip it entirely. */
   manifest?:
-    | Omit<GenerateEnvManifestOptions, "root" | "include" | "exclude" | "packages">
+    | Omit<GenerateEnvManifestOptions, "root" | "include" | "exclude" | "packages" | "tsconfig">
     | false
     | undefined
   /** Docs pass options, or `false` to skip it entirely. */
   docs?:
     | Omit<
         GenerateDocumentationOptions,
-        "root" | "include" | "exclude" | "packages" | "liveExpirationDates"
+        "root" | "include" | "exclude" | "packages" | "tsconfig" | "liveExpirationDates"
       >
     | false
     | undefined
   /** Usage-report pass options, or `false` to skip it entirely. */
   usage?:
-    | Omit<GenerateUsageReportOptions, "root" | "include" | "exclude" | "packages">
+    | Omit<GenerateUsageReportOptions, "root" | "include" | "exclude" | "packages" | "tsconfig">
     | false
     | undefined
   /**
@@ -104,14 +107,15 @@ export interface GenerateEnvArtifactsResult {
 export interface ComputeArtifactsResult {
   readonly root: string
   readonly manifestOptions:
-    Omit<GenerateEnvManifestOptions, "root" | "include" | "exclude" | "packages"> | undefined
+    | Omit<GenerateEnvManifestOptions, "root" | "include" | "exclude" | "packages" | "tsconfig">
+    | undefined
   readonly manifestOutputPath: string | undefined
   readonly manifestComputed: ManifestComputation | undefined
   readonly manifestChanges: ManifestChangesComputation | undefined
   readonly docsOptions:
     | Omit<
         GenerateDocumentationOptions,
-        "root" | "include" | "exclude" | "packages" | "liveExpirationDates"
+        "root" | "include" | "exclude" | "packages" | "tsconfig" | "liveExpirationDates"
       >
     | undefined
   readonly docsPath: string | undefined
@@ -119,7 +123,8 @@ export interface ComputeArtifactsResult {
   readonly docsComputed: DocumentationComputation | undefined
   readonly docsContracts: readonly DiscoveredContract[]
   readonly usageOptions:
-    Omit<GenerateUsageReportOptions, "root" | "include" | "exclude" | "packages"> | undefined
+    | Omit<GenerateUsageReportOptions, "root" | "include" | "exclude" | "packages" | "tsconfig">
+    | undefined
   readonly usageReportPath: string | undefined
   readonly usageComputed: UsageComputation | undefined
   readonly blocking: readonly CompatibilityIssue[]
@@ -229,8 +234,19 @@ export async function computeArtifacts(
     localSchemaFiles,
     packageFiles.map((f) => f.file),
   )
+  const { resolution: tsconfigPaths, warning: tsconfigWarning } = await loadTsconfigPaths(
+    root,
+    options.tsconfig,
+  )
+  const tsconfigWarnings = tsconfigWarning ? [tsconfigWarning] : []
 
-  const context: ImportResolutionContext = { root, packages, cache: packageCache }
+  const context: ImportResolutionContext = {
+    root,
+    packages,
+    cache: packageCache,
+    tsconfigPaths,
+    aliasCache: createAliasResolutionCache(),
+  }
   const linkResult = await linkFiles(schemaFiles, readFileCached, context, origins)
   const generatedAt = new Date()
 
@@ -273,7 +289,7 @@ export async function computeArtifacts(
       readFileCached,
       usageOptions.onOwnershipIssue ?? "warn",
       context,
-      [...packageWarnings, ...linkResult.warnings],
+      [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     )
     blocking.push(...usageComputed.blocking)
   }
@@ -293,7 +309,7 @@ export async function computeArtifacts(
     usageReportPath,
     usageComputed,
     blocking,
-    packageWarnings,
+    packageWarnings: [...packageWarnings, ...tsconfigWarnings],
     linkWarnings: linkResult.warnings,
     generatedAt,
   }

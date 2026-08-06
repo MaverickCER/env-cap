@@ -55,13 +55,16 @@ interface BuildingContract {
  * Builds the dependency graph: for every discovered contract, which files
  * import it and which of its variables are actually read. Resolves import
  * specifiers via `resolveImportSpecifier` (relative imports, plus -- since
- * ADR 0014 -- bare specifiers matching an allow-listed package) -- same
- * identity shape `link.ts` already uses (`file#exportName`), no new scheme.
- * Wiring `resolveImportSpecifier` in here (not just `link.ts`) is load-
- * bearing, not optional: without it, a cross-package contract's consumer
- * (`import { x } from "@acme/pkg"`) could never resolve, and the contract
- * would be misreported as `abandoned` by `deriveOwnershipFindings` below.
- * Never executes any scanned file.
+ * ADR 0023 -- a bare specifier matching the project's own `tsconfig.json`
+ * `paths`/`baseUrl`, plus -- since ADR 0014 -- a bare specifier matching an
+ * allow-listed package) -- same identity shape `link.ts` already uses
+ * (`file#exportName`), no new scheme. Wiring `resolveImportSpecifier` in
+ * here (not just `link.ts`) is load-bearing, not optional: without it, a
+ * contract's consumer reached only through an alias (`import { x } from
+ * "@/contracts/x"`) or a cross-package import (`import { x } from
+ * "@acme/pkg"`) could never resolve, and the contract would be misreported
+ * as `abandoned` by `deriveOwnershipFindings` below. Never executes any
+ * scanned file.
  */
 export async function buildDependencyGraph(
   contracts: readonly DiscoveredContract[],

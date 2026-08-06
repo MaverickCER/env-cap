@@ -590,6 +590,38 @@ See `SECURITY.md`'s "Avoids unnecessary traversal of dependency directories" sec
 
 ---
 
+## TypeScript path aliases (paths/baseUrl)
+
+If your project organizes its own source with a `tsconfig.json` path alias (`"@/lib/env"`, `"~/schema/env"`, ...), `env-cap` resolves it automatically — no configuration required:
+
+```ts
+// tsconfig.json
+{ "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["src/*"] } } }
+```
+
+```ts
+// src/consumer.ts
+import { paymentsEnv } from "@/features/payments/env.schema.js"
+paymentsEnv.STRIPE_KEY
+```
+
+Without this, a contract only ever imported through an alias would be misreported as `abandoned` in the Dependency & Ownership Report, or its `documentEnv()` call left unlinked — the same class of false positive [ADR 0010](specs/decisions/0010-dependency-ownership-engine-scope-boundary.md)'s ownership engine exists to avoid.
+
+See [`examples/tsconfig-aliases`](examples/tsconfig-aliases) for a complete, runnable example, and [`examples/tsconfig-aliases-consumer`](examples/tsconfig-aliases-consumer) for the same producer/consumer pairing [Reusable packages](#reusable-packages) uses — proving this composes correctly with cross-package discovery (ADR 0014) in one real install (one of several runnable examples — see [`examples/`](examples/) for the full set and suggested reading order).
+
+Unlike [Reusable packages](#reusable-packages) above, this is on by default (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)): a project's own `tsconfig.json` never crosses a trust/versioning boundary the way an installed package does, so there's no safety reason to require opt-in. `env-cap` auto-detects `tsconfig.json` at `root`, exactly (no upward directory search, unlike bare `tsc`). Pass `tsconfig: "<path>"` to point at a different file (useful in monorepos where the relevant config isn't at `root`), or `tsconfig: false` to disable alias resolution entirely:
+
+```ts
+await generateEnvArtifacts({
+  tsconfig: "tsconfig.build.json", // or `false` to disable
+  manifest: { location: "src/env.manifest.ts" },
+})
+```
+
+The actual `paths`/`baseUrl` matching is delegated entirely to the TypeScript compiler (`ts.resolveModuleName()`, the same function `tsc`/`tsserver` themselves use), never resolves into `node_modules` (that boundary stays exclusively [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)'s), and only ever resolves to a real `.ts`/`.tsx` file.
+
+---
+
 ## Architecture
 
 ### Runtime and build-time are intentionally separate
@@ -761,6 +793,12 @@ Discovery only understands statically analyzable patterns — an inline object l
 A dynamically constructed schema (`createEnv(buildSchema())`) or a spread (`createEnv({ ...shared })`) may produce a parse warning instead of silently guessing.
 
 Check `result.parseWarnings` or the CLI's non-JSON output for the specific reason (see [ADR 0002](specs/decisions/0002-static-analysis-never-execution.md)).
+
+**"A contract imported through a `tsconfig.json` path alias shows up as abandoned / a `documentEnv()` call through an alias is unresolved."**
+
+Confirm `tsconfig.json` is actually at `root` (auto-detection doesn't search upward) and declares `paths`/`baseUrl`, or that an explicit `tsconfig` option points at the right file. Confirm `tsconfig` wasn't set to `false`.
+
+This mechanism is Experimental (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)) -- see [TypeScript path aliases](#typescript-path-aliases-pathsbaseurl) above.
 
 **"A package's contract isn't discoverable even though I listed it in `packages`."**
 
@@ -1113,7 +1151,7 @@ The architecture is considered stable, but APIs may continue to evolve based on 
 See [`VERSIONING.md`](VERSIONING.md) for:
 
 - semver guarantees
-- Experimental features (currently cross-package schema discovery)
+- Experimental features (currently cross-package schema discovery and tsconfig path-alias resolution)
 - private implementation details
 
 See [`ADOPTION.md`](ADOPTION.md) for a decision-maker summary covering:
