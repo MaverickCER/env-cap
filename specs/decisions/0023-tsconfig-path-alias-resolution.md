@@ -75,8 +75,7 @@ systematically inaccurate.
 
 4. **The gate for building a resolution is "`paths` non-empty OR `baseUrl` set,"
    not `paths` alone.** A `baseUrl`-only tsconfig (no `paths` at all) still makes
-   TypeScript resolve bare specifiers relative to `baseUrl` (e.g. `import "src/env/schema"`
-   with `"baseUrl": "."`), and `ts.resolveModuleName()` already handles that once
+   TypeScript resolve bare specifiers relative to `baseUrl` (e.g. `import "./src/env/schema"`), and `ts.resolveModuleName()` already handles that once
    `compilerOptions.baseUrl` is passed through -- gating on `paths` alone would silently
    drop this real, common case.
 

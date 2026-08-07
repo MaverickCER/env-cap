@@ -53,6 +53,49 @@ This separation is enforced through automated checks. The tree-shaking tests
 and bundle-size checks fail if runtime consumers accidentally receive build
 tooling or unrelated helper code.
 
+```mermaid
+flowchart TB
+    subgraph RUNTIME["package root - runtime (isomorphic)<br/>zero npm dependencies, no fs, no Node APIs"]
+        CREATE["createEnv()"]
+        DOCFN["documentEnv()<br/>(inert at runtime - a marker only)"]
+        VALIDATE["validateEnv()"]
+        REG["registry (WeakMap) + cache"]
+    end
+
+    subgraph HELPERS["./helpers - optional"]
+        PROC["processors.*"]
+        VALID["validators.*"]
+    end
+
+    subgraph BUILD["./build - Node-only, dev/CI tooling"]
+        DISCOVER["discoverSchemaFiles()"]
+        PARSE["parseSchemaFile()<br/>TS compiler API - parses AST,<br/>never imports/executes the file"]
+        LINK["linkFiles()"]
+        CHECKS["detectCompatibilityIssues()<br/>detectExclusiveGroupIssues()"]
+        GEN["generateEnvManifest / Documentation /<br/>UsageReport / EnvArtifacts"]
+        CHECKMODE["checkEnvArtifacts() - the --check flag"]
+        DISCOVER --> PARSE --> LINK --> CHECKS --> GEN
+        GEN -.->|"same discovery + link,<br/>compare instead of write"| CHECKMODE
+    end
+
+    subgraph ESLINT["./eslint-plugin"]
+        RULE["no-raw-process-env rule"]
+    end
+
+    subgraph CLIBIN["env-cap bin - src/cli/"]
+        MAIN["parseArgs() / main()"]
+    end
+
+    HELPERS -->|"type-only import:<br/>Processor / Validator"| RUNTIME
+    CLIBIN -->|"imports build's public<br/>src/build/index.ts"| BUILD
+```
+
+`build`, `eslint-plugin`, and `runtime` have no edges between them above
+because none exist: each owns its own copy of shared internals (e.g.
+`glob.ts`) rather than importing from another entry point. `helpers`' single
+edge is type-only and erased at compile time. This is what the tree-shaking
+and bundle-size tests in the previous paragraph actually verify.
+
 ## `runtime/` — define, validate, cache, and expose environment values
 
 The runtime package contains only the functionality required while an
@@ -206,29 +249,18 @@ contracts.
 
 The relationship is therefore not a runtime pipeline:
 
-```
+```mermaid
+flowchart TB
+    SCHEMA["env.schema.ts"]
 
-env.schema.ts
+    SCHEMA --> CREATECALL["createEnv(schema)"]
+    CREATECALL --> CONTRACT["runtime contract"]
+    CONTRACT --> VALIDATECALL["validateEnv()"]
+    VALIDATECALL --> VALUES["validated in-memory values"]
 
-createEnv(schema)
-│
-▼
-runtime contract
-│
-▼
-validateEnv()
-│
-▼
-validated in-memory values
-
-documentEnv(schema, docs)
-│
-▼
-build-time analysis only
-│
-▼
-manifest / documentation / example artifacts
-
+    SCHEMA --> DOCCALL["documentEnv(schema, docs)"]
+    DOCCALL --> BUILDANALYSIS["build-time AST analysis only"]
+    BUILDANALYSIS --> ARTIFACTS["manifest / documentation / example artifacts"]
 ```
 
 The same schema file can contain both calls, but they serve different
@@ -238,6 +270,82 @@ consumers:
 - build tooling consumes `documentEnv()`
 
 ## Data flow
+
+```mermaid
+flowchart TB
+    subgraph AUTHOR["1 - Author time (capability owner)"]
+        SCHEMA["features/payments/env.schema.ts<br/>createEnv(schema) + documentEnv(schema, docs)"]
+    end
+
+    subgraph BUILDTIME["2 - Build time - shared compute pipeline<br/>(explicit CLI / npm script / CI step, never automatic at startup)"]
+        DISCOVER["discoverSchemaFiles()<br/>glob scan, + optional --package allowlist,<br/>+ optional tsconfig path-alias resolution"]
+        PARSE["parseSchemaFile()<br/>TypeScript AST - static analysis,<br/>schema file is never imported/executed"]
+        LINK["linkFiles()<br/>pairs createEnv()/documentEnv() calls<br/>into DiscoveredContract objects"]
+        CHECKS{"detectCompatibilityIssues()<br/>detectExclusiveGroupIssues()<br/>blocking finding?"}
+        THROW["EnvProjectGenerationError<br/>nothing written, either mode"]
+
+        DISCOVER --> PARSE --> LINK --> CHECKS
+        CHECKS -- yes --> THROW
+    end
+
+    SCHEMA -.->|explicit run| DISCOVER
+
+    subgraph WRITE["2a - generateEnvArtifacts() (default: write)"]
+        MANIFEST["env.manifest.ts<br/>renderManifest()"]
+        SNAPSHOT["env.manifest.snapshot.json<br/>diff sidecar, ADR 0021"]
+        DOCS["ENVIRONMENT.md<br/>renderDocs()"]
+        EXAMPLE[".env.example<br/>renderEnvExample(), reconciled<br/>against the existing file"]
+        OWNERSHIP["OWNERSHIP.md<br/>broader source scan -><br/>dependency graph -> ownership findings"]
+        MANIFEST --> SNAPSHOT
+    end
+
+    subgraph CHECKPATH["2b - checkEnvArtifacts() (--check: compare, never write)"]
+        COMPARE["recompute every requested artifact,<br/>diff against what's already on disk"]
+    end
+
+    CHECKS -- "no, writing" --> MANIFEST & DOCS & EXAMPLE & OWNERSHIP
+    CHECKS -- "no, check mode" --> COMPARE
+
+    subgraph CI["3 - CI enforcement"]
+        GHACTION["GitHub Action (action.yml)<br/>env-cap --json -> PR annotations +<br/>sticky summary comment"]
+        ROTATION["rotation-alert GitHub issue<br/>on scheduled/non-PR runs -<br/>opens/auto-closes on expiringSoon"]
+        GHACTION --> ROTATION
+    end
+
+    COMPARE -->|exit 1 on drift| GHACTION
+
+    subgraph STARTUP["4 - Process startup"]
+        IMPORT["application imports<br/>the generated manifest"]
+        VALIDATECALL["validateEnv({ manifest,<br/>values: process.env, activeContexts })"]
+        PERVAR["per variable: context match?<br/>-> default -> processor -> validator<br/>-> freeze into cache"]
+        ERR["EnvValidationError<br/>aggregated failures"]
+        CACHED["cached validated result<br/>(one-shot per process)"]
+
+        IMPORT --> VALIDATECALL --> PERVAR
+        PERVAR -- "any invalid" --> ERR
+        PERVAR -- "all valid" --> CACHED
+    end
+
+    MANIFEST --> IMPORT
+
+    subgraph RUNTIME_ACCESS["5 - Runtime access"]
+        ACCESS["feature code imports the<br/>contract it owns:<br/>paymentsEnv.STRIPE_KEY"]
+        NOTREADY["EnvNotReadyError<br/>if read before validateEnv() resolves"]
+    end
+
+    CACHED --> ACCESS
+    ACCESS -. "read before ready" .-> NOTREADY
+```
+
+`generateEnvArtifacts()` and `checkEnvArtifacts()` share one
+`computeArtifacts()` pass (discovery, parsing, linking, and blocking-finding
+checks) and only diverge at the last step: write, or compare-and-report (see
+[ADR 0011](decisions/0011-shared-discovery-compute-atomic-write-non-atomic.md)
+and [ADR 0016](decisions/0016-check-mode-compute-before-compare-never-partial-write.md)).
+Manifest, docs, `.env.example`, and the ownership report are each optional
+per invocation (`--location`/`--docs`/`--ownership`) and only appear above
+when requested. The GitHub Action wraps whichever mode a workflow invokes
+`env-cap --json` with.
 
 ### 1. Author time
 
@@ -299,6 +407,17 @@ Each contract, per variable:
 4. runs its processor
 5. runs its validator
 6. stores the frozen validated result
+
+```mermaid
+flowchart LR
+    START(["for each variable<br/>in the contract"]) --> CTX{"has a context,<br/>and it's not in<br/>activeContexts?"}
+    CTX -- "yes - skip" --> SKIP["stays not-ready,<br/>as if this run<br/>never happened"]
+    CTX -- "no - participates" --> RAW["read raw value"]
+    RAW --> DEFAULT["apply default"]
+    DEFAULT --> PROC["run processor"]
+    PROC --> VALID["run validator"]
+    VALID --> FREEZE["store frozen<br/>validated result"]
+```
 
 Failures are aggregated into `EnvValidationError` rather than stopping at
 the first invalid variable.

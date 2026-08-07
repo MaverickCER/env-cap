@@ -596,7 +596,7 @@ If your project organizes its own source with a `tsconfig.json` path alias (`"@/
 
 ```ts
 // tsconfig.json
-{ "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["src/*"] } } }
+{ "compilerOptions": { "paths": { "@/*": ["./src/*"] } } }
 ```
 
 ```ts
