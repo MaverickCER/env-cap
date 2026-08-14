@@ -1,7 +1,7 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import type { DiscoveredContract } from "./link.js"
-import type { ParseWarning } from "./parse.js"
+import type { DiscoveredClassification, ParseWarning } from "./parse.js"
 
 /**
  * The manifest's own `.ts` output is deliberately metadata-free (imports +
@@ -22,6 +22,7 @@ export interface ManifestSnapshotVariable {
   readonly key: string
   readonly description: string | undefined
   readonly owner: string | undefined
+  readonly classification: DiscoveredClassification | undefined
   readonly expiresAt: string | undefined
   readonly refreshInstructions: string | undefined
   readonly required: boolean | undefined
@@ -38,6 +39,7 @@ export interface ManifestSnapshotContract {
   readonly category: string | undefined
   readonly exclusiveGroup: string | undefined
   readonly owner: string | undefined
+  readonly classification: DiscoveredClassification | undefined
   readonly expiresAt: string | undefined
   readonly metadata: Readonly<Record<string, string>> | undefined
   readonly variables: readonly ManifestSnapshotVariable[]
@@ -67,6 +69,7 @@ export function buildManifestSnapshot(
     category: contract.category,
     exclusiveGroup: contract.exclusiveGroup,
     owner: contract.owner,
+    classification: contract.classification,
     expiresAt: contract.expiresAt,
     metadata: contract.metadata,
     variables: [...contract.variables]
@@ -75,6 +78,7 @@ export function buildManifestSnapshot(
         key: variable.key,
         description: variable.description,
         owner: variable.owner,
+        classification: variable.classification,
         expiresAt: variable.expiresAt,
         refreshInstructions: variable.refreshInstructions,
         required: variable.required,
@@ -269,6 +273,7 @@ function contractFieldChanges(
   pushIfDifferent(changes, "category", previous.category, current.category)
   pushIfDifferent(changes, "exclusiveGroup", previous.exclusiveGroup, current.exclusiveGroup)
   pushIfDifferent(changes, "owner", previous.owner, current.owner)
+  pushIfDifferent(changes, "classification", previous.classification, current.classification)
   pushIfDifferent(changes, "expiresAt", previous.expiresAt, current.expiresAt)
   changes.push(...recordFieldChanges(previous.metadata, current.metadata, "metadata"))
   return changes
@@ -281,6 +286,7 @@ function variableFieldChanges(
   const changes: ManifestFieldChange[] = []
   pushIfDifferent(changes, "description", previous.description, current.description)
   pushIfDifferent(changes, "owner", previous.owner, current.owner)
+  pushIfDifferent(changes, "classification", previous.classification, current.classification)
   pushIfDifferent(changes, "expiresAt", previous.expiresAt, current.expiresAt)
   pushIfDifferent(
     changes,

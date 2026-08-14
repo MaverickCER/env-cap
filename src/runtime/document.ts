@@ -1,5 +1,8 @@
 import type { EnvSchema } from "./types.js"
 
+/** How sensitive a variable's value is -- feeds classification-aware findings and reports (e.g. flagging a secret with no rotation guidance). */
+export type VariableClassification = "secret" | "credential" | "pii" | "config"
+
 /**
  * Per-variable documentation. Every field is optional and unconstrained on
  * purpose -- there is no required shape, so documenting a variable never
@@ -11,6 +14,8 @@ export interface VariableDocs {
   description?: string
   /** Who owns this variable (a team, a handle, whatever your org uses). Overrides the contract's own `owner` for this key. */
   owner?: string
+  /** How sensitive this variable's value is. Overrides the contract's own `classification` for this key. */
+  classification?: VariableClassification
   /** ISO date string (e.g. "2026-06-01") -- when this variable's current value stops being valid (a key rotation deadline, a sunset date, etc.). */
   expiresAt?: string
   /** How to get a new value before/when it expires (e.g. "Rotate in the Stripe dashboard, then redeploy."). */
@@ -33,6 +38,8 @@ export interface ContractDocs {
   active?: boolean
   /** Default owner for every variable in this contract that doesn't set its own `owner`. */
   owner?: string
+  /** Default classification for every variable in this contract that doesn't set its own `classification`. */
+  classification?: VariableClassification
   /** Whole-contract/feature sunset date, ISO date string. */
   expiresAt?: string
   /** Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this feature. */

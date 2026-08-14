@@ -316,6 +316,7 @@ describe("extractContractDocs", () => {
     expect(docs.category).toBeUndefined()
     expect(docs.exclusiveGroup).toBeUndefined()
     expect(docs.owner).toBeUndefined()
+    expect(docs.classification).toBeUndefined()
     expect(docs.expiresAt).toBeUndefined()
     expect(docs.variables.size).toBe(0)
   })
@@ -329,12 +330,14 @@ describe("extractContractDocs", () => {
         category: "database",
         exclusiveGroup: "database",
         owner: "data-platform",
+        classification: "credential",
         expiresAt: "2026-01-01",
         metadata: { runbook: "https://wiki.internal/postgres" },
         variables: {
           DATABASE_URL: {
             description: "Postgres connection string.",
             owner: "data-platform",
+            classification: "secret",
             expiresAt: "2026-06-01",
             refreshInstructions: "Rotate in the RDS console.",
             required: true,
@@ -353,16 +356,30 @@ describe("extractContractDocs", () => {
       category: "database",
       exclusiveGroup: "database",
       owner: "data-platform",
+      classification: "credential",
       expiresAt: "2026-01-01",
       metadata: { runbook: "https://wiki.internal/postgres" },
     })
     const dbUrl = docs.variables.get("DATABASE_URL")!
     expect(dbUrl.description).toBe("Postgres connection string.")
     expect(dbUrl.owner).toBe("data-platform")
+    expect(dbUrl.classification).toBe("secret")
     expect(dbUrl.expiresAt).toBe("2026-06-01")
     expect(dbUrl.refreshInstructions).toBe("Rotate in the RDS console.")
     expect(dbUrl.required).toBe(true)
     expect(dbUrl.extra).toEqual({ setup: "Ask #data-platform for a connection string." })
+  })
+
+  it("warns and ignores classification when not one of the known values", async () => {
+    const warnings: { file: string; message: string }[] = []
+    const docs = extractContractDocs(
+      objectLiteral(`{ classification: "top-secret" }`),
+      "/repo/x.ts",
+      "weird",
+      warnings,
+    )
+    expect(docs.classification).toBeUndefined()
+    expect(warnings.some((w) => w.message.includes('"classification"'))).toBe(true)
   })
 
   it("warns and defaults to active: true when active is not a statically-resolvable boolean literal", async () => {

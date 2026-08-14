@@ -28,6 +28,7 @@ function makeVariable(
     context: undefined,
     description: undefined,
     owner: undefined,
+    classification: undefined,
     expiresAt: undefined,
     refreshInstructions: undefined,
     required: undefined,
@@ -50,6 +51,7 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
+    classification: undefined,
     expiresAt: undefined,
     metadata: undefined,
     documented: true,
@@ -106,12 +108,14 @@ describe("buildManifestSnapshot", () => {
       file: "/repo/a/env.schema.ts",
       exportName: "aEnv",
       owner: "team-a",
+      classification: "credential",
       metadata: { service: "A" },
       variables: [
         makeVariable({
           key: "KEY",
           description: "desc",
           owner: "var-owner",
+          classification: "secret",
           expiresAt: "2030-01-01",
           refreshInstructions: "rotate",
           required: true,
@@ -128,6 +132,7 @@ describe("buildManifestSnapshot", () => {
       category: undefined,
       exclusiveGroup: undefined,
       owner: "team-a",
+      classification: "credential",
       expiresAt: undefined,
       metadata: { service: "A" },
       variables: [
@@ -135,6 +140,7 @@ describe("buildManifestSnapshot", () => {
           key: "KEY",
           description: "desc",
           owner: "var-owner",
+          classification: "secret",
           expiresAt: "2030-01-01",
           refreshInstructions: "rotate",
           required: true,
@@ -192,6 +198,7 @@ describe("readManifestSnapshot / writeManifestSnapshot", () => {
           category: undefined,
           exclusiveGroup: undefined,
           owner: undefined,
+          classification: undefined,
           expiresAt: undefined,
           metadata: undefined,
           variables: [
@@ -199,6 +206,7 @@ describe("readManifestSnapshot / writeManifestSnapshot", () => {
               key: "KEY",
               description: "desc",
               owner: undefined,
+              classification: undefined,
               expiresAt: undefined,
               refreshInstructions: undefined,
               required: undefined,
@@ -233,6 +241,7 @@ describe("diffManifestSnapshots", () => {
       category: undefined,
       exclusiveGroup: undefined,
       owner: undefined,
+      classification: undefined,
       expiresAt: undefined,
       metadata: undefined,
       variables: [],
@@ -248,6 +257,7 @@ describe("diffManifestSnapshots", () => {
     return {
       description: undefined,
       owner: undefined,
+      classification: undefined,
       expiresAt: undefined,
       refreshInstructions: undefined,
       required: undefined,
@@ -346,6 +356,7 @@ describe("diffManifestSnapshots", () => {
         file: "a/env.schema.ts",
         exportName: "aEnv",
         owner: "team-a",
+        classification: "config",
         metadata: { service: "A" },
       }),
     ])
@@ -354,6 +365,7 @@ describe("diffManifestSnapshots", () => {
         file: "a/env.schema.ts",
         exportName: "aEnv",
         owner: "team-b",
+        classification: "credential",
         metadata: { service: "A2" },
       }),
     ])
@@ -363,6 +375,7 @@ describe("diffManifestSnapshots", () => {
     expect(report.updatedContracts[0]?.changes).toEqual(
       expect.arrayContaining([
         { field: "owner", previous: "team-a", current: "team-b" },
+        { field: "classification", previous: "config", current: "credential" },
         { field: "metadata.service", previous: "A", current: "A2" },
       ]),
     )

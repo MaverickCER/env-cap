@@ -3,12 +3,12 @@ import { fileURLToPath } from "node:url"
 import path from "node:path"
 import fs from "node:fs/promises"
 import { linkFiles } from "../../src/build/link.js"
-import type { ImportResolutionContext } from "../../src/build/resolve-import.js"
-import type { PackageSchemaResolutionResult } from "../../src/build/resolve-package-schema.js"
+import type { ImportResolutionContext } from "../../src/build/resolution/resolve-import.js"
+import type { PackageSchemaResolutionResult } from "../../src/build/resolution/resolve-package-schema.js"
 import {
   createAliasResolutionCache,
   loadTsconfigPaths,
-} from "../../src/build/resolve-tsconfig-paths.js"
+} from "../../src/build/resolution/resolve-tsconfig-paths.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-link")
@@ -71,7 +71,7 @@ describe("linkFiles", () => {
       "docs/payments.docs.ts",
       `
       import { paymentsSchema } from "../payments/env.schema.js";
-      documentEnv(paymentsSchema, { owner: "payments-team", variables: { STRIPE_KEY: { description: "Stripe secret key." } } });
+      documentEnv(paymentsSchema, { owner: "payments-team", classification: "credential", variables: { STRIPE_KEY: { description: "Stripe secret key.", classification: "secret" } } });
       `,
     )
 
@@ -79,7 +79,9 @@ describe("linkFiles", () => {
     expect(result.contracts).toHaveLength(1)
     expect(result.contracts[0]?.documented).toBe(true)
     expect(result.contracts[0]?.owner).toBe("payments-team")
+    expect(result.contracts[0]?.classification).toBe("credential")
     expect(result.contracts[0]?.variables[0]?.description).toBe("Stripe secret key.")
+    expect(result.contracts[0]?.variables[0]?.classification).toBe("secret")
   })
 
   it("resolves a documentEnv() schema reference imported through a tsconfig path alias (ADR 0023, Experimental)", async () => {

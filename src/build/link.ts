@@ -6,6 +6,7 @@ import {
   parseSchemaFile,
 } from "./parse.js"
 import type {
+  DiscoveredClassification,
   DiscoveredSchemaVariable,
   DiscoveredVariableDocs,
   FileParseResult,
@@ -23,6 +24,8 @@ export interface DiscoveredVariable extends DiscoveredSchemaVariable {
   readonly description: string | undefined
   /** From the linked `documentEnv()` call's matching `variables` entry, if any -- individual-variable override of the contract's own `owner`. */
   readonly owner: string | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any -- individual-variable override of the contract's own `classification`. */
+  readonly classification: DiscoveredClassification | undefined
   /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
   readonly expiresAt: string | undefined
   /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
@@ -51,6 +54,8 @@ export interface DiscoveredContract {
   readonly exclusiveGroup: string | undefined
   /** Contract-level default owner -- individual variables may override via their own `owner`. */
   readonly owner: string | undefined
+  /** Contract-level default classification -- individual variables may override via their own `classification`. */
+  readonly classification: DiscoveredClassification | undefined
   /** From the linked `documentEnv()` call, if any. */
   readonly expiresAt: string | undefined
   /** From the linked `documentEnv()` call, if any. */
@@ -302,6 +307,7 @@ export async function linkFiles(
         ...v,
         description: vd?.description,
         owner: vd?.owner,
+        classification: vd?.classification,
         expiresAt: vd?.expiresAt,
         refreshInstructions: vd?.refreshInstructions,
         required: vd?.required,
@@ -318,6 +324,7 @@ export async function linkFiles(
       category: docs?.category,
       exclusiveGroup: docs?.exclusiveGroup,
       owner: docs?.owner,
+      classification: docs?.classification,
       expiresAt: docs?.expiresAt,
       metadata: docs?.metadata,
       packageOrigin: packageOrigins.get(entry.file),

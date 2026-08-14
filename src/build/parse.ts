@@ -11,6 +11,20 @@ import { evaluateLiteral, getStaticPropertyName } from "./literal-eval.js"
  */
 const ENV_KEY_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/
 
+/** Mirrors {@link runtime.VariableClassification} -- duplicated rather than imported since `src/build/` never imports from `src/runtime/` (see `specs/architecture.md`'s zero-cross-folder-dependency rule). */
+export type DiscoveredClassification = "secret" | "credential" | "pii" | "config"
+
+const DISCOVERED_CLASSIFICATION_VALUES: ReadonlySet<string> = new Set([
+  "secret",
+  "credential",
+  "pii",
+  "config",
+])
+
+function isDiscoveredClassification(value: unknown): value is DiscoveredClassification {
+  return typeof value === "string" && DISCOVERED_CLASSIFICATION_VALUES.has(value)
+}
+
 /** A recoverable issue found while statically parsing or linking one schema file -- never fatal, always surfaced to the caller as data. */
 export interface ParseWarning {
   /** Absolute path of the file the warning applies to. */
@@ -402,6 +416,8 @@ export interface DiscoveredVariableDocs {
   readonly description: string | undefined
   /** Statically-resolved `owner`, if set to a string literal. */
   readonly owner: string | undefined
+  /** Statically-resolved `classification`, if set to one of `"secret" | "credential" | "pii" | "config"`. */
+  readonly classification: DiscoveredClassification | undefined
   /** Statically-resolved `expiresAt`, if set to a string literal. */
   readonly expiresAt: string | undefined
   /** Statically-resolved `refreshInstructions`, if set to a string literal. */
@@ -424,6 +440,8 @@ export interface DiscoveredContractDocs {
   readonly active: boolean
   /** Statically-resolved `owner`, if set to a string literal. */
   readonly owner: string | undefined
+  /** Statically-resolved `classification`, if set to one of `"secret" | "credential" | "pii" | "config"`. */
+  readonly classification: DiscoveredClassification | undefined
   /** Statically-resolved `expiresAt`, if set to a string literal. */
   readonly expiresAt: string | undefined
   /** Statically-resolved `metadata`, if set to a string-valued object literal. */
@@ -435,6 +453,7 @@ export interface DiscoveredContractDocs {
 const KNOWN_VARIABLE_DOC_KEYS = new Set([
   "description",
   "owner",
+  "classification",
   "expiresAt",
   "refreshInstructions",
   "required",
@@ -461,6 +480,7 @@ export function extractContractDocs(
   let exclusiveGroup: string | undefined
   let active = true
   let owner: string | undefined
+  let classification: DiscoveredClassification | undefined
   let expiresAt: string | undefined
   let metadata: Record<string, string> | undefined
   const variables = new Map<string, DiscoveredVariableDocs>()
@@ -472,7 +492,17 @@ export function extractContractDocs(
         message: `documentEnv() call for "${contextLabel}" does not pass an inline object literal as its second argument; skipping it entirely.`,
       })
     }
-    return { name, category, exclusiveGroup, active, owner, expiresAt, metadata, variables }
+    return {
+      name,
+      category,
+      exclusiveGroup,
+      active,
+      owner,
+      classification,
+      expiresAt,
+      metadata,
+      variables,
+    }
   }
 
   for (const prop of docsArg.properties) {
@@ -515,6 +545,16 @@ export function extractContractDocs(
     } else if (propName === "owner") {
       const evaluated = evaluateLiteral(prop.initializer)
       if (evaluated.ok && typeof evaluated.value === "string") owner = evaluated.value
+    } else if (propName === "classification") {
+      const evaluated = evaluateLiteral(prop.initializer)
+      if (evaluated.ok && isDiscoveredClassification(evaluated.value)) {
+        classification = evaluated.value
+      } else {
+        warnings.push({
+          file: filePath,
+          message: `"classification" for "${contextLabel}" is not one of "secret" | "credential" | "pii" | "config"; ignoring it.`,
+        })
+      }
     } else if (propName === "expiresAt") {
       const evaluated = evaluateLiteral(prop.initializer)
       if (evaluated.ok && typeof evaluated.value === "string") {
@@ -547,7 +587,17 @@ export function extractContractDocs(
     }
   }
 
-  return { name, category, exclusiveGroup, active, owner, expiresAt, metadata, variables }
+  return {
+    name,
+    category,
+    exclusiveGroup,
+    active,
+    owner,
+    classification,
+    expiresAt,
+    metadata,
+    variables,
+  }
 }
 
 function extractVariableDocsMap(
@@ -571,6 +621,7 @@ function extractVariableDocsMap(
 
     let description: string | undefined
     let owner: string | undefined
+    let classification: DiscoveredClassification | undefined
     let expiresAt: string | undefined
     let refreshInstructions: string | undefined
     let required: boolean | undefined
@@ -586,6 +637,8 @@ function extractVariableDocsMap(
       if (fieldName === "description" && typeof evaluated.value === "string")
         description = evaluated.value
       else if (fieldName === "owner" && typeof evaluated.value === "string") owner = evaluated.value
+      else if (fieldName === "classification" && isDiscoveredClassification(evaluated.value))
+        classification = evaluated.value
       else if (fieldName === "expiresAt" && typeof evaluated.value === "string")
         expiresAt = evaluated.value
       else if (fieldName === "refreshInstructions" && typeof evaluated.value === "string")
@@ -596,7 +649,16 @@ function extractVariableDocsMap(
         extra[fieldName] = evaluated.value
     }
 
-    out.set(key, { key, description, owner, expiresAt, refreshInstructions, required, extra })
+    out.set(key, {
+      key,
+      description,
+      owner,
+      classification,
+      expiresAt,
+      refreshInstructions,
+      required,
+      extra,
+    })
   }
 }
 

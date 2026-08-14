@@ -438,28 +438,29 @@ contract.
 
 ## Architectural decisions
 
-| Boundary                                                                                       | ADR                                                                             |
-| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| One `createEnv` vs `createEnv` + `defineEnv`                                                   | [0001](decisions/0001-runtime-documentation-separation.md)                      |
-| Parsing instead of importing schema files                                                      | [0002](decisions/0002-static-analysis-never-execution.md)                       |
-| Per-feature contracts instead of global `env`                                                  | [0003](decisions/0003-no-global-env-object.md)                                  |
-| No `/client` or `/server` package split                                                        | [0004](decisions/0004-no-client-server-package-split.md)                        |
-| Warn by default instead of throwing                                                            | [0005](decisions/0005-warn-not-throw-by-default.md)                             |
-| Self-redacting contracts                                                                       | [0006](decisions/0006-self-redacting-contracts.md)                              |
-| `processor` terminology instead of `transformer`                                               | [0007](decisions/0007-processor-not-transformer.md)                             |
-| Fixed gzip size budget on runtime/helpers                                                      | [0008](decisions/0008-gzip-size-budget.md)                                      |
-| Exclusive-group violations always error                                                        | [0009](decisions/0009-exclusive-groups-are-always-errors.md)                    |
-| Dependency-ownership engine's fixed scope, internals not public                                | [0010](decisions/0010-dependency-ownership-engine-scope-boundary.md)            |
-| Shared discovery, compute-atomic but not write-atomic `generateEnvArtifacts()`                 | [0011](decisions/0011-shared-discovery-compute-atomic-write-non-atomic.md)      |
-| Live expiration overrides via callback, not AST                                                | [0012](decisions/0012-live-expiration-overrides-not-ast-functions.md)           |
-| `--json` CLI output is a versioned mirror                                                      | [0013](decisions/0013-json-output-is-a-versioned-mirror.md)                     |
-| Cross-package schema discovery via explicit allowlist (Experimental)                           | [0014](decisions/0014-cross-package-schema-discovery.md)                        |
-| Post-1.0 security-fix backport window (one major back, ≥6 months, never shortened once stated) | [0015](decisions/0015-security-backport-window.md)                              |
-| `--check` computes fully before comparing, and never partially writes                          | [0016](decisions/0016-check-mode-compute-before-compare-never-partial-write.md) |
-| A 4th public entry point (`./eslint-plugin`) for a capability-owned-access lint rule           | [0017](decisions/0017-eslint-plugin-entry-point.md)                             |
-| Rotation-alert GitHub issue on non-PR Action runs (opens/auto-closes based on expiringSoon)    | [0018](decisions/0018-rotation-alert-issue-on-non-pr-runs.md)                   |
-| The published `--json` schema is generated from types, never hand-authored                     | [0019](decisions/0019-published-json-schema-generated-from-types.md)            |
-| Declaration maps emitted by a separate `tsc` pass, not tsup's own `dts` pipeline               | [0020](decisions/0020-declaration-maps-via-separate-tsc-pass.md)                |
-| The manifest change report is a persisted, committed JSON sidecar snapshot                     | [0021](decisions/0021-manifest-change-report-persisted-snapshot.md)             |
-| Generic, declarative validation contexts (`context`/`activeContexts`)                          | [0022](decisions/0022-validation-contexts.md)                                   |
-| TypeScript path-alias resolution, on by default (Experimental)                                 | [0023](decisions/0023-tsconfig-path-alias-resolution.md)                        |
+| Boundary                                                                                                               | ADR                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| One `createEnv` vs `createEnv` + `defineEnv`                                                                           | [0001](decisions/0001-runtime-documentation-separation.md)                      |
+| Parsing instead of importing schema files                                                                              | [0002](decisions/0002-static-analysis-never-execution.md)                       |
+| Per-feature contracts instead of global `env`                                                                          | [0003](decisions/0003-no-global-env-object.md)                                  |
+| No `/client` or `/server` package split                                                                                | [0004](decisions/0004-no-client-server-package-split.md)                        |
+| Warn by default instead of throwing                                                                                    | [0005](decisions/0005-warn-not-throw-by-default.md)                             |
+| Self-redacting contracts                                                                                               | [0006](decisions/0006-self-redacting-contracts.md)                              |
+| `processor` terminology instead of `transformer`                                                                       | [0007](decisions/0007-processor-not-transformer.md)                             |
+| Fixed gzip size budget on runtime/helpers                                                                              | [0008](decisions/0008-gzip-size-budget.md)                                      |
+| Exclusive-group violations always error                                                                                | [0009](decisions/0009-exclusive-groups-are-always-errors.md)                    |
+| Dependency-ownership engine's fixed scope, internals not public                                                        | [0010](decisions/0010-dependency-ownership-engine-scope-boundary.md)            |
+| Shared discovery, compute-atomic but not write-atomic `generateEnvArtifacts()`                                         | [0011](decisions/0011-shared-discovery-compute-atomic-write-non-atomic.md)      |
+| Live expiration overrides via callback, not AST                                                                        | [0012](decisions/0012-live-expiration-overrides-not-ast-functions.md)           |
+| `--json` CLI output is a versioned mirror                                                                              | [0013](decisions/0013-json-output-is-a-versioned-mirror.md)                     |
+| Cross-package schema discovery via explicit allowlist (Experimental)                                                   | [0014](decisions/0014-cross-package-schema-discovery.md)                        |
+| Post-1.0 security-fix backport window (one major back, ≥6 months, never shortened once stated)                         | [0015](decisions/0015-security-backport-window.md)                              |
+| `--check` computes fully before comparing, and never partially writes                                                  | [0016](decisions/0016-check-mode-compute-before-compare-never-partial-write.md) |
+| A 4th public entry point (`./eslint-plugin`) for a capability-owned-access lint rule                                   | [0017](decisions/0017-eslint-plugin-entry-point.md)                             |
+| Rotation-alert GitHub issue on non-PR Action runs (opens/auto-closes based on expiringSoon)                            | [0018](decisions/0018-rotation-alert-issue-on-non-pr-runs.md)                   |
+| The published `--json` schema is generated from types, never hand-authored                                             | [0019](decisions/0019-published-json-schema-generated-from-types.md)            |
+| Declaration maps emitted by a separate `tsc` pass, not tsup's own `dts` pipeline                                       | [0020](decisions/0020-declaration-maps-via-separate-tsc-pass.md)                |
+| The manifest change report is a persisted, committed JSON sidecar snapshot                                             | [0021](decisions/0021-manifest-change-report-persisted-snapshot.md)             |
+| Generic, declarative validation contexts (`context`/`activeContexts`)                                                  | [0022](decisions/0022-validation-contexts.md)                                   |
+| TypeScript path-alias resolution, on by default (Experimental)                                                         | [0023](decisions/0023-tsconfig-path-alias-resolution.md)                        |
+| Seven canonical fact models (Contract/Dependency/Ownership/Lifecycle/Finding/Change/Evidence), not thirty-five reports | [0024](decisions/0024-fact-model-architecture.md)                               |
