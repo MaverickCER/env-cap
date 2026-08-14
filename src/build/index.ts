@@ -86,6 +86,16 @@ export type { DiscoveredContractSummary } from "./link.js"
 
 // Lower-level building blocks, exposed for custom tooling (bundler plugins, CI scripts).
 export { detectCompatibilityIssues } from "./compatibility.js"
+// The Contract Model (ADR 0024, ADR 0025) -- the first of env-cap's seven
+// canonical fact models. A versioned, JSON-serializable superset of
+// DiscoveredContract/DiscoveredVariable (below), including every discovered
+// contract regardless of `active`.
+export { buildContractModel, CONTRACT_MODEL_SCHEMA_VERSION } from "./contract-model.js"
+export type {
+  ContractModel,
+  ContractModelContract,
+  ContractModelVariable,
+} from "./contract-model.js"
 export { discoverSchemaFiles } from "./discover.js"
 export { computeExpiringEntries, extractPreviouslyDocumentedKeys, renderDocs } from "./docs.js"
 export type {
@@ -114,6 +124,7 @@ export type { LiveExpirationDates } from "./live-expirations.js"
 export { renderManifest } from "./manifest.js"
 export { extractContractDocs, extractSchemaVariables, parseSchemaFile } from "./parse.js"
 export type {
+  DiscoveredClassification,
   DiscoveredContractDocs,
   DiscoveredSchemaVariable,
   DiscoveredVariableDocs,

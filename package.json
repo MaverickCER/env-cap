@@ -51,6 +51,7 @@
       "require": "./dist/eslint-plugin/index.cjs"
     },
     "./schema": "./schemas/env-cap-report.schema.json",
+    "./schema/*": "./schemas/*.schema.json",
     "./package.json": "./package.json"
   },
   "main": "./dist/index.cjs",

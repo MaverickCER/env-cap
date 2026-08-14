@@ -1,0 +1,105 @@
+# 0025: The Contract Model is a new, versioned JSON projection, published alongside the manifest
+
+## Status
+
+Accepted. Implemented in `src/build/contract-model.ts`, exported as
+`buildContractModel()`/`ContractModel` from `@maverickcer/env-cap/build`. Its
+JSON Schema is generated into `schemas/contract-model.schema.json` and
+published at `@maverickcer/env-cap/schema/contract-model` (`scripts/generate-json-schema.mjs`,
+generalized from ADR 0019's single-target script).
+
+## Context
+
+ADR 0024 named the Contract Model as the closest of the seven canonical fact
+models to already existing: `DiscoveredContract`/`DiscoveredVariable`
+(`src/build/link.ts`) are already fact-shaped and exported. What's missing is
+a JSON-serializable, versioned publication of that data -- today the only
+generated artifact close to it is `env.manifest.ts` (`renderManifest()`),
+which is deliberately metadata-free TS source (no `description`/`owner`/
+AST facts, "no timestamps, no randomness," per its own docstring), and the
+manifest change-report's sidecar snapshot (`manifest-snapshot.ts`), which is
+JSON but deliberately scoped to _active_ contracts and _only_ the
+`documentEnv()`-sourced fields (ADR 0021: "nothing schema- or processor-shaped
+is in it"). Neither is a suitable Contract Model publication: a consumer
+building a projection over "every declared variable's full contract" (its
+processor/validator presence, its statically-resolved default, its
+declaring contract's active status) has no single artifact to read.
+
+## Decision
+
+**A new file, `src/build/contract-model.ts`, exporting `ContractModel`/
+`ContractModelContract`/`ContractModelVariable` and `buildContractModel()`.**
+Concretely:
+
+- **A superset, not a replacement.** `ContractModel` carries every field
+  `DiscoveredContract`/`DiscoveredVariable` already have -- both the
+  `documentEnv()`-sourced fields the manifest snapshot already captures
+  (`description`, `owner`, `classification`, `expiresAt`,
+  `refreshInstructions`, `required`, `extra`) and the AST-derived schema
+  facts it deliberately excludes (`hasDefault`/`defaultValue`/`hasProcessor`/
+  `processorSource`/`processorReturnType`/`hasValidator`/`validatorSource`/
+  `context`). Both are load-bearing for what this model unblocks: Finding
+  Model needs `classification` for anything secret-specific, and a
+  completeness/inventory projection needs to know whether a variable has a
+  processor at all.
+- **Every discovered contract, active or not.** Unlike the manifest
+  snapshot (scoped to active contracts, matching `renderManifest()`'s own
+  scope), `ContractModel` includes inactive contracts too, with `active:
+boolean` carried through -- a report answering "what's declared, and is it
+  currently active" needs both states visible, not just the active half.
+- **`schemaVersion`, same bump discipline as every other snapshot in this
+  codebase.** `CONTRACT_MODEL_SCHEMA_VERSION`, bumped only when a reader
+  could misinterpret the new shape, mirroring `MANIFEST_SNAPSHOT_SCHEMA_VERSION`
+  (ADR 0021) and `JSON_SCHEMA_VERSION` (ADR 0013).
+- **Deterministic ordering.** Sorted by file, then exportName, then variable
+  key -- the same discipline `buildManifestSnapshot()` already follows, so
+  wherever this model is persisted, `JSON.stringify` output is stable and
+  diffs cleanly.
+- **The JSON Schema generator generalizes to a `TARGETS` list, one entry per
+  published schema, rather than staying hardcoded to the single `--json`
+  envelope type ADR 0019 introduced it for.** Each target's own freshness
+  test (mirroring `test/build/json-schema.test.ts`) still fails the build if
+  its committed schema drifts from what `ts-json-schema-generator` would
+  produce fresh -- this generalization changes nothing about that guarantee,
+  it just lets a second (and future third, fourth, ...) type opt into it
+  without a second hand-copied script.
+- **Published at `@maverickcer/env-cap/schema/contract-model`, via a new
+  wildcard `./schema/*` export**, alongside the existing bare `./schema`
+  (kept, unchanged, for the original `--json` envelope schema). A new fact
+  model's schema needs zero further `package.json` edits going forward --
+  it's picked up by the wildcard the moment its file lands in `schemas/`.
+
+## Consequences
+
+- A consumer wanting the full declared-contract surface (for a custom
+  inventory report, a policy check, or feeding `defineEvidenceProjection()`
+  once it exists) has one artifact to read instead of reconstructing it by
+  combining the manifest snapshot with `linkFiles()`'s raw output themselves.
+- `env.manifest.ts` and `manifest-snapshot.ts`'s `ManifestSnapshot` are
+  unchanged and keep their existing, narrower scopes -- this is additive,
+  not a consolidation. A project already depending on the snapshot's
+  active-only, metadata-only shape sees no behavior change.
+- Two schema files now ship in `schemas/` (`env-cap-report.schema.json`,
+  `contract-model.schema.json`), both generated by the same script, both
+  covered by their own freshness + correctness tests.
+
+## Alternatives considered
+
+- **Widen `ManifestSnapshot` itself to include AST facts and inactive
+  contracts, instead of a new type.** Rejected -- `ManifestSnapshot`'s scope
+  is deliberately narrow and already load-bearing for the manifest
+  change-report's diffing semantics (ADR 0021's "matches `renderManifest()`'s
+  own scope" reasoning). Widening it would change what "since last commit"
+  means for existing consumers of `ManifestChangeReport`, an unrelated
+  breaking change bundled into unrelated new scope.
+- **Add a `--json`-only Contract Model, folded into the existing envelope
+  schema rather than published separately.** Rejected -- the whole point of
+  publishing a model-specific schema is that a consumer validating just a
+  `ContractModel` payload (e.g. from a future persisted Evidence Model slice)
+  shouldn't need to reference or strip away the unrelated `--json` envelope
+  fields (`docs`, `usage`, `checkResult`) that have nothing to do with the
+  Contract Model itself.
+- **Keep the JSON Schema generator single-target and hand-copy it for each
+  new model.** Rejected -- this is exactly the "35 independently-maintained
+  analyses of the same underlying facts" anti-pattern ADR 0024 exists to
+  avoid, just at the tooling layer instead of the report layer.

@@ -464,3 +464,4 @@ contract.
 | Generic, declarative validation contexts (`context`/`activeContexts`)                                                  | [0022](decisions/0022-validation-contexts.md)                                   |
 | TypeScript path-alias resolution, on by default (Experimental)                                                         | [0023](decisions/0023-tsconfig-path-alias-resolution.md)                        |
 | Seven canonical fact models (Contract/Dependency/Ownership/Lifecycle/Finding/Change/Evidence), not thirty-five reports | [0024](decisions/0024-fact-model-architecture.md)                               |
+| Contract Model is a new, versioned JSON projection, published alongside the manifest                                   | [0025](decisions/0025-contract-model-json-projection.md)                        |

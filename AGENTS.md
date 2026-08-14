@@ -32,7 +32,8 @@ and aggregated at build time. There is no global `env` object.
    Never put `description`/`owner`/`expiresAt` fields inside `createEnv()`; never expect
    `documentEnv()` to affect runtime behavior.
 4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`,
-   `./helpers`, `./eslint-plugin`, `./schema`, and `./package.json`. Import only from
+   `./helpers`, `./eslint-plugin`, `./schema`, `./schema/*` (one JSON Schema per canonical
+   fact model, e.g. `./schema/contract-model`), and `./package.json`. Import only from
    these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported build
    internal (e.g. the dependency-graph engine).
 5. **Runtime and build are strictly separated.** `src/build` uses `node:fs`/`node:path`/
