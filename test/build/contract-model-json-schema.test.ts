@@ -1,0 +1,71 @@
+import { readFileSync } from "node:fs"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import Ajv from "ajv"
+import { describe, expect, it } from "vitest"
+import { generateContractModelSchema } from "../../scripts/generate-json-schema.mjs"
+import { buildContractModel } from "../../src/build/contract-model.js"
+import type { DiscoveredContract } from "../../src/build/link.js"
+
+const here = path.dirname(fileURLToPath(import.meta.url))
+const projectRoot = path.resolve(here, "../..")
+const schemaPath = path.resolve(projectRoot, "schemas/contract-model.schema.json")
+
+describe("published Contract Model JSON Schema: freshness", () => {
+  // Same reasoning as test/build/json-schema.test.ts's freshness test: a real
+  // TypeScript program/type-check over the whole type graph, slow enough
+  // under coverage instrumentation to need a longer timeout.
+  it("matches a fresh generation byte-for-byte (fails if committed but stale)", () => {
+    const fresh = `${JSON.stringify(generateContractModelSchema(), null, 2)}\n`
+    const committed = readFileSync(schemaPath, "utf8")
+    expect(committed).toBe(fresh)
+  }, 15000)
+})
+
+describe("published Contract Model JSON Schema: correctness", () => {
+  const ajv = new Ajv({ strict: false })
+  const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as object
+  const validate = ajv.compile(schema)
+
+  it("a real ContractModel built from DiscoveredContract data validates against the schema", () => {
+    const contract: DiscoveredContract = {
+      file: "/repo/payments/env.schema.ts",
+      exportName: "paymentsEnv",
+      contractName: "payments",
+      active: true,
+      category: "payments",
+      exclusiveGroup: undefined,
+      owner: "payments-team",
+      classification: "credential",
+      expiresAt: undefined,
+      metadata: { runbook: "https://wiki.internal/payments" },
+      documented: true,
+      packageOrigin: undefined,
+      variables: [
+        {
+          key: "STRIPE_KEY",
+          hasDefault: false,
+          defaultValue: undefined,
+          hasProcessor: true,
+          processorSource: "(v) => String(v)",
+          processorReturnType: "string",
+          hasValidator: false,
+          validatorSource: undefined,
+          context: undefined,
+          description: "Stripe secret key.",
+          owner: undefined,
+          classification: "secret",
+          expiresAt: "2026-09-01",
+          refreshInstructions: "Rotate in the Stripe dashboard.",
+          required: true,
+          extra: { rotationCadence: "90 days" },
+          documented: true,
+        },
+      ],
+    }
+
+    const model = buildContractModel([contract], "/repo")
+    expect(validate(model)).toBe(true)
+    if (!validate(model)) console.error(validate.errors)
+  })
+})

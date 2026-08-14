@@ -1,0 +1,227 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maverickcer.github.io/env-cap/schema/contract-model.schema.json",
+  "title": "env-cap Contract Model",
+  "description": "Canonical, versioned projection of every declared environment-variable contract, active or not (see ADR 0024, ADR 0025). Generated from src/build/contract-model.ts's ContractModel type -- never hand-authored.",
+  "$ref": "#/definitions/ContractModel",
+  "definitions": {
+    "ContractModel": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "contracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContractModelContract"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "contracts"
+      ],
+      "additionalProperties": false
+    },
+    "ContractModelContract": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated -- matches `DiscoveredContractSummary.file`."
+        },
+        "exportName": {
+          "type": "string"
+        },
+        "contractName": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "category": {
+          "type": "string"
+        },
+        "exclusiveGroup": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "classification": {
+          "$ref": "#/definitions/DiscoveredClassification"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContractModelVariable"
+          }
+        },
+        "documented": {
+          "type": "boolean"
+        },
+        "packageOrigin": {
+          "$ref": "#/definitions/PackageOrigin"
+        }
+      },
+      "required": [
+        "file",
+        "exportName",
+        "contractName",
+        "active",
+        "variables",
+        "documented"
+      ],
+      "additionalProperties": false,
+      "description": "One `createEnv()` contract's full statically-discoverable contract, active or not."
+    },
+    "DiscoveredClassification": {
+      "type": "string",
+      "enum": [
+        "secret",
+        "credential",
+        "pii",
+        "config"
+      ],
+      "description": "Mirrors runtime.VariableClassification -- duplicated rather than imported since `src/build/` never imports from `src/runtime/` (see `specs/architecture.md`'s zero-cross-folder-dependency rule)."
+    },
+    "ContractModelVariable": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "hasDefault": {
+          "type": "boolean"
+        },
+        "defaultValue": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "ok": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "value": {}
+              },
+              "required": [
+                "ok",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "ok": {
+                  "type": "boolean",
+                  "const": false
+                }
+              },
+              "required": [
+                "ok"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "hasProcessor": {
+          "type": "boolean"
+        },
+        "processorSource": {
+          "type": "string"
+        },
+        "processorReturnType": {
+          "type": "string"
+        },
+        "hasValidator": {
+          "type": "boolean"
+        },
+        "validatorSource": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "classification": {
+          "$ref": "#/definitions/DiscoveredClassification"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "refreshInstructions": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "extra": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "documented": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "hasDefault",
+        "hasProcessor",
+        "hasValidator",
+        "extra",
+        "documented"
+      ],
+      "additionalProperties": false,
+      "description": "One variable's full statically-discoverable contract: schema-shaped facts plus linked documentation."
+    },
+    "PackageOrigin": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "type": "string",
+          "description": "The allow-listed package name that declared this schema."
+        },
+        "declaredField": {
+          "type": "string",
+          "description": "The `\"envCap.schema\"` value exactly as the package author wrote it."
+        },
+        "resolvedFile": {
+          "type": "string",
+          "description": "Absolute, realpath-canonicalized path to the resolved schema file."
+        },
+        "packageDir": {
+          "type": "string",
+          "description": "Absolute, realpath-canonicalized path to the package's own directory."
+        }
+      },
+      "required": [
+        "packageName",
+        "declaredField",
+        "resolvedFile",
+        "packageDir"
+      ],
+      "additionalProperties": false,
+      "description": "Both the authored and resolved forms are kept -- diagnostics benefit from showing exactly what a package author wrote versus what it resolved to."
+    }
+  }
+}

@@ -6,3 +6,4 @@
 // package's types.
 
 export function generateReportSchema(): object
+export function generateContractModelSchema(): object
