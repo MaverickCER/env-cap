@@ -86,3 +86,4 @@ After approval:
 - Verify CI/CD compatibility.
 
 For the best results, provide your AI assistant access to both your repository and the env-cap repository. The assistant should understand your application's architecture before recommending how env-cap fits into it.
+```

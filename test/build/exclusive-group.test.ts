@@ -11,6 +11,7 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
+    classification: undefined,
     expiresAt: undefined,
     metadata: undefined,
     variables: [],
