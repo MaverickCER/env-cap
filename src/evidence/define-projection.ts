@@ -4,7 +4,7 @@ import type { EvidenceModel } from "../build/evidence-model.js"
  * A pure function from the full Evidence Model to one field of a
  * projection's output shape. Must not mutate `evidence` -- the membrane
  * `defineEvidenceProjection()` wraps it in enforces that at runtime, see
- * {@link createTrackingProxy} -- and must not perform I/O; env-cap can
+ * `createTrackingProxy()` below -- and must not perform I/O; env-cap can
  * enforce the read-only half of purity but not the "no side effects" half.
  */
 export type EvidenceProjector<T> = (evidence: EvidenceModel) => T

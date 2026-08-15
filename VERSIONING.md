@@ -74,6 +74,14 @@ better shape for `EvidenceProjectionResult.sources` in particular (currently
 flat `EvidenceModel` field-path strings, not yet resolved into structured
 `EvidenceReference`s -- see ADR 0032's Consequences).
 
+**`generateEvidenceModel`** (`@maverickcer/env-cap/build`) is Experimental
+for the same reason, and unlike `generateEnvManifest`/`generateDocumentation`/
+`generateUsageReport`/`generateEnvArtifacts` it is deliberately never
+promoted to the same "throws on a blocking finding" behavior those four
+share -- it never throws for a data-quality finding by design (every one
+becomes a `Finding` instead, see ADR 0031), which isn't a temporary
+Experimental-tier gap to close but the intended, permanent shape.
+
 ## Private
 
 Never covered by semver, may change at any time without notice:
