@@ -185,8 +185,8 @@
           "description": "Human-readable explanation of the conflict."
         },
         "code": {
-          "type": "string",
-          "description": "Stable, machine-readable identifier for CI filtering / doc-linking / GitHub Action annotations / IDE integration -- `undefined` for every check that predates this field. Currently populated only by the duplicate-documentation check below (`\"duplicate-variable-documentation\"`); an opt-in field other checks can adopt incrementally, not a retrofit of every existing issue at once."
+          "$ref": "#/definitions/CompatibilityIssueCode",
+          "description": "Stable, machine-readable identifier for CI filtering / doc-linking / GitHub Action annotations / IDE integration. `undefined` only for checks that don't (yet) set one -- see CompatibilityIssueCode for the full enumerated list of values a check in this file can produce."
         }
       },
       "required": [
@@ -197,6 +197,16 @@
       ],
       "additionalProperties": false,
       "description": "One compatibility problem found between two or more declarations of the same variable, or an exclusive-group violation."
+    },
+    "CompatibilityIssueCode": {
+      "type": "string",
+      "enum": [
+        "processor-return-type-conflict",
+        "processor-source-conflict",
+        "validator-source-conflict",
+        "duplicate-variable-documentation"
+      ],
+      "description": "Every stable `code` a check in this file (or `exclusive-group.ts`) can emit. Documented as an enumerated union so a consumer filtering/linking on `code` has a closed list to switch over, rather than an arbitrary string -- see ADR 0024/0026. `exclusive-group.ts`'s check does not (yet) set one; see that file's own comment for why."
     },
     "ParseWarning": {
       "type": "object",

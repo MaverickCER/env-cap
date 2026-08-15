@@ -11,8 +11,11 @@ docs/size-badge.json
 examples
 
 # Generated, never hand-authored -- reformatting drifts it from its
-# generator instead of the other way around.
-schemas/env-cap-report.schema.json
+# generator instead of the other way around. One glob covers every published
+# fact-model schema (scripts/generate-json-schema.mjs's TARGETS list) so a
+# new model's schema is excluded automatically, not by remembering to add a
+# line here each time.
+schemas/*.schema.json
 docs/benchmark-history/*.json
 
 # Changesets-managed; reformatting past entries creates noise unrelated to

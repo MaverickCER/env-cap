@@ -75,7 +75,7 @@ export type {
   UnresolvedConsumerFinding,
 } from "./usage-report.js"
 
-export type { CompatibilityIssue } from "./compatibility.js"
+export type { CompatibilityIssue, CompatibilityIssueCode } from "./compatibility.js"
 export {
   EnvDocumentationGenerationError,
   EnvManifestGenerationError,
