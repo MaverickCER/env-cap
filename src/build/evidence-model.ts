@@ -36,7 +36,7 @@ export interface EvidenceProvenance {
  * shape as `helpers`' single sanctioned edge onto `runtime` -- see
  * `specs/architecture.md`. `src/evidence/` never imports a *value* from
  * here, only this shape, so it stays isomorphic and Node-free. An actual
- * `EvidenceModel` instance is produced by `generateEvidenceModel()`
+ * `EvidenceModel` instance is produced by {@link generateEvidenceModel}
  * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,
  * builds all six sub-models, and `deepFreeze()`s the result.
  */
