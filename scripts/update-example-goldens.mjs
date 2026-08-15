@@ -57,8 +57,18 @@ const EXAMPLES = {
   "tsconfig-aliases": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
   "tsconfig-aliases-consumer": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
   "evidence-projections": {
-    artifacts: [".env.example", "projected-config-reference.md", "projected-inventory.json"],
-    extraScripts: ["project:env-example", "project:config-reference", "project:inventory"],
+    artifacts: [
+      ".env.example",
+      "projected-config-reference.md",
+      "projected-inventory.json",
+      "projected-ownership.json",
+    ],
+    extraScripts: [
+      "project:env-example",
+      "project:config-reference",
+      "project:inventory",
+      "project:ownership",
+    ],
   },
 }
 
