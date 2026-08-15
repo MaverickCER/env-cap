@@ -7,9 +7,9 @@ import { discoverSchemaFiles } from "../../src/build/discover.js"
 import { EnvUsageAnalysisError } from "../../src/build/errors.js"
 import { computeUsage, generateUsageReport } from "../../src/build/generate-usage.js"
 import { linkFiles } from "../../src/build/link.js"
-import type { ImportResolutionContext } from "../../src/build/resolve-import.js"
-import type { PackageSchemaResolutionResult } from "../../src/build/resolve-package-schema.js"
-import { createAliasResolutionCache } from "../../src/build/resolve-tsconfig-paths.js"
+import type { ImportResolutionContext } from "../../src/build/resolution/resolve-import.js"
+import type { PackageSchemaResolutionResult } from "../../src/build/resolution/resolve-package-schema.js"
+import { createAliasResolutionCache } from "../../src/build/resolution/resolve-tsconfig-paths.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-usage-generate")
@@ -166,6 +166,32 @@ describe("generateUsageReport", () => {
     } finally {
       process.chdir(originalCwd)
     }
+  })
+
+  it("resolves an unconsumed variable's effective owner -- its own override, not just the contract's (regression, ADR 0028)", async () => {
+    const ownerFallbackRoot = path.resolve(fixtureRoot, "owner-fallback")
+    await write(
+      "owner-fallback/features/billing/env.schema.ts",
+      `const billingSchema = { INVOICE_KEY: {} };
+      export const billingEnv = createEnv(billingSchema, { name: "billing" });
+      documentEnv(billingSchema, { variables: { INVOICE_KEY: { owner: "billing-team" } } });`,
+    )
+    // Imports the contract (so it's not "abandoned") but never accesses
+    // INVOICE_KEY (so the variable itself is "unconsumed"). The contract
+    // declares no owner of its own -- only the variable does.
+    await write(
+      "owner-fallback/src/server.ts",
+      `import { billingEnv } from "../features/billing/env.schema.js";\nconsole.log(billingEnv);\n`,
+    )
+
+    const result = await generateUsageReport({ root: ownerFallbackRoot })
+    expect(result.unconsumedOwnedVariables).toEqual([
+      expect.objectContaining({
+        contractName: "billing",
+        key: "INVOICE_KEY",
+        owner: "billing-team",
+      }),
+    ])
   })
 
   it("maps unresolvedConsumers and indeterminate ownership findings into the public result shape", async () => {

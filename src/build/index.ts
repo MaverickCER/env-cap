@@ -153,7 +153,7 @@ export type {
   FindingFamily,
   FindingModel,
 } from "./finding-model.js"
-export { linkFiles } from "./link.js"
+export { effectiveOwner, linkFiles } from "./link.js"
 export type { DiscoveredContract, DiscoveredVariable, LinkResult, UnresolvedLink } from "./link.js"
 export {
   applyLiveExpirationOverrides,
@@ -162,6 +162,17 @@ export {
 } from "./live-expirations.js"
 export type { LiveExpirationDates } from "./live-expirations.js"
 export { renderManifest } from "./manifest.js"
+// The Ownership Model (ADR 0024, ADR 0028) -- effective owner per
+// contract/variable, plus first-class unownedContracts/unownedVariables
+// arrays (previously only a count inside renderSecurityReview()'s text).
+export { buildOwnershipModel, OWNERSHIP_MODEL_SCHEMA_VERSION } from "./ownership-model.js"
+export type {
+  OwnershipModel,
+  OwnershipModelContract,
+  OwnershipModelContractRef,
+  OwnershipModelVariable,
+  OwnershipModelVariableRef,
+} from "./ownership-model.js"
 export { extractContractDocs, extractSchemaVariables, parseSchemaFile } from "./parse.js"
 export type {
   DiscoveredClassification,

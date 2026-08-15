@@ -6,7 +6,7 @@ import type { DependencyGraph } from "./dependency-graph.js"
 import { discoverSchemaFiles } from "./discover.js"
 import { EnvUsageAnalysisError } from "./errors.js"
 import { DEFAULT_EXCLUDE, DEFAULT_INCLUDE } from "./generate-manifest.js"
-import { linkFiles } from "./link.js"
+import { effectiveOwner, linkFiles } from "./link.js"
 import type { DiscoveredContract } from "./link.js"
 import type { ParseWarning } from "./parse.js"
 import type { ImportResolutionContext } from "./resolve-import.js"
@@ -15,7 +15,10 @@ import {
   resolveAllowlistedPackages,
   type PackageSchemaResolutionResult,
 } from "./resolve-package-schema.js"
-import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
+import {
+  createAliasResolutionCache,
+  loadTsconfigPaths,
+} from "./resolve-tsconfig-paths.js"
 import { resolveWithinRoot } from "./resolve-within-root.js"
 import {
   renderUsageReport,
@@ -103,11 +106,24 @@ export async function computeUsage(
   const graph = await buildDependencyGraph(contracts, scanFiles, readFile, context)
   const findings = deriveOwnershipFindings(graph)
 
-  const ownerByIdentity = new Map<string, string | undefined>()
+  const contractByIdentity = new Map<string, DiscoveredContract>()
   for (const contract of contracts)
-    ownerByIdentity.set(`${contract.file}#${contract.exportName}`, contract.owner)
+    contractByIdentity.set(`${contract.file}#${contract.exportName}`, contract)
+  // Contract-level default owner only -- correct for a contract-level
+  // finding (dependencyOwnership, abandonedContracts), which has no
+  // specific variable to consider a per-variable override for.
   const ownerFor = (file: string, exportName: string): string | undefined =>
-    ownerByIdentity.get(`${file}#${exportName}`)
+    contractByIdentity.get(`${file}#${exportName}`)?.owner
+  // A specific variable's *effective* owner (its own override, falling back
+  // to the contract default) -- see ADR 0028. Used only for
+  // unconsumedOwnedVariables below, the one finding type that names a
+  // specific variable.
+  const effectiveOwnerFor = (file: string, exportName: string, key: string): string | undefined => {
+    const contract = contractByIdentity.get(`${file}#${exportName}`)
+    if (!contract) return undefined
+    const variable = contract.variables.find((v) => v.key === key)
+    return variable ? effectiveOwner(contract, variable) : contract.owner
+  }
 
   const dependencyOwnership: OwnershipDependencyEntry[] = graph.contracts.map((c) => ({
     contractName: c.contractName,
@@ -134,7 +150,7 @@ export async function computeUsage(
   const unconsumedOwnedVariables: UnconsumedOwnedVariableFinding[] = findings.unconsumedOwned.map(
     (f) => ({
       contractName: f.contractName,
-      owner: ownerFor(f.file, f.exportName),
+      owner: effectiveOwnerFor(f.file, f.exportName, f.key),
       key: f.key,
     }),
   )

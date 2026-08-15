@@ -1,5 +1,6 @@
 import { markdownBannerLine } from "./generated-banner.js"
 import { humanizeKey } from "./humanize-key.js"
+import { effectiveOwner } from "./link.js"
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 import { mustGet } from "./map-utils.js"
 
@@ -322,13 +323,6 @@ function sortedContracts(contracts: readonly DiscoveredContract[]): DiscoveredCo
   return [...contracts].sort((a, b) =>
     a.contractName < b.contractName ? -1 : a.contractName > b.contractName ? 1 : 0,
   )
-}
-
-function effectiveOwner(
-  contract: DiscoveredContract,
-  variable: DiscoveredVariable,
-): string | undefined {
-  return variable.owner ?? contract.owner
 }
 
 // ---------------------------------------------------------------------------
