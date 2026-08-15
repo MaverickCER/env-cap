@@ -484,3 +484,4 @@ contract.
 | Change Model wraps the existing manifest change report                                                                 | [0030](decisions/0030-change-model-wraps-manifest-change-report.md)             |
 | A 5th public entry point (`./evidence`) for Evidence Model projections                                                 | [0031](decisions/0031-evidence-entry-point.md)                                  |
 | Evidence projection provenance via a non-frozen Proxy tracking membrane, not `Object.freeze()`                         | [0032](decisions/0032-evidence-projection-provenance-mechanism.md)              |
+| The ten first-party reference projections live in examples/, not src/                                                  | [0033](decisions/0033-reference-projections-live-in-examples.md)                |

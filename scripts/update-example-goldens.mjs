@@ -56,6 +56,7 @@ const EXAMPLES = {
   "validation-contexts": { artifacts: STANDARD_ARTIFACTS },
   "tsconfig-aliases": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
   "tsconfig-aliases-consumer": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
+  "evidence-projections": { artifacts: [".env.example"] },
 }
 
 function normalizeDocsForComparison(content) {
