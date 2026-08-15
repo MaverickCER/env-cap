@@ -56,4 +56,9 @@ describe(EXAMPLE, () => {
     runScript(EXAMPLE, "project:ownership");
     await compareGoldenArtifacts(EXAMPLE, ["projected-ownership.json"]);
   });
+
+  it.skipIf(!installed)("projected Configuration Lifecycle matches its golden expected/ copy", async () => {
+    runScript(EXAMPLE, "project:lifecycle");
+    await compareGoldenArtifacts(EXAMPLE, ["projected-lifecycle.json"]);
+  });
 });

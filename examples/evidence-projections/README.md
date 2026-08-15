@@ -24,12 +24,14 @@ scripts/
   project-config-reference.mjs      <- runs the Configuration Reference projection
   project-inventory.mjs             <- runs the Configuration Inventory projection
   project-ownership.mjs             <- runs the Configuration Ownership projection
+  project-lifecycle.mjs             <- runs the Configuration Lifecycle projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
   config-reference.mjs              <- the "Environment Configuration Reference" reference projection
   inventory.mjs                     <- the "Configuration Inventory" reference projection
   ownership.mjs                     <- the "Configuration Ownership" reference projection
+  lifecycle.mjs                     <- the "Configuration Lifecycle" reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
@@ -37,6 +39,7 @@ projected-env-example.txt            <- generated (by the env-example projection
 projected-config-reference.md        <- generated (by the config-reference projection)
 projected-inventory.json             <- generated (by the inventory projection)
 projected-ownership.json             <- generated (by the ownership projection)
+projected-lifecycle.json             <- generated (by the lifecycle projection)
 expected/                            <- golden regression fixtures, see examples/README.md
 ```
 
@@ -49,6 +52,7 @@ npm run project:env-example        # generateEvidenceModel() + the .env.example 
 npm run project:config-reference   # generateEvidenceModel() + the Configuration Reference projection
 npm run project:inventory          # generateEvidenceModel() + the Configuration Inventory projection
 npm run project:ownership          # generateEvidenceModel() + the Configuration Ownership projection
+npm run project:lifecycle          # generateEvidenceModel() + the Configuration Lifecycle projection
 ```
 
 ## The projections landed so far
@@ -78,6 +82,15 @@ use, built from Contract Model, Dependency Model, and Finding Model together. Co
 identical to `generateEnvArtifacts()`'s own `result.usage` for this example's single-contract
 schema; verified against a dedicated `expected/` golden fixture in general, since multi-contract
 schemas hit the same canonical-vs-discovery ordering divergence documented above.
+
+**Configuration Lifecycle** (`projections/lifecycle.mjs`) — absorbs the audit's separate
+"Expiration" and "Deprecation" report types into one projection: `expiring` (Lifecycle Model's
+own pre-computed list, passed through) alongside `deprecatedContracts`/`deprecatedVariables`
+(filtered here, since Lifecycle Model doesn't pre-compute a flat deprecated list the way it does
+for expiring entries). Also fixed a real bug found while building this: `LifecycleModel.expiring[].file`
+was leaking an absolute, machine-specific filesystem path, inconsistent with
+`LifecycleModelContract.file`'s own root-relative convention on the very same model — fixed at
+the source (`src/build/lifecycle-model.ts`), not worked around here.
 
 ## Known divergences from the direct-call baseline
 

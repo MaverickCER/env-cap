@@ -9,7 +9,8 @@
     "project:env-example": "npm run generate:env && node scripts/project-env-example.mjs",
     "project:config-reference": "npm run generate:env && node scripts/project-config-reference.mjs",
     "project:inventory": "npm run generate:env && node scripts/project-inventory.mjs",
-    "project:ownership": "npm run generate:env && node scripts/project-ownership.mjs"
+    "project:ownership": "npm run generate:env && node scripts/project-ownership.mjs",
+    "project:lifecycle": "npm run generate:env && node scripts/project-lifecycle.mjs"
   },
   "dependencies": {
     "@maverickcer/env-cap": "file:../.."

@@ -62,12 +62,14 @@ const EXAMPLES = {
       "projected-config-reference.md",
       "projected-inventory.json",
       "projected-ownership.json",
+      "projected-lifecycle.json",
     ],
     extraScripts: [
       "project:env-example",
       "project:config-reference",
       "project:inventory",
       "project:ownership",
+      "project:lifecycle",
     ],
   },
 }
