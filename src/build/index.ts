@@ -96,6 +96,22 @@ export type {
   ContractModelContract,
   ContractModelVariable,
 } from "./contract-model.js"
+// The Dependency Model (ADR 0024, ADR 0027) -- a fact-shaped result of the
+// dependency-ownership engine, including the inverse file->contracts index
+// and per-access-site line numbers neither `dependency-graph.ts` (Private,
+// unchanged, per ADR 0010) nor `usage-report.ts` exposes today.
+export { buildDependencyModel, DEPENDENCY_MODEL_SCHEMA_VERSION } from "./dependency-model.js"
+export type {
+  DependencyModel,
+  DependencyModelConsumer,
+  DependencyModelContract,
+  DependencyModelContractRef,
+  DependencyModelVariable,
+} from "./dependency-model.js"
+// Only this one status-vocabulary type, needed to name
+// DependencyModelVariable.status -- every function in dependency-graph.ts
+// stays unexported, per ADR 0010.
+export type { VariableAccessStatus } from "./dependency-graph.js"
 export { discoverSchemaFiles } from "./discover.js"
 export {
   computeExpiringEntries,
