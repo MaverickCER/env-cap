@@ -43,4 +43,10 @@ describe(EXAMPLE, () => {
       await compareGoldenArtifacts(EXAMPLE, ["projected-config-reference.md"]);
     },
   );
+
+  it.skipIf(!installed)("projected Configuration Inventory matches its golden expected/ copy", async () => {
+    runScript(EXAMPLE, "generate:env");
+    runScript(EXAMPLE, "project:inventory");
+    await compareGoldenArtifacts(EXAMPLE, ["projected-inventory.json"]);
+  });
 });

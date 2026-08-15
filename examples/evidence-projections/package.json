@@ -7,7 +7,8 @@
     "generate:env": "node scripts/generate-manifest.mjs",
     "typecheck": "npm run generate:env && tsc --noEmit",
     "project:env-example": "npm run generate:env && node scripts/project-env-example.mjs",
-    "project:config-reference": "npm run generate:env && node scripts/project-config-reference.mjs"
+    "project:config-reference": "npm run generate:env && node scripts/project-config-reference.mjs",
+    "project:inventory": "npm run generate:env && node scripts/project-inventory.mjs"
   },
   "dependencies": {
     "@maverickcer/env-cap": "file:../.."
