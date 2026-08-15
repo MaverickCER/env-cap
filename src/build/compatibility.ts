@@ -1,5 +1,18 @@
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 
+/**
+ * Every stable `code` a check in this file (or `exclusive-group.ts`) can
+ * emit. Documented as an enumerated union so a consumer filtering/linking on
+ * `code` has a closed list to switch over, rather than an arbitrary string --
+ * see ADR 0024/0026. `exclusive-group.ts`'s check does not (yet) set one; see
+ * that file's own comment for why.
+ */
+export type CompatibilityIssueCode =
+  | "processor-return-type-conflict"
+  | "processor-source-conflict"
+  | "validator-source-conflict"
+  | "duplicate-variable-documentation"
+
 /** One compatibility problem found between two or more declarations of the same variable, or an exclusive-group violation. */
 export interface CompatibilityIssue {
   /** `"error"` blocks generation regardless of `onIncompatibility`; `"warning"` blocks only when `onIncompatibility: "throw"`. */
@@ -12,13 +25,11 @@ export interface CompatibilityIssue {
   readonly reason: string
   /**
    * Stable, machine-readable identifier for CI filtering / doc-linking /
-   * GitHub Action annotations / IDE integration -- `undefined` for every
-   * check that predates this field. Currently populated only by the
-   * duplicate-documentation check below (`"duplicate-variable-documentation"`);
-   * an opt-in field other checks can adopt incrementally, not a retrofit of
-   * every existing issue at once.
+   * GitHub Action annotations / IDE integration. `undefined` only for checks
+   * that don't (yet) set one -- see {@link CompatibilityIssueCode} for the
+   * full enumerated list of values a check in this file can produce.
    */
-  readonly code?: string
+  readonly code?: CompatibilityIssueCode
 }
 
 const DOCUMENTATION_COMPARISON_FIELDS = [
@@ -92,6 +103,7 @@ export function detectCompatibilityIssues(
             severity: "error",
             variable: key,
             files: [a.file, b.file],
+            code: "processor-return-type-conflict",
             reason:
               `Processor return types are declared incompatible: "${a.contractName}" produces ` +
               `${a.variable.processorReturnType}, "${b.contractName}" produces ${b.variable.processorReturnType}.`,
@@ -108,6 +120,7 @@ export function detectCompatibilityIssues(
             severity: "warning",
             variable: key,
             files: [a.file, b.file],
+            code: "processor-source-conflict",
             reason:
               `"${a.contractName}" and "${b.contractName}" both declare a processor for this variable with ` +
               "different implementations. Return types could not be statically verified -- add explicit " +
@@ -124,6 +137,7 @@ export function detectCompatibilityIssues(
             severity: "warning",
             variable: key,
             files: [a.file, b.file],
+            code: "validator-source-conflict",
             reason:
               `"${a.contractName}" and "${b.contractName}" both declare a validator for this variable with ` +
               "different implementations. Validator logic cannot be statically compared -- confirm they enforce compatible rules.",

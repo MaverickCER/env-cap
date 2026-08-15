@@ -659,7 +659,7 @@ describe("main() -- manifest.warnings (compatibility warnings, non-strict)", () 
 
     const output = writes.join("")
     expect(output).toContain("compatibility warning(s):")
-    expect(output).toContain("- SHARED_VAR:")
+    expect(output).toContain("- [processor-source-conflict] SHARED_VAR:")
   })
 })
 

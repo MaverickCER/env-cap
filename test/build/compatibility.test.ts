@@ -69,6 +69,7 @@ describe("detectCompatibilityIssues", () => {
     expect(issues[0]?.severity).toBe("error")
     expect(issues[0]?.variable).toBe("PORT")
     expect(issues[0]?.files).toEqual(["/repo/a/env.schema.ts", "/repo/b/env.schema.ts"])
+    expect(issues[0]?.code).toBe("processor-return-type-conflict")
   })
 
   it("warns (not errors) when processors differ without explicit annotations", () => {
@@ -86,6 +87,7 @@ describe("detectCompatibilityIssues", () => {
     const issues = detectCompatibilityIssues([a, b])
     expect(issues).toHaveLength(1)
     expect(issues[0]?.severity).toBe("warning")
+    expect(issues[0]?.code).toBe("processor-source-conflict")
   })
 
   it("warns when validators differ, independently of processor compatibility", () => {
@@ -103,6 +105,7 @@ describe("detectCompatibilityIssues", () => {
     const issues = detectCompatibilityIssues([a, b])
     expect(issues).toHaveLength(1)
     expect(issues[0]?.severity).toBe("warning")
+    expect(issues[0]?.code).toBe("validator-source-conflict")
   })
 
   it("does not flag identical processor/validator source across files", () => {
@@ -122,18 +125,6 @@ describe("detectCompatibilityIssues", () => {
     const b = makeContract("/repo/b/env.schema.ts", "bEnv", [makeVariable({ key: "ONLY_B" })])
 
     expect(detectCompatibilityIssues([a, b])).toHaveLength(0)
-  })
-
-  it("existing checks (processor/validator) never set a code -- only the new duplicate-documentation check does", () => {
-    const a = makeContract("/repo/a/env.schema.ts", "aEnv", [
-      makeVariable({ key: "PORT", hasProcessor: true, processorReturnType: "string" }),
-    ])
-    const b = makeContract("/repo/b/env.schema.ts", "bEnv", [
-      makeVariable({ key: "PORT", hasProcessor: true, processorReturnType: "number" }),
-    ])
-    const issues = detectCompatibilityIssues([a, b])
-    expect(issues).toHaveLength(1)
-    expect(issues[0]?.code).toBeUndefined()
   })
 
   describe("duplicate-variable-documentation warning", () => {
