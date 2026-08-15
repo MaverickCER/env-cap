@@ -110,4 +110,20 @@ describe(EXAMPLE, () => {
       await compareGoldenArtifacts(EXAMPLE, ["projected-audit-trail.json"]);
     },
   );
+
+  // Correctly empty for this fixture, same reason as Migration/Audit
+  // Trail's. The correlation logic itself was verified manually against a
+  // fresh (no-snapshot) run during development -- every changed variable
+  // and the contract correctly correlated to src/server.ts as their one
+  // real consumer, with totalDistinctFilesAffected deduplicating across
+  // both -- see projections/change-impact-blast-radius.mjs's own doc
+  // comment.
+  it.skipIf(!installed)(
+    "projected Change Impact B (blast radius) matches its golden expected/ copy",
+    async () => {
+      const stdout = runScript(EXAMPLE, "project:change-impact-blast-radius");
+      expect(stdout).toContain("nothing to correlate");
+      await compareGoldenArtifacts(EXAMPLE, ["projected-blast-radius.json"]);
+    },
+  );
 });
