@@ -1,3 +1,4 @@
+import { deepFreeze } from "./deep-freeze.js"
 import { parseIsoDate } from "./docs.js"
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 
@@ -71,22 +72,6 @@ export function applyLiveExpirationOverrides(
   }))
 }
 
-/** Recursively freezes a fully-independent contracts array (see `applyLiveExpirationOverrides`) so a mutation anywhere downstream throws instead of silently succeeding. */
-function deepFreezeContracts(
-  contracts: readonly DiscoveredContract[],
-): readonly DiscoveredContract[] {
-  for (const contract of contracts) {
-    for (const variable of contract.variables) {
-      Object.freeze(variable.extra)
-      Object.freeze(variable)
-    }
-    Object.freeze(contract.variables)
-    if (contract.metadata) Object.freeze(contract.metadata)
-    Object.freeze(contract)
-  }
-  return Object.freeze(contracts)
-}
-
 /**
  * Orchestration entry point -- the only place `liveExpirationDates` is ever invoked.
  *
@@ -105,5 +90,5 @@ export async function resolveLiveExpirationDates(
 ): Promise<readonly DiscoveredContract[]> {
   if (!liveExpirationDates) return contracts
   const overrides = await liveExpirationDates(collectVariableNames(contracts))
-  return deepFreezeContracts(applyLiveExpirationOverrides(contracts, overrides))
+  return deepFreeze(applyLiveExpirationOverrides(contracts, overrides))
 }
