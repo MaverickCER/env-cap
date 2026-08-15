@@ -30,6 +30,7 @@ scripts/
   project-findings.mjs              <- runs the unified filterable Finding list projection
   project-drift.mjs                 <- runs the Configuration Drift projection
   project-migration.mjs             <- runs the Configuration Migration projection
+  project-change-impact-audit-trail.mjs <- runs the Change Impact A (audit trail) projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
@@ -41,6 +42,7 @@ projections/
   findings.mjs                       <- the unified filterable Finding list reference projection
   drift.mjs                          <- the "Configuration Drift" reference projection
   migration.mjs                      <- the "Configuration Migration" reference projection
+  change-impact-audit-trail.mjs      <- the Change Impact A (audit trail) reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
@@ -73,6 +75,7 @@ npm run project:dependency-graph   # generateEvidenceModel() + the Configuration
 npm run project:findings           # generateEvidenceModel() + the unified filterable Finding list projection
 npm run project:drift              # generateEvidenceModel() + checkEnvArtifacts() + the Configuration Drift projection
 npm run project:migration          # generateEvidenceModel() + the Configuration Migration projection
+npm run project:change-impact-audit-trail  # generateEvidenceModel() + the Change Impact A projection
 ```
 
 ## The projections landed so far
@@ -152,6 +155,13 @@ referencing entirely, not update to a new name). Empty for this example on purpo
 hasn't changed since the committed manifest snapshot, so there's nothing to migrate -- the
 correlation logic itself is already covered by `test/build/change-model.test.ts`; this
 projection only reshapes already-tested data.
+
+**Change Impact A (audit trail)** (`projections/change-impact-audit-trail.mjs`) -- absorbs the
+audit's "Audit Trail" report type, scoped to "since the one committed manifest snapshot" (already
+supported by Change Model) rather than true N-run history, which would be new scope beyond ADR
+0021's single-snapshot design -- the plan's own guidance for this phase. A thin reshape of
+`evidence.change` plus one human-readable summary line; empty for this example's fixture for the
+same reason Configuration Migration's is.
 
 ## Known divergences from the direct-call baseline
 

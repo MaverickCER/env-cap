@@ -14,7 +14,8 @@
     "project:dependency-graph": "npm run generate:env && node scripts/project-dependency-graph.mjs",
     "project:findings": "npm run generate:env && node scripts/project-findings.mjs",
     "project:drift": "npm run generate:env && node scripts/project-drift.mjs",
-    "project:migration": "npm run generate:env && node scripts/project-migration.mjs"
+    "project:migration": "npm run generate:env && node scripts/project-migration.mjs",
+    "project:change-impact-audit-trail": "npm run generate:env && node scripts/project-change-impact-audit-trail.mjs"
   },
   "dependencies": {
     "@maverickcer/env-cap": "file:../.."

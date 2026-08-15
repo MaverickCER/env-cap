@@ -69,6 +69,7 @@ const EXAMPLES = {
       "projected-findings.json",
       "projected-drift.json",
       "projected-migration.json",
+      "projected-audit-trail.json",
     ],
     extraScripts: [
       "project:env-example",
@@ -80,6 +81,7 @@ const EXAMPLES = {
       "project:findings",
       "project:drift",
       "project:migration",
+      "project:change-impact-audit-trail",
     ],
   },
 }
