@@ -63,6 +63,9 @@ const EXAMPLES = {
       "projected-inventory.json",
       "projected-ownership.json",
       "projected-lifecycle.json",
+      "projected-dependency-graph.dot",
+      "projected-dependency-graph.mmd",
+      "projected-dependency-graph.json",
     ],
     extraScripts: [
       "project:env-example",
@@ -70,6 +73,7 @@ const EXAMPLES = {
       "project:inventory",
       "project:ownership",
       "project:lifecycle",
+      "project:dependency-graph",
     ],
   },
 }

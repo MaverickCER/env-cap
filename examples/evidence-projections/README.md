@@ -16,6 +16,7 @@ each projection's output can be verified against the existing, already-tested re
 ```
 src/
   env.ts                          <- the same schema as examples/basic-node/src/env.ts
+  server.ts                        <- a minimal real consumer (not a runnable app -- see below)
   generated/
     env.manifest.ts                <- generated, do not edit
 scripts/
@@ -25,6 +26,7 @@ scripts/
   project-inventory.mjs             <- runs the Configuration Inventory projection
   project-ownership.mjs             <- runs the Configuration Ownership projection
   project-lifecycle.mjs             <- runs the Configuration Lifecycle projection
+  project-dependency-graph.mjs      <- runs the Configuration Dependency projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
@@ -32,6 +34,7 @@ projections/
   inventory.mjs                     <- the "Configuration Inventory" reference projection
   ownership.mjs                     <- the "Configuration Ownership" reference projection
   lifecycle.mjs                     <- the "Configuration Lifecycle" reference projection
+  dependency-graph.mjs              <- the "Configuration Dependency" reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
@@ -40,8 +43,15 @@ projected-config-reference.md        <- generated (by the config-reference proje
 projected-inventory.json             <- generated (by the inventory projection)
 projected-ownership.json             <- generated (by the ownership projection)
 projected-lifecycle.json             <- generated (by the lifecycle projection)
+projected-dependency-graph.{dot,mmd,json} <- generated (by the dependency-graph projection)
 expected/                            <- golden regression fixtures, see examples/README.md
 ```
+
+`src/server.ts` is a minimal, real consumer of `env` (imports it, reads two of its five
+variables) -- not a runnable app (this example has no `start` script; other examples like
+`basic-node` already cover the runtime-validation story). It exists so the projections that
+depend on real usage data (Configuration Ownership, Configuration Dependency) have something
+more interesting to show than "never consumed anywhere."
 
 ## Running it
 
@@ -53,6 +63,7 @@ npm run project:config-reference   # generateEvidenceModel() + the Configuration
 npm run project:inventory          # generateEvidenceModel() + the Configuration Inventory projection
 npm run project:ownership          # generateEvidenceModel() + the Configuration Ownership projection
 npm run project:lifecycle          # generateEvidenceModel() + the Configuration Lifecycle projection
+npm run project:dependency-graph   # generateEvidenceModel() + the Configuration Dependency projection
 ```
 
 ## The projections landed so far
@@ -91,6 +102,15 @@ for expiring entries). Also fixed a real bug found while building this: `Lifecyc
 was leaking an absolute, machine-specific filesystem path, inconsistent with
 `LifecycleModelContract.file`'s own root-relative convention on the very same model — fixed at
 the source (`src/build/lifecycle-model.ts`), not worked around here.
+
+**Configuration Dependency** (`projections/dependency-graph.mjs`) — DOT, Mermaid, and plain JSON
+graph export over Dependency Model. Unlike every projection before it, there's no existing
+`@maverickcer/env-cap/build` renderer to reshape into at all: `dependency-model.ts`'s own module
+doc comment says graph-format rendering is "deliberately not here -- that's presentation over
+this model's data, not the model itself" (ADR 0027). This is genuinely new rendering logic, built
+from `DependencyModel.consumers` (ADR 0027's inverse file→contracts index) -- one node per
+contract, one node per consuming file, one directed edge per real "this file consumes this
+contract" relationship.
 
 ## Known divergences from the direct-call baseline
 
