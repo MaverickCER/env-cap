@@ -4,6 +4,7 @@
     "src/runtime/index.ts",
     "src/build/index.ts",
     "src/helpers/index.ts",
+    "src/evidence/index.ts",
     "src/eslint-plugin/index.ts"
   ],
   "out": "api-docs",

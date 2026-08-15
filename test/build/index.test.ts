@@ -42,6 +42,7 @@ describe("env-cap/build entry point", () => {
     expect(buildEntryPoint.extractDeclaredVariables).toBeTypeOf("function")
     expect(buildEntryPoint.renderEnvExample).toBeTypeOf("function")
     expect(buildEntryPoint.writeEnvExample).toBeTypeOf("function")
+    expect(buildEntryPoint.EVIDENCE_MODEL_SCHEMA_VERSION).toBeTypeOf("number")
     expect(buildEntryPoint.detectExclusiveGroupIssues).toBeTypeOf("function")
     expect(buildEntryPoint.buildFindingModel).toBeTypeOf("function")
     expect(buildEntryPoint.FINDING_MODEL_SCHEMA_VERSION).toBeTypeOf("number")

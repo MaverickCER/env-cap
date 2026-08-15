@@ -63,6 +63,17 @@ A breaking change to any of them is not a semver violation today; each is
 promoted to Stable independently once real usage shows its current shape is
 right, the same promotion path `packages` itself is following.
 
+**`@maverickcer/env-cap/evidence`** (`defineEvidenceProjection`, and the
+`EvidenceModel` shape it projects over) ships Experimental for the same
+reason -- see [ADR 0031](specs/decisions/0031-evidence-entry-point.md) and
+[ADR 0032](specs/decisions/0032-evidence-projection-provenance-mechanism.md).
+The mechanism (automatic read-only enforcement, field-level provenance
+tracking) is new enough that real projection authorship -- both env-cap's own
+reference projections and a consumer's custom ones -- is likely to surface a
+better shape for `EvidenceProjectionResult.sources` in particular (currently
+flat `EvidenceModel` field-path strings, not yet resolved into structured
+`EvidenceReference`s -- see ADR 0032's Consequences).
+
 ## Private
 
 Never covered by semver, may change at any time without notice:

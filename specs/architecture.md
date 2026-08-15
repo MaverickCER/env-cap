@@ -8,7 +8,7 @@ For the reasoning behind these boundaries, including rejected alternatives,
 see [`decisions/`](decisions/). This document describes the current
 architecture; the ADRs explain why it was designed this way.
 
-## The four entry points
+## The five entry points
 
 ```
 
@@ -16,6 +16,7 @@ src/
 ├── runtime/        @maverickcer/env-cap                 (runtime library)
 ├── build/          @maverickcer/env-cap/build             (Node-only build tooling)
 ├── helpers/        @maverickcer/env-cap/helpers           (optional utilities)
+├── evidence/       @maverickcer/env-cap/evidence          (Evidence Model projections)
 └── eslint-plugin/  @maverickcer/env-cap/eslint-plugin      (capability-owned-access lint rule)
 
 ```
@@ -30,16 +31,21 @@ zero cross-folder dependency, including internal utilities.
 `eslint-plugin/no-raw-process-env.ts`; rather than living in a shared
 internal module both would depend on, each directory owns its own copy
 (`build/glob.ts`, `eslint-plugin/glob.ts` -- see ADR 0017's "Alternatives
-considered"). `helpers` has exactly one cross-folder import, and it's
-structural, not incidental: `processors.ts`/`validators.ts` import
-`Processor`/`Validator` as types (erased at compile time) from
-`runtime/index.ts`, because a helper's whole job is producing a value that
-type-checks as the exact shape `createEnv()` expects -- that contract can't
-be expressed without referencing runtime's own type. This is deliberate, not
-an oversight: it's what lets any of these four directories move to its own
-repository independent of the others, with `helpers` simply gaining
-`@maverickcer/env-cap` as an ordinary dependency the way any package
-depending on another package's published types would.
+considered"). `helpers` and `evidence` each have exactly one cross-folder
+import, and both are structural, not incidental. `helpers`' `processors.ts`/
+`validators.ts` import `Processor`/`Validator` as types (erased at compile
+time) from `runtime/index.ts`, because a helper's whole job is producing a
+value that type-checks as the exact shape `createEnv()` expects -- that
+contract can't be expressed without referencing runtime's own type.
+`evidence/define-projection.ts` imports `EvidenceModel` as a type (also
+erased at compile time) from `build/evidence-model.ts`, for the same reason:
+a projector's whole job is a function _of_ that shape, which can't be named
+without referencing it -- see ADR 0031. Neither edge is an oversight: it's
+what lets any of these five directories move to its own repository
+independent of the others, with `helpers`/`evidence` simply gaining
+`@maverickcer/env-cap`/`@maverickcer/env-cap-build` as an ordinary
+dependency the way any package depending on another package's published
+types would.
 
 `src/cli/` (the `env-cap` bin, not a `package.json#exports` subpath) has the
 same kind of real, intentional dependency on `build` -- it imports
@@ -78,6 +84,10 @@ flowchart TB
         GEN -.->|"same discovery + link,<br/>compare instead of write"| CHECKMODE
     end
 
+    subgraph EVIDENCE["./evidence - isomorphic, optional"]
+        DEFPROJ["defineEvidenceProjection()"]
+    end
+
     subgraph ESLINT["./eslint-plugin"]
         RULE["no-raw-process-env rule"]
     end
@@ -87,14 +97,16 @@ flowchart TB
     end
 
     HELPERS -->|"type-only import:<br/>Processor / Validator"| RUNTIME
+    EVIDENCE -->|"type-only import:<br/>EvidenceModel"| BUILD
     CLIBIN -->|"imports build's public<br/>src/build/index.ts"| BUILD
 ```
 
 `build`, `eslint-plugin`, and `runtime` have no edges between them above
 because none exist: each owns its own copy of shared internals (e.g.
-`glob.ts`) rather than importing from another entry point. `helpers`' single
-edge is type-only and erased at compile time. This is what the tree-shaking
-and bundle-size tests in the previous paragraph actually verify.
+`glob.ts`) rather than importing from another entry point. `helpers`' and
+`evidence`'s single edges are both type-only and erased at compile time.
+This is what the tree-shaking and bundle-size tests in the previous
+paragraph actually verify.
 
 ## `runtime/` — define, validate, cache, and expose environment values
 
@@ -470,3 +482,5 @@ contract.
 | Ownership Model shares one effectiveOwner() rule, fixing a pre-existing divergence                                     | [0028](decisions/0028-ownership-model-shared-effective-owner.md)                |
 | Lifecycle Model adds deprecation/rename fields, promotes ExpiringEntry                                                 | [0029](decisions/0029-lifecycle-model-deprecation-rename-fields.md)             |
 | Change Model wraps the existing manifest change report                                                                 | [0030](decisions/0030-change-model-wraps-manifest-change-report.md)             |
+| A 5th public entry point (`./evidence`) for Evidence Model projections                                                 | [0031](decisions/0031-evidence-entry-point.md)                                  |
+| Evidence projection provenance via a non-frozen Proxy tracking membrane, not `Object.freeze()`                         | [0032](decisions/0032-evidence-projection-provenance-mechanism.md)              |

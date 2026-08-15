@@ -32,10 +32,10 @@ and aggregated at build time. There is no global `env` object.
    Never put `description`/`owner`/`expiresAt` fields inside `createEnv()`; never expect
    `documentEnv()` to affect runtime behavior.
 4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`,
-   `./helpers`, `./eslint-plugin`, `./schema`, `./schema/*` (one JSON Schema per canonical
-   fact model, e.g. `./schema/contract-model`), and `./package.json`. Import only from
-   these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported build
-   internal (e.g. the dependency-graph engine).
+   `./helpers`, `./evidence`, `./eslint-plugin`, `./schema`, `./schema/*` (one JSON Schema
+   per canonical fact model, e.g. `./schema/contract-model`), and `./package.json`. Import
+   only from these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported
+   build internal (e.g. the dependency-graph engine).
 5. **Runtime and build are strictly separated.** `src/build` uses `node:fs`/`node:path`/
    `typescript` and must never be imported from runtime/browser code. `src/runtime` has
    zero filesystem access and zero dependencies, and is held to a 3KB gzip budget
@@ -112,6 +112,7 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
 | `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                                               |
 | `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation (see `VERSIONING.md` — only the four `generate*()` orchestrators are Stable; the lower-level primitives it also exports are Experimental) |
 | `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                                                                                                                            |
+| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | `defineEvidenceProjection` — pure transforms over the Evidence Model (Experimental, see `VERSIONING.md`)                                                                               |
 | `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                                                                                                                         |
 
 ## Before finishing a change
