@@ -81,4 +81,10 @@ describe(EXAMPLE, () => {
       await compareGoldenArtifacts(EXAMPLE, ["projected-findings.json"]);
     },
   );
+
+  it.skipIf(!installed)("projected Configuration Drift matches its golden expected/ copy", async () => {
+    const stdout = runScript(EXAMPLE, "project:drift");
+    expect(stdout).toContain("No drift -- every checked artifact is up to date.");
+    await compareGoldenArtifacts(EXAMPLE, ["projected-drift.json"]);
+  });
 });
