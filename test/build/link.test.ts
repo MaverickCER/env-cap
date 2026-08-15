@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 import fs from "node:fs/promises"
-import { linkFiles } from "../../src/build/link.js"
+import { effectiveOwner, linkFiles } from "../../src/build/link.js"
+import type { DiscoveredContract, DiscoveredVariable } from "../../src/build/link.js"
 import type { ImportResolutionContext } from "../../src/build/resolution/resolve-import.js"
 import type { PackageSchemaResolutionResult } from "../../src/build/resolution/resolve-package-schema.js"
 import {
@@ -338,5 +339,76 @@ describe("linkFiles", () => {
     )
 
     await expect(linkFiles([file], readFile, context)).resolves.toBeDefined()
+  })
+})
+
+function makeVariable(
+  overrides: Partial<DiscoveredVariable> & { key: string },
+): DiscoveredVariable {
+  return {
+    hasDefault: false,
+    defaultValue: undefined,
+    hasProcessor: false,
+    processorSource: undefined,
+    processorReturnType: undefined,
+    hasValidator: false,
+    validatorSource: undefined,
+    context: undefined,
+    description: undefined,
+    owner: undefined,
+    classification: undefined,
+    expiresAt: undefined,
+    refreshInstructions: undefined,
+    required: undefined,
+    extra: {},
+    documented: true,
+    ...overrides,
+  }
+}
+
+function makeContract(
+  overrides: Partial<DiscoveredContract> & { file: string; exportName: string },
+): DiscoveredContract {
+  return {
+    contractName: overrides.exportName,
+    active: true,
+    category: undefined,
+    exclusiveGroup: undefined,
+    owner: undefined,
+    classification: undefined,
+    expiresAt: undefined,
+    metadata: undefined,
+    variables: [],
+    documented: true,
+    packageOrigin: undefined,
+    ...overrides,
+  }
+}
+
+describe("effectiveOwner", () => {
+  it("returns the variable's own owner when it sets one, even if the contract also sets one", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      owner: "contract-team",
+    })
+    const variable = makeVariable({ key: "KEY", owner: "variable-team" })
+    expect(effectiveOwner(contract, variable)).toBe("variable-team")
+  })
+
+  it("falls back to the contract's owner when the variable doesn't set one", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      owner: "contract-team",
+    })
+    const variable = makeVariable({ key: "KEY" })
+    expect(effectiveOwner(contract, variable)).toBe("contract-team")
+  })
+
+  it("returns undefined when neither the variable nor the contract sets an owner", () => {
+    const contract = makeContract({ file: "/repo/a/env.schema.ts", exportName: "aEnv" })
+    const variable = makeVariable({ key: "KEY" })
+    expect(effectiveOwner(contract, variable)).toBeUndefined()
   })
 })

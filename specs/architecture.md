@@ -467,3 +467,4 @@ contract.
 | Contract Model is a new, versioned JSON projection, published alongside the manifest                                   | [0025](decisions/0025-contract-model-json-projection.md)                        |
 | Finding Model unifies four independently-shaped finding families                                                       | [0026](decisions/0026-finding-model-unifies-four-families.md)                   |
 | Dependency Model publishes a fact-shaped result, not the scanning engine                                               | [0027](decisions/0027-dependency-model-fact-shape-not-engine-access.md)         |
+| Ownership Model shares one effectiveOwner() rule, fixing a pre-existing divergence                                     | [0028](decisions/0028-ownership-model-shared-effective-owner.md)                |

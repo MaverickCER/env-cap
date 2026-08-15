@@ -384,3 +384,23 @@ export function summarizeContract(
     documented: contract.documented,
   }
 }
+
+/**
+ * A variable's owner, falling back to its contract's default when the
+ * variable itself doesn't set one.
+ *
+ * @remarks
+ * The one place this resolution rule should live -- see ADR 0028. Every
+ * caller that needs "who owns this variable" (the docs Catalog/ownership
+ * matrix/security review, and, as of ADR 0028, the usage report's
+ * variable-level ownership findings) must go through this, not
+ * `variable.owner` or `contract.owner` alone, so two call sites can never
+ * again disagree about who owns a variable the way `docs.ts` and
+ * `usage-report.ts` once did.
+ */
+export function effectiveOwner(
+  contract: DiscoveredContract,
+  variable: DiscoveredVariable,
+): string | undefined {
+  return variable.owner ?? contract.owner
+}
