@@ -27,6 +27,7 @@ scripts/
   project-ownership.mjs             <- runs the Configuration Ownership projection
   project-lifecycle.mjs             <- runs the Configuration Lifecycle projection
   project-dependency-graph.mjs      <- runs the Configuration Dependency projection
+  project-findings.mjs              <- runs the unified filterable Finding list projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
@@ -35,6 +36,7 @@ projections/
   ownership.mjs                     <- the "Configuration Ownership" reference projection
   lifecycle.mjs                     <- the "Configuration Lifecycle" reference projection
   dependency-graph.mjs              <- the "Configuration Dependency" reference projection
+  findings.mjs                       <- the unified filterable Finding list reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
@@ -64,6 +66,7 @@ npm run project:inventory          # generateEvidenceModel() + the Configuration
 npm run project:ownership          # generateEvidenceModel() + the Configuration Ownership projection
 npm run project:lifecycle          # generateEvidenceModel() + the Configuration Lifecycle projection
 npm run project:dependency-graph   # generateEvidenceModel() + the Configuration Dependency projection
+npm run project:findings           # generateEvidenceModel() + the unified filterable Finding list projection
 ```
 
 ## The projections landed so far
@@ -111,6 +114,17 @@ this model's data, not the model itself" (ADR 0027). This is genuinely new rende
 from `DependencyModel.consumers` (ADR 0027's inverse file→contracts index) -- one node per
 contract, one node per consuming file, one directed edge per real "this file consumes this
 contract" relationship.
+
+**Unified filterable Finding list** (`projections/findings.mjs`) — indexes Finding Model's flat
+`Finding[]` (ADR 0026) by severity, family, code, and contract, so a consumer can look a bucket
+up directly instead of filtering the whole array on every query. Also normalizes a real
+portability hazard: `ContractEvidenceReference.file` is documented as an absolute path (an
+intentional convention, matching what `CompatibilityIssue`/`DocumentationFindings` -- the sources
+`buildFindingModel()` adapts -- need for their own direct consumers), which would otherwise put a
+machine-specific filesystem path straight into this projection's JSON output. This projection
+normalizes it to Contract Model's portable, root-relative convention instead, the same choice
+`lifecycle.mjs` makes for `LifecycleModel.expiring[].file` -- except here it's Finding Model
+behaving exactly as documented, not a bug, so the fix belongs in the projection, not the source.
 
 ## Known divergences from the direct-call baseline
 
