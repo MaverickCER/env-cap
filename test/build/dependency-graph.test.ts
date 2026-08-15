@@ -5,12 +5,12 @@ import fs from "node:fs/promises"
 import { linkFiles } from "../../src/build/link.js"
 import type { DiscoveredContract } from "../../src/build/link.js"
 import { buildDependencyGraph, deriveOwnershipFindings } from "../../src/build/dependency-graph.js"
-import type { ImportResolutionContext } from "../../src/build/resolve-import.js"
-import type { PackageSchemaResolutionResult } from "../../src/build/resolve-package-schema.js"
+import type { ImportResolutionContext } from "../../src/build/resolution/resolve-import.js"
+import type { PackageSchemaResolutionResult } from "../../src/build/resolution/resolve-package-schema.js"
 import {
   createAliasResolutionCache,
   loadTsconfigPaths,
-} from "../../src/build/resolve-tsconfig-paths.js"
+} from "../../src/build/resolution/resolve-tsconfig-paths.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-dependency-graph")
@@ -96,6 +96,56 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
     expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("used")
     expect(contract.hasDynamicAccess).toBe(false)
+    // Line 1 is the import; the two accesses are on lines 2 and 3 respectively.
+    expect(contract.variables.get("STRIPE_KEY")?.lines).toEqual([2])
+    expect(contract.variables.get("WEBHOOK_SECRET")?.lines).toEqual([3])
+  })
+
+  it("records every line a variable is member-accessed on, not just the first", async () => {
+    const schemaFile = await write(
+      "payments/env.schema.ts",
+      `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
+    )
+    const consumerFile = await write(
+      "consumer.ts",
+      `import { paymentsEnv } from "./payments/env.schema.js";\nconsole.log(paymentsEnv.STRIPE_KEY);\nif (paymentsEnv.STRIPE_KEY) {}\n`,
+    )
+
+    const contracts = await discover([schemaFile])
+    const graph = await buildDependencyGraph(
+      contracts,
+      [schemaFile, consumerFile],
+      readFile,
+      context,
+    )
+
+    const contract = graph.contracts[0]
+    expect(contract.variables.get("STRIPE_KEY")?.lines).toEqual([2, 3])
+  })
+
+  it("leaves lines empty for an unconsumed or indeterminate variable", async () => {
+    const schemaFile = await write(
+      "payments/env.schema.ts",
+      `export const paymentsEnv = createEnv({ STRIPE_KEY: {}, WEBHOOK_SECRET: {} }, { name: "payments" });`,
+    )
+    const consumerFile = await write(
+      "consumer.ts",
+      `import { paymentsEnv } from "./payments/env.schema.js";\nconst key = "STRIPE_KEY";\npaymentsEnv[key];`,
+    )
+
+    const contracts = await discover([schemaFile])
+    const graph = await buildDependencyGraph(
+      contracts,
+      [schemaFile, consumerFile],
+      readFile,
+      context,
+    )
+
+    const contract = graph.contracts[0]
+    expect(contract.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
+    expect(contract.variables.get("STRIPE_KEY")?.lines).toEqual([])
+    expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
+    expect(contract.variables.get("WEBHOOK_SECRET")?.lines).toEqual([])
   })
 
   it("computed element access produces dynamic access and forces not-otherwise-accessed variables to indeterminate, never unconsumed", async () => {

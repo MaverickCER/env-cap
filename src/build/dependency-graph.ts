@@ -15,6 +15,13 @@ export interface VariableAccessInfo {
    *  unconsumed" bug report is debuggable without re-deriving the AST walk
    *  by hand. */
   readonly evidence: "member-access" | "dynamic-access" | "no-access"
+  /** Every line number (1-indexed) where a member access was observed for
+   *  this variable, aggregated across every consuming file -- empty unless
+   *  `status === "used"`. Previously computed by `scan-dependencies.ts`'s
+   *  `AccessSite.line` and discarded before reaching even this internal
+   *  type; threaded through as of ADR 0027 so `dependency-model.ts` can
+   *  publish it. */
+  readonly lines: readonly number[]
 }
 
 export interface ContractDependencySummary {
@@ -46,7 +53,7 @@ interface BuildingContract {
   contractName: string
   imported: boolean
   hasDynamicAccess: boolean
-  variables: Map<string, { hasMemberAccess: boolean }>
+  variables: Map<string, { hasMemberAccess: boolean; lines: number[] }>
   consumingFiles: Set<string>
   ambiguousBarrelFiles: Set<string>
 }
@@ -89,9 +96,9 @@ export async function buildDependencyGraph(
 
   const byIdentity = new Map<string, BuildingContract>()
   for (const contract of contracts) {
-    const variables = new Map<string, { hasMemberAccess: boolean }>()
+    const variables = new Map<string, { hasMemberAccess: boolean; lines: number[] }>()
     for (const variable of contract.variables)
-      variables.set(variable.key, { hasMemberAccess: false })
+      variables.set(variable.key, { hasMemberAccess: false, lines: [] })
     byIdentity.set(`${contract.file}#${contract.exportName}`, {
       file: contract.file,
       exportName: contract.exportName,
@@ -122,7 +129,10 @@ export async function buildDependencyGraph(
           building.hasDynamicAccess = true
         } else if (site.kind === "member") {
           const variable = building.variables.get(site.member)
-          if (variable) variable.hasMemberAccess = true
+          if (variable) {
+            variable.hasMemberAccess = true
+            variable.lines.push(site.line)
+          }
         }
         // "reference" sites only prove contract-level coupling (recorded above), never a specific variable's access.
       }
@@ -156,11 +166,15 @@ export async function buildDependencyGraph(
     const variables = new Map<string, VariableAccessInfo>()
     for (const [key, info] of building.variables) {
       if (info.hasMemberAccess) {
-        variables.set(key, { status: "used", evidence: "member-access" })
+        variables.set(key, {
+          status: "used",
+          evidence: "member-access",
+          lines: info.lines.sort((a, b) => a - b),
+        })
       } else if (building.hasDynamicAccess) {
-        variables.set(key, { status: "indeterminate", evidence: "dynamic-access" })
+        variables.set(key, { status: "indeterminate", evidence: "dynamic-access", lines: [] })
       } else {
-        variables.set(key, { status: "unconsumed", evidence: "no-access" })
+        variables.set(key, { status: "unconsumed", evidence: "no-access", lines: [] })
       }
     }
     finalContracts.push({
