@@ -29,6 +29,7 @@ describe("env-cap/build entry point", () => {
     expect(buildEntryPoint.CONTRACT_MODEL_SCHEMA_VERSION).toBeTypeOf("number")
     expect(buildEntryPoint.discoverSchemaFiles).toBeTypeOf("function")
     expect(buildEntryPoint.computeExpiringEntries).toBeTypeOf("function")
+    expect(buildEntryPoint.computeSecurityReviewCounters).toBeTypeOf("function")
     expect(buildEntryPoint.extractPreviouslyDocumentedKeys).toBeTypeOf("function")
     expect(buildEntryPoint.renderDocs).toBeTypeOf("function")
     expect(buildEntryPoint.computeReconciliation).toBeTypeOf("function")

@@ -97,10 +97,16 @@ export type {
   ContractModelVariable,
 } from "./contract-model.js"
 export { discoverSchemaFiles } from "./discover.js"
-export { computeExpiringEntries, extractPreviouslyDocumentedKeys, renderDocs } from "./docs.js"
+export {
+  computeExpiringEntries,
+  computeSecurityReviewCounters,
+  extractPreviouslyDocumentedKeys,
+  renderDocs,
+} from "./docs.js"
 export type {
   ExpiringEntry,
   RenderDocsOptions,
+  SecurityReviewCounters,
   UndocumentedContractRef,
   UndocumentedVariableRef,
 } from "./docs.js"

@@ -60,6 +60,13 @@ export function parseIsoDate(value: string): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date
 }
 
+const MS_PER_DAY = 86_400_000
+
+/** Days from `now` until `date`; negative when `date` is already in the past. The one place this arithmetic lives -- every wall-clock-relative computation in this file goes through it. */
+function daysRemainingFrom(date: Date, now: Date): number {
+  return Math.ceil((date.getTime() - now.getTime()) / MS_PER_DAY)
+}
+
 /**
  * Computes every contract- or variable-level `expiresAt` within `expiringWithinDays` of `now`, sorted soonest-first.
  *
@@ -72,13 +79,12 @@ export function computeExpiringEntries(
   now: Date,
 ): ExpiringEntry[] {
   const entries: ExpiringEntry[] = []
-  const msPerDay = 86_400_000
 
   for (const contract of contracts) {
     if (contract.expiresAt) {
       const date = parseIsoDate(contract.expiresAt)
       if (date) {
-        const daysRemaining = Math.ceil((date.getTime() - now.getTime()) / msPerDay)
+        const daysRemaining = daysRemainingFrom(date, now)
         if (daysRemaining <= expiringWithinDays) {
           entries.push({
             file: contract.file,
@@ -94,7 +100,7 @@ export function computeExpiringEntries(
       if (!variable.expiresAt) continue
       const date = parseIsoDate(variable.expiresAt)
       if (!date) continue
-      const daysRemaining = Math.ceil((date.getTime() - now.getTime()) / msPerDay)
+      const daysRemaining = daysRemainingFrom(date, now)
       if (daysRemaining <= expiringWithinDays) {
         entries.push({
           file: contract.file,
@@ -583,7 +589,7 @@ function renderLifecycleReport(
       const expiry = expiresAt ? parseIsoDate(expiresAt) : undefined
       let expiresCell = expiresAt ?? "--"
       if (expiry && expiresAt) {
-        const daysRemaining = Math.ceil((expiry.getTime() - now.getTime()) / 86_400_000)
+        const daysRemaining = daysRemainingFrom(expiry, now)
         if (daysRemaining < 0)
           expiresCell = `${expiresAt} (**expired ${Math.abs(daysRemaining)}d ago**)`
         else if (daysRemaining <= expiringWithinDays)
@@ -614,13 +620,42 @@ function renderLifecycleReport(
 // Section 5 -- security review
 // ---------------------------------------------------------------------------
 
-function renderSecurityReview(
+/** Every number the security review reports, as structured data instead of only rendered Markdown text. */
+export interface SecurityReviewCounters {
+  readonly totalContracts: number
+  readonly totalVariableDeclarations: number
+  readonly activeVariableDeclarations: number
+  readonly uniqueVariableNames: number
+  readonly expiresAtSetCount: number
+  readonly expiredCount: number
+  readonly expiringSoonCount: number
+  readonly requiredCount: number
+  readonly refreshInstructionsCount: number
+  readonly noOwnerCount: number
+  readonly duplicateVariableNameCount: number
+  readonly undocumentedContractCount: number
+  readonly undocumentedVariableCount: number
+}
+
+/**
+ * Computes every number `renderSecurityReview()` reports, as real data.
+ *
+ * @remarks
+ * Previously this arithmetic lived entirely inside the renderer as closure
+ * locals that only ever became interpolated Markdown text -- no exported
+ * type backed any of it, so nothing downstream (the `--json` envelope, a CI
+ * gate, a future Finding Model adapter) could consume it as data. Extracted
+ * so it can be reused wherever these facts are needed, not just prose.
+ */
+export function computeSecurityReviewCounters(
   contracts: readonly DiscoveredContract[],
-  options: RenderDocsOptions,
+  expiringWithinDays: number,
   now: Date,
-): string[] {
-  let totalVariables = 0
-  let activeVariables = 0
+  undocumentedContractCount: number,
+  undocumentedVariableCount: number,
+): SecurityReviewCounters {
+  let totalVariableDeclarations = 0
+  let activeVariableDeclarations = 0
   const uniqueKeys = new Set<string>()
   const keyContractCount = new Map<string, number>()
   let expiresAtSetCount = 0
@@ -632,8 +667,8 @@ function renderSecurityReview(
 
   for (const contract of contracts) {
     for (const variable of contract.variables) {
-      totalVariables += 1
-      if (contract.active) activeVariables += 1
+      totalVariableDeclarations += 1
+      if (contract.active) activeVariableDeclarations += 1
       uniqueKeys.add(variable.key)
       keyContractCount.set(variable.key, (keyContractCount.get(variable.key) ?? 0) + 1)
       if (variable.required) requiredCount += 1
@@ -643,36 +678,67 @@ function renderSecurityReview(
         expiresAtSetCount += 1
         const date = parseIsoDate(variable.expiresAt)
         if (date) {
-          const daysRemaining = Math.ceil((date.getTime() - now.getTime()) / 86_400_000)
+          const daysRemaining = daysRemainingFrom(date, now)
           if (daysRemaining < 0) expiredCount += 1
-          else if (daysRemaining <= options.expiringWithinDays) expiringSoonCount += 1
+          else if (daysRemaining <= expiringWithinDays) expiringSoonCount += 1
         }
       }
     }
   }
 
-  const duplicateKeyCount = [...keyContractCount.values()].filter((count) => count > 1).length
+  const duplicateVariableNameCount = [...keyContractCount.values()].filter(
+    (count) => count > 1,
+  ).length
 
-  const lines = [
+  return {
+    totalContracts: contracts.length,
+    totalVariableDeclarations,
+    activeVariableDeclarations,
+    uniqueVariableNames: uniqueKeys.size,
+    expiresAtSetCount,
+    expiredCount,
+    expiringSoonCount,
+    requiredCount,
+    refreshInstructionsCount,
+    noOwnerCount,
+    duplicateVariableNameCount,
+    undocumentedContractCount,
+    undocumentedVariableCount,
+  }
+}
+
+function renderSecurityReview(
+  contracts: readonly DiscoveredContract[],
+  options: RenderDocsOptions,
+  now: Date,
+): string[] {
+  const counters = computeSecurityReviewCounters(
+    contracts,
+    options.expiringWithinDays,
+    now,
+    options.undocumentedContracts.length,
+    options.undocumentedVariables.length,
+  )
+
+  return [
     "## Security review",
     "",
     '<a id="security-review"></a>',
     "",
-    `- Total contracts: ${contracts.length}`,
-    `- Total variable declarations: ${totalVariables} (${activeVariables} from active contracts)`,
-    `- Unique variable names: ${uniqueKeys.size}`,
-    `- Variables with \`expiresAt\` set: ${expiresAtSetCount}`,
-    `  - Already expired: ${expiredCount}`,
-    `  - Expiring within ${options.expiringWithinDays} days: ${expiringSoonCount}`,
-    `- Variables marked \`required: true\`: ${requiredCount}`,
-    `- Variables with refresh instructions: ${refreshInstructionsCount}`,
-    `- Variables with no assigned owner: ${noOwnerCount}`,
-    `- Variable names declared by more than one contract: ${duplicateKeyCount}`,
-    `- Undocumented contracts: ${options.undocumentedContracts.length}`,
-    `- Undocumented variables: ${options.undocumentedVariables.length}`,
+    `- Total contracts: ${counters.totalContracts}`,
+    `- Total variable declarations: ${counters.totalVariableDeclarations} (${counters.activeVariableDeclarations} from active contracts)`,
+    `- Unique variable names: ${counters.uniqueVariableNames}`,
+    `- Variables with \`expiresAt\` set: ${counters.expiresAtSetCount}`,
+    `  - Already expired: ${counters.expiredCount}`,
+    `  - Expiring within ${options.expiringWithinDays} days: ${counters.expiringSoonCount}`,
+    `- Variables marked \`required: true\`: ${counters.requiredCount}`,
+    `- Variables with refresh instructions: ${counters.refreshInstructionsCount}`,
+    `- Variables with no assigned owner: ${counters.noOwnerCount}`,
+    `- Variable names declared by more than one contract: ${counters.duplicateVariableNameCount}`,
+    `- Undocumented contracts: ${counters.undocumentedContractCount}`,
+    `- Undocumented variables: ${counters.undocumentedVariableCount}`,
     "",
   ]
-  return lines
 }
 
 // ---------------------------------------------------------------------------

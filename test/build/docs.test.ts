@@ -4,6 +4,7 @@ import {
   extractPreviouslyDocumentedKeys,
   extractPreviouslyActiveKeys,
   computeExpiringEntries,
+  computeSecurityReviewCounters,
   buildCatalog,
   normalizeDocsForComparison,
   type RenderDocsOptions,
@@ -681,6 +682,88 @@ describe("computeExpiringEntries", () => {
     })
     const entries = computeExpiringEntries([contract], 30, NOW)
     expect(entries.map((e) => e.key)).toEqual(["EXPIRING"])
+  })
+})
+
+describe("computeSecurityReviewCounters", () => {
+  it("counts totals, active-only variables, and unique vs. total variable names", () => {
+    const a = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      active: true,
+      variables: [makeVariable({ key: "SHARED" }), makeVariable({ key: "ONLY_A" })],
+    })
+    const b = makeContract({
+      file: "/repo/b/env.schema.ts",
+      exportName: "bEnv",
+      active: false,
+      variables: [makeVariable({ key: "SHARED" })],
+    })
+
+    const counters = computeSecurityReviewCounters([a, b], 30, NOW, 0, 0)
+    expect(counters.totalContracts).toBe(2)
+    expect(counters.totalVariableDeclarations).toBe(3)
+    expect(counters.activeVariableDeclarations).toBe(2)
+    expect(counters.uniqueVariableNames).toBe(2)
+    expect(counters.duplicateVariableNameCount).toBe(1)
+  })
+
+  it("classifies expiresAt into expired vs. expiring-soon vs. neither, sharing the same day-math computeExpiringEntries uses", () => {
+    const contract = makeContract({
+      file: "/repo/x/env.schema.ts",
+      exportName: "xEnv",
+      variables: [
+        makeVariable({ key: "EXPIRED", expiresAt: "2025-01-01" }),
+        makeVariable({ key: "EXPIRING_SOON", expiresAt: "2026-01-15" }),
+        makeVariable({ key: "FAR_OUT", expiresAt: "2027-01-01" }),
+        makeVariable({ key: "NO_EXPIRY" }),
+      ],
+    })
+
+    const counters = computeSecurityReviewCounters([contract], 30, NOW, 0, 0)
+    expect(counters.expiresAtSetCount).toBe(3)
+    expect(counters.expiredCount).toBe(1)
+    expect(counters.expiringSoonCount).toBe(1)
+  })
+
+  it("counts required/refresh-instructions/no-owner using the same effective-owner fallback the ownership matrix uses", () => {
+    const contract = makeContract({
+      file: "/repo/x/env.schema.ts",
+      exportName: "xEnv",
+      owner: "contract-owner",
+      variables: [
+        makeVariable({ key: "REQUIRED", required: true }),
+        makeVariable({ key: "REFRESHABLE", refreshInstructions: "Rotate it." }),
+        makeVariable({ key: "OWNED_BY_CONTRACT" }), // falls back to contract.owner -- not "no owner"
+        makeVariable({ key: "TRULY_UNOWNED", owner: undefined }),
+      ],
+    })
+
+    const counters = computeSecurityReviewCounters([contract], 30, NOW, 0, 0)
+    expect(counters.requiredCount).toBe(1)
+    expect(counters.refreshInstructionsCount).toBe(1)
+    expect(counters.noOwnerCount).toBe(0) // every variable resolves an owner via the contract fallback
+  })
+
+  it("counts a variable with no owner at any level (variable or contract) as unowned", () => {
+    const contract = makeContract({
+      file: "/repo/x/env.schema.ts",
+      exportName: "xEnv",
+      variables: [makeVariable({ key: "UNOWNED" })],
+    })
+    const counters = computeSecurityReviewCounters([contract], 30, NOW, 0, 0)
+    expect(counters.noOwnerCount).toBe(1)
+  })
+
+  it("passes through the undocumented contract/variable counts given by the caller", () => {
+    const contract = makeContract({
+      file: "/repo/x/env.schema.ts",
+      exportName: "xEnv",
+      variables: [makeVariable({ key: "A" })],
+    })
+    const counters = computeSecurityReviewCounters([contract], 30, NOW, 2, 5)
+    expect(counters.undocumentedContractCount).toBe(2)
+    expect(counters.undocumentedVariableCount).toBe(5)
   })
 })
 
