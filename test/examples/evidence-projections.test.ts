@@ -61,4 +61,16 @@ describe(EXAMPLE, () => {
     runScript(EXAMPLE, "project:lifecycle");
     await compareGoldenArtifacts(EXAMPLE, ["projected-lifecycle.json"]);
   });
+
+  it.skipIf(!installed)(
+    "projected Configuration Dependency (DOT/Mermaid/JSON) matches its golden expected/ copies",
+    async () => {
+      runScript(EXAMPLE, "project:dependency-graph");
+      await compareGoldenArtifacts(EXAMPLE, [
+        "projected-dependency-graph.dot",
+        "projected-dependency-graph.mmd",
+        "projected-dependency-graph.json",
+      ]);
+    },
+  );
 });

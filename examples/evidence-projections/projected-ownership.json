@@ -5,18 +5,30 @@
       "file": "src/env.ts",
       "owner": "platform-team",
       "variableCount": 5,
-      "consumers": []
+      "consumers": [
+        "src/server.ts"
+      ]
     }
   ],
-  "abandonedContracts": [
+  "abandonedContracts": [],
+  "unresolvedConsumers": [],
+  "unconsumedOwnedVariables": [
     {
       "contractName": "app",
-      "file": "src/env.ts",
-      "owner": "platform-team"
+      "owner": "platform-team",
+      "key": "DATABASE_URL"
+    },
+    {
+      "contractName": "app",
+      "owner": "platform-team",
+      "key": "LOG_LEVEL"
+    },
+    {
+      "contractName": "app",
+      "owner": "platform-team",
+      "key": "STRIPE_KEY"
     }
   ],
-  "unresolvedConsumers": [],
-  "unconsumedOwnedVariables": [],
   "indeterminate": [],
   "parseWarnings": []
 }
