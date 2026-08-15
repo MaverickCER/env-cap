@@ -44,6 +44,8 @@ describe("env-cap/build entry point", () => {
     expect(buildEntryPoint.FINDING_MODEL_SCHEMA_VERSION).toBeTypeOf("number")
     expect(buildEntryPoint.linkFiles).toBeTypeOf("function")
     expect(buildEntryPoint.effectiveOwner).toBeTypeOf("function")
+    expect(buildEntryPoint.buildLifecycleModel).toBeTypeOf("function")
+    expect(buildEntryPoint.LIFECYCLE_MODEL_SCHEMA_VERSION).toBeTypeOf("number")
     expect(buildEntryPoint.applyLiveExpirationOverrides).toBeTypeOf("function")
     expect(buildEntryPoint.collectVariableNames).toBeTypeOf("function")
     expect(buildEntryPoint.resolveLiveExpirationDates).toBeTypeOf("function")

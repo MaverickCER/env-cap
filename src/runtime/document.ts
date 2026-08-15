@@ -22,6 +22,14 @@ export interface VariableDocs {
   refreshInstructions?: string
   /** Documentation-level assertion that this variable must be set. Independent of how (or whether) a validator actually enforces it. */
   required?: boolean
+  /** Marks this variable as being phased out. Independent of `expiresAt` (a rotation/sunset date) and of the contract-level `active` switch (on/off, not a phase-out signal). */
+  deprecated?: boolean
+  /** Why this variable is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`. */
+  deprecatedReason?: string
+  /** ISO date string -- by when a deprecated variable must be removed. Only meaningful alongside `deprecated: true`. */
+  removeBy?: string
+  /** The previous environment variable name this one replaces, if this declaration is the result of a rename. Lets the Change Model correlate a remove+add pair into a single rename entry instead of two unrelated changes. */
+  renamedFrom?: string
   /** Anything else worth recording (setup steps, a link to docs, rotation cadence, ...). */
   [key: string]: string | boolean | undefined
 }
@@ -42,6 +50,10 @@ export interface ContractDocs {
   classification?: VariableClassification
   /** Whole-contract/feature sunset date, ISO date string. */
   expiresAt?: string
+  /** Marks this whole contract/feature as being phased out. Independent of `active` (on/off, not a phase-out signal). */
+  deprecated?: boolean
+  /** Why this contract is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`. */
+  deprecatedReason?: string
   /** Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this feature. */
   metadata?: Record<string, string>
   /** Per-variable documentation, keyed by variable name. Any key not present here is reported as undocumented; any key here with no matching schema variable is reported as stale. */

@@ -32,6 +32,14 @@ export interface DiscoveredVariable extends DiscoveredSchemaVariable {
   readonly refreshInstructions: string | undefined
   /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
   readonly required: boolean | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
+  readonly deprecated: boolean | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
+  readonly deprecatedReason: string | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
+  readonly removeBy: string | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any -- the previous variable name this one renames, if this declaration is the result of a rename. */
+  readonly renamedFrom: string | undefined
   /** Fields other than the known {@link runtime.VariableDocs} keys, keyed by field name. */
   readonly extra: Readonly<Record<string, string>>
   /** Whether this specific key had a matching entry in the linked `documentEnv()` call, if any. */
@@ -58,6 +66,10 @@ export interface DiscoveredContract {
   readonly classification: DiscoveredClassification | undefined
   /** From the linked `documentEnv()` call, if any. */
   readonly expiresAt: string | undefined
+  /** From the linked `documentEnv()` call, if any. */
+  readonly deprecated: boolean | undefined
+  /** From the linked `documentEnv()` call, if any. */
+  readonly deprecatedReason: string | undefined
   /** From the linked `documentEnv()` call, if any. */
   readonly metadata: Readonly<Record<string, string>> | undefined
   /** Every variable declared in the schema, merged with its linked documentation. */
@@ -311,6 +323,10 @@ export async function linkFiles(
         expiresAt: vd?.expiresAt,
         refreshInstructions: vd?.refreshInstructions,
         required: vd?.required,
+        deprecated: vd?.deprecated,
+        deprecatedReason: vd?.deprecatedReason,
+        removeBy: vd?.removeBy,
+        renamedFrom: vd?.renamedFrom,
         extra: vd?.extra ?? {},
         documented: vd !== undefined,
       }
@@ -326,6 +342,8 @@ export async function linkFiles(
       owner: docs?.owner,
       classification: docs?.classification,
       expiresAt: docs?.expiresAt,
+      deprecated: docs?.deprecated,
+      deprecatedReason: docs?.deprecatedReason,
       metadata: docs?.metadata,
       packageOrigin: packageOrigins.get(entry.file),
       variables,
