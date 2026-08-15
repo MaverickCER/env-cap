@@ -14,9 +14,9 @@ import type {
   SchemaRef,
 } from "./parse.js"
 import { mustGet } from "./map-utils.js"
-import { resolveImportSpecifier } from "./resolve-import.js"
-import type { ImportResolutionContext } from "./resolve-import.js"
-import type { PackageOrigin } from "./resolve-package-schema.js"
+import { resolveImportSpecifier } from "./resolution/resolve-import.js"
+import type { ImportResolutionContext } from "./resolution/resolve-import.js"
+import type { PackageOrigin } from "./resolution/resolve-package-schema.js"
 
 /** One schema variable, merged with its linked `documentEnv()` documentation (if any). */
 export interface DiscoveredVariable extends DiscoveredSchemaVariable {

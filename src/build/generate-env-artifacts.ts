@@ -41,11 +41,17 @@ import type { DiscoveredContract } from "./link.js"
 import { resolveLiveExpirationDates } from "./live-expirations.js"
 import type { LiveExpirationDates } from "./live-expirations.js"
 import type { ParseWarning } from "./parse.js"
-import type { ImportResolutionContext } from "./resolve-import.js"
-import { mergeLocalAndPackageFiles, resolveAllowlistedPackages } from "./resolve-package-schema.js"
-import type { PackageSchemaResolutionResult } from "./resolve-package-schema.js"
-import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
-import { resolveWithinRoot } from "./resolve-within-root.js"
+import type { ImportResolutionContext } from "./resolution/resolve-import.js"
+import {
+  mergeLocalAndPackageFiles,
+  resolveAllowlistedPackages,
+} from "./resolution/resolve-package-schema.js"
+import type { PackageSchemaResolutionResult } from "./resolution/resolve-package-schema.js"
+import {
+  createAliasResolutionCache,
+  loadTsconfigPaths,
+} from "./resolution/resolve-tsconfig-paths.js"
+import { resolveWithinRoot } from "./resolution/resolve-within-root.js"
 
 /** Options for {@link generateEnvArtifacts}. */
 export interface GenerateEnvArtifactsOptions {
