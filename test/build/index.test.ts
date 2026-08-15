@@ -24,6 +24,8 @@ describe("env-cap/build entry point", () => {
   })
 
   it("re-exports the lower-level building blocks for custom tooling", () => {
+    expect(buildEntryPoint.buildChangeModel).toBeTypeOf("function")
+    expect(buildEntryPoint.CHANGE_MODEL_SCHEMA_VERSION).toBeTypeOf("number")
     expect(buildEntryPoint.detectCompatibilityIssues).toBeTypeOf("function")
     expect(buildEntryPoint.buildContractModel).toBeTypeOf("function")
     expect(buildEntryPoint.CONTRACT_MODEL_SCHEMA_VERSION).toBeTypeOf("number")
