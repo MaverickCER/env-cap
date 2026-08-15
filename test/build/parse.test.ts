@@ -332,6 +332,8 @@ describe("extractContractDocs", () => {
         owner: "data-platform",
         classification: "credential",
         expiresAt: "2026-01-01",
+        deprecated: true,
+        deprecatedReason: "Superseded by the payments-v2 contract.",
         metadata: { runbook: "https://wiki.internal/postgres" },
         variables: {
           DATABASE_URL: {
@@ -341,6 +343,10 @@ describe("extractContractDocs", () => {
             expiresAt: "2026-06-01",
             refreshInstructions: "Rotate in the RDS console.",
             required: true,
+            deprecated: true,
+            deprecatedReason: "Use POSTGRES_URL instead.",
+            removeBy: "2027-01-01",
+            renamedFrom: "DB_URL",
             setup: "Ask #data-platform for a connection string.",
           },
         },
@@ -358,6 +364,8 @@ describe("extractContractDocs", () => {
       owner: "data-platform",
       classification: "credential",
       expiresAt: "2026-01-01",
+      deprecated: true,
+      deprecatedReason: "Superseded by the payments-v2 contract.",
       metadata: { runbook: "https://wiki.internal/postgres" },
     })
     const dbUrl = docs.variables.get("DATABASE_URL")!
@@ -367,7 +375,23 @@ describe("extractContractDocs", () => {
     expect(dbUrl.expiresAt).toBe("2026-06-01")
     expect(dbUrl.refreshInstructions).toBe("Rotate in the RDS console.")
     expect(dbUrl.required).toBe(true)
+    expect(dbUrl.deprecated).toBe(true)
+    expect(dbUrl.deprecatedReason).toBe("Use POSTGRES_URL instead.")
+    expect(dbUrl.removeBy).toBe("2027-01-01")
+    expect(dbUrl.renamedFrom).toBe("DB_URL")
     expect(dbUrl.extra).toEqual({ setup: "Ask #data-platform for a connection string." })
+  })
+
+  it("warns and ignores deprecated when not a statically-resolvable boolean literal", async () => {
+    const warnings: { file: string; message: string }[] = []
+    const docs = extractContractDocs(
+      objectLiteral(`{ deprecated: Math.random() > 0.5 }`),
+      "/repo/x.ts",
+      "flaky",
+      warnings,
+    )
+    expect(docs.deprecated).toBeUndefined()
+    expect(warnings.some((w) => w.message.includes('"deprecated"'))).toBe(true)
   })
 
   it("warns and ignores classification when not one of the known values", async () => {

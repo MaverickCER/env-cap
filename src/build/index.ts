@@ -153,6 +153,15 @@ export type {
   FindingFamily,
   FindingModel,
 } from "./finding-model.js"
+// The Lifecycle Model (ADR 0024, ADR 0029) -- promotes ExpiringEntry/
+// computeExpiringEntries() into a canonical, versioned shape alongside the
+// new deprecated/deprecatedReason/removeBy/renamedFrom fields.
+export { buildLifecycleModel, LIFECYCLE_MODEL_SCHEMA_VERSION } from "./lifecycle-model.js"
+export type {
+  LifecycleModel,
+  LifecycleModelContract,
+  LifecycleModelVariable,
+} from "./lifecycle-model.js"
 export { effectiveOwner, linkFiles } from "./link.js"
 export type { DiscoveredContract, DiscoveredVariable, LinkResult, UnresolvedLink } from "./link.js"
 export {

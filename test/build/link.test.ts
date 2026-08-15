@@ -72,7 +72,7 @@ describe("linkFiles", () => {
       "docs/payments.docs.ts",
       `
       import { paymentsSchema } from "../payments/env.schema.js";
-      documentEnv(paymentsSchema, { owner: "payments-team", classification: "credential", variables: { STRIPE_KEY: { description: "Stripe secret key.", classification: "secret" } } });
+      documentEnv(paymentsSchema, { owner: "payments-team", classification: "credential", deprecated: true, deprecatedReason: "Superseded by payments-v2.", variables: { STRIPE_KEY: { description: "Stripe secret key.", classification: "secret", removeBy: "2027-01-01", renamedFrom: "STRIPE_SECRET" } } });
       `,
     )
 
@@ -81,8 +81,12 @@ describe("linkFiles", () => {
     expect(result.contracts[0]?.documented).toBe(true)
     expect(result.contracts[0]?.owner).toBe("payments-team")
     expect(result.contracts[0]?.classification).toBe("credential")
+    expect(result.contracts[0]?.deprecated).toBe(true)
+    expect(result.contracts[0]?.deprecatedReason).toBe("Superseded by payments-v2.")
     expect(result.contracts[0]?.variables[0]?.description).toBe("Stripe secret key.")
     expect(result.contracts[0]?.variables[0]?.classification).toBe("secret")
+    expect(result.contracts[0]?.variables[0]?.removeBy).toBe("2027-01-01")
+    expect(result.contracts[0]?.variables[0]?.renamedFrom).toBe("STRIPE_SECRET")
   })
 
   it("resolves a documentEnv() schema reference imported through a tsconfig path alias (ADR 0023, Experimental)", async () => {
@@ -360,6 +364,10 @@ function makeVariable(
     expiresAt: undefined,
     refreshInstructions: undefined,
     required: undefined,
+    deprecated: undefined,
+    deprecatedReason: undefined,
+    removeBy: undefined,
+    renamedFrom: undefined,
     extra: {},
     documented: true,
     ...overrides,
@@ -377,6 +385,8 @@ function makeContract(
     owner: undefined,
     classification: undefined,
     expiresAt: undefined,
+    deprecated: undefined,
+    deprecatedReason: undefined,
     metadata: undefined,
     variables: [],
     documented: true,

@@ -13,6 +13,8 @@ function makeContract(
     owner: undefined,
     classification: undefined,
     expiresAt: undefined,
+    deprecated: undefined,
+    deprecatedReason: undefined,
     metadata: undefined,
     variables: [],
     documented: false,

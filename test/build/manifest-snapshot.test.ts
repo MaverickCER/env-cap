@@ -32,6 +32,10 @@ function makeVariable(
     expiresAt: undefined,
     refreshInstructions: undefined,
     required: undefined,
+    deprecated: undefined,
+    deprecatedReason: undefined,
+    removeBy: undefined,
+    renamedFrom: undefined,
     extra: {},
     documented: true,
     ...overrides,
@@ -53,6 +57,8 @@ function makeContract(
     owner: undefined,
     classification: undefined,
     expiresAt: undefined,
+    deprecated: undefined,
+    deprecatedReason: undefined,
     metadata: undefined,
     documented: true,
     packageOrigin: undefined,
@@ -109,6 +115,8 @@ describe("buildManifestSnapshot", () => {
       exportName: "aEnv",
       owner: "team-a",
       classification: "credential",
+      deprecated: true,
+      deprecatedReason: "Superseded by a newer contract.",
       metadata: { service: "A" },
       variables: [
         makeVariable({
@@ -119,6 +127,10 @@ describe("buildManifestSnapshot", () => {
           expiresAt: "2030-01-01",
           refreshInstructions: "rotate",
           required: true,
+          deprecated: true,
+          deprecatedReason: "Use NEW_KEY instead.",
+          removeBy: "2027-01-01",
+          renamedFrom: "OLD_KEY",
           extra: { rotationCadence: "30 days" },
         }),
       ],
@@ -134,6 +146,8 @@ describe("buildManifestSnapshot", () => {
       owner: "team-a",
       classification: "credential",
       expiresAt: undefined,
+      deprecated: true,
+      deprecatedReason: "Superseded by a newer contract.",
       metadata: { service: "A" },
       variables: [
         {
@@ -144,6 +158,10 @@ describe("buildManifestSnapshot", () => {
           expiresAt: "2030-01-01",
           refreshInstructions: "rotate",
           required: true,
+          deprecated: true,
+          deprecatedReason: "Use NEW_KEY instead.",
+          removeBy: "2027-01-01",
+          renamedFrom: "OLD_KEY",
           extra: { rotationCadence: "30 days" },
           documented: true,
         },
@@ -200,6 +218,8 @@ describe("readManifestSnapshot / writeManifestSnapshot", () => {
           owner: undefined,
           classification: undefined,
           expiresAt: undefined,
+          deprecated: undefined,
+          deprecatedReason: undefined,
           metadata: undefined,
           variables: [
             {
@@ -210,6 +230,10 @@ describe("readManifestSnapshot / writeManifestSnapshot", () => {
               expiresAt: undefined,
               refreshInstructions: undefined,
               required: undefined,
+              deprecated: undefined,
+              deprecatedReason: undefined,
+              removeBy: undefined,
+              renamedFrom: undefined,
               extra: {},
               documented: true,
             },
@@ -243,6 +267,8 @@ describe("diffManifestSnapshots", () => {
       owner: undefined,
       classification: undefined,
       expiresAt: undefined,
+      deprecated: undefined,
+      deprecatedReason: undefined,
       metadata: undefined,
       variables: [],
       ...overrides,
@@ -261,6 +287,10 @@ describe("diffManifestSnapshots", () => {
       expiresAt: undefined,
       refreshInstructions: undefined,
       required: undefined,
+      deprecated: undefined,
+      deprecatedReason: undefined,
+      removeBy: undefined,
+      renamedFrom: undefined,
       extra: {},
       documented: true,
       ...overrides,
@@ -357,6 +387,7 @@ describe("diffManifestSnapshots", () => {
         exportName: "aEnv",
         owner: "team-a",
         classification: "config",
+        deprecated: false,
         metadata: { service: "A" },
       }),
     ])
@@ -366,6 +397,8 @@ describe("diffManifestSnapshots", () => {
         exportName: "aEnv",
         owner: "team-b",
         classification: "credential",
+        deprecated: true,
+        deprecatedReason: "Superseded by a newer contract.",
         metadata: { service: "A2" },
       }),
     ])
@@ -376,6 +409,12 @@ describe("diffManifestSnapshots", () => {
       expect.arrayContaining([
         { field: "owner", previous: "team-a", current: "team-b" },
         { field: "classification", previous: "config", current: "credential" },
+        { field: "deprecated", previous: "false", current: "true" },
+        {
+          field: "deprecatedReason",
+          previous: undefined,
+          current: "Superseded by a newer contract.",
+        },
         { field: "metadata.service", previous: "A", current: "A2" },
       ]),
     )
@@ -393,7 +432,14 @@ describe("diffManifestSnapshots", () => {
       contract({
         file: "a/env.schema.ts",
         exportName: "aEnv",
-        variables: [variable({ key: "K", required: true, extra: { rotationCadence: "90 days" } })],
+        variables: [
+          variable({
+            key: "K",
+            required: true,
+            renamedFrom: "OLD_K",
+            extra: { rotationCadence: "90 days" },
+          }),
+        ],
       }),
     ])
     const report = diffManifestSnapshots(previous, current)
@@ -402,6 +448,7 @@ describe("diffManifestSnapshots", () => {
     expect(report.updatedVariables[0]?.changes).toEqual(
       expect.arrayContaining([
         { field: "required", previous: "false", current: "true" },
+        { field: "renamedFrom", previous: undefined, current: "OLD_K" },
         { field: "extra.rotationCadence", previous: "30 days", current: "90 days" },
       ]),
     )

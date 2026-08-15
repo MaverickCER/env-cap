@@ -424,6 +424,14 @@ export interface DiscoveredVariableDocs {
   readonly refreshInstructions: string | undefined
   /** Statically-resolved `required`, if set to a boolean literal. */
   readonly required: boolean | undefined
+  /** Statically-resolved `deprecated`, if set to a boolean literal. */
+  readonly deprecated: boolean | undefined
+  /** Statically-resolved `deprecatedReason`, if set to a string literal. */
+  readonly deprecatedReason: string | undefined
+  /** Statically-resolved `removeBy`, if set to a string literal. */
+  readonly removeBy: string | undefined
+  /** Statically-resolved `renamedFrom`, if set to a string literal. */
+  readonly renamedFrom: string | undefined
   /** Fields other than the known {@link runtime.VariableDocs} keys, keyed by field name. */
   readonly extra: Readonly<Record<string, string>>
 }
@@ -444,6 +452,10 @@ export interface DiscoveredContractDocs {
   readonly classification: DiscoveredClassification | undefined
   /** Statically-resolved `expiresAt`, if set to a string literal. */
   readonly expiresAt: string | undefined
+  /** Statically-resolved `deprecated`, if set to a boolean literal. */
+  readonly deprecated: boolean | undefined
+  /** Statically-resolved `deprecatedReason`, if set to a string literal. */
+  readonly deprecatedReason: string | undefined
   /** Statically-resolved `metadata`, if set to a string-valued object literal. */
   readonly metadata: Readonly<Record<string, string>> | undefined
   /** Per-variable documentation, keyed by variable name. */
@@ -457,6 +469,10 @@ const KNOWN_VARIABLE_DOC_KEYS = new Set([
   "expiresAt",
   "refreshInstructions",
   "required",
+  "deprecated",
+  "deprecatedReason",
+  "removeBy",
+  "renamedFrom",
 ])
 
 /**
@@ -482,6 +498,8 @@ export function extractContractDocs(
   let owner: string | undefined
   let classification: DiscoveredClassification | undefined
   let expiresAt: string | undefined
+  let deprecated: boolean | undefined
+  let deprecatedReason: string | undefined
   let metadata: Record<string, string> | undefined
   const variables = new Map<string, DiscoveredVariableDocs>()
 
@@ -500,6 +518,8 @@ export function extractContractDocs(
       owner,
       classification,
       expiresAt,
+      deprecated,
+      deprecatedReason,
       metadata,
       variables,
     }
@@ -565,6 +585,19 @@ export function extractContractDocs(
           message: `"expiresAt" for "${contextLabel}" is not a statically-resolvable string literal; ignoring it.`,
         })
       }
+    } else if (propName === "deprecated") {
+      const evaluated = evaluateLiteral(prop.initializer)
+      if (evaluated.ok && typeof evaluated.value === "boolean") {
+        deprecated = evaluated.value
+      } else {
+        warnings.push({
+          file: filePath,
+          message: `"deprecated" for "${contextLabel}" is not a statically-resolvable boolean literal; ignoring it.`,
+        })
+      }
+    } else if (propName === "deprecatedReason") {
+      const evaluated = evaluateLiteral(prop.initializer)
+      if (evaluated.ok && typeof evaluated.value === "string") deprecatedReason = evaluated.value
     } else if (propName === "metadata") {
       const evaluated = evaluateLiteral(prop.initializer)
       if (evaluated.ok && isStringRecord(evaluated.value)) {
@@ -595,6 +628,8 @@ export function extractContractDocs(
     owner,
     classification,
     expiresAt,
+    deprecated,
+    deprecatedReason,
     metadata,
     variables,
   }
@@ -625,6 +660,10 @@ function extractVariableDocsMap(
     let expiresAt: string | undefined
     let refreshInstructions: string | undefined
     let required: boolean | undefined
+    let deprecated: boolean | undefined
+    let deprecatedReason: string | undefined
+    let removeBy: string | undefined
+    let renamedFrom: string | undefined
     const extra: Record<string, string> = {}
 
     for (const field of prop.initializer.properties) {
@@ -645,6 +684,14 @@ function extractVariableDocsMap(
         refreshInstructions = evaluated.value
       else if (fieldName === "required" && typeof evaluated.value === "boolean")
         required = evaluated.value
+      else if (fieldName === "deprecated" && typeof evaluated.value === "boolean")
+        deprecated = evaluated.value
+      else if (fieldName === "deprecatedReason" && typeof evaluated.value === "string")
+        deprecatedReason = evaluated.value
+      else if (fieldName === "removeBy" && typeof evaluated.value === "string")
+        removeBy = evaluated.value
+      else if (fieldName === "renamedFrom" && typeof evaluated.value === "string")
+        renamedFrom = evaluated.value
       else if (!KNOWN_VARIABLE_DOC_KEYS.has(fieldName) && typeof evaluated.value === "string")
         extra[fieldName] = evaluated.value
     }
@@ -657,6 +704,10 @@ function extractVariableDocsMap(
       expiresAt,
       refreshInstructions,
       required,
+      deprecated,
+      deprecatedReason,
+      removeBy,
+      renamedFrom,
       extra,
     })
   }

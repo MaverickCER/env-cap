@@ -26,6 +26,10 @@ export interface ManifestSnapshotVariable {
   readonly expiresAt: string | undefined
   readonly refreshInstructions: string | undefined
   readonly required: boolean | undefined
+  readonly deprecated: boolean | undefined
+  readonly deprecatedReason: string | undefined
+  readonly removeBy: string | undefined
+  readonly renamedFrom: string | undefined
   readonly extra: Readonly<Record<string, string>>
   readonly documented: boolean
 }
@@ -41,6 +45,8 @@ export interface ManifestSnapshotContract {
   readonly owner: string | undefined
   readonly classification: DiscoveredClassification | undefined
   readonly expiresAt: string | undefined
+  readonly deprecated: boolean | undefined
+  readonly deprecatedReason: string | undefined
   readonly metadata: Readonly<Record<string, string>> | undefined
   readonly variables: readonly ManifestSnapshotVariable[]
 }
@@ -71,6 +77,8 @@ export function buildManifestSnapshot(
     owner: contract.owner,
     classification: contract.classification,
     expiresAt: contract.expiresAt,
+    deprecated: contract.deprecated,
+    deprecatedReason: contract.deprecatedReason,
     metadata: contract.metadata,
     variables: [...contract.variables]
       .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
@@ -82,6 +90,10 @@ export function buildManifestSnapshot(
         expiresAt: variable.expiresAt,
         refreshInstructions: variable.refreshInstructions,
         required: variable.required,
+        deprecated: variable.deprecated,
+        deprecatedReason: variable.deprecatedReason,
+        removeBy: variable.removeBy,
+        renamedFrom: variable.renamedFrom,
         extra: variable.extra,
         documented: variable.documented,
       })),
@@ -275,6 +287,8 @@ function contractFieldChanges(
   pushIfDifferent(changes, "owner", previous.owner, current.owner)
   pushIfDifferent(changes, "classification", previous.classification, current.classification)
   pushIfDifferent(changes, "expiresAt", previous.expiresAt, current.expiresAt)
+  pushIfDifferent(changes, "deprecated", previous.deprecated, current.deprecated)
+  pushIfDifferent(changes, "deprecatedReason", previous.deprecatedReason, current.deprecatedReason)
   changes.push(...recordFieldChanges(previous.metadata, current.metadata, "metadata"))
   return changes
 }
@@ -295,6 +309,10 @@ function variableFieldChanges(
     current.refreshInstructions,
   )
   pushIfDifferent(changes, "required", previous.required, current.required)
+  pushIfDifferent(changes, "deprecated", previous.deprecated, current.deprecated)
+  pushIfDifferent(changes, "deprecatedReason", previous.deprecatedReason, current.deprecatedReason)
+  pushIfDifferent(changes, "removeBy", previous.removeBy, current.removeBy)
+  pushIfDifferent(changes, "renamedFrom", previous.renamedFrom, current.renamedFrom)
   pushIfDifferent(changes, "documented", previous.documented, current.documented)
   changes.push(...recordFieldChanges(previous.extra, current.extra, "extra"))
   return changes
