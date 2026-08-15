@@ -19,18 +19,22 @@ src/
   generated/
     env.manifest.ts                <- generated, do not edit
 scripts/
-  generate-manifest.mjs            <- the baseline: generateEnvArtifacts(), unchanged
-  project-env-example.mjs          <- runs the .env.example projection, compares it
-  project-config-reference.mjs     <- runs the Configuration Reference projection
+  generate-manifest.mjs             <- the baseline: generateEnvArtifacts(), unchanged
+  project-env-example.mjs           <- runs the .env.example projection
+  project-config-reference.mjs      <- runs the Configuration Reference projection
+  project-inventory.mjs             <- runs the Configuration Inventory projection
 projections/
-  env-example.mjs                  <- the ".env.example Artifact" reference projection
-  config-reference.mjs             <- the "Environment Configuration Reference" reference projection
+  lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
+  env-example.mjs                   <- the ".env.example Artifact" reference projection
+  config-reference.mjs              <- the "Environment Configuration Reference" reference projection
+  inventory.mjs                     <- the "Configuration Inventory" reference projection
 docs/
-  ENVIRONMENT.md                    <- generated (by the baseline path)
-.env.example                        <- generated (by the baseline path)
-projected-env-example.txt           <- generated (by the env-example projection)
-projected-config-reference.md       <- generated (by the config-reference projection)
-expected/                           <- golden regression fixtures, see examples/README.md
+  ENVIRONMENT.md                     <- generated (by the baseline path)
+.env.example                         <- generated (by the baseline path)
+projected-env-example.txt            <- generated (by the env-example projection)
+projected-config-reference.md        <- generated (by the config-reference projection)
+projected-inventory.json             <- generated (by the inventory projection)
+expected/                            <- golden regression fixtures, see examples/README.md
 ```
 
 ## Running it
@@ -40,34 +44,55 @@ npm install
 npm run generate:env               # the baseline path: generateEnvArtifacts()
 npm run project:env-example        # generateEvidenceModel() + the .env.example projection
 npm run project:config-reference   # generateEvidenceModel() + the Configuration Reference projection
+npm run project:inventory          # generateEvidenceModel() + the Configuration Inventory projection
 ```
 
-## The two projections landed so far
+## The projections landed so far
 
 **`.env.example` Artifact** (`projections/env-example.mjs`) — `project:env-example` prints
 whether the projection's output is byte-identical to the baseline's `.env.example`. It is, by
-construction: a thin reshape of Contract Model into `renderEnvExample()`'s existing, unchanged
-input shape, not a reimplementation of `.env.example` rendering.
+construction: a thin reshape into `renderEnvExample()`'s existing, unchanged input shape, not a
+reimplementation of `.env.example` rendering.
 
-**Environment Configuration Reference** (`projections/config-reference.mjs`) — a thin reshape of
-Contract Model *and* Lifecycle Model (joined by `file`+`exportName` identity) into
-`renderDocs()`'s existing, unchanged input shape. Verified against a dedicated `expected/`
-golden fixture rather than byte-identity with the baseline, because of two documented,
-non-bugs (see the projection's own doc comment):
+**Environment Configuration Reference** (`projections/config-reference.mjs`) — a thin reshape
+into `renderDocs()`'s existing, unchanged input shape. Verified against a dedicated `expected/`
+golden fixture rather than byte-identity with the baseline (see "Known divergences" below).
+
+**Configuration Inventory** (`projections/inventory.mjs`) — the JSON-consumer-facing sibling of
+Configuration Reference's "## Catalog" section (`docs.ts`'s `buildCatalog()`/`CatalogContract`
+are documented as "Same data `renderCatalog()` renders to Markdown, reshaped for JSON/
+programmatic consumers instead of prose" — but neither is exported publicly, so this projection
+reproduces that reshape using only the public `effectiveOwner()`). Also verified against a
+dedicated `expected/` golden fixture, for the same reasons as Configuration Reference.
+
+## Known divergences from the direct-call baseline
+
+Two of `ContractModel`'s own properties (ADR 0025) mean a projection built from it isn't always
+byte-identical to what the equivalent direct `generateEnvArtifacts()` call produces on the exact
+same input — both are intentional properties of the model, not bugs, documented in each
+affected projection's own doc comment:
 
 - **Variable ordering.** `ContractModel` stores variables in canonical alphabetical order
-  (`buildContractModel()`, ADR 0025 — needed for deterministic JSON); `DiscoveredContract`
-  preserves the schema's original declaration order. `renderDocs()` displays variables in
-  whatever order it's handed, so this projection's tables are alphabetical, not
-  declaration-order, whenever the two differ (as they do for this example's schema).
-- **"Changes since last report."** A pure projection has no access to a previously-rendered
-  docs file, so this section always reads as a first-time render ("No changes.").
+  (`buildContractModel()` — needed for deterministic JSON); `DiscoveredContract` preserves the
+  schema's original declaration order. Any renderer that displays variables in whatever order
+  it's handed (`renderDocs()`, `buildCatalog()`) therefore shows alphabetical order here,
+  whenever that differs from declaration order (as it does for this example's schema).
+- **File paths.** `ContractModel.file` is root-relative and POSIX-separated — portable and
+  JSON-serializable by design, since an `EvidenceModel` may be read on a different machine than
+  the one that generated it. `DiscoveredContract.file` is an absolute filesystem path. A
+  Markdown renderer that only ever displays a *relative* path (`renderDocs()`, via
+  `relativeTo()`'s pure string-prefix-strip) is unaffected; a JSON projection that surfaces
+  `.file` directly (`inventory.mjs`) shows the relative form.
+
+Additionally, `config-reference.mjs`'s "Changes since last report" section always reads as a
+first-time render ("No changes.") — a pure projection has no access to a previously-rendered
+docs file to diff against.
 
 ## Why "thin reshape, not reimplementation" is the point
 
 Each reference projection here is deliberately *not* new rendering logic. It's a reshape of one
 or more of the seven canonical fact models (`ContractModel`, `DependencyModel`, `OwnershipModel`,
 `LifecycleModel`, `FindingModel`, `ChangeModel`, and their `EvidenceModel` union) into whatever
-shape an existing, already-tested `@maverickcer/env-cap/build` renderer expects, then a direct
-call into that renderer. That's the whole design: the seven fact models are the real API surface;
-a projection is a *view* over them, not a second, independently-drifting source of truth.
+shape an existing, already-tested `@maverickcer/env-cap/build` renderer/builder already expects,
+then a direct call into it. That's the whole design: the seven fact models are the real API
+surface; a projection is a *view* over them, not a second, independently-drifting source of truth.
