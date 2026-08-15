@@ -70,6 +70,7 @@ const EXAMPLES = {
       "projected-drift.json",
       "projected-migration.json",
       "projected-audit-trail.json",
+      "projected-blast-radius.json",
     ],
     extraScripts: [
       "project:env-example",
@@ -82,6 +83,7 @@ const EXAMPLES = {
       "project:drift",
       "project:migration",
       "project:change-impact-audit-trail",
+      "project:change-impact-blast-radius",
     ],
   },
 }

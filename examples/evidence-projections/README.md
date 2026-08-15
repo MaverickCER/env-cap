@@ -31,6 +31,7 @@ scripts/
   project-drift.mjs                 <- runs the Configuration Drift projection
   project-migration.mjs             <- runs the Configuration Migration projection
   project-change-impact-audit-trail.mjs <- runs the Change Impact A (audit trail) projection
+  project-change-impact-blast-radius.mjs <- runs the Change Impact B (blast radius) projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
@@ -43,6 +44,7 @@ projections/
   drift.mjs                          <- the "Configuration Drift" reference projection
   migration.mjs                      <- the "Configuration Migration" reference projection
   change-impact-audit-trail.mjs      <- the Change Impact A (audit trail) reference projection
+  change-impact-blast-radius.mjs     <- the Change Impact B (blast radius) reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
@@ -76,6 +78,7 @@ npm run project:findings           # generateEvidenceModel() + the unified filte
 npm run project:drift              # generateEvidenceModel() + checkEnvArtifacts() + the Configuration Drift projection
 npm run project:migration          # generateEvidenceModel() + the Configuration Migration projection
 npm run project:change-impact-audit-trail  # generateEvidenceModel() + the Change Impact A projection
+npm run project:change-impact-blast-radius # generateEvidenceModel() + the Change Impact B projection
 ```
 
 ## The projections landed so far
@@ -162,6 +165,21 @@ supported by Change Model) rather than true N-run history, which would be new sc
 0021's single-snapshot design -- the plan's own guidance for this phase. A thin reshape of
 `evidence.change` plus one human-readable summary line; empty for this example's fixture for the
 same reason Configuration Migration's is.
+
+**Change Impact B (blast radius)** (`projections/change-impact-blast-radius.mjs`) -- "the
+actual Change x Dependency join `computeArtifacts()` never does today," and the plan's own
+estimate for the most complex of the ten. Joins every changed contract/variable (Change Model)
+against its current real consumers (Dependency Model), by `file`+`exportName` identity, to answer
+"if this change ships, which files does it actually affect." A **removed** contract/variable's
+blast radius always reports `0` by construction -- Dependency Model reflects *current* reality,
+and a removed contract no longer exists in it to have consumers -- meaningful for **added** and
+**updated** changes, where the current consumer set is exactly the set actually affected. Empty
+for this example's fixture for the same reason as the other change-based projections; the join
+logic itself was verified manually during development against a fresh (no-snapshot) run, where
+every one of the schema's 5 variables and its 1 contract correctly correlated to `src/server.ts`
+as their real consumer.
+
+This is the tenth and last of the ten first-party reference projections the plan called for.
 
 ## Known divergences from the direct-call baseline
 
