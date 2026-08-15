@@ -465,3 +465,4 @@ contract.
 | TypeScript path-alias resolution, on by default (Experimental)                                                         | [0023](decisions/0023-tsconfig-path-alias-resolution.md)                        |
 | Seven canonical fact models (Contract/Dependency/Ownership/Lifecycle/Finding/Change/Evidence), not thirty-five reports | [0024](decisions/0024-fact-model-architecture.md)                               |
 | Contract Model is a new, versioned JSON projection, published alongside the manifest                                   | [0025](decisions/0025-contract-model-json-projection.md)                        |
+| Finding Model unifies four independently-shaped finding families                                                       | [0026](decisions/0026-finding-model-unifies-four-families.md)                   |

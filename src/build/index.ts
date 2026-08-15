@@ -118,7 +118,25 @@ export {
   writeEnvExample,
 } from "./env-example.js"
 export type { EnvExampleOnExisting, EnvExampleResult, Reconciliation } from "./env-example.js"
+// The Finding Model (ADR 0024, ADR 0026) -- unifies CompatibilityIssue,
+// ArtifactCheckFinding, DocumentationFindings, and the usage-report ownership
+// findings behind one shape, with a required `code` and a structured
+// EvidenceReference `location` instead of four independently-shaped families.
+export type {
+  ChangeEvidenceReference,
+  ContractEvidenceReference,
+  EvidenceReference,
+  OwnershipEvidenceReference,
+} from "./evidence-reference.js"
 export { detectExclusiveGroupIssues } from "./exclusive-group.js"
+export { buildFindingModel, FINDING_MODEL_SCHEMA_VERSION } from "./finding-model.js"
+export type {
+  BuildFindingModelInput,
+  Finding,
+  FindingCode,
+  FindingFamily,
+  FindingModel,
+} from "./finding-model.js"
 export { linkFiles } from "./link.js"
 export type { DiscoveredContract, DiscoveredVariable, LinkResult, UnresolvedLink } from "./link.js"
 export {
