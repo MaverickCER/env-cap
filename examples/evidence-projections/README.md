@@ -29,6 +29,7 @@ scripts/
   project-dependency-graph.mjs      <- runs the Configuration Dependency projection
   project-findings.mjs              <- runs the unified filterable Finding list projection
   project-drift.mjs                 <- runs the Configuration Drift projection
+  project-migration.mjs             <- runs the Configuration Migration projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
@@ -39,6 +40,7 @@ projections/
   dependency-graph.mjs              <- the "Configuration Dependency" reference projection
   findings.mjs                       <- the unified filterable Finding list reference projection
   drift.mjs                          <- the "Configuration Drift" reference projection
+  migration.mjs                      <- the "Configuration Migration" reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
@@ -70,6 +72,7 @@ npm run project:lifecycle          # generateEvidenceModel() + the Configuration
 npm run project:dependency-graph   # generateEvidenceModel() + the Configuration Dependency projection
 npm run project:findings           # generateEvidenceModel() + the unified filterable Finding list projection
 npm run project:drift              # generateEvidenceModel() + checkEnvArtifacts() + the Configuration Drift projection
+npm run project:migration          # generateEvidenceModel() + the Configuration Migration projection
 ```
 
 ## The projections landed so far
@@ -138,6 +141,17 @@ context `defineEvidenceProjection()`'s `(evidence) => T` signature has no room f
 runs `checkEnvArtifacts()` itself and passes the result in. Also relativizes
 `ArtifactCheckFinding.path` (documented as absolute) at the script level, where `root` is
 actually available, before the projection ever sees it.
+
+**Configuration Migration** (`projections/migration.mjs`) -- **scope note**: no existing report
+type or renderer anchors this one; the plan flagged it as needing a judgment call rather than
+blocking on it. Implements the rename-correlation-checklist interpretation: a concrete,
+actionable instruction per variable rename Change Model correlated from an authored
+`renamedFrom` (ADR 0029/0030 -- never guessed from name similarity), plus variables removed
+*without* a matching rename (a real migration signal, distinct from a rename: something to stop
+referencing entirely, not update to a new name). Empty for this example on purpose: `src/env.ts`
+hasn't changed since the committed manifest snapshot, so there's nothing to migrate -- the
+correlation logic itself is already covered by `test/build/change-model.test.ts`; this
+projection only reshapes already-tested data.
 
 ## Known divergences from the direct-call baseline
 

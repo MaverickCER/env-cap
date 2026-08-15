@@ -87,4 +87,18 @@ describe(EXAMPLE, () => {
     expect(stdout).toContain("No drift -- every checked artifact is up to date.");
     await compareGoldenArtifacts(EXAMPLE, ["projected-drift.json"]);
   });
+
+  // Correctly empty for this fixture: src/env.ts hasn't changed since the
+  // committed manifest snapshot, so there's nothing to migrate. The
+  // correlation logic itself (renamedFrom -> RenamedVariable) is already
+  // covered by test/build/change-model.test.ts; this only exercises the
+  // projection's own reshape over already-tested data.
+  it.skipIf(!installed)(
+    "projected Configuration Migration matches its golden expected/ copy (empty -- no changes since the snapshot)",
+    async () => {
+      const stdout = runScript(EXAMPLE, "project:migration");
+      expect(stdout).toContain("No migration steps needed");
+      await compareGoldenArtifacts(EXAMPLE, ["projected-migration.json"]);
+    },
+  );
 });

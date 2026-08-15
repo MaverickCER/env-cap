@@ -68,6 +68,7 @@ const EXAMPLES = {
       "projected-dependency-graph.json",
       "projected-findings.json",
       "projected-drift.json",
+      "projected-migration.json",
     ],
     extraScripts: [
       "project:env-example",
@@ -78,6 +79,7 @@ const EXAMPLES = {
       "project:dependency-graph",
       "project:findings",
       "project:drift",
+      "project:migration",
     ],
   },
 }

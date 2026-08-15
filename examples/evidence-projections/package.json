@@ -13,7 +13,8 @@
     "project:lifecycle": "npm run generate:env && node scripts/project-lifecycle.mjs",
     "project:dependency-graph": "npm run generate:env && node scripts/project-dependency-graph.mjs",
     "project:findings": "npm run generate:env && node scripts/project-findings.mjs",
-    "project:drift": "npm run generate:env && node scripts/project-drift.mjs"
+    "project:drift": "npm run generate:env && node scripts/project-drift.mjs",
+    "project:migration": "npm run generate:env && node scripts/project-migration.mjs"
   },
   "dependencies": {
     "@maverickcer/env-cap": "file:../.."
