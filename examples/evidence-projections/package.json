@@ -1,0 +1,18 @@
+{
+  "name": "env-cap-example-evidence-projections",
+  "private": true,
+  "type": "module",
+  "description": "Ten first-party reference projections (ADR 0024/0031/0032) built entirely through @maverickcer/env-cap's public API -- generateEvidenceModel() from /build, defineEvidenceProjection() from /evidence -- with no privileged internal access, the same two entry points any consumer would import.",
+  "scripts": {
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "project:env-example": "npm run generate:env && node scripts/project-env-example.mjs"
+  },
+  "dependencies": {
+    "@maverickcer/env-cap": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  }
+}
