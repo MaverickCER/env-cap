@@ -1,6 +1,6 @@
 # Examples
 
-Thirteen runnable projects, each demonstrating a distinct part of `env-cap`. Read them in this
+Fourteen runnable projects, each demonstrating a distinct part of `env-cap`. Read them in this
 order — each one assumes the concepts the previous ones already covered:
 
 1. **[basic-node](basic-node/)** — the simplest possible starting point: one centralized
@@ -69,16 +69,23 @@ order — each one assumes the concepts the previous ones already covered:
     the alias-only-imported local contract and the cross-package contract show up as
     consumed, never abandoned, in the same generated report.
 
-Every example's own README documents exactly how to run it. All thirteen are validated in CI
+11. **[evidence-projections](evidence-projections/)** — env-cap's own first-party Evidence
+    Model projections (ADR 0024/0031/0032), each built entirely through the public API
+    (`generateEvidenceModel()` from `/build`, `defineEvidenceProjection()` from `/evidence`)
+    with no privileged internal access — reuses `basic-node`'s exact schema so each
+    projection's output can be verified byte-identical to the existing, already-tested
+    rendering path on the exact same input.
+
+Every example's own README documents exactly how to run it. All fourteen are validated in CI
 (see `.github/workflows/ci.yml`'s `examples` job and [`test/examples/`](../test/examples/),
 one file per example, mirroring this directory 1:1) against the real, currently-built
 `@maverickcer/env-cap` package, so they stay in sync with the API rather than drifting
-silently — the twelve that succeed are asserted on for their expected runtime output, and
+silently — the thirteen that succeed are asserted on for their expected runtime output, and
 `multiple-active-exclusive-capabilities` is asserted on for its expected failure.
 
 ## `expected/` — golden regression fixtures
 
-Twelve of the thirteen examples (every one except `multiple-active-exclusive-capabilities`, which by
+Thirteen of the fourteen examples (every one except `multiple-active-exclusive-capabilities`, which by
 design never successfully generates anything) carry an `expected/` directory mirroring their
 own generated-artifact paths — e.g. `basic-node/expected/src/generated/env.manifest.ts`
 alongside the real `basic-node/src/generated/env.manifest.ts`. CI regenerates each example for
@@ -101,7 +108,7 @@ change the output, here's the new baseline" step, not something that should ever
 ## Performance benchmarks
 
 [`performance-runtime/`](performance-runtime/) and [`performance-buildtime/`](performance-buildtime/)
-are project confidence tooling, not "start here" adoption samples like the thirteen above — they exist
+are project confidence tooling, not "start here" adoption samples like the fourteen above — they exist
 to answer "does this scale," "did this regress," and "did that architectural decision actually pay
 off," for maintainers and prospective adopters evaluating env-cap at monorepo scale. Run via
 `npm run benchmark` from the repo root, or `npm run benchmark` inside either directory.

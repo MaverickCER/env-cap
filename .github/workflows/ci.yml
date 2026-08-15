@@ -225,6 +225,18 @@ jobs:
           npm install
           npm run typecheck
 
+      # env-cap's own ten first-party Evidence Model projections (ADR 0024/
+      # 0031/0032), built entirely through the public API (generateEvidenceModel()
+      # from /build, defineEvidenceProjection() from /evidence) -- reuses
+      # basic-node's exact schema so each projection's output can be
+      # golden-compared against the existing, already-tested rendering path.
+      # See test/examples/evidence-projections.test.ts.
+      - name: evidence-projections
+        working-directory: examples/evidence-projections
+        run: |
+          npm install
+          npm run typecheck
+
       # Runs each example's real npm scripts against its own committed,
       # fake-but-plausible `.env` file and asserts on real stdout -- the
       # actual runtime path (validateEnv -> read a validated value), not just
