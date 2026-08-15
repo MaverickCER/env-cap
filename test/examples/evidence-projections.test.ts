@@ -101,4 +101,13 @@ describe(EXAMPLE, () => {
       await compareGoldenArtifacts(EXAMPLE, ["projected-migration.json"]);
     },
   );
+
+  it.skipIf(!installed)(
+    "projected Change Impact A (audit trail) matches its golden expected/ copy",
+    async () => {
+      const stdout = runScript(EXAMPLE, "project:change-impact-audit-trail");
+      expect(stdout).toContain("No changes since the committed manifest snapshot.");
+      await compareGoldenArtifacts(EXAMPLE, ["projected-audit-trail.json"]);
+    },
+  );
 });
