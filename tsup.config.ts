@@ -72,6 +72,21 @@ export default defineConfig([
     esbuildOptions,
   },
   {
+    name: "evidence",
+    entry: { evidence: "src/evidence/index.ts" },
+    format: ["esm", "cjs"],
+    // Isomorphic, like runtime/helpers -- no node:fs, no `typescript`, safe
+    // in a browser/edge bundle. `EvidenceModel` is imported as a type only
+    // (erased at compile time), so this platform/target pair matches
+    // runtime/helpers, not build.
+    platform: "neutral",
+    target: "es2020",
+    dts: false,
+    sourcemap: true,
+    treeshake: true,
+    esbuildOptions,
+  },
+  {
     name: "eslint-plugin",
     entry: { "eslint-plugin/index": "src/eslint-plugin/index.ts" },
     format: ["esm", "cjs"],

@@ -143,6 +143,12 @@ export {
   writeEnvExample,
 } from "./env-example.js"
 export type { EnvExampleOnExisting, EnvExampleResult, Reconciliation } from "./env-example.js"
+// The Evidence Model (ADR 0024, ADR 0031) -- the assembled union of the
+// other six models plus provenance. `generateEvidenceModel()` (a later
+// phase) is what actually produces one; this is only the shape, also
+// consumed (type-only) by `@maverickcer/env-cap/evidence`.
+export type { EvidenceModel, EvidenceProvenance } from "./evidence-model.js"
+export { EVIDENCE_MODEL_SCHEMA_VERSION } from "./evidence-model.js"
 // The Finding Model (ADR 0024, ADR 0026) -- unifies CompatibilityIssue,
 // ArtifactCheckFinding, DocumentationFindings, and the usage-report ownership
 // findings behind one shape, with a required `code` and a structured
