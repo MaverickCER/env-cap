@@ -23,17 +23,20 @@ scripts/
   project-env-example.mjs           <- runs the .env.example projection
   project-config-reference.mjs      <- runs the Configuration Reference projection
   project-inventory.mjs             <- runs the Configuration Inventory projection
+  project-ownership.mjs             <- runs the Configuration Ownership projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
   config-reference.mjs              <- the "Environment Configuration Reference" reference projection
   inventory.mjs                     <- the "Configuration Inventory" reference projection
+  ownership.mjs                     <- the "Configuration Ownership" reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
 projected-env-example.txt            <- generated (by the env-example projection)
 projected-config-reference.md        <- generated (by the config-reference projection)
 projected-inventory.json             <- generated (by the inventory projection)
+projected-ownership.json             <- generated (by the ownership projection)
 expected/                            <- golden regression fixtures, see examples/README.md
 ```
 
@@ -45,6 +48,7 @@ npm run generate:env               # the baseline path: generateEnvArtifacts()
 npm run project:env-example        # generateEvidenceModel() + the .env.example projection
 npm run project:config-reference   # generateEvidenceModel() + the Configuration Reference projection
 npm run project:inventory          # generateEvidenceModel() + the Configuration Inventory projection
+npm run project:ownership          # generateEvidenceModel() + the Configuration Ownership projection
 ```
 
 ## The projections landed so far
@@ -64,6 +68,16 @@ are documented as "Same data `renderCatalog()` renders to Markdown, reshaped for
 programmatic consumers instead of prose" — but neither is exported publicly, so this projection
 reproduces that reshape using only the public `effectiveOwner()`). Also verified against a
 dedicated `expected/` golden fixture, for the same reasons as Configuration Reference.
+
+**Configuration Ownership** (`projections/ownership.mjs`) — like Inventory, a *data* projection:
+`usage-report.ts`'s `renderUsageReport()` is a private implementation detail of
+`generateUsageReport()`'s orchestration (never re-exported), so this projection's output is the
+same shape its (also private) `RenderUsageReportOptions` describes — `dependencyOwnership` plus
+the four ownership-family finding arrays plus `parseWarnings` — for a consumer's own renderer to
+use, built from Contract Model, Dependency Model, and Finding Model together. Confirmed
+identical to `generateEnvArtifacts()`'s own `result.usage` for this example's single-contract
+schema; verified against a dedicated `expected/` golden fixture in general, since multi-contract
+schemas hit the same canonical-vs-discovery ordering divergence documented above.
 
 ## Known divergences from the direct-call baseline
 

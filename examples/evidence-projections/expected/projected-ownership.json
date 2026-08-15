@@ -1,0 +1,22 @@
+{
+  "dependencyOwnership": [
+    {
+      "contractName": "app",
+      "file": "src/env.ts",
+      "owner": "platform-team",
+      "variableCount": 5,
+      "consumers": []
+    }
+  ],
+  "abandonedContracts": [
+    {
+      "contractName": "app",
+      "file": "src/env.ts",
+      "owner": "platform-team"
+    }
+  ],
+  "unresolvedConsumers": [],
+  "unconsumedOwnedVariables": [],
+  "indeterminate": [],
+  "parseWarnings": []
+}
