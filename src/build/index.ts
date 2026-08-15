@@ -101,6 +101,10 @@ export type {
   ContractModelContract,
   ContractModelVariable,
 } from "./contract-model.js"
+// A generic recursive deep-freeze, genericized from live-expirations.ts's
+// former DiscoveredContract[]-hardcoded version -- Evidence Model (a later
+// phase, ADR 0024) reuses this for its own immutability guarantee.
+export { deepFreeze } from "./deep-freeze.js"
 // The Dependency Model (ADR 0024, ADR 0027) -- a fact-shaped result of the
 // dependency-ownership engine, including the inverse file->contracts index
 // and per-access-site line numbers neither `dependency-graph.ts` (Private,
