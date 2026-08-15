@@ -42,7 +42,15 @@ export interface LifecycleModel {
   readonly schemaVersion: typeof LIFECYCLE_MODEL_SCHEMA_VERSION
   /** Only contracts with at least one lifecycle-relevant field set, at the contract level or on at least one variable. */
   readonly contracts: readonly LifecycleModelContract[]
-  /** Every contract-/variable-level `expiresAt` within the configured window, soonest-first -- see `computeExpiringEntries()`. */
+  /**
+   * Every contract-/variable-level `expiresAt` within the configured window,
+   * soonest-first -- see `computeExpiringEntries()`. `file` is root-relative
+   * and POSIX-separated here, matching `LifecycleModelContract.file`/every
+   * other canonical model -- unlike `ExpiringEntry`'s own doc comment, which
+   * describes its shape in `computeExpiringEntries()`'s other direct
+   * consumers (e.g. `DocumentationFindings.expiringSoon`), where `file`
+   * stays the absolute path `renderDocs()` itself expects.
+   */
   readonly expiring: readonly ExpiringEntry[]
 }
 
@@ -117,6 +125,9 @@ export function buildLifecycleModel(
   return {
     schemaVersion: LIFECYCLE_MODEL_SCHEMA_VERSION,
     contracts: modelContracts,
-    expiring: computeExpiringEntries(contracts, expiringWithinDays, now),
+    expiring: computeExpiringEntries(contracts, expiringWithinDays, now).map((entry) => ({
+      ...entry,
+      file: relativize(root, entry.file),
+    })),
   }
 }

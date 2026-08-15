@@ -165,7 +165,7 @@ describe("buildLifecycleModel", () => {
     expect(model1.contracts.map((c) => c.file)).toEqual(["a/env.schema.ts", "b/env.schema.ts"])
   })
 
-  it("promotes computeExpiringEntries() into the model's expiring field, unchanged", () => {
+  it("promotes computeExpiringEntries() into the model's expiring field, with file relativized to root", () => {
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
       exportName: "aEnv",
@@ -174,5 +174,11 @@ describe("buildLifecycleModel", () => {
     const model = buildLifecycleModel([contract], 30, NOW, "/repo")
     expect(model.expiring).toHaveLength(1)
     expect(model.expiring[0]).toMatchObject({ key: "SOON", expiresAt: "2026-01-15" })
+    // Unlike ExpiringEntry's own doc comment (an absolute path, in
+    // computeExpiringEntries()'s other direct consumers), LifecycleModel's
+    // own `expiring` field is root-relative -- matching every other
+    // canonical model's file convention, not the absolute path
+    // computeExpiringEntries() itself returns.
+    expect(model.expiring[0].file).toBe("a/env.schema.ts")
   })
 })
