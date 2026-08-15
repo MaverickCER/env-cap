@@ -85,6 +85,11 @@ export {
 export type { DiscoveredContractSummary } from "./link.js"
 
 // Lower-level building blocks, exposed for custom tooling (bundler plugins, CI scripts).
+// The Change Model (ADR 0024, ADR 0030) -- wraps the existing
+// ManifestChangeReport in a versioned, model-namespaced shape. See ADR 0021
+// for the change report itself, unchanged here.
+export { buildChangeModel, CHANGE_MODEL_SCHEMA_VERSION } from "./change-model.js"
+export type { ChangeModel } from "./change-model.js"
 export { detectCompatibilityIssues } from "./compatibility.js"
 // The Contract Model (ADR 0024, ADR 0025) -- the first of env-cap's seven
 // canonical fact models. A versioned, JSON-serializable superset of

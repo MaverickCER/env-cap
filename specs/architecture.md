@@ -469,3 +469,4 @@ contract.
 | Dependency Model publishes a fact-shaped result, not the scanning engine                                               | [0027](decisions/0027-dependency-model-fact-shape-not-engine-access.md)         |
 | Ownership Model shares one effectiveOwner() rule, fixing a pre-existing divergence                                     | [0028](decisions/0028-ownership-model-shared-effective-owner.md)                |
 | Lifecycle Model adds deprecation/rename fields, promotes ExpiringEntry                                                 | [0029](decisions/0029-lifecycle-model-deprecation-rename-fields.md)             |
+| Change Model wraps the existing manifest change report                                                                 | [0030](decisions/0030-change-model-wraps-manifest-change-report.md)             |
