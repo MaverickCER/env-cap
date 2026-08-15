@@ -11,7 +11,8 @@
     "project:inventory": "npm run generate:env && node scripts/project-inventory.mjs",
     "project:ownership": "npm run generate:env && node scripts/project-ownership.mjs",
     "project:lifecycle": "npm run generate:env && node scripts/project-lifecycle.mjs",
-    "project:dependency-graph": "npm run generate:env && node scripts/project-dependency-graph.mjs"
+    "project:dependency-graph": "npm run generate:env && node scripts/project-dependency-graph.mjs",
+    "project:findings": "npm run generate:env && node scripts/project-findings.mjs"
   },
   "dependencies": {
     "@maverickcer/env-cap": "file:../.."

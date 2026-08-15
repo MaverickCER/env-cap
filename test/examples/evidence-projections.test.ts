@@ -73,4 +73,12 @@ describe(EXAMPLE, () => {
       ]);
     },
   );
+
+  it.skipIf(!installed)(
+    "projected unified filterable Finding list matches its golden expected/ copy",
+    async () => {
+      runScript(EXAMPLE, "project:findings");
+      await compareGoldenArtifacts(EXAMPLE, ["projected-findings.json"]);
+    },
+  );
 });
