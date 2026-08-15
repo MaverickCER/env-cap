@@ -56,7 +56,10 @@ const EXAMPLES = {
   "validation-contexts": { artifacts: STANDARD_ARTIFACTS },
   "tsconfig-aliases": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
   "tsconfig-aliases-consumer": { artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP },
-  "evidence-projections": { artifacts: [".env.example"] },
+  "evidence-projections": {
+    artifacts: [".env.example", "projected-config-reference.md"],
+    extraScripts: ["project:env-example", "project:config-reference"],
+  },
 }
 
 function normalizeDocsForComparison(content) {
@@ -100,6 +103,10 @@ for (const [name, config] of Object.entries(EXAMPLES)) {
 
   console.log(`[golden] ${name}: regenerating...`)
   const generateOutput = run(exampleDir, "generate:env")
+  // evidence-projections' projected artifacts each come from their own
+  // `project:*` script (which runs generate:env itself first, as their
+  // baseline) rather than generate:env alone -- see its README.
+  for (const script of config.extraScripts ?? []) run(exampleDir, script)
 
   const expectedDir = path.join(exampleDir, "expected")
   for (const relativePath of config.artifacts) {
