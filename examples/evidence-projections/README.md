@@ -28,6 +28,7 @@ scripts/
   project-lifecycle.mjs             <- runs the Configuration Lifecycle projection
   project-dependency-graph.mjs      <- runs the Configuration Dependency projection
   project-findings.mjs              <- runs the unified filterable Finding list projection
+  project-drift.mjs                 <- runs the Configuration Drift projection
 projections/
   lib/to-discovered-contracts.mjs   <- shared Contract Model + Lifecycle Model -> DiscoveredContract[] reshape
   env-example.mjs                   <- the ".env.example Artifact" reference projection
@@ -37,6 +38,7 @@ projections/
   lifecycle.mjs                     <- the "Configuration Lifecycle" reference projection
   dependency-graph.mjs              <- the "Configuration Dependency" reference projection
   findings.mjs                       <- the unified filterable Finding list reference projection
+  drift.mjs                          <- the "Configuration Drift" reference projection
 docs/
   ENVIRONMENT.md                     <- generated (by the baseline path)
 .env.example                         <- generated (by the baseline path)
@@ -67,6 +69,7 @@ npm run project:ownership          # generateEvidenceModel() + the Configuration
 npm run project:lifecycle          # generateEvidenceModel() + the Configuration Lifecycle projection
 npm run project:dependency-graph   # generateEvidenceModel() + the Configuration Dependency projection
 npm run project:findings           # generateEvidenceModel() + the unified filterable Finding list projection
+npm run project:drift              # generateEvidenceModel() + checkEnvArtifacts() + the Configuration Drift projection
 ```
 
 ## The projections landed so far
@@ -125,6 +128,16 @@ machine-specific filesystem path straight into this projection's JSON output. Th
 normalizes it to Contract Model's portable, root-relative convention instead, the same choice
 `lifecycle.mjs` makes for `LifecycleModel.expiring[].file` -- except here it's Finding Model
 behaving exactly as documented, not a bug, so the fix belongs in the projection, not the source.
+
+**Configuration Drift** (`projections/drift.mjs`) -- the first projection whose data genuinely
+can't come from `EvidenceModel` alone: drift is "does the committed file on disk match what a
+real run would generate right now," and `EvidenceModel` is a snapshot of *discovered* reality,
+never a comparison against previously-written output. `artifactCheckFindings` is a factory
+parameter -- the same pattern `config-reference.mjs`'s `expiringWithinDays` establishes -- for
+context `defineEvidenceProjection()`'s `(evidence) => T` signature has no room for; a real caller
+runs `checkEnvArtifacts()` itself and passes the result in. Also relativizes
+`ArtifactCheckFinding.path` (documented as absolute) at the script level, where `root` is
+actually available, before the projection ever sees it.
 
 ## Known divergences from the direct-call baseline
 
