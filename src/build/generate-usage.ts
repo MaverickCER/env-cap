@@ -9,17 +9,17 @@ import { DEFAULT_EXCLUDE, DEFAULT_INCLUDE } from "./generate-manifest.js"
 import { effectiveOwner, linkFiles } from "./link.js"
 import type { DiscoveredContract } from "./link.js"
 import type { ParseWarning } from "./parse.js"
-import type { ImportResolutionContext } from "./resolve-import.js"
+import type { ImportResolutionContext } from "./resolution/resolve-import.js"
 import {
   mergeLocalAndPackageFiles,
   resolveAllowlistedPackages,
   type PackageSchemaResolutionResult,
-} from "./resolve-package-schema.js"
+} from "./resolution/resolve-package-schema.js"
 import {
   createAliasResolutionCache,
   loadTsconfigPaths,
-} from "./resolve-tsconfig-paths.js"
-import { resolveWithinRoot } from "./resolve-within-root.js"
+} from "./resolution/resolve-tsconfig-paths.js"
+import { resolveWithinRoot } from "./resolution/resolve-within-root.js"
 import {
   renderUsageReport,
   type AbandonedContractFinding,

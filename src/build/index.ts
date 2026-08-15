@@ -212,7 +212,7 @@ export type {
   ParseWarning,
   SchemaRef,
 } from "./parse.js"
-export { resolveRelativeImport } from "./resolve-import.js"
+export { resolveRelativeImport } from "./resolution/resolve-import.js"
 // Cross-package schema discovery (Experimental -- see ADR 0014 and VERSIONING.md).
 // Only the `packages` option (above, on each generator's options type) and
 // the `PackageOrigin` shape it attaches to `DiscoveredContract` are public --
@@ -220,4 +220,4 @@ export { resolveRelativeImport } from "./resolve-import.js"
 // `resolveImportSpecifier`, `resolvePackageImport`, `mergeLocalAndPackageFiles`)
 // are deliberately not exported, matching ADR 0010's precedent for keeping
 // analysis-engine internals out of the public surface.
-export type { PackageOrigin } from "./resolve-package-schema.js"
+export type { PackageOrigin } from "./resolution/resolve-package-schema.js"
