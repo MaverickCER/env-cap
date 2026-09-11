@@ -44,7 +44,10 @@ function graphNodesAndEdges(evidence) {
 }
 
 function dotId(id) {
-  return `"${id.replace(/"/g, '\\"')}"`;
+  // Escape backslashes before quotes -- otherwise a backslash in `id` (e.g.
+  // a Windows-style path) isn't itself escaped, so it can combine with the
+  // character that follows to break out of the DOT quoted-string context.
+  return `"${id.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
 function toDot(evidence) {
