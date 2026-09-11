@@ -96,7 +96,7 @@ Covers the common case: adding or changing a variable in an app or package that 
 
 ```ts
 // features/database/env.schema.ts
-import { createEnv, documentEnv } from "env-cap"
+import { createEnv, documentEnv } from "@maverickcer/env-cap"
 import { processors, validators } from "env-cap/helpers"
 
 const databaseSchema = {
@@ -121,7 +121,7 @@ Always pass `source: import.meta.url` — there's no portable way for `createEnv
 
 ```ts
 // src/startup.ts — before any capability code executes
-import { validateEnv } from "env-cap"
+import { validateEnv } from "@maverickcer/env-cap"
 import { manifest } from "./generated/env.manifest.js"
 
 await validateEnv({ values: process.env, manifest })

@@ -1,4 +1,4 @@
-# env-cap
+# @maverickcer/env-cap
 
 ## Modules
 

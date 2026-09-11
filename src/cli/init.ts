@@ -42,7 +42,7 @@ const SCHEMA_TEMPLATE = `// Starter env-cap capability contract -- expand it: ad
 // that feeds the generated docs and ownership report; it is inert at runtime.
 // Keep the object passed to both a static literal -- env-cap resolves it by
 // static analysis and never executes this file.
-import { createEnv, documentEnv } from "env-cap"
+import { createEnv, documentEnv } from "@maverickcer/env-cap"
 
 const schema = {
   EXAMPLE_API_URL: {
@@ -66,8 +66,8 @@ documentEnv(schema, {
 
 const GENERATOR_TEMPLATE = `// Build-time only. Run with \`node scripts/generate-env.mjs\`, or wire it into
 // a package.json script (e.g. "generate:env"). Never imported by app code.
-import { generateEnvArtifacts } from "env-cap/build"
-import { nodeBuildFileSystem } from "env-cap/node"
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -230,7 +230,7 @@ function renderReport(report: InitReport): string {
     "  1. Generate the manifest + docs:  node scripts/generate-env.mjs",
     "  2. Validate once at app startup:",
     "",
-    '       import { validateEnv } from "env-cap"',
+    '       import { validateEnv } from "@maverickcer/env-cap"',
     `       import { manifest } from "${manifestImport}"`,
     "       await validateEnv({ manifest, values: process.env })",
     "",
