@@ -158,7 +158,7 @@
     "eslint": "^10.8.0",
     "eslint-config-prettier": "10.1.8",
     "globals": "^17.9.0",
-    "internal-package-contract": "git+https://github.com/MaverickCER/internal-package-contract.git#main",
+    "internal-package-contract": "github:MaverickCER/internal-package-contract#main",
     "prettier": "3.9.6",
     "ts-json-schema-generator": "^2.9.0",
     "tsup": "^8.0.0",
