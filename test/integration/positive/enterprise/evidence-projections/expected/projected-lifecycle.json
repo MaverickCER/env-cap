@@ -1,0 +1,13 @@
+{
+  "expiring": [
+    {
+      "file": "src/env.ts",
+      "exportName": "env",
+      "key": "STRIPE_KEY",
+      "expiresAt": "2026-09-27",
+      "daysRemaining": 16
+    }
+  ],
+  "deprecatedContracts": [],
+  "deprecatedVariables": []
+}

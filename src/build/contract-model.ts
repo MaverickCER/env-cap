@@ -1,7 +1,14 @@
-import path from "node:path"
+import { displayPath } from "./display-path.js"
+import { byContractIdentity } from "./sort-by-identity.js"
+import { governanceFieldsOf, type EnvGovernanceFields } from "./governance-fields.js"
 import type { DiscoveredContract } from "./link.js"
-import type { DiscoveredClassification } from "./parse.js"
+import type { DiscoveredVariableEvidence } from "./parse.js"
 import type { PackageOrigin } from "./resolution/resolve-package-schema.js"
+import type { SourcePosition } from "./source-position.js"
+
+function relativizePosition(root: string, position: SourcePosition): SourcePosition {
+  return { ...position, file: displayPath(root, position.file) }
+}
 
 /**
  * The first of env-cap's seven canonical fact models (ADR 0024) -- a
@@ -9,23 +16,33 @@ import type { PackageOrigin } from "./resolution/resolve-package-schema.js"
  * variable's structural and documentation contract. See ADR 0025.
  *
  * @remarks
- * Deliberately broader than `manifest-snapshot.ts`'s `ManifestSnapshot`:
- * that snapshot is scoped to *active* contracts and *only* the
- * `documentEnv()`-sourced fields, matching `renderManifest()`'s own scope
- * (ADR 0021). This model includes every discovered contract regardless of
- * `active`, plus the AST-derived schema facts (`hasDefault`/`hasProcessor`/
- * etc.) the snapshot deliberately excludes -- both are load-bearing for
- * downstream Finding/Evidence Model work.
+ * Deliberately broader than the persisted evidence snapshot's
+ * (`evidence-snapshot.ts`) `ManifestChangeReport` scope: that diff is scoped
+ * to *active* contracts and *only* the `documentEnv()`-sourced fields,
+ * matching `renderManifest()`'s own scope (ADR 0021). This model includes
+ * every discovered contract regardless of `active`, plus the AST-derived
+ * schema facts (`hasDefault`/`hasProcessor`/etc.) the change report
+ * deliberately excludes -- both are load-bearing for downstream
+ * Finding/Evidence Model work.
  */
 
 /** Bump only when a reader could misinterpret the new shape (a field changes
  *  type/meaning, or is removed) -- NOT for every additive field. Same
- *  discipline `manifest-snapshot.ts`'s `MANIFEST_SNAPSHOT_SCHEMA_VERSION` and
+ *  discipline `evidence-model.ts`'s `EVIDENCE_MODEL_SCHEMA_VERSION` and
  *  `src/cli/json.ts`'s `JSON_SCHEMA_VERSION` already document. */
-export const CONTRACT_MODEL_SCHEMA_VERSION = 1
+export const CONTRACT_MODEL_SCHEMA_VERSION = 3
 
-/** One variable's full statically-discoverable contract: schema-shaped facts plus linked documentation. */
-export interface ContractModelVariable {
+/**
+ * One variable's full statically-discoverable contract: schema-shaped facts plus linked documentation.
+ *
+ * @see {@link DependencyModelVariable} -- this same declared variable's access status.
+ * @see {@link OwnershipModelVariable} -- this same declared variable's effective owner.
+ * @see {@link LifecycleModelVariable} -- this same declared variable's lifecycle data.
+ * @see `CatalogVariable` (`docs.ts`) -- this same declared variable, reshaped for the generated
+ * docs catalog/JSON. Plain reference, not `{@link}`: `CatalogVariable` is intentionally not part
+ * of the public surface (see `typedoc.json`'s `intentionallyNotExported`).
+ */
+export interface ContractModelVariable extends EnvGovernanceFields {
   readonly key: string
   readonly hasDefault: boolean
   readonly defaultValue:
@@ -37,17 +54,18 @@ export interface ContractModelVariable {
   readonly validatorSource: string | undefined
   readonly context: string | undefined
   readonly description: string | undefined
-  readonly owner: string | undefined
-  readonly classification: DiscoveredClassification | undefined
-  readonly expiresAt: string | undefined
   readonly refreshInstructions: string | undefined
+  readonly setupInstructions: string | undefined
   readonly required: boolean | undefined
-  readonly extra: Readonly<Record<string, string>>
   readonly documented: boolean
+  /** The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See {@link runtime.VariableEvidenceDocs} and ADR 0037. */
+  readonly evidence: DiscoveredVariableEvidence | undefined
+  /** Where this variable's own schema property is declared. See ADR 0036. */
+  readonly declaration: SourcePosition
 }
 
 /** One `createEnv()` contract's full statically-discoverable contract, active or not. */
-export interface ContractModelContract {
+export interface ContractModelContract extends EnvGovernanceFields {
   /** Root-relative, POSIX-separated -- matches `DiscoveredContractSummary.file`. */
   readonly file: string
   readonly exportName: string
@@ -55,13 +73,13 @@ export interface ContractModelContract {
   readonly active: boolean
   readonly category: string | undefined
   readonly exclusiveGroup: string | undefined
-  readonly owner: string | undefined
-  readonly classification: DiscoveredClassification | undefined
-  readonly expiresAt: string | undefined
-  readonly metadata: Readonly<Record<string, string>> | undefined
   readonly variables: readonly ContractModelVariable[]
   readonly documented: boolean
   readonly packageOrigin: PackageOrigin | undefined
+  /** Where this contract's `createEnv(...)` call is declared. Always present. See ADR 0036. */
+  readonly declaration: SourcePosition
+  /** Where this contract's `documentEnv(...)` call is declared, if one exists. See ADR 0036. */
+  readonly documentation: SourcePosition | undefined
 }
 
 export interface ContractModel {
@@ -74,8 +92,7 @@ export interface ContractModel {
  * Model's versioned, JSON-serializable shape.
  *
  * @remarks
- * Sorted deterministically (by file, then exportName, then variable key),
- * same discipline `buildManifestSnapshot()` already follows, so
+ * Sorted deterministically (by file, then exportName, then variable key), so
  * `JSON.stringify` output is stable and diffs cleanly wherever this is
  * persisted.
  */
@@ -84,20 +101,19 @@ export function buildContractModel(
   root: string,
 ): ContractModel {
   const projected: ContractModelContract[] = contracts.map((contract) => ({
-    file: path.relative(root, contract.file).split(path.sep).join("/"),
+    file: displayPath(root, contract.file),
     exportName: contract.exportName,
     contractName: contract.contractName,
     active: contract.active,
     category: contract.category,
     exclusiveGroup: contract.exclusiveGroup,
-    owner: contract.owner,
-    classification: contract.classification,
-    expiresAt: contract.expiresAt,
-    metadata: contract.metadata,
+    ...governanceFieldsOf(contract),
     documented: contract.documented,
     packageOrigin: contract.packageOrigin,
+    declaration: relativizePosition(root, contract.declaration),
+    documentation: contract.documentation && relativizePosition(root, contract.documentation),
     variables: [...contract.variables]
-      .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+      .sort((a, b) => a.key.localeCompare(b.key))
       .map((variable) => ({
         key: variable.key,
         hasDefault: variable.hasDefault,
@@ -109,20 +125,29 @@ export function buildContractModel(
         validatorSource: variable.validatorSource,
         context: variable.context,
         description: variable.description,
+        // Explicit (not `...governanceFieldsOf`) because this stage interleaves
+        // `refreshInstructions`/`setupInstructions`/`required` between the
+        // governance fields, and the persisted `env.evidence.json` is compared
+        // key-order-sensitively.
         owner: variable.owner,
-        classification: variable.classification,
+        sensitivity: variable.sensitivity,
         expiresAt: variable.expiresAt,
         refreshInstructions: variable.refreshInstructions,
+        setupInstructions: variable.setupInstructions,
         required: variable.required,
-        extra: variable.extra,
+        purpose: variable.purpose,
+        legalBasis: variable.legalBasis,
+        retention: variable.retention,
+        dataResidency: variable.dataResidency,
+        auditRequired: variable.auditRequired,
+        metadata: variable.metadata,
         documented: variable.documented,
+        evidence: variable.evidence,
+        declaration: relativizePosition(root, variable.declaration),
       })),
   }))
 
-  projected.sort((a, b) => {
-    if (a.file !== b.file) return a.file < b.file ? -1 : 1
-    return a.exportName < b.exportName ? -1 : a.exportName > b.exportName ? 1 : 0
-  })
+  projected.sort(byContractIdentity)
 
   return { schemaVersion: CONTRACT_MODEL_SCHEMA_VERSION, contracts: projected }
 }

@@ -33,6 +33,9 @@ ruleTester.run("no-raw-process-env", noRawProcessEnv as unknown as Rule.RuleModu
     { code: "// eslint-disable-next-line\nconst x = process.env.FOO;", filename: "src/app.ts" },
     // Not a process.env access at all -- some other object's .env property.
     { code: "const x = config.env.FOO;", filename: "src/app.ts" },
+    // process's own OTHER properties (not .env) are untouched.
+    { code: "const x = process.argv[0];", filename: "src/app.ts" },
+    { code: "const x = process.platform;", filename: "src/app.ts" },
   ],
   invalid: [
     {

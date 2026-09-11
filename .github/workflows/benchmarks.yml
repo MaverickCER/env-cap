@@ -12,7 +12,7 @@ on:
 # produces a committed artifact -- PRs never get a commit pushed to them,
 # and main itself is only ever updated through a review PR. No step here
 # ever fails the job because of a performance number -- see
-# examples/PERFORMANCE.md's "How regressions are surfaced".
+# benchmark/README.md's "How regressions are surfaced".
 permissions:
   contents: read
 
@@ -35,15 +35,15 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - working-directory: examples/performance-runtime
+      - working-directory: benchmark/performance-runtime
         run: npm install
-      - working-directory: examples/performance-buildtime
+      - working-directory: benchmark/performance-buildtime
         run: npm install
 
       - name: Snapshot main's committed results as "previous"
         run: |
-          git show origin/main:examples/performance-runtime/results.json > /tmp/previous-runtime.json || echo '{}' > /tmp/previous-runtime.json
-          git show origin/main:examples/performance-buildtime/results.json > /tmp/previous-buildtime.json || echo '{}' > /tmp/previous-buildtime.json
+          git show origin/main:benchmark/performance-runtime/results.json > /tmp/previous-runtime.json || echo '{}' > /tmp/previous-runtime.json
+          git show origin/main:benchmark/performance-buildtime/results.json > /tmp/previous-buildtime.json || echo '{}' > /tmp/previous-buildtime.json
 
       - run: npm run benchmark
 
@@ -51,17 +51,17 @@ jobs:
         with:
           name: benchmark-results
           path: |
-            examples/performance-runtime/results.json
-            examples/performance-runtime/RESULTS.md
-            examples/performance-buildtime/results.json
-            examples/performance-buildtime/RESULTS.md
+            benchmark/performance-runtime/results.json
+            benchmark/performance-runtime/RESULTS.md
+            benchmark/performance-buildtime/results.json
+            benchmark/performance-buildtime/RESULTS.md
           retention-days: 14
 
       - name: Post or update the marker-tagged summary comment
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          node scripts/render-benchmark-summary.mjs /tmp/previous-runtime.json examples/performance-runtime/results.json /tmp/previous-buildtime.json examples/performance-buildtime/results.json > /tmp/summary.md
+          node scripts/render-benchmark-summary.mjs /tmp/previous-runtime.json benchmark/performance-runtime/results.json /tmp/previous-buildtime.json benchmark/performance-buildtime/results.json > /tmp/summary.md
           PR="${{ github.event.pull_request.number }}"
           EXISTING=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" --jq '.[] | select(.body | startswith("<!-- env-cap-benchmark-summary -->")) | .id' | head -n1)
           if [ -n "$EXISTING" ]; then
@@ -87,15 +87,15 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - working-directory: examples/performance-runtime
+      - working-directory: benchmark/performance-runtime
         run: npm install
-      - working-directory: examples/performance-buildtime
+      - working-directory: benchmark/performance-buildtime
         run: npm install
 
       - name: Snapshot the currently-committed results as "previous"
         run: |
-          cp examples/performance-runtime/results.json /tmp/previous-runtime.json
-          cp examples/performance-buildtime/results.json /tmp/previous-buildtime.json
+          cp benchmark/performance-runtime/results.json /tmp/previous-runtime.json
+          cp benchmark/performance-buildtime/results.json /tmp/previous-buildtime.json
 
       - run: npm run benchmark
 
@@ -103,21 +103,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if git diff --quiet -- examples/performance-runtime/results.json examples/performance-buildtime/results.json; then
+          if git diff --quiet -- benchmark/performance-runtime/results.json benchmark/performance-buildtime/results.json; then
             echo "No change in results.json -- nothing to open a PR for."
             exit 0
           fi
 
-          node scripts/render-benchmark-summary.mjs /tmp/previous-runtime.json examples/performance-runtime/results.json /tmp/previous-buildtime.json examples/performance-buildtime/results.json > /tmp/summary.md
-          node scripts/append-benchmark-history.mjs examples/performance-runtime/results.json docs/benchmark-history/runtime.json
-          node scripts/append-benchmark-history.mjs examples/performance-buildtime/results.json docs/benchmark-history/buildtime.json
+          node scripts/render-benchmark-summary.mjs /tmp/previous-runtime.json benchmark/performance-runtime/results.json /tmp/previous-buildtime.json benchmark/performance-buildtime/results.json > /tmp/summary.md
+          node scripts/append-benchmark-history.mjs benchmark/performance-runtime/results.json docs/benchmark-history/runtime.json
+          node scripts/append-benchmark-history.mjs benchmark/performance-buildtime/results.json docs/benchmark-history/buildtime.json
 
           SHORT_SHA=$(git rev-parse --short HEAD)
           BRANCH="ci/benchmark-results/${{ github.run_id }}-${SHORT_SHA}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
-          git add examples/performance-runtime/results.json examples/performance-runtime/RESULTS.md examples/performance-buildtime/results.json examples/performance-buildtime/RESULTS.md docs/benchmark-history/runtime.json docs/benchmark-history/buildtime.json
+          git add benchmark/performance-runtime/results.json benchmark/performance-runtime/RESULTS.md benchmark/performance-buildtime/results.json benchmark/performance-buildtime/RESULTS.md docs/benchmark-history/runtime.json docs/benchmark-history/buildtime.json
           git commit -m "chore(benchmarks): refresh results.json from main@${SHORT_SHA} [skip ci]"
           git push origin "$BRANCH"
           gh pr create --base main --head "$BRANCH" --title "chore(benchmarks): refresh results.json (${SHORT_SHA})" --body-file /tmp/summary.md

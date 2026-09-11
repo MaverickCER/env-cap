@@ -7,7 +7,7 @@ If you use an AI coding assistant, provide it with the following prompt before a
 Replace `<YOUR_PROJECT_CONTEXT>` with any additional context about your application before submitting the prompt.
 
 ```text
-You are integrating @maverickcer/env-cap into an existing production codebase.
+You are integrating env-cap into an existing production codebase.
 
 Package source:
 https://github.com/maverickcer/env-cap

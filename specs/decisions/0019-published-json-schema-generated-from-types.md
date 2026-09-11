@@ -51,7 +51,7 @@ will build real tooling against.
     this one.
 - **Ships in the published npm tarball, with its own subpath export.**
   `schemas/` is added to `package.json`'s `files` array, and
-  `@maverickcer/env-cap/schema` maps directly to the JSON file -- the same
+  `env-cap/schema` maps directly to the JSON file -- the same
   pattern already used for `"./package.json": "./package.json"` -- so a
   consumer can resolve it via Node's own module resolution rather than
   reconstructing a path into `node_modules`.
@@ -72,7 +72,7 @@ will build real tooling against.
   the committed file — the same way a stale generated manifest would fail in
   any project using this tool on itself.
 - External tooling gets exactly one artifact to point at
-  (`@maverickcer/env-cap/schema` or `schemas/env-cap-report.schema.json` in
+  (`env-cap/schema` or `schemas/env-cap-report.schema.json` in
   the repo) instead of reverse-engineering the README's prose example.
 - `ts-json-schema-generator` and `ajv` are devDependencies only -- neither
   ships in the published package or is required at runtime by anything

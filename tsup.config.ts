@@ -1,4 +1,15 @@
+import { readFileSync } from "node:fs"
 import { defineConfig } from "tsup"
+
+// Read once, here, at build time -- NOT shipped in dist/. Substituted into
+// `src/build/tool-version.ts` and `src/cli/json.ts` via `define` below, so
+// neither reads `package.json` from disk at runtime. See ADR 0040.
+const packageVersion: string = (
+  JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as {
+    version: string
+  }
+).version
+const versionDefine = { __PACKAGE_VERSION__: JSON.stringify(packageVersion) }
 
 // Every entry drops comments and collapses whitespace from its built output
 // (`minifyWhitespace`) -- esbuild's default, unminified behavior otherwise
@@ -47,6 +58,23 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     treeshake: true,
+    define: versionDefine,
+    esbuildOptions,
+  },
+  {
+    name: "node",
+    // The `env-cap/node` entry -- the Node-backed
+    // `BuildFileSystem` adapter (`src/cli/filesystem.ts`, re-exported through
+    // `src/node/index.ts`). An executable-context entry like `bin` /
+    // `./eslint-plugin`: it legitimately bundles `node:fs/promises`, and
+    // `scripts/verify-no-ambient-fs.mjs` exempts its resolved target. See ADR 0040.
+    entry: { node: "src/node/index.ts" },
+    format: ["esm", "cjs"],
+    platform: "node",
+    target: "node18",
+    dts: false,
+    sourcemap: true,
+    treeshake: true,
     esbuildOptions,
   },
   {
@@ -69,6 +97,7 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     banner: { js: "#!/usr/bin/env node" },
+    define: versionDefine,
     esbuildOptions,
   },
   {

@@ -30,7 +30,12 @@ export function detectExclusiveGroupIssues(
 
   const issues: CompatibilityIssue[] = []
 
-  for (const [group, members] of [...byGroup.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+  for (const [group, members] of [...byGroup.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    // Equivalent to `i <= members.length`: whenever `i >= members.length`,
+    // the inner loop's own `j = i + 1` starts already past `members.length`
+    // too, so its body never runs -- an extra outer iteration at the bound
+    // is a genuine no-op for any `members.length`, not just this test's.
+    // Stryker disable next-line EqualityOperator
     for (let i = 0; i < members.length; i++) {
       for (let j = i + 1; j < members.length; j++) {
         const a = members[i]

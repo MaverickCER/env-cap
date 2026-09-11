@@ -3,21 +3,25 @@ import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
-import envCapPlugin, { noRawProcessEnv } from "../../src/eslint-plugin/index.js"
+import envCapPlugin, { noNodeFs, noRawProcessEnv } from "../../src/eslint-plugin/index.js"
 
 // Only test/eslint-plugin/no-raw-process-env.ts imports the rule module
 // directly -- nothing imports this barrel (`src/eslint-plugin/index.ts`)
-// itself, the actual `@maverickcer/env-cap/eslint-plugin` entry point a
+// itself, the actual `env-cap/eslint-plugin` entry point a
 // consumer's flat config imports (see ADR 0017) -- so it shows as 0%
 // covered without this test.
 describe("env-cap/eslint-plugin entry point", () => {
-  it("exports a flat-config-shaped plugin object with the no-raw-process-env rule", () => {
-    expect(envCapPlugin).toEqual({ rules: { "no-raw-process-env": noRawProcessEnv } })
+  it("exports a flat-config-shaped plugin object with every rule", () => {
+    expect(envCapPlugin).toEqual({
+      rules: { "no-raw-process-env": noRawProcessEnv, "no-node-fs": noNodeFs },
+    })
   })
 
-  it("also re-exports the rule by name for direct consumption", () => {
+  it("also re-exports each rule by name for direct consumption", () => {
     expect(noRawProcessEnv).toBeTypeOf("object")
     expect(noRawProcessEnv.meta.docs?.description).toContain("process.env")
+    expect(noNodeFs).toBeTypeOf("object")
+    expect(noNodeFs.meta.docs?.description).toContain("node:fs")
   })
 })
 
@@ -32,7 +36,7 @@ describe.skipIf(distMissing)(
     // src/eslint-plugin/index.ts has both a default export and a named
     // export (`noRawProcessEnv`) -- esbuild's plain CJS output for that
     // shape is `{ default: plugin, noRawProcessEnv }`, which would silently
-    // break a `require("@maverickcer/env-cap/eslint-plugin")` consumer
+    // break a `require("env-cap/eslint-plugin")` consumer
     // (e.g. an `eslint.config.cjs`) expecting the plugin object itself, the
     // same way `import envCapPlugin from "..."` already resolves it for ESM
     // consumers. See scripts/fix-eslint-plugin-cjs-interop.mjs.

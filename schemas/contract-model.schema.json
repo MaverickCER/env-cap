@@ -10,7 +10,7 @@
       "properties": {
         "schemaVersion": {
           "type": "number",
-          "const": 1
+          "const": 3
         },
         "contracts": {
           "type": "array",
@@ -28,6 +28,44 @@
     "ContractModelContract": {
       "type": "object",
       "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "sensitivity": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "legalBasis": {
+          "type": "string"
+        },
+        "retention": {
+          "type": "string"
+        },
+        "dataResidency": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "auditRequired": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {}
+        },
         "file": {
           "type": "string",
           "description": "Root-relative, POSIX-separated -- matches `DiscoveredContractSummary.file`."
@@ -47,21 +85,6 @@
         "exclusiveGroup": {
           "type": "string"
         },
-        "owner": {
-          "type": "string"
-        },
-        "classification": {
-          "$ref": "#/definitions/DiscoveredClassification"
-        },
-        "expiresAt": {
-          "type": "string"
-        },
-        "metadata": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "variables": {
           "type": "array",
           "items": {
@@ -73,6 +96,14 @@
         },
         "packageOrigin": {
           "$ref": "#/definitions/PackageOrigin"
+        },
+        "declaration": {
+          "$ref": "#/definitions/SourcePosition",
+          "description": "Where this contract's `createEnv(...)` call is declared. Always present. See ADR 0036."
+        },
+        "documentation": {
+          "$ref": "#/definitions/SourcePosition",
+          "description": "Where this contract's `documentEnv(...)` call is declared, if one exists. See ADR 0036."
         }
       },
       "required": [
@@ -81,24 +112,53 @@
         "contractName",
         "active",
         "variables",
-        "documented"
+        "documented",
+        "declaration"
       ],
       "additionalProperties": false,
       "description": "One `createEnv()` contract's full statically-discoverable contract, active or not."
     },
-    "DiscoveredClassification": {
-      "type": "string",
-      "enum": [
-        "secret",
-        "credential",
-        "pii",
-        "config"
-      ],
-      "description": "Mirrors runtime.VariableClassification -- duplicated rather than imported since `src/build/` never imports from `src/runtime/` (see `specs/architecture.md`'s zero-cross-folder-dependency rule)."
-    },
     "ContractModelVariable": {
       "type": "object",
       "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "sensitivity": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "legalBasis": {
+          "type": "string"
+        },
+        "retention": {
+          "type": "string"
+        },
+        "dataResidency": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "auditRequired": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {}
+        },
         "key": {
           "type": "string"
         },
@@ -158,29 +218,25 @@
         "description": {
           "type": "string"
         },
-        "owner": {
-          "type": "string"
-        },
-        "classification": {
-          "$ref": "#/definitions/DiscoveredClassification"
-        },
-        "expiresAt": {
-          "type": "string"
-        },
         "refreshInstructions": {
+          "type": "string"
+        },
+        "setupInstructions": {
           "type": "string"
         },
         "required": {
           "type": "boolean"
         },
-        "extra": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "documented": {
           "type": "boolean"
+        },
+        "evidence": {
+          "$ref": "#/definitions/DiscoveredVariableEvidence",
+          "description": "The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See runtime.VariableEvidenceDocs and ADR 0037."
+        },
+        "declaration": {
+          "$ref": "#/definitions/SourcePosition",
+          "description": "Where this variable's own schema property is declared. See ADR 0036."
         }
       },
       "required": [
@@ -188,11 +244,49 @@
         "hasDefault",
         "hasProcessor",
         "hasValidator",
-        "extra",
-        "documented"
+        "documented",
+        "declaration"
       ],
       "additionalProperties": false,
       "description": "One variable's full statically-discoverable contract: schema-shaped facts plus linked documentation."
+    },
+    "DiscoveredVariableEvidence": {
+      "type": "object",
+      "properties": {
+        "dynamicAccess": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Well-formed `\"path:line:column\"` entries from `evidence.dynamicAccess`, if set to an array of string literals -- a malformed entry warns and is dropped, never included here. See ADR 0037."
+        }
+      },
+      "additionalProperties": false,
+      "description": "The statically-extracted contents of one variable's `evidence` sub-object. See runtime.VariableEvidenceDocs."
+    },
+    "SourcePosition": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated."
+        },
+        "line": {
+          "type": "number",
+          "description": "1-indexed line number."
+        },
+        "column": {
+          "type": "number",
+          "description": "1-indexed column number."
+        }
+      },
+      "required": [
+        "file",
+        "line",
+        "column"
+      ],
+      "additionalProperties": false,
+      "description": "A precise pointer into a source file -- the shared shape every exact-position fact in the build pipeline (declaration sites, usage sites, dynamic-access sites) uses, so a consumer never has to reconcile three ad hoc `{ file; line; column }` shapes that happen to mean the same thing. See ADR 0036."
     },
     "PackageOrigin": {
       "type": "object",

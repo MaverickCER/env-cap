@@ -4,7 +4,7 @@
 
 Accepted. Implemented in `src/build/finding-model.ts` (`buildFindingModel()`,
 `Finding`, `FindingModel`) and `src/build/evidence-reference.ts`
-(`EvidenceReference`), exported from `@maverickcer/env-cap/build`.
+(`EvidenceReference`), exported from `env-cap/build`.
 
 ## Context
 

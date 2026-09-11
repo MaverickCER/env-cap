@@ -1,7 +1,7 @@
-import fs from "node:fs/promises"
 import path from "node:path"
 import ts from "typescript"
 import type { ParseWarning } from "../parse.js"
+import type { BuildFileSystem } from "../types.js"
 
 /**
  * TypeScript path-alias resolution (ADR 0023, Experimental -- see VERSIONING.md).
@@ -53,13 +53,16 @@ export function createAliasResolutionCache(): AliasResolutionCache {
   return { resolutions: new Map() }
 }
 
-async function fileExists(filePath: string): Promise<boolean> {
+async function fileExists(filePath: string, fs: BuildFileSystem): Promise<boolean> {
   try {
-    const stat = await fs.stat(filePath)
-    return stat.isFile()
+    return (await fs.stat(filePath)).isFile()
   } catch {
-    return false
+    // Empty -- no BlockStatement mutant on a trailing `{}` and the fallthrough
+    // `return false` below (data-cap's identical `resolve-tsconfig-paths.ts`
+    // precedent, and this file's own `resolve-import.ts`/
+    // `resolve-package-schema.ts` siblings).
   }
+  return false
 }
 
 export interface LoadTsconfigPathsResult {
@@ -92,13 +95,14 @@ export interface LoadTsconfigPathsResult {
 export async function loadTsconfigPaths(
   root: string,
   tsconfigOption: string | false | undefined,
+  fs: BuildFileSystem,
 ): Promise<LoadTsconfigPathsResult> {
   if (tsconfigOption === false) return { resolution: undefined, warning: undefined }
 
   const isExplicit = tsconfigOption !== undefined
   const configFile = path.resolve(root, tsconfigOption ?? "tsconfig.json")
 
-  if (!(await fileExists(configFile))) {
+  if (!(await fileExists(configFile, fs))) {
     if (!isExplicit) return { resolution: undefined, warning: undefined }
     return {
       resolution: undefined,
@@ -111,11 +115,18 @@ export async function loadTsconfigPaths(
 
   const readResult = ts.readConfigFile(configFile, (p) => ts.sys.readFile(p))
   if (readResult.error) {
+    // `readConfigFile`'s own diagnostic `messageText` is always a plain
+    // string in practice (probed) -- the chain separator arg is unreachable,
+    // kept only for the API's own `string | DiagnosticMessageChain` type.
+    // Same established equivalence as data-cap's identical
+    // `resolve-tsconfig-paths.ts`.
+    // Stryker disable next-line StringLiteral
+    const detail = ts.flattenDiagnosticMessageText(readResult.error.messageText, "\n")
     return {
       resolution: undefined,
       warning: {
         file: configFile,
-        message: `Could not parse "${configFile}": ${ts.flattenDiagnosticMessageText(readResult.error.messageText, "\n")}`,
+        message: `Could not parse "${configFile}": ${detail}`,
       },
     }
   }

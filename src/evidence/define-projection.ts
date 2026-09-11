@@ -62,8 +62,22 @@ export function defineEvidenceProjection<T extends Record<string, unknown>>(
   return Object.assign(invoke, { project })
 }
 
-const READ_ONLY_MESSAGE =
-  "EvidenceModel is read-only inside a projector -- a projection must be a pure function of its evidence argument. See ADR 0032."
+/**
+ * The error every membrane write-trap below throws. A function, not a
+ * module-level `const` -- a `const` string's mutants are evaluated once at
+ * module load and can't be attributed to a covering test under Stryker's
+ * `perTest` coverage analysis (a documented false-Survivor, not a real
+ * gap); exported so a test can pin the exact message directly, the same way
+ * every membrane trap's own `.toThrow(...)` can't (a `TypeError` from a
+ * Proxy invariant violation is thrown either way a trap's body is mutated,
+ * so `.toThrow(TypeError)` alone doesn't distinguish "our message" from
+ * "the engine's own invariant-violation message").
+ */
+export function readOnlyMembraneError(): TypeError {
+  return new TypeError(
+    "EvidenceModel is read-only inside a projector -- a projection must be a pure function of its evidence argument. See ADR 0032.",
+  )
+}
 
 /**
  * Wraps a fresh, unfrozen clone of `evidence` in a Proxy membrane that
@@ -107,16 +121,16 @@ function createTrackingProxy(evidence: EvidenceModel): {
         return wrap(result, nextPath)
       },
       set() {
-        throw new TypeError(READ_ONLY_MESSAGE)
+        throw readOnlyMembraneError()
       },
       deleteProperty() {
-        throw new TypeError(READ_ONLY_MESSAGE)
+        throw readOnlyMembraneError()
       },
       defineProperty() {
-        throw new TypeError(READ_ONLY_MESSAGE)
+        throw readOnlyMembraneError()
       },
       setPrototypeOf() {
-        throw new TypeError(READ_ONLY_MESSAGE)
+        throw readOnlyMembraneError()
       },
     })
     wrapped.set(target, proxy)

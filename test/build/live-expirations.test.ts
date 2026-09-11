@@ -20,16 +20,24 @@ function makeVariable(
     context: undefined,
     description: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     refreshInstructions: undefined,
+    setupInstructions: undefined,
     required: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
     removeBy: undefined,
     renamedFrom: undefined,
-    extra: {},
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
+    metadata: undefined,
+    evidence: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
     ...overrides,
   }
 }
@@ -47,12 +55,19 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
     metadata: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
+    documentation: undefined,
     packageOrigin: undefined,
     ...overrides,
   }
@@ -141,14 +156,18 @@ describe("applyLiveExpirationOverrides", () => {
       file: "/repo/x/env.schema.ts",
       exportName: "xEnv",
       metadata: { runbook: "https://example.com" },
-      variables: [makeVariable({ key: "A", extra: { setup: "..." } })],
+      variables: [makeVariable({ key: "A", metadata: { setup: "..." } })],
     })
     const [result] = applyLiveExpirationOverrides([contract], {})
     expect(result).not.toBe(contract)
     expect(result.variables).not.toBe(contract.variables)
     expect(result.variables[0]).not.toBe(contract.variables[0])
-    expect(result.variables[0]?.extra).not.toBe(contract.variables[0]?.extra)
+    expect(result.variables[0]?.metadata).not.toBe(contract.variables[0]?.metadata)
     expect(result.metadata).not.toBe(contract.metadata)
+    // A genuinely independent COPY, not a fresh-but-empty object -- every
+    // key/value must actually be carried over.
+    expect(result.variables[0]?.metadata).toEqual({ setup: "..." })
+    expect(result.metadata).toEqual({ runbook: "https://example.com" })
   })
 })
 

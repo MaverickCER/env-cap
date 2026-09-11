@@ -63,7 +63,7 @@ describe.skipIf(distMissing)("env-cap/helpers tree-shaking (requires `npm run bu
 
   it("importing only `processors` drops every `validators`-only string", async () => {
     const { code } = await bundle(
-      `import { processors } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.number);`,
+      `import { processors } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber);`,
     )
     for (const marker of VALIDATORS_ONLY_MARKERS) {
       expect(code).not.toContain(marker)
@@ -85,10 +85,10 @@ describe.skipIf(distMissing)("env-cap/helpers tree-shaking (requires `npm run bu
   it("importing both namespaces is meaningfully larger (gzip) than importing just one", async () => {
     const [processorsOnly, both] = await Promise.all([
       bundle(
-        `import { processors } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.number);`,
+        `import { processors } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber);`,
       ),
       bundle(
-        `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.number, typeof validators.required);`,
+        `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber, typeof validators.required);`,
       ),
     ])
     // Pre-fix, this gap was ~7 bytes (both namespaces shipped regardless of
@@ -98,7 +98,7 @@ describe.skipIf(distMissing)("env-cap/helpers tree-shaking (requires `npm run bu
 
   it("importing both namespaces still contains markers from both", async () => {
     const { code } = await bundle(
-      `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.number, typeof validators.required);`,
+      `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber, typeof validators.required);`,
     )
     expect(code).toContain("required")
     expect(code.includes("Expected a numeric value") || code.includes("number")).toBe(true)

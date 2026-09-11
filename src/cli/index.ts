@@ -4,16 +4,14 @@ import {
   checkEnvArtifacts,
   generateEnvArtifacts,
   type CheckEnvArtifactsResult,
+  type ContractModelContract,
   type EnvExampleOnExisting,
   type ManifestChangeReport,
 } from "../build/index.js"
+import { nodeBuildFileSystem } from "./filesystem.js"
+import { runInitCommand } from "./init.js"
+import type { JsonRequestedPasses } from "./json.js"
 import { serializeFailure, serializeSuccess, writeJson } from "./json.js"
-
-const ENV_EXAMPLE_ON_EXISTING_VALUES: readonly EnvExampleOnExisting[] = [
-  "keep-sibling",
-  "overwrite",
-  "skip",
-]
 
 /**
  * Thin, optional CLI wrapper around `generateEnvArtifacts()`. Nothing here is
@@ -22,7 +20,7 @@ const ENV_EXAMPLE_ON_EXISTING_VALUES: readonly EnvExampleOnExisting[] = [
  * from npm scripts, bundler plugins, or CI steps without this file.
  */
 
-/** Parsed CLI flags -- see `HELP_TEXT` below for what each one means. */
+/** Parsed CLI flags -- see `helpText()` below for what each one means. */
 export interface ParsedArgs {
   root?: string
   location?: string
@@ -34,6 +32,7 @@ export interface ParsedArgs {
   envExample?: string
   envExampleOnExisting?: EnvExampleOnExisting
   ownership?: string
+  evidence?: string
   strict: boolean
   strictDocs: boolean
   strictOwnership: boolean
@@ -41,6 +40,126 @@ export interface ParsedArgs {
   json: boolean
   check: boolean
   help: boolean
+}
+
+// Every VALUE_FLAGS/BOOL_FLAGS entry below is a named function declaration,
+// not an inline arrow inside the dispatch table object literals -- Stryker
+// marks a module-level object literal's own arrow-shorthand properties
+// `static: true` (evaluated once at module load), which can produce a false
+// "Survived" on a mutant that real tests genuinely reach and would fail
+// against, even though `ignoreStatic` only suppresses a static mutant with
+// *zero* coverage (this one has real coverage, just misattributed). Named
+// function declarations don't have this problem -- their bodies are ordinary
+// function-scope code, attributed normally. See the identical fix already
+// applied to `check-artifacts.ts`/`reference-projections.ts`'s `defineX({...})`
+// schema objects.
+function setRoot(a: ParsedArgs, v: string): void {
+  a.root = v
+}
+function setLocation(a: ParsedArgs, v: string): void {
+  a.location = v
+}
+function pushInclude(a: ParsedArgs, v: string): void {
+  a.include.push(v)
+}
+function pushExclude(a: ParsedArgs, v: string): void {
+  a.exclude.push(v)
+}
+function pushPackage(a: ParsedArgs, v: string): void {
+  a.packages.push(v)
+}
+function setTsconfig(a: ParsedArgs, v: string): void {
+  a.tsconfig = v
+}
+function setDocs(a: ParsedArgs, v: string): void {
+  a.docs = v
+}
+function setEnvExample(a: ParsedArgs, v: string): void {
+  a.envExample = v
+}
+function setOwnership(a: ParsedArgs, v: string): void {
+  a.ownership = v
+}
+function setEvidence(a: ParsedArgs, v: string): void {
+  a.evidence = v
+}
+function setEnvExampleOnExisting(a: ParsedArgs, v: string): void {
+  const values: readonly EnvExampleOnExisting[] = ["keep-sibling", "overwrite", "skip"]
+  if (!values.includes(v as EnvExampleOnExisting)) {
+    throw new Error(
+      `Unknown value for --env-example-on-existing: "${v}". Expected one of: ${values.join(", ")}.`,
+    )
+  }
+  a.envExampleOnExisting = v as EnvExampleOnExisting
+}
+function setExpiringWithinDays(a: ParsedArgs, v: string): void {
+  const parsed = Number(v)
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`--expiring-within-days expects a number, got "${v}".`)
+  }
+  a.expiringWithinDays = parsed
+}
+
+/** Flags that consume the following argv token. A table, not a `switch`, so `parseArgs` stays a flat dispatch loop -- one branch per *kind* of flag. */
+const VALUE_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs, value: string) => void>>> = {
+  "--root": setRoot,
+  "--location": setLocation,
+  "--include": pushInclude,
+  "--exclude": pushExclude,
+  "--package": pushPackage,
+  "--tsconfig": setTsconfig,
+  "--docs": setDocs,
+  "--env-example": setEnvExample,
+  "--ownership": setOwnership,
+  "--evidence": setEvidence,
+  "--env-example-on-existing": setEnvExampleOnExisting,
+  "--expiring-within-days": setExpiringWithinDays,
+}
+
+function setNoTsconfig(a: ParsedArgs): void {
+  a.tsconfig = false
+}
+function setStrict(a: ParsedArgs): void {
+  a.strict = true
+}
+function setStrictDocs(a: ParsedArgs): void {
+  a.strictDocs = true
+}
+function setStrictOwnership(a: ParsedArgs): void {
+  a.strictOwnership = true
+}
+function setJson(a: ParsedArgs): void {
+  a.json = true
+}
+function setCheck(a: ParsedArgs): void {
+  a.check = true
+}
+function setHelp(a: ParsedArgs): void {
+  a.help = true
+}
+
+/** Flags that set a boolean and consume nothing further. */
+// This object literal itself is `static: true` (built once at module load),
+// which Stryker can misattribute a false "Survived" to even though it's
+// genuinely, heavily test-covered -- NOT an equivalent mutant. Hand-verified:
+// replacing this whole literal with `{}` and running the real suite
+// (`vitest run`, whole package) fails 21 tests across 2 files (every test
+// exercising `--strict`/`--json`/`--check`/`--help`/etc.), each throwing
+// "Unknown argument" instead of setting the flag. Extracting each entry to
+// its own named function (see above) already fixed the same class of false
+// "Survived" for every individual entry's own body; this fixes the entries,
+// the wrapper object literal's own collapse-to-`{}` mutant is a second,
+// distinct static-attribution target that the same fix doesn't reach.
+// Stryker disable next-line ObjectLiteral
+const BOOL_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs) => void>>> = {
+  "--no-tsconfig": setNoTsconfig,
+  "--strict": setStrict,
+  "--strict-docs": setStrictDocs,
+  "--strict-ownership": setStrictOwnership,
+  "--json": setJson,
+  "--check": setCheck,
+  "--help": setHelp,
+  "-h": setHelp,
 }
 
 /**
@@ -62,78 +181,28 @@ export function parseArgs(argv: string[]): ParsedArgs {
   }
 
   for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]
-    switch (arg) {
-      case "--root":
-        args.root = nonEmpty(argv[++i], "--root")
-        break
-      case "--location":
-        args.location = nonEmpty(argv[++i], "--location")
-        break
-      case "--include":
-        args.include.push(nonEmpty(argv[++i], "--include"))
-        break
-      case "--exclude":
-        args.exclude.push(nonEmpty(argv[++i], "--exclude"))
-        break
-      case "--package":
-        args.packages.push(nonEmpty(argv[++i], "--package"))
-        break
-      case "--tsconfig":
-        args.tsconfig = nonEmpty(argv[++i], "--tsconfig")
-        break
-      case "--no-tsconfig":
-        args.tsconfig = false
-        break
-      case "--docs":
-        args.docs = nonEmpty(argv[++i], "--docs")
-        break
-      case "--env-example":
-        args.envExample = nonEmpty(argv[++i], "--env-example")
-        break
-      case "--env-example-on-existing": {
-        const value = nonEmpty(argv[++i], "--env-example-on-existing")
-        if (!ENV_EXAMPLE_ON_EXISTING_VALUES.includes(value as EnvExampleOnExisting)) {
-          throw new Error(
-            `Unknown value for --env-example-on-existing: "${value}". Expected one of: ${ENV_EXAMPLE_ON_EXISTING_VALUES.join(", ")}.`,
-          )
-        }
-        args.envExampleOnExisting = value as EnvExampleOnExisting
-        break
-      }
-      case "--ownership":
-        args.ownership = nonEmpty(argv[++i], "--ownership")
-        break
-      case "--strict":
-        args.strict = true
-        break
-      case "--strict-docs":
-        args.strictDocs = true
-        break
-      case "--strict-ownership":
-        args.strictOwnership = true
-        break
-      case "--json":
-        args.json = true
-        break
-      case "--check":
-        args.check = true
-        break
-      case "--expiring-within-days": {
-        const value = nonEmpty(argv[++i], "--expiring-within-days")
-        const parsed = Number(value)
-        if (!Number.isFinite(parsed))
-          throw new Error(`--expiring-within-days expects a number, got "${value}".`)
-        args.expiringWithinDays = parsed
-        break
-      }
-      case "--help":
-      case "-h":
-        args.help = true
-        break
-      default:
-        throw new Error(`Unknown argument: ${arg}`)
+    // Provably unreachable for any real `string[]` input: the loop condition
+    // `i < argv.length` guarantees `argv[i]` is in-bounds (hence defined)
+    // every time this line runs, whether `i` just advanced by the outer
+    // `i++` or by a value flag's own `++i` above -- `noUncheckedIndexedAccess`
+    // isn't enabled, so TypeScript doesn't force this fallback either; it's
+    // pure runtime defense against an out-of-bounds access that can't
+    // actually occur. Hand-verified: replacing the fallback string and
+    // running the real suite (`vitest run` across all of test/cli/) passes
+    // unchanged.
+    // Stryker disable next-line StringLiteral
+    const arg = argv[i] ?? ""
+    const valueFlag = VALUE_FLAGS[arg]
+    if (valueFlag) {
+      valueFlag(args, nonEmpty(argv[++i], arg))
+      continue
     }
+    const boolFlag = BOOL_FLAGS[arg]
+    if (boolFlag) {
+      boolFlag(args)
+      continue
+    }
+    throw new Error(`Unknown argument: ${arg}`)
   }
 
   return args
@@ -145,12 +214,22 @@ function nonEmpty(value: string | undefined, flag: string): string {
   return value
 }
 
-const HELP_TEXT = `env-cap - generate a manifest, docs, and/or a dependency ownership report from discovered env.schema.ts contracts
+// A function, not a module-level `const` -- Stryker marks a module-level
+// template-literal `static: true` (evaluated once at import time), which can
+// under-attribute a real, test-covered mutant to a false "Survived" the same
+// way the VALUE_FLAGS/BOOL_FLAGS dispatch tables above did. Returning it from
+// a function makes the template literal ordinary function-scope code,
+// evaluated (and attributed) fresh on each of `main()`'s two call sites.
+function helpText(): string {
+  return `env-cap - generate a manifest, docs, and/or a dependency ownership report from discovered env.schema.ts contracts
 
 Usage:
-  env-cap [--location <path>] [--docs <path>] [--ownership <path>] [options]
+  env-cap init
+  env-cap [--location <path>] [--docs <path>] [--ownership <path>] [--evidence <path>] [options]
 
-At least one of --location, --docs, or --ownership is required.
+  init                            Scaffold a minimal starting point (one env.schema.ts + a generate script); run \`env-cap init --help\` for details
+
+At least one of --location, --docs, --ownership, or --evidence is required (for a non-init invocation).
 
 Options:
   --root <path>                   Directory to resolve globs from (default: cwd)
@@ -164,16 +243,19 @@ Options:
   --env-example <path>              Also emit a .env.example file at this path (only meaningful alongside --docs)
   --env-example-on-existing <mode>  What to do when --env-example's target already exists: keep-sibling (default, never overwrites -- writes a timestamped sibling instead), overwrite, or skip (write nothing). No effect with --check, which never writes anything regardless.
   --ownership <path>                Also emit the Dependency & Ownership Report at this path
-  --strict                          Escalate compatibility warnings to hard errors
-  --strict-docs                     Escalate undocumented contracts/variables to hard errors
-  --strict-ownership                Escalate proven abandoned contracts/unconsumed owned variables to hard errors (never escalates unresolved-consumer or indeterminate findings)
+  --evidence <path>                 Also emit the persisted evidence artifact (the full EvidenceModel, plus a paired .fingerprint sidecar) at this path, e.g. docs/env.evidence.json (see ADR 0038). Independent of --location -- needs no other pass.
+  --strict                          Escalate compatibility warnings to hard errors (manifest pass only -- ADR 0009's provable exclusive-group/compatibility errors). Does not affect docs/ownership findings; use the two scoped flags below for those.
+  --strict-docs                     Escalate every documentation-family warning (undocumented contract/variable, stale doc entry, expiring/expired entry, unresolvable documentEnv() link) to a hard error. Nothing is written when it fires. Info-severity findings are never escalated.
+  --strict-ownership                Escalate every ownership-family warning (abandoned contract, unresolved consumer, unconsumed owned variable, indeterminate ownership, stale/missing dynamicAccess citation) to a hard error. Nothing is written when it fires. Info-severity findings are never escalated.
   --expiring-within-days <n>        Window (in days) for the "expiring soon" report (default: 30)
   --json                             Emit a machine-readable JSON report instead of formatted text (see ADR 0013)
   --check                           Verify generated artifacts are up to date without writing anything; exits 1 if any is stale or missing (see ADR 0016)
   --help                            Show this message
 `
+}
 
-function formatFieldChanges(
+/** @internal Exported for direct unit coverage -- reached through `main()`'s `--evidence` flow in production, but that path alone can't isolate this from `contractNameResolver()`/`writeEvidenceChanges()`'s own logic, nor cheaply exercise every field-change/added/updated/removed shape without a full real generation run per case. */
+export function formatFieldChanges(
   changes: ManifestChangeReport["updatedContracts"][number]["changes"],
 ): string {
   return changes
@@ -184,16 +266,38 @@ function formatFieldChanges(
 /**
  * Mirrors `docs.ts`'s "Changes since last report" section: a fixed
  * Added/Updated/Removed order, each printed only when non-empty, "No
- * changes." when all three are empty -- printed unconditionally whenever a
- * manifest was generated, not only when something actually changed. See
- * ADR 0021.
+ * changes." when all three are empty -- printed whenever `--evidence` was
+ * requested, not only when something actually changed. See ADR 0038 (the
+ * persisted evidence artifact -- not the manifest itself, which no longer
+ * tracks its own change history; see ADR 0021's now-superseded design).
  */
-function writeManifestChanges(changes: ManifestChangeReport): void {
+/**
+ * Resolves a `${file}#${exportName}` reference to the contract's display
+ * name, from `ContractModel` -- the one model that owns it. A change-report
+ * ref carries identity only (see `ContractRef`), so this is the lookup any
+ * renderer needing prose performs; a removed contract has no entry in the
+ * *current* model at all, which is exactly why this falls back to the export
+ * name rather than assuming one exists.
+ */
+/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+export function contractNameResolver(
+  contracts: readonly ContractModelContract[],
+): (ref: { file: string; exportName: string }) => string {
+  const byIdentity = new Map(contracts.map((c) => [`${c.file}#${c.exportName}`, c.contractName]))
+  return (ref) => byIdentity.get(`${ref.file}#${ref.exportName}`) ?? ref.exportName
+}
+
+/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+export function writeEvidenceChanges(
+  changes: ManifestChangeReport,
+  contracts: readonly ContractModelContract[],
+): void {
+  const nameOf = contractNameResolver(contracts)
   const hasAdded = changes.addedContracts.length > 0 || changes.addedVariables.length > 0
   const hasUpdated = changes.updatedContracts.length > 0 || changes.updatedVariables.length > 0
   const hasRemoved = changes.removedContracts.length > 0 || changes.removedVariables.length > 0
 
-  process.stdout.write("\nManifest changes since last execution:\n")
+  process.stdout.write("\nEvidence changes since the last persisted snapshot:\n")
   if (!hasAdded && !hasUpdated && !hasRemoved) {
     process.stdout.write("  No changes.\n")
     return
@@ -202,25 +306,38 @@ function writeManifestChanges(changes: ManifestChangeReport): void {
   if (hasAdded) {
     process.stdout.write("  Added:\n")
     for (const c of changes.addedContracts)
-      process.stdout.write(`    - contract "${c.contractName}" (${c.file})\n`)
+      process.stdout.write(`    - contract "${nameOf(c)}" (${c.file})\n`)
     for (const v of changes.addedVariables)
-      process.stdout.write(`    - ${v.key} in "${v.contractName}"\n`)
+      process.stdout.write(`    - ${v.key} in "${nameOf(v)}"\n`)
   }
   if (hasUpdated) {
     process.stdout.write("  Updated:\n")
     for (const c of changes.updatedContracts)
-      process.stdout.write(`    - contract "${c.contractName}": ${formatFieldChanges(c.changes)}\n`)
+      process.stdout.write(`    - contract "${nameOf(c)}": ${formatFieldChanges(c.changes)}\n`)
     for (const v of changes.updatedVariables)
-      process.stdout.write(
-        `    - ${v.key} in "${v.contractName}": ${formatFieldChanges(v.changes)}\n`,
-      )
+      process.stdout.write(`    - ${v.key} in "${nameOf(v)}": ${formatFieldChanges(v.changes)}\n`)
   }
   if (hasRemoved) {
     process.stdout.write("  Removed:\n")
     for (const c of changes.removedContracts)
-      process.stdout.write(`    - contract "${c.contractName}" (${c.file})\n`)
+      process.stdout.write(`    - contract "${nameOf(c)}" (${c.file})\n`)
     for (const v of changes.removedVariables)
-      process.stdout.write(`    - ${v.key} in "${v.contractName}"\n`)
+      process.stdout.write(`    - ${v.key} in "${nameOf(v)}"\n`)
+  }
+}
+
+/**
+ * Which passes this invocation asked for, straight off the parsed flags --
+ * never inferred from which results came back populated, which is exactly the
+ * ambiguity `requested` exists to remove. See `JsonRequestedPasses`.
+ */
+/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+export function requestedPasses(args: ParsedArgs): JsonRequestedPasses {
+  return {
+    manifest: args.location !== undefined,
+    docs: args.docs !== undefined,
+    usage: args.ownership !== undefined,
+    evidence: args.evidence !== undefined,
   }
 }
 
@@ -229,135 +346,250 @@ function writeManifestChanges(changes: ManifestChangeReport): void {
  * human-readable text or (`--json`) a machine-readable report to stdout, setting
  * `process.exitCode` accordingly (see ADR 0013 for the JSON report contract).
  */
-export async function main(): Promise<void> {
-  const args = parseArgs(process.argv.slice(2))
-
-  if (args.help) {
-    process.stdout.write(HELP_TEXT)
-    process.exitCode = 0
-    return
+/**
+ * The full `GenerateEnvArtifactsOptions` object, built once from parsed args --
+ * `checkEnvArtifacts` and `generateEnvArtifacts` take the same type, so both
+ * call sites use this directly. `evidence` is included: `--check --evidence`
+ * verifies the persisted evidence artifact for drift too, exactly as `--check`
+ * already does for the manifest/docs/env-example/ownership artifacts.
+ */
+/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+export function artifactOptions(args: ParsedArgs) {
+  const listOrUndefined = (list: string[]): string[] | undefined =>
+    list.length > 0 ? list : undefined
+  return {
+    // The deliberate injection boundary: the CLI (an executable consumer)
+    // hands `env-cap/build` (a library surface) its filesystem capability.
+    // See src/cli/filesystem.ts and ADR 0040.
+    fs: nodeBuildFileSystem,
+    root: args.root,
+    include: listOrUndefined(args.include),
+    exclude: listOrUndefined(args.exclude),
+    packages: listOrUndefined(args.packages),
+    tsconfig: args.tsconfig,
+    manifest: args.location
+      ? {
+          location: args.location,
+          onIncompatibility: args.strict ? ("throw" as const) : ("warn" as const),
+        }
+      : (false as const),
+    docs: args.docs
+      ? {
+          location: args.docs,
+          expiringWithinDays: args.expiringWithinDays,
+          envExample: args.envExample
+            ? { location: args.envExample, onExisting: args.envExampleOnExisting }
+            : undefined,
+        }
+      : (false as const),
+    usage: args.ownership ? { report: { location: args.ownership } } : (false as const),
+    evidence: args.evidence ? { location: args.evidence } : (false as const),
+    onUndocumented: args.strictDocs ? ("throw" as const) : ("warn" as const),
+    onOwnershipIssue: args.strictOwnership ? ("throw" as const) : ("warn" as const),
   }
+}
 
-  if (!args.location && !args.docs && !args.ownership) {
-    if (args.json) {
-      writeJson(
-        serializeFailure(
-          new Error("At least one of --location, --docs, or --ownership is required."),
-        ),
-      )
-    } else {
-      process.stdout.write(HELP_TEXT)
-    }
+/** `if (items.length) { write header; write "  - <render(item)>" per item }` -- the summary-list shape `main`'s generate output repeats ~15 times. */
+/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+export function printList<T>(
+  items: readonly T[],
+  header: string,
+  render: (item: T) => string,
+): void {
+  if (items.length === 0) return
+  process.stdout.write(`\n${header}\n`)
+  for (const item of items) process.stdout.write(`  - ${render(item)}\n`)
+}
+
+/** `--check`: verify every requested artifact for drift, write nothing, exit non-zero on any stale/missing. */
+async function runCheckMode(args: ParsedArgs): Promise<void> {
+  let checkResult: CheckEnvArtifactsResult
+  try {
+    checkResult = await checkEnvArtifacts(artifactOptions(args))
+  } catch (error) {
+    if (!args.json) throw error
+    writeJson(serializeFailure(error))
     process.exitCode = 1
     return
   }
 
-  const include = args.include.length > 0 ? args.include : undefined
-  const exclude = args.exclude.length > 0 ? args.exclude : undefined
-  const packages = args.packages.length > 0 ? args.packages : undefined
-
-  if (args.check) {
-    let checkResult: CheckEnvArtifactsResult
-    try {
-      checkResult = await checkEnvArtifacts({
-        root: args.root,
-        include,
-        exclude,
-        packages,
-        tsconfig: args.tsconfig,
-        manifest: args.location
-          ? { location: args.location, onIncompatibility: args.strict ? "throw" : "warn" }
-          : false,
-        docs: args.docs
-          ? {
-              location: args.docs,
-              onUndocumented: args.strictDocs ? "throw" : "warn",
-              expiringWithinDays: args.expiringWithinDays,
-              envExample: args.envExample
-                ? { location: args.envExample, onExisting: args.envExampleOnExisting }
-                : undefined,
-            }
-          : false,
-        usage: args.ownership
-          ? {
-              report: { location: args.ownership },
-              onOwnershipIssue: args.strictOwnership ? "throw" : "warn",
-            }
-          : false,
-      })
-    } catch (error) {
-      if (args.json) {
-        writeJson(serializeFailure(error))
-        process.exitCode = 1
-        return
-      }
-      throw error
-    }
-
-    const stale = checkResult.findings.filter((f) => f.status !== "ok").map((f) => f.artifact)
-    if (args.json) {
-      writeJson(
-        serializeSuccess(
-          { manifest: undefined, docs: undefined, usage: undefined },
-          { ok: checkResult.ok, stale },
-        ),
-      )
-    } else {
-      process.stdout.write("Checking for drift (--check: nothing will be written)...\n\n")
-      for (const f of checkResult.findings) {
-        process.stdout.write(
-          `  ${f.artifact.padEnd(10)} ${f.path.padEnd(50)} ${f.status.toUpperCase()}${f.detail ? ` (${f.detail})` : ""}\n`,
-        )
-      }
+  const stale = checkResult.findings.filter((f) => f.status !== "ok").map((f) => f.artifact)
+  if (args.json) {
+    // Both the `{manifest,docs,usage: undefined}` object and the `false`
+    // (`includeEvidence`) argument below are equivalent at this call site:
+    // `serializeSuccess()` only ever spreads these into its return payload
+    // (`...rest`, `...(includeEvidence ? {evidence} : {})`), and `writeJson`
+    // serializes the result through `JSON.stringify`, which drops an
+    // `undefined`-valued key exactly like a MISSING key -- so `{}` (every
+    // field implicitly undefined) and `{manifest: undefined, ...}` (every
+    // field explicitly undefined) serialize identically, and
+    // `includeEvidence: true` would only add `evidence: undefined` (`result`
+    // here has no `evidence` property to destructure), equally dropped.
+    // `requested` is passed explicitly right below, so `serializeSuccess`'s
+    // own `rest.manifest !== undefined`-based default (which WOULD
+    // distinguish `{}` from explicit `undefined`s) is never reached from
+    // this call site either. Hand-verified: mutating both together (`{}`,
+    // `true`) and running the real whole-package suite (`vitest run`)
+    // passes unchanged.
+    // Stryker disable ObjectLiteral,BooleanLiteral
+    writeJson(
+      serializeSuccess(
+        { manifest: undefined, docs: undefined, usage: undefined },
+        { ok: checkResult.ok, stale },
+        false,
+        // `--check` writes nothing, so every result above is undefined by
+        // construction -- `requested` is the only thing distinguishing "this run
+        // checked the docs artifact" from "it didn't."
+        requestedPasses(args),
+      ),
+    )
+    // Stryker restore ObjectLiteral,BooleanLiteral
+  } else {
+    process.stdout.write("Checking for drift (--check: nothing will be written)...\n\n")
+    for (const f of checkResult.findings) {
       process.stdout.write(
-        checkResult.ok
-          ? "\nAll generated artifacts are up to date.\n"
-          : `\n${stale.length} artifact(s) are stale or missing. Run without --check to regenerate.\n`,
+        `  ${f.artifact.padEnd(10)} ${f.path.padEnd(50)} ${f.status.toUpperCase()}${f.detail ? ` (${f.detail})` : ""}\n`,
       )
     }
-    process.exitCode = checkResult.ok ? 0 : 1
+    process.stdout.write(
+      checkResult.ok
+        ? "\nAll generated artifacts are up to date.\n"
+        : `\n${stale.length} artifact(s) are stale or missing. Run without --check to regenerate.\n`,
+    )
+  }
+  process.exitCode = checkResult.ok ? 0 : 1
+}
+
+type GenerateResult = Awaited<ReturnType<typeof generateEnvArtifacts>>
+
+/** The human-readable manifest section of a generate run's summary. */
+/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+export function printManifestSummary(manifest: NonNullable<GenerateResult["manifest"]>): void {
+  process.stdout.write(`Wrote manifest: ${manifest.outputPath}\n`)
+  process.stdout.write(`Discovered ${String(manifest.contracts.length)} contract(s).\n`)
+  printList(
+    manifest.warnings,
+    `${String(manifest.warnings.length)} compatibility warning(s):`,
+    (w) => `${w.code ? `[${w.code}] ` : ""}${w.variable}: ${w.reason}`,
+  )
+  printList(
+    manifest.parseWarnings,
+    `${String(manifest.parseWarnings.length)} parse warning(s):`,
+    (w) => `${w.file}: ${w.message}`,
+  )
+}
+
+/** The human-readable docs (+ env-example) section of a generate run's summary. */
+function printDocsSummary(docs: NonNullable<GenerateResult["docs"]>): void {
+  process.stdout.write(`Wrote docs: ${docs.docsPath}\n`)
+  const ex = docs.envExample
+  if (ex) {
+    process.stdout.write(
+      ex.skippedExistingPath
+        ? `Left existing example untouched: ${ex.skippedExistingPath}\nWrote a fresh copy to compare/merge: ${ex.writtenPath}\n`
+        : `Wrote example: ${ex.writtenPath}\n`,
+    )
+    printList(
+      ex.staleVariables,
+      `${String(ex.staleVariables.length)} variable(s) in the existing example are no longer used by any contract:`,
+      (name) => name,
+    )
+    printList(
+      ex.variablesToComment,
+      `${String(ex.variablesToComment.length)} variable(s) in the existing example should be commented out (feature no longer active):`,
+      (name) => name,
+    )
+    printList(
+      ex.variablesToAdd,
+      `${String(ex.variablesToAdd.length)} variable(s) required by the current configuration are missing from the existing example:`,
+      (name) => name,
+    )
+  }
+
+  const doc = docs.documentation
+  printList(
+    doc.undocumentedContracts,
+    `${String(doc.undocumentedContracts.length)} undocumented contract(s) (no documentEnv() linked):`,
+    (c) => `${c.exportName} (${c.file})`,
+  )
+  printList(
+    doc.undocumentedVariables,
+    `${String(doc.undocumentedVariables.length)} undocumented variable(s):`,
+    (v) => `${v.key} in ${v.exportName} (${v.file})`,
+  )
+  printList(
+    doc.staleDocEntries,
+    `${String(doc.staleDocEntries.length)} stale documentEnv() entry/entries (no matching schema variable):`,
+    (s) => `${s.key} in ${s.exportName} (${s.file})`,
+  )
+  printList(
+    doc.expiringSoon,
+    `${String(doc.expiringSoon.length)} variable(s)/contract(s) expiring soon or already expired:`,
+    (e) => {
+      const label = e.key ? `${e.key} in ${e.exportName}` : e.exportName
+      const status =
+        e.daysRemaining < 0
+          ? `expired ${String(Math.abs(e.daysRemaining))}d ago`
+          : `${String(e.daysRemaining)}d remaining`
+      return `${label}: ${e.expiresAt} (${status})`
+    },
+  )
+  printList(
+    doc.unresolvedLinks,
+    `${String(doc.unresolvedLinks.length)} documentEnv() call(s) could not be statically linked:`,
+    (u) => `${u.file}: ${u.reason}`,
+  )
+}
+
+/** The human-readable dependency-ownership section of a generate run's summary. */
+/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+export function printUsageSummary(usage: NonNullable<GenerateResult["usage"]>): void {
+  if (usage.reportPath) {
+    process.stdout.write(`Wrote dependency ownership report: ${usage.reportPath}\n`)
+  }
+  printList(
+    usage.abandonedContracts,
+    `${String(usage.abandonedContracts.length)} abandoned contract(s) (never imported anywhere):`,
+    (f) => `${f.contractName} (${f.file})`,
+  )
+  printList(
+    usage.unresolvedConsumers,
+    `${String(usage.unresolvedConsumers.length)} contract(s) with unresolved consumers (barrel re-exports):`,
+    (f) => `${f.contractName}: ${f.reason}`,
+  )
+  printList(
+    usage.unconsumedOwnedVariables,
+    `${String(usage.unconsumedOwnedVariables.length)} unconsumed owned variable(s):`,
+    (f) => `${f.key} in ${f.contractName}`,
+  )
+  printList(
+    usage.indeterminate,
+    `${String(usage.indeterminate.length)} indeterminate finding(s) (dynamic access, never guessed at):`,
+    (f) => `${f.key} in ${f.contractName}: ${f.reason}`,
+  )
+  printList(
+    usage.parseWarnings,
+    `${String(usage.parseWarnings.length)} parse warning(s):`,
+    (w) => `${w.file}: ${w.message}`,
+  )
+}
+
+/** A real generate run: write every requested artifact, then print a summary (or `--json` envelope). */
+async function runGenerateMode(args: ParsedArgs): Promise<void> {
+  let result: GenerateResult
+  try {
+    result = await generateEnvArtifacts(artifactOptions(args))
+  } catch (error) {
+    if (!args.json) throw error // propagates to main().catch() exactly as before
+    writeJson(serializeFailure(error))
+    process.exitCode = 1
     return
   }
 
-  let result: Awaited<ReturnType<typeof generateEnvArtifacts>>
-  try {
-    result = await generateEnvArtifacts({
-      root: args.root,
-      include,
-      exclude,
-      packages,
-      tsconfig: args.tsconfig,
-      manifest: args.location
-        ? { location: args.location, onIncompatibility: args.strict ? "throw" : "warn" }
-        : false,
-      docs: args.docs
-        ? {
-            location: args.docs,
-            onUndocumented: args.strictDocs ? "throw" : "warn",
-            expiringWithinDays: args.expiringWithinDays,
-            envExample: args.envExample
-              ? { location: args.envExample, onExisting: args.envExampleOnExisting }
-              : undefined,
-          }
-        : false,
-      usage: args.ownership
-        ? {
-            report: { location: args.ownership },
-            onOwnershipIssue: args.strictOwnership ? "throw" : "warn",
-          }
-        : false,
-    })
-  } catch (error) {
-    if (args.json) {
-      writeJson(serializeFailure(error))
-      process.exitCode = 1
-      return
-    }
-    throw error // unchanged: propagates to main().catch() exactly as today
-  }
-
   if (args.json) {
-    writeJson(serializeSuccess(result))
+    writeJson(
+      serializeSuccess(result, undefined, args.evidence !== undefined, requestedPasses(args)),
+    )
     return
   }
 
@@ -371,135 +603,50 @@ export async function main(): Promise<void> {
     )
   }
 
-  if (result.manifest) {
-    process.stdout.write(`Wrote manifest: ${result.manifest.outputPath}\n`)
-    process.stdout.write(`Discovered ${result.manifest.contracts.length} contract(s).\n`)
-    if (result.manifest.warnings.length > 0) {
-      process.stdout.write(`\n${result.manifest.warnings.length} compatibility warning(s):\n`)
-      for (const warning of result.manifest.warnings) {
-        const codePrefix = warning.code ? `[${warning.code}] ` : ""
-        process.stdout.write(`  - ${codePrefix}${warning.variable}: ${warning.reason}\n`)
-      }
-    }
-    if (result.manifest.parseWarnings.length > 0) {
-      process.stdout.write(`\n${result.manifest.parseWarnings.length} parse warning(s):\n`)
-      for (const warning of result.manifest.parseWarnings) {
-        process.stdout.write(`  - ${warning.file}: ${warning.message}\n`)
-      }
-    }
-    writeManifestChanges(result.manifest.changes)
+  if (result.manifest) printManifestSummary(result.manifest)
+  if (result.docs) printDocsSummary(result.docs)
+  if (result.usage) printUsageSummary(result.usage)
+
+  if (args.evidence) {
+    process.stdout.write(`Wrote evidence: ${args.evidence}\n`)
+    writeEvidenceChanges(result.evidence.change.manifest, result.evidence.contract.contracts)
+  }
+}
+
+export async function main(): Promise<void> {
+  const argv = process.argv.slice(2)
+
+  // Subcommand dispatch: `init` as the FIRST positional token routes to the
+  // scaffolder. Every existing flag-based invocation is untouched -- no flag
+  // is reinterpreted as a subcommand, `--help` alone still prints helpText().
+  if (argv[0] === "init") {
+    process.exitCode = runInitCommand(argv.slice(1))
+    return
   }
 
-  if (result.docs) {
-    process.stdout.write(`Wrote docs: ${result.docs.docsPath}\n`)
-    if (result.docs.envExample) {
-      const envExample = result.docs.envExample
-      if (envExample.skippedExistingPath) {
-        process.stdout.write(
-          `Left existing example untouched: ${envExample.skippedExistingPath}\n` +
-            `Wrote a fresh copy to compare/merge: ${envExample.writtenPath}\n`,
-        )
-      } else {
-        process.stdout.write(`Wrote example: ${envExample.writtenPath}\n`)
-      }
-      if (envExample.staleVariables.length > 0) {
-        process.stdout.write(
-          `\n${envExample.staleVariables.length} variable(s) in the existing example are no longer used by any contract:\n`,
-        )
-        for (const name of envExample.staleVariables) process.stdout.write(`  - ${name}\n`)
-      }
-      if (envExample.variablesToComment.length > 0) {
-        process.stdout.write(
-          `\n${envExample.variablesToComment.length} variable(s) in the existing example should be commented out (feature no longer active):\n`,
-        )
-        for (const name of envExample.variablesToComment) process.stdout.write(`  - ${name}\n`)
-      }
-      if (envExample.variablesToAdd.length > 0) {
-        process.stdout.write(
-          `\n${envExample.variablesToAdd.length} variable(s) required by the current configuration are missing from the existing example:\n`,
-        )
-        for (const name of envExample.variablesToAdd) process.stdout.write(`  - ${name}\n`)
-      }
-    }
+  const args = parseArgs(argv)
 
-    const doc = result.docs.documentation
-    if (doc.undocumentedContracts.length > 0) {
-      process.stdout.write(
-        `\n${doc.undocumentedContracts.length} undocumented contract(s) (no documentEnv() linked):\n`,
-      )
-      for (const c of doc.undocumentedContracts)
-        process.stdout.write(`  - ${c.exportName} (${c.file})\n`)
-    }
-    if (doc.undocumentedVariables.length > 0) {
-      process.stdout.write(`\n${doc.undocumentedVariables.length} undocumented variable(s):\n`)
-      for (const v of doc.undocumentedVariables)
-        process.stdout.write(`  - ${v.key} in ${v.exportName} (${v.file})\n`)
-    }
-    if (doc.staleDocEntries.length > 0) {
-      process.stdout.write(
-        `\n${doc.staleDocEntries.length} stale documentEnv() entry/entries (no matching schema variable):\n`,
-      )
-      for (const s of doc.staleDocEntries)
-        process.stdout.write(`  - ${s.key} in ${s.exportName} (${s.file})\n`)
-    }
-    if (doc.expiringSoon.length > 0) {
-      process.stdout.write(
-        `\n${doc.expiringSoon.length} variable(s)/contract(s) expiring soon or already expired:\n`,
-      )
-      for (const e of doc.expiringSoon) {
-        const label = e.key ? `${e.key} in ${e.exportName}` : e.exportName
-        const status =
-          e.daysRemaining < 0
-            ? `expired ${Math.abs(e.daysRemaining)}d ago`
-            : `${e.daysRemaining}d remaining`
-        process.stdout.write(`  - ${label}: ${e.expiresAt} (${status})\n`)
-      }
-    }
-    if (doc.unresolvedLinks.length > 0) {
-      process.stdout.write(
-        `\n${doc.unresolvedLinks.length} documentEnv() call(s) could not be statically linked:\n`,
-      )
-      for (const u of doc.unresolvedLinks) process.stdout.write(`  - ${u.file}: ${u.reason}\n`)
-    }
+  if (args.help) {
+    process.stdout.write(helpText())
+    process.exitCode = 0
+    return
   }
 
-  if (result.usage) {
-    if (result.usage.reportPath)
-      process.stdout.write(`Wrote dependency ownership report: ${result.usage.reportPath}\n`)
-    if (result.usage.abandonedContracts.length > 0) {
-      process.stdout.write(
-        `\n${result.usage.abandonedContracts.length} abandoned contract(s) (never imported anywhere):\n`,
+  if (!args.location && !args.docs && !args.ownership && !args.evidence) {
+    if (args.json) {
+      writeJson(
+        serializeFailure(
+          new Error("At least one of --location, --docs, --ownership, or --evidence is required."),
+        ),
       )
-      for (const f of result.usage.abandonedContracts)
-        process.stdout.write(`  - ${f.contractName} (${f.file})\n`)
+    } else {
+      process.stdout.write(helpText())
     }
-    if (result.usage.unresolvedConsumers.length > 0) {
-      process.stdout.write(
-        `\n${result.usage.unresolvedConsumers.length} contract(s) with unresolved consumers (barrel re-exports):\n`,
-      )
-      for (const f of result.usage.unresolvedConsumers)
-        process.stdout.write(`  - ${f.contractName}: ${f.reason}\n`)
-    }
-    if (result.usage.unconsumedOwnedVariables.length > 0) {
-      process.stdout.write(
-        `\n${result.usage.unconsumedOwnedVariables.length} unconsumed owned variable(s):\n`,
-      )
-      for (const f of result.usage.unconsumedOwnedVariables)
-        process.stdout.write(`  - ${f.key} in ${f.contractName}\n`)
-    }
-    if (result.usage.indeterminate.length > 0) {
-      process.stdout.write(
-        `\n${result.usage.indeterminate.length} indeterminate finding(s) (dynamic access, never guessed at):\n`,
-      )
-      for (const f of result.usage.indeterminate)
-        process.stdout.write(`  - ${f.key} in ${f.contractName}: ${f.reason}\n`)
-    }
-    if (result.usage.parseWarnings.length > 0) {
-      process.stdout.write(`\n${result.usage.parseWarnings.length} parse warning(s):\n`)
-      for (const warning of result.usage.parseWarnings)
-        process.stdout.write(`  - ${warning.file}: ${warning.message}\n`)
-    }
+    process.exitCode = 1
+    return
   }
+
+  await (args.check ? runCheckMode(args) : runGenerateMode(args))
 }
 
 // Only auto-run when this file is the process entry point, not when a test
@@ -507,7 +654,7 @@ export async function main(): Promise<void> {
 // have the side effect of running the CLI.
 //
 // npm installs `bin` entries as symlinks (e.g. `node_modules/.bin/env-cap`
-// -> `../@maverickcer/env-cap/dist/cli/index.js`). Node resolves
+// -> `../env-cap/dist/cli/index.js`). Node resolves
 // `import.meta.url` through that symlink to this file's real, on-disk path,
 // but leaves `process.argv[1]` as the symlink path it was actually invoked
 // with -- so comparing the two directly never matches for a real `npx`/`.bin`

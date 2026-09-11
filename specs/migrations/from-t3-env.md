@@ -143,7 +143,7 @@ Move the configuration requirement into the owning capability:
 ```ts
 // features/payments/env.schema.ts
 
-import { createEnv, documentEnv } from "@maverickcer/env-cap"
+import { createEnv, documentEnv } from "env-cap"
 import { z } from "zod"
 
 const paymentsSchema = {
@@ -255,7 +255,7 @@ client bundle -- see [ADR 0004](../decisions/0004-no-client-server-package-split
 
 If you'd rather keep `server`/`client` variables declared in one schema location instead of splitting into
 two contract files, `context`/`activeContexts` (see the README's ["Validation
-contexts"](../../README.md#validation-contexts) section, [ADR 0022](../decisions/0022-validation-contexts.md))
+contexts"](../../GUIDE.md#validation-contexts) section, [ADR 0022](../decisions/0022-validation-contexts.md))
 is the closer analogue to t3-env's `server`/`client` grouping:
 
 ```ts

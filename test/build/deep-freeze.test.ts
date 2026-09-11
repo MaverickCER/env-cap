@@ -63,6 +63,22 @@ describe("deepFreeze", () => {
     expect(Object.isFrozen(nested)).toBe(false)
   })
 
+  it("does not recurse into a class instance's own enumerable properties, unlike a plain object", () => {
+    // Unlike the Map case above (which has no enumerable own string-keyed
+    // properties to begin with, so "recurse or not" is unobservable there),
+    // a class instance's own fields ARE enumerable -- this is the real test
+    // that `isPlainObject` genuinely gates recursion, not just freezing.
+    class Contract {
+      nested: { a: number }
+      constructor() {
+        this.nested = { a: 1 }
+      }
+    }
+    const value = deepFreeze({ contract: new Contract() })
+    expect(Object.isFrozen(value.contract)).toBe(true)
+    expect(Object.isFrozen(value.contract.nested)).toBe(false)
+  })
+
   it("returns the exact same object reference it was given (freezes in place, no copying)", () => {
     const original = { a: 1 }
     const result = deepFreeze(original)
@@ -76,10 +92,14 @@ describe("deepFreeze", () => {
     expect(Object.isFrozen(value)).toBe(true)
   })
 
-  it("freezes an object created with Object.create(null) (no prototype)", () => {
-    const value: { a: number } = Object.create(null) as { a: number }
-    value.a = 1
+  it("recurses into an object created with Object.create(null) (no prototype), not just freezing its own top level", () => {
+    const value: { nested: { a: number } } = Object.create(null) as { nested: { a: number } }
+    value.nested = { a: 1 }
     const frozen = deepFreeze(value)
     expect(Object.isFrozen(frozen)).toBe(true)
+    // The real assertion: a null-proto object is recognized as "plain" too,
+    // so its OWN properties get walked and frozen -- not just the top level,
+    // which `Object.freeze()` alone would already give for free.
+    expect(Object.isFrozen(frozen.nested)).toBe(true)
   })
 })

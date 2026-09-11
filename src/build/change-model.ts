@@ -1,19 +1,23 @@
-import path from "node:path"
+import { displayPath } from "./display-path.js"
 import type { DiscoveredContract } from "./link.js"
-import type { ManifestChangeReport, ManifestVariableRef } from "./manifest-snapshot.js"
+import type { ManifestChangeReport, ManifestVariableRef } from "./evidence-snapshot.js"
 
 /**
  * The sixth of env-cap's seven canonical fact models (ADR 0024) -- what
- * changed since the last committed manifest snapshot. See ADR 0030 (base
- * shape) and ADR 0029 (the `renamedFrom` field this file's rename
- * correlation is gated on).
+ * changed since the last persisted evidence snapshot (ADR 0038; previously
+ * a manifest-scoped snapshot, ADR 0021). See ADR 0030 (base shape) and ADR
+ * 0029 (the `renamedFrom` field this file's rename correlation is gated
+ * on).
  *
  * @remarks
- * Wraps the existing `ManifestChangeReport` (ADR 0021) rather than
- * replacing it -- that type, and the manifest-generation consumer surface
- * built on it, stay exactly as they are. This model exists to give the
- * change report a versioned, model-namespaced shape Evidence Model can
- * assemble against, alongside the other six models.
+ * Wraps `ManifestChangeReport` (`evidence-snapshot.ts`) rather than
+ * replacing it -- this model exists to give the change report a versioned,
+ * model-namespaced shape Evidence Model can assemble against, alongside the
+ * other six models. Empty (no adds/removes/updates) whenever no previous
+ * evidence snapshot location was configured for this run -- there is
+ * nothing to diff against, which is a genuinely different state from a
+ * first-ever run *with* tracking configured (where everything reads as
+ * added).
  */
 
 /** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
@@ -56,17 +60,18 @@ function contractIdentity(file: string, exportName: string): string {
 }
 
 function byRenameIdentity(a: RenamedVariable, b: RenamedVariable): number {
-  if (a.contractIdentity !== b.contractIdentity)
-    return a.contractIdentity < b.contractIdentity ? -1 : 1
-  return a.currentKey < b.currentKey ? -1 : a.currentKey > b.currentKey ? 1 : 0
+  return (
+    a.contractIdentity.localeCompare(b.contractIdentity) || a.currentKey.localeCompare(b.currentKey)
+  )
 }
 
 function findByContractAndKey(
   refs: readonly ManifestVariableRef[],
-  contractIdentity: string,
+  file: string,
+  exportName: string,
   key: string,
 ): ManifestVariableRef | undefined {
-  return refs.find((ref) => ref.contractIdentity === contractIdentity && ref.key === key)
+  return refs.find((ref) => ref.file === file && ref.exportName === exportName && ref.key === key)
 }
 
 /**
@@ -86,16 +91,33 @@ export function buildChangeModel(
   const renamedVariables: RenamedVariable[] = []
 
   for (const contract of currentContracts) {
-    const relativeFile = path.relative(root, contract.file).split(path.sep).join("/")
+    const relativeFile = displayPath(root, contract.file)
     const cIdentity = contractIdentity(relativeFile, contract.exportName)
 
     for (const variable of contract.variables) {
+      // Runtime-equivalent without this guard: `findByContractAndKey(...,
+      // variable.renamedFrom)` with `renamedFrom === undefined` searches for
+      // `ref.key === undefined`, which a real `ManifestVariableRef.key`
+      // (always a defined string) can never match -- `removedRef` stays
+      // `undefined`, and the `if (!addedRef || !removedRef) continue` two
+      // lines down already skips it. Load-bearing for TypeScript's own
+      // narrowing of `variable.renamedFrom` to `string` below, though --
+      // hand-verified by bypassing it and running the full `vitest run`:
+      // only the tsc-backed json-schema freshness test fails, all 1233
+      // others pass unchanged.
+      // Stryker disable next-line ConditionalExpression
       if (!variable.renamedFrom) continue
 
-      const addedRef = findByContractAndKey(manifest.addedVariables, cIdentity, variable.key)
+      const addedRef = findByContractAndKey(
+        manifest.addedVariables,
+        relativeFile,
+        contract.exportName,
+        variable.key,
+      )
       const removedRef = findByContractAndKey(
         manifest.removedVariables,
-        cIdentity,
+        relativeFile,
+        contract.exportName,
         variable.renamedFrom,
       )
       if (!addedRef || !removedRef) continue
@@ -104,7 +126,9 @@ export function buildChangeModel(
         contractIdentity: cIdentity,
         file: addedRef.file,
         exportName: addedRef.exportName,
-        contractName: addedRef.contractName,
+        // Resolved from the contract this rename was declared on, not carried
+        // on the ref -- see `ContractRef` (`evidence-reference.ts`).
+        contractName: contract.contractName,
         previousKey: removedRef.key,
         currentKey: addedRef.key,
       })

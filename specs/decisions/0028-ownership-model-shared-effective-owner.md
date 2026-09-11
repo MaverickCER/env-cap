@@ -5,7 +5,7 @@
 Accepted. `effectiveOwner()` relocated from `docs.ts` (private) to
 `link.ts` (exported). Implemented in `src/build/ownership-model.ts`
 (`buildOwnershipModel()`, `OwnershipModel`), exported from
-`@maverickcer/env-cap/build`. `src/build/generate-usage.ts` now uses the
+`env-cap/build`. `src/build/generate-usage.ts` now uses the
 shared function for `unconsumedOwnedVariables`' `owner` field.
 
 ## Context

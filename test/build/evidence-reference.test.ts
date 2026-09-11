@@ -20,8 +20,10 @@ describe("EvidenceReference", () => {
       file: "/repo/a/env.schema.ts",
       exportName: "aEnv",
       variable: "STRIPE_KEY",
+      position: { file: "/repo/a/env.schema.ts", line: 12, column: 3 },
     }
     expect(describeReference(ref)).toBe("contract:/repo/a/env.schema.ts#aEnv#STRIPE_KEY")
+    expect(ref.position).toEqual({ file: "/repo/a/env.schema.ts", line: 12, column: 3 })
   })
 
   it("narrows to an ownership reference's fields, keyed by contractName rather than file/exportName", () => {
@@ -30,6 +32,7 @@ describe("EvidenceReference", () => {
       contractName: "paymentsEnv",
       file: undefined,
       variable: "STRIPE_KEY",
+      position: undefined,
     }
     expect(describeReference(ref)).toBe("ownership:paymentsEnv#STRIPE_KEY")
   })

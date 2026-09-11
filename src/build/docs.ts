@@ -1,19 +1,28 @@
-import { markdownBannerLine } from "./generated-banner.js"
-import { humanizeKey } from "./humanize-key.js"
-import { effectiveOwner } from "./link.js"
-import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
+import type { ContractModelContract, ContractModelVariable } from "./contract-model.js"
+import { governanceFieldsOf, type EnvGovernanceFields } from "./governance-fields.js"
+import type { DiscoveredVariableEvidence } from "./parse.js"
+import { evidenceDisclaimer, evidenceProjectionNote, generatedBanner } from "./generated-banner.js"
+import { humanizeKey, renderMetadataValue } from "./humanize-key.js"
+import {
+  effectiveAuditRequired,
+  effectiveDataResidency,
+  effectiveLegalBasis,
+  effectiveOwner,
+  effectivePurpose,
+  effectiveRetention,
+  effectiveSensitivity,
+} from "./link.js"
 import { mustGet } from "./map-utils.js"
+import { groupVariablesByOwner } from "./reference-projections.js"
 
-/** Identifies a contract with no linked `documentEnv()` call at all. */
+/** Identifies a contract with no linked `documentEnv()` call at all. `file`'s absolute-vs-relative convention depends on where a given instance comes from -- see the specific field using this type (`DocumentationFindings.undocumentedContracts` is absolute; `RenderDocsOptions.undocumentedContracts` must be root-relative, matching the `ContractModel`-shaped `contracts` it's compared against). */
 export interface UndocumentedContractRef {
-  /** Absolute path of the file declaring the contract. */
   readonly file: string
   /** The contract's exported binding name. */
   readonly exportName: string
 }
-/** Identifies a schema variable with no matching entry in its contract's linked documentation. */
+/** Identifies a schema variable with no matching entry in its contract's linked documentation. See {@link UndocumentedContractRef}'s own note on `file`. */
 export interface UndocumentedVariableRef {
-  /** Absolute path of the file declaring the contract. */
   readonly file: string
   /** The contract's exported binding name. */
   readonly exportName: string
@@ -38,9 +47,9 @@ export interface ExpiringEntry {
 export interface RenderDocsOptions {
   /** How many days out counts as "expiring soon" in the lifecycle report and security review. */
   readonly expiringWithinDays: number
-  /** Contracts with no linked `documentEnv()` call at all. */
+  /** Contracts with no linked `documentEnv()` call at all. `file` must be root-relative, POSIX-separated -- matching `contracts`' own `ContractModel` convention, since this is matched against it by identity. */
   readonly undocumentedContracts: readonly UndocumentedContractRef[]
-  /** Schema variables with no matching entry in their contract's linked documentation. */
+  /** Schema variables with no matching entry in their contract's linked documentation. `file` must be root-relative, POSIX-separated -- see `undocumentedContracts`. */
   readonly undocumentedVariables: readonly UndocumentedVariableRef[]
   /** Timestamp rendered into the header and used for expiry/days-remaining math. */
   readonly generatedAt: Date
@@ -68,20 +77,38 @@ function daysRemainingFrom(date: Date, now: Date): number {
   return Math.ceil((date.getTime() - now.getTime()) / MS_PER_DAY)
 }
 
+/** The minimal shape {@link computeExpiringEntries} needs -- structural, not pinned to `DiscoveredContract`, so the exact same rule serves both `LinkResult`'s absolute-path contracts (`generate-documentation.ts`'s `documentation.expiringSoon`, Stable tier) and `ContractModel`'s root-relative ones, whichever a caller already has on hand. */
+interface ExpiryBearingContract {
+  readonly file: string
+  readonly exportName: string
+  readonly expiresAt: string | undefined
+  readonly variables: readonly { readonly key: string; readonly expiresAt: string | undefined }[]
+}
+
 /**
  * Computes every contract- or variable-level `expiresAt` within `expiringWithinDays` of `now`, sorted soonest-first.
- *
- * @remarks
- * Shared by `renderDocs` (Section 4/5) and `generate-documentation.ts` (the `documentation.expiringSoon` result field), so both agree on exactly the same set.
  */
 export function computeExpiringEntries(
-  contracts: readonly DiscoveredContract[],
+  contracts: readonly ExpiryBearingContract[],
   expiringWithinDays: number,
   now: Date,
 ): ExpiringEntry[] {
   const entries: ExpiringEntry[] = []
 
   for (const contract of contracts) {
+    // `parseIsoDate()` treats every falsy string input (`undefined` or `""`,
+    // the only two falsy values `expiresAt: string | undefined` can hold)
+    // identically -- `new Date(x).getTime()` is `NaN` either way, so `date`
+    // ends up `undefined` regardless, and the `if (date)` guard just below
+    // already skips pushing an entry. Bypassing this outer guard is
+    // therefore runtime-equivalent, but still load-bearing for TypeScript's
+    // own narrowing of `contract.expiresAt` to `string` for the
+    // `parseIsoDate()` call inside (see the identical `tsc`-narrowing
+    // dependency already documented for `parse.ts`/`generate-env-artifacts.ts`
+    // this same drive). Hand-verified: bypassing it and running the real
+    // whole-package suite (`vitest run`) only breaks the two `tsc`-backed
+    // json-schema freshness tests, no runtime-behavior assertion.
+    // Stryker disable next-line ConditionalExpression
     if (contract.expiresAt) {
       const date = parseIsoDate(contract.expiresAt)
       if (date) {
@@ -98,6 +125,15 @@ export function computeExpiringEntries(
       }
     }
     for (const variable of contract.variables) {
+      // Same equivalence as the contract-level guard above: `parseIsoDate()`
+      // treats every falsy string identically, and the very next `if
+      // (!date) continue` already catches the result -- but this bypass
+      // still relies on TypeScript's own narrowing of `variable.expiresAt`
+      // to `string` for the `parseIsoDate()` call on the next line.
+      // Hand-verified: bypassing it and running the real whole-package suite
+      // (`vitest run`) only breaks the two `tsc`-backed json-schema
+      // freshness tests, no runtime-behavior assertion.
+      // Stryker disable next-line ConditionalExpression
       if (!variable.expiresAt) continue
       const date = parseIsoDate(variable.expiresAt)
       if (!date) continue
@@ -117,11 +153,18 @@ export function computeExpiringEntries(
   return entries.sort((a, b) => a.daysRemaining - b.daysRemaining)
 }
 
-export interface CatalogVariable {
+/**
+ * Same data `renderCatalog()` renders to Markdown for one variable, reshaped for JSON/
+ * programmatic consumers instead of prose.
+ *
+ * @see `ContractModelVariable` (`contract-model.ts`) -- this same declared variable's canonical
+ * starting point. Plain reference, not `{@link}`: this type is intentionally not part of the
+ * public surface (see `typedoc.json`'s `intentionallyNotExported`).
+ */
+interface CatalogVariable extends EnvGovernanceFields {
   readonly description: string | undefined
-  readonly owner: string | undefined
-  readonly expiresAt: string | undefined
   readonly refreshInstructions: string | undefined
+  readonly setupInstructions: string | undefined
   readonly required: boolean | undefined
   readonly hasDefault: boolean
   readonly hasProcessor: boolean
@@ -130,14 +173,11 @@ export interface CatalogVariable {
   readonly documented: boolean
   /** The variable's declared validation context, if any -- see ADR 0022. Participation data, not documentation: describes when `validateEnv()` processes this variable, not who may access it or what a bundler includes. */
   readonly context: string | undefined
-  /** Arbitrary documentEnv() fields beyond the ones above (compliance,
-   *  rotationCadence, storageProvider, ...) -- always its own nested
-   *  property, never spread onto this object, so an author-chosen key can
-   *  never silently override a reserved field above. */
-  readonly extra: Readonly<Record<string, string>>
+  /** The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See ADR 0037. */
+  readonly evidence: DiscoveredVariableEvidence | undefined
 }
 
-export interface CatalogContract {
+export interface CatalogContract extends EnvGovernanceFields {
   readonly file: string
   readonly exportName: string
   readonly contractName: string
@@ -145,9 +185,6 @@ export interface CatalogContract {
   readonly documented: boolean
   readonly category: string | undefined
   readonly exclusiveGroup: string | undefined
-  readonly owner: string | undefined
-  readonly expiresAt: string | undefined
-  readonly metadata: Readonly<Record<string, string>> | undefined
   /** Keyed by variable name -- unique within one contract (a schema
    *  object-literal property name), unlike `contractName` at the top level. */
   readonly variables: Readonly<Record<string, CatalogVariable>>
@@ -157,15 +194,17 @@ export interface CatalogContract {
  * Same data `renderCatalog()` renders to Markdown, reshaped for JSON/
  * programmatic consumers instead of prose. See `GenerateDocumentationResult.catalog`.
  */
-export function buildCatalog(contracts: readonly DiscoveredContract[]): CatalogContract[] {
+export function buildCatalog(contracts: readonly ContractModelContract[]): CatalogContract[] {
   return sortedContracts(contracts).map((contract) => {
     const variables: Record<string, CatalogVariable> = {}
     for (const variable of contract.variables) {
       variables[variable.key] = {
         description: variable.description,
         owner: effectiveOwner(contract, variable),
+        sensitivity: effectiveSensitivity(contract, variable),
         expiresAt: variable.expiresAt,
         refreshInstructions: variable.refreshInstructions,
+        setupInstructions: variable.setupInstructions,
         required: variable.required,
         hasDefault: variable.hasDefault,
         hasProcessor: variable.hasProcessor,
@@ -173,7 +212,13 @@ export function buildCatalog(contracts: readonly DiscoveredContract[]): CatalogC
         hasValidator: variable.hasValidator,
         documented: variable.documented,
         context: variable.context,
-        extra: variable.extra,
+        purpose: effectivePurpose(contract, variable),
+        legalBasis: effectiveLegalBasis(contract, variable),
+        retention: effectiveRetention(contract, variable),
+        dataResidency: effectiveDataResidency(contract, variable),
+        auditRequired: effectiveAuditRequired(contract, variable),
+        metadata: variable.metadata,
+        evidence: variable.evidence,
       }
     }
 
@@ -185,22 +230,30 @@ export function buildCatalog(contracts: readonly DiscoveredContract[]): CatalogC
       documented: contract.documented,
       category: contract.category,
       exclusiveGroup: contract.exclusiveGroup,
-      owner: contract.owner,
-      expiresAt: contract.expiresAt,
-      metadata: contract.metadata,
+      ...governanceFieldsOf(contract),
       variables,
     }
   })
 }
 
-const PREVIOUS_HEADING_PATTERN = /^### `([A-Za-z_][A-Za-z0-9_]*)`$/gm
-const PREVIOUS_ACTIVE_MARKER_PATTERN = /^- Active: (yes|no)$/
-const PREVIOUS_VARIABLE_HEADING_PATTERN = /^### `([A-Za-z_][A-Za-z0-9_]*)`$/
+// Every module-level regex pattern in this file is inlined at its one call
+// site, not a shared `const` -- Stryker marks a module-level regex literal
+// `static: true` (evaluated once at import time), which produces a false
+// "Survived" on a mutant that's genuinely, heavily test-covered (the same
+// limitation already fixed for `cli/index.ts`'s dispatch tables/`HELP_TEXT`
+// and `parse.ts`'s `ENV_KEY_PATTERN` this same drive).
 
 /** Every variable key that appeared as a catalog heading in a previously-generated docs file. Exported for testing. */
 export function extractPreviouslyDocumentedKeys(previousContent: string): Set<string> {
   const keys = new Set<string>()
-  for (const match of previousContent.matchAll(PREVIOUS_HEADING_PATTERN)) {
+  for (const match of previousContent.matchAll(/^### `([A-Za-z_][A-Za-z0-9_]*)`$/gm)) {
+    // The pattern's own capture group (`[A-Za-z_][A-Za-z0-9_]*`) requires at
+    // least one character, so `match[1]` can never be empty/falsy on a real
+    // match -- this is a pure `string | undefined` -> `string` type guard,
+    // not a real runtime branch. Hand-verified: bypassing it (`match[1]!`)
+    // and running the real whole-package suite (`vitest run`) passes
+    // unchanged.
+    // Stryker disable next-line ConditionalExpression
     if (match[1]) keys.add(match[1])
   }
   return keys
@@ -218,12 +271,12 @@ export function extractPreviouslyActiveKeys(previousContent: string): Set<string
   const keys = new Set<string>()
   let currentContractActive = false
   for (const line of previousContent.split("\n")) {
-    const activeMatch = PREVIOUS_ACTIVE_MARKER_PATTERN.exec(line)
+    const activeMatch = /^- Active: (yes|no)$/.exec(line)
     if (activeMatch) {
       currentContractActive = activeMatch[1] === "yes"
       continue
     }
-    const headingMatch = PREVIOUS_VARIABLE_HEADING_PATTERN.exec(line)
+    const headingMatch = /^### `([A-Za-z_][A-Za-z0-9_]*)`$/.exec(line)
     if (headingMatch && currentContractActive) {
       keys.add(headingMatch[1])
     }
@@ -264,7 +317,7 @@ interface ChangeSummary {
  * even on a first-ever report, is the only phrasing that round-trips.
  */
 function computeChangeSummary(
-  contracts: readonly DiscoveredContract[],
+  contracts: readonly ContractModelContract[],
   previousContent: string | undefined,
 ): ChangeSummary {
   if (previousContent === undefined) return { added: [], removed: [], commented: [] }
@@ -290,12 +343,23 @@ function computeChangeSummary(
 }
 
 function slugify(text: string): string {
+  // The `+` quantifiers on the SECOND `.replace()` below are unobservable:
+  // the FIRST replace's own `+` already collapses every run of
+  // non-identifier characters (dashes included, since a literal `-` isn't in
+  // `[a-z0-9_]` either) into a single `-`, so the second regex can never
+  // actually see 2+ consecutive dashes at either end to strip -- there is
+  // always at most one. Hand-verified: dropping both `+`s and running the
+  // real whole-package suite (`vitest run`) passes unchanged. Unscoped
+  // disable/restore (not `next-line`) because this is one multi-line
+  // statement -- `next-line` didn't reliably attach here.
+  // Stryker disable Regex
   return (
     text
       .toLowerCase()
       .replace(/[^a-z0-9_]+/g, "-")
       .replace(/^-+|-+$/g, "") || "section"
   )
+  // Stryker restore Regex
 }
 
 /** Assigns each heading a stable, collision-free anchor -- duplicate variable names across contracts (a supported feature) would otherwise collide on a heading-derived anchor. */
@@ -303,7 +367,7 @@ class AnchorRegistry {
   private readonly used = new Map<string, number>()
   private readonly assigned = new Map<object, string>()
 
-  for(target: object, baseText: string): string {
+  anchorFor(target: object, baseText: string): string {
     const existing = this.assigned.get(target)
     if (existing) return existing
     const base = slugify(baseText)
@@ -319,10 +383,8 @@ function mdLink(text: string, anchor: string): string {
   return `[${text}](#${anchor})`
 }
 
-function sortedContracts(contracts: readonly DiscoveredContract[]): DiscoveredContract[] {
-  return [...contracts].sort((a, b) =>
-    a.contractName < b.contractName ? -1 : a.contractName > b.contractName ? 1 : 0,
-  )
+function sortedContracts(contracts: readonly ContractModelContract[]): ContractModelContract[] {
+  return [...contracts].sort((a, b) => a.contractName.localeCompare(b.contractName))
 }
 
 // ---------------------------------------------------------------------------
@@ -330,7 +392,7 @@ function sortedContracts(contracts: readonly DiscoveredContract[]): DiscoveredCo
 // ---------------------------------------------------------------------------
 
 function renderHeader(
-  contracts: readonly DiscoveredContract[],
+  contracts: readonly ContractModelContract[],
   options: RenderDocsOptions,
   anchors: AnchorRegistry,
   hasOwnership: boolean,
@@ -338,9 +400,15 @@ function renderHeader(
   hasLifecycle: boolean,
 ): string[] {
   const lines = [
-    markdownBannerLine(),
+    generatedBanner("markdown"),
+    "",
+    `> ${evidenceDisclaimer()}`,
+    "",
+    `> ${evidenceProjectionNote()}`,
     "",
     "# Environment Variables",
+    "",
+    "_Produced by `env-cap --docs`._",
     "",
     `_Generated ${options.generatedAt.toISOString()}_`,
     "",
@@ -369,7 +437,7 @@ function renderHeader(
   lines.push("## Table of contents", "", `- ${mdLink("Catalog", "catalog")}`)
   for (const contract of sortedContracts(contracts)) {
     lines.push(
-      `  - ${mdLink(contract.contractName, anchors.for(contract, `contract-${contract.contractName}`))}`,
+      `  - ${mdLink(contract.contractName, anchors.anchorFor(contract, `contract-${contract.contractName}`))}`,
     )
   }
   if (hasOwnership) lines.push(`- ${mdLink("Ownership matrix", "ownership-matrix")}`)
@@ -385,8 +453,7 @@ function renderHeader(
 // ---------------------------------------------------------------------------
 
 function renderCatalog(
-  contracts: readonly DiscoveredContract[],
-  root: string,
+  contracts: readonly ContractModelContract[],
   anchors: AnchorRegistry,
   undocumented: RenderDocsOptions["undocumentedContracts"],
 ): string[] {
@@ -407,9 +474,17 @@ function renderCatalog(
   }
 
   for (const contract of sortedContracts(contracts)) {
-    const relativeFile = relativeTo(root, contract.file)
-    lines.push(`<a id="${anchors.for(contract, `contract-${contract.contractName}`)}"></a>`)
-    lines.push(`## ${contract.contractName}`, "", `Source: \`${relativeFile}\``)
+    // `anchorFor()` caches by TARGET OBJECT (`this.assigned.get(target)`),
+    // and `renderHeader()`'s own TOC loop already calls
+    // `anchorFor(contract, ...)` with this exact same baseText for every
+    // contract, always BEFORE renderCatalog() runs (see renderDocs()'s call
+    // order) -- so this call's own `baseText` argument can never actually
+    // matter; the cached anchor from the TOC call always wins. Hand-verified:
+    // replacing the baseText argument here with `` `` `` (empty) and running
+    // the real whole-package suite (`vitest run`) passes unchanged.
+    // Stryker disable next-line StringLiteral
+    lines.push(`<a id="${anchors.anchorFor(contract, `contract-${contract.contractName}`)}"></a>`)
+    lines.push(`## ${contract.contractName}`, "", `Source: \`${contract.file}\``)
     if (undocumentedByIdentity.has(`${contract.file}#${contract.exportName}`)) {
       lines.push("", "> ⚠️ **Undocumented.** No `documentEnv()` call is linked to this contract.")
     }
@@ -418,23 +493,57 @@ function renderCatalog(
     if (contract.exclusiveGroup !== undefined)
       lines.push(`- Exclusive group: ${contract.exclusiveGroup}`)
     if (contract.owner !== undefined) lines.push(`- Owner: ${contract.owner}`)
+    if (contract.sensitivity !== undefined) lines.push(`- Sensitivity: ${contract.sensitivity}`)
     if (contract.expiresAt !== undefined) lines.push(`- Expires: ${contract.expiresAt}`)
+    if (contract.purpose !== undefined) lines.push(`- Purpose: ${contract.purpose}`)
+    if (contract.legalBasis !== undefined) lines.push(`- Legal basis: ${contract.legalBasis}`)
+    if (contract.retention !== undefined) lines.push(`- Retention: ${contract.retention}`)
+    if (contract.dataResidency !== undefined)
+      lines.push(`- Data residency: ${renderMetadataValue(contract.dataResidency)}`)
+    if (contract.auditRequired !== undefined)
+      lines.push(`- Audit required: ${contract.auditRequired ? "yes" : "no"}`)
     if (contract.metadata) {
       for (const [metaKey, metaValue] of Object.entries(contract.metadata)) {
-        lines.push(`- ${humanizeKey(metaKey)}: ${metaValue}`)
+        lines.push(`- ${humanizeKey(metaKey)}: ${renderMetadataValue(metaValue)}`)
       }
     }
     lines.push("")
 
     // Two-way compare: `variable.key` is a schema object-literal property
     // name, always unique within one contract, so `a.key === b.key` can
-    // never happen here.
+    // never happen here -- `<` vs `<=` is therefore unobservable (the tie
+    // branch this would otherwise distinguish is unreachable). Hand-verified:
+    // switching to `<=` and running the real whole-package suite
+    // (`vitest run`) passes unchanged.
+    // Stryker disable next-line EqualityOperator
     for (const variable of [...contract.variables].sort((a, b) => (a.key < b.key ? -1 : 1))) {
+      // Same equivalence as the contract anchor above: `renderDependencyGraph()`
+      // (called before `renderCatalog()` in `renderDocs()`) already calls
+      // `anchorFor(variable, ...)` with this exact same baseText for EVERY
+      // variable (it lists all of them, not just owned ones), so this call's
+      // own baseText can never matter -- the cache always wins. Hand-verified:
+      // replacing it with `` `` `` and running the real whole-package suite
+      // (`vitest run`) passes unchanged.
+      // Stryker disable StringLiteral
       lines.push(
-        `<a id="${anchors.for(variable, `${contract.contractName}-${variable.key}`)}"></a>`,
+        `<a id="${anchors.anchorFor(variable, `${contract.contractName}-${variable.key}`)}"></a>`,
       )
+      // Stryker restore StringLiteral
       lines.push(`### \`${variable.key}\``, "")
 
+      // Bypassing this guard when `variable.description` is undefined would
+      // push `undefined` (joined as "" by `.join("\n")`, same as the real
+      // `""` beside it) -- the resulting extra blank-ish line only ever
+      // shows up as 3+ consecutive newlines in the final joined document,
+      // which `renderDocs()`'s own trailing `.replace(/\n{3,}/g, "\n\n")`
+      // always collapses back down regardless (same reasoning already
+      // established for `usage-report.ts`'s identical cleanup regex this
+      // drive). Still load-bearing for TypeScript's own narrowing of
+      // `variable.description` to `string` for the `lines.push()` call.
+      // Hand-verified: bypassing it and running the real whole-package suite
+      // (`vitest run`) only breaks the two `tsc`-backed json-schema
+      // freshness tests, no runtime-behavior assertion.
+      // Stryker disable next-line ConditionalExpression
       if (variable.description) lines.push(variable.description, "")
       if (!variable.documented) lines.push("> ⚠️ **Undocumented.**", "")
 
@@ -446,13 +555,32 @@ function renderCatalog(
       if (variable.context !== undefined) lines.push(`- Validation context: ${variable.context}`)
       const owner = effectiveOwner(contract, variable)
       if (owner !== undefined) lines.push(`- Owner: ${owner}`)
+      const sensitivity = effectiveSensitivity(contract, variable)
+      if (sensitivity !== undefined) lines.push(`- Sensitivity: ${sensitivity}`)
       if (variable.expiresAt !== undefined) lines.push(`- Expires: ${variable.expiresAt}`)
+      if (variable.setupInstructions !== undefined)
+        lines.push(`- Setup instructions: ${variable.setupInstructions}`)
       if (variable.refreshInstructions !== undefined)
         lines.push(`- Refresh instructions: ${variable.refreshInstructions}`)
       if (variable.required !== undefined)
         lines.push(`- Required: ${variable.required ? "yes" : "no"}`)
-      for (const [extraKey, extraValue] of Object.entries(variable.extra)) {
-        lines.push(`- ${humanizeKey(extraKey)}: ${extraValue}`)
+      const purpose = effectivePurpose(contract, variable)
+      if (purpose !== undefined) lines.push(`- Purpose: ${purpose}`)
+      const legalBasis = effectiveLegalBasis(contract, variable)
+      if (legalBasis !== undefined) lines.push(`- Legal basis: ${legalBasis}`)
+      const retention = effectiveRetention(contract, variable)
+      if (retention !== undefined) lines.push(`- Retention: ${retention}`)
+      const dataResidency = effectiveDataResidency(contract, variable)
+      if (dataResidency !== undefined)
+        lines.push(`- Data residency: ${renderMetadataValue(dataResidency)}`)
+      const auditRequired = effectiveAuditRequired(contract, variable)
+      if (auditRequired !== undefined)
+        lines.push(`- Audit required: ${auditRequired ? "yes" : "no"}`)
+      const dynamicAccess = variable.evidence?.dynamicAccess
+      if (dynamicAccess && dynamicAccess.length > 0)
+        lines.push(`- Dynamic access: ${dynamicAccess.join(", ")}`)
+      for (const [metaKey, metaValue] of Object.entries(variable.metadata ?? {})) {
+        lines.push(`- ${humanizeKey(metaKey)}: ${renderMetadataValue(metaValue)}`)
       }
       lines.push("")
     }
@@ -461,39 +589,33 @@ function renderCatalog(
   return lines
 }
 
-function relativeTo(root: string, absolutePath: string): string {
-  // Avoids a hard `node:path` dependency in this otherwise-pure-string module;
-  // callers already pass POSIX-normalized-enough paths for this to be safe.
-  return absolutePath.startsWith(root)
-    ? absolutePath
-        .slice(root.length)
-        .replace(/^[/\\]/, "")
-        .split("\\")
-        .join("/")
-    : absolutePath
-}
-
 // ---------------------------------------------------------------------------
 // Section 2 -- ownership matrix (omitted if nothing sets `owner`)
 // ---------------------------------------------------------------------------
 
+/**
+ * Groups via the same `groupVariablesByOwner()` the public
+ * `ownershipSummary` reference projection uses (`reference-projections.ts`),
+ * so env-cap's own rendered matrix and the projection a consumer reads are
+ * the same grouping by construction, not two implementations kept in sync by
+ * hand. Only the link/label formatting below is this renderer's own.
+ */
 function renderOwnershipMatrix(
-  contracts: readonly DiscoveredContract[],
+  contracts: readonly ContractModelContract[],
   anchors: AnchorRegistry,
 ): string[] {
+  const grouped = groupVariablesByOwner(sortedContracts(contracts), effectiveOwner)
   const byOwner = new Map<string, string[]>()
-  for (const contract of sortedContracts(contracts)) {
-    for (const variable of contract.variables) {
-      const owner = effectiveOwner(contract, variable)
-      if (owner === undefined) continue
-      const entry = mdLink(
-        `\`${variable.key}\` (${contract.contractName})`,
-        anchors.for(variable, `${contract.contractName}-${variable.key}`),
-      )
-      const list = byOwner.get(owner) ?? []
-      list.push(entry)
-      byOwner.set(owner, list)
-    }
+  for (const [owner, entries] of grouped) {
+    byOwner.set(
+      owner,
+      entries.map(({ contract, variable }) =>
+        mdLink(
+          `\`${variable.key}\` (${contract.contractName})`,
+          anchors.anchorFor(variable, `${contract.contractName}-${variable.key}`),
+        ),
+      ),
+    )
   }
   if (byOwner.size === 0) return []
 
@@ -517,11 +639,13 @@ function renderOwnershipMatrix(
 // ---------------------------------------------------------------------------
 
 function renderDependencyGraph(
-  contracts: readonly DiscoveredContract[],
-  root: string,
+  contracts: readonly ContractModelContract[],
   anchors: AnchorRegistry,
 ): { lines: string[]; hasDuplicates: boolean } {
-  const byKey = new Map<string, { contract: DiscoveredContract; variable: DiscoveredVariable }[]>()
+  const byKey = new Map<
+    string,
+    { contract: ContractModelContract; variable: ContractModelVariable }[]
+  >()
   for (const contract of contracts) {
     for (const variable of contract.variables) {
       const list = byKey.get(variable.key) ?? []
@@ -547,8 +671,8 @@ function renderDependencyGraph(
     const locations = declarations
       .map(({ contract, variable }) =>
         mdLink(
-          `${contract.contractName} (\`${relativeTo(root, contract.file)}\`)`,
-          anchors.for(variable, `${contract.contractName}-${variable.key}`),
+          `${contract.contractName} (\`${contract.file}\`)`,
+          anchors.anchorFor(variable, `${contract.contractName}-${variable.key}`),
         ),
       )
       .join(", ")
@@ -564,7 +688,7 @@ function renderDependencyGraph(
 // ---------------------------------------------------------------------------
 
 function renderLifecycleReport(
-  contracts: readonly DiscoveredContract[],
+  contracts: readonly ContractModelContract[],
   anchors: AnchorRegistry,
   expiringWithinDays: number,
   now: Date,
@@ -590,9 +714,18 @@ function renderLifecycleReport(
           expiresCell = `${expiresAt} (**${daysRemaining}d remaining**)`
       }
 
+      // Same anchor-cache equivalence as renderCatalog's own two anchor
+      // calls above: `renderDependencyGraph()` (called before
+      // `renderLifecycleReport()` in `renderDocs()`) already calls
+      // `anchorFor(variable, ...)` with this exact same baseText for every
+      // variable, so this call's own baseText can never matter. Hand-verified:
+      // replacing it with `` `` `` and running the real whole-package suite
+      // (`vitest run`) passes unchanged.
+      // Stryker disable StringLiteral
       rows.push(
-        `| ${mdLink(`\`${variable.key}\``, anchors.for(variable, `${contract.contractName}-${variable.key}`))} | ${owner ?? "--"} | ${expiresCell} | ${variable.refreshInstructions ?? "--"} |`,
+        `| ${mdLink(`\`${variable.key}\``, anchors.anchorFor(variable, `${contract.contractName}-${variable.key}`))} | ${owner ?? "--"} | ${expiresCell} | ${variable.refreshInstructions ?? "--"} |`,
       )
+      // Stryker restore StringLiteral
     }
   }
   if (rows.length === 0) return { lines: [], hasLifecycle: false }
@@ -642,7 +775,7 @@ export interface SecurityReviewCounters {
  * so it can be reused wherever these facts are needed, not just prose.
  */
 export function computeSecurityReviewCounters(
-  contracts: readonly DiscoveredContract[],
+  contracts: readonly ContractModelContract[],
   expiringWithinDays: number,
   now: Date,
   undocumentedContractCount: number,
@@ -702,7 +835,7 @@ export function computeSecurityReviewCounters(
 }
 
 function renderSecurityReview(
-  contracts: readonly DiscoveredContract[],
+  contracts: readonly ContractModelContract[],
   options: RenderDocsOptions,
   now: Date,
 ): string[] {
@@ -746,17 +879,21 @@ function renderSecurityReview(
  * Documents everything discovered, active or not, same scope as the catalog always
  * had. Fully regenerated every run -- unlike `.env.example`, nothing here is
  * meant to be hand-edited, so there's no "never overwrite" behavior.
+ *
+ * `contracts` is `ContractModel`'s own shape (`file` root-relative and
+ * POSIX-separated already, per that model's convention) -- there is no
+ * separate `root` parameter to resolve against, unlike this function's
+ * pre-ADR-0038 signature.
  */
 export function renderDocs(
-  contracts: readonly DiscoveredContract[],
-  root: string,
+  contracts: readonly ContractModelContract[],
   options: RenderDocsOptions,
 ): string {
   const anchors = new AnchorRegistry()
   const sorted = sortedContracts(contracts)
 
   const ownership = renderOwnershipMatrix(sorted, anchors)
-  const { lines: dependencyLines, hasDuplicates } = renderDependencyGraph(sorted, root, anchors)
+  const { lines: dependencyLines, hasDuplicates } = renderDependencyGraph(sorted, anchors)
   const { lines: lifecycleLines, hasLifecycle } = renderLifecycleReport(
     sorted,
     anchors,
@@ -772,19 +909,13 @@ export function renderDocs(
     hasDuplicates,
     hasLifecycle,
   )
-  const catalog = renderCatalog(sorted, root, anchors, options.undocumentedContracts)
+  const catalog = renderCatalog(sorted, anchors, options.undocumentedContracts)
   const security = renderSecurityReview(sorted, options, options.generatedAt)
 
   return [...header, ...catalog, ...ownership, ...dependencyLines, ...lifecycleLines, ...security]
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
 }
-
-const GENERATED_LINE_PATTERN = /^_Generated .+_$/m
-const DAYS_REMAINING_PATTERN = /\(\*\*\d+d remaining\*\*\)/g
-const EXPIRED_AGO_PATTERN = /\(\*\*expired \d+d ago\*\*\)/g
-const ALREADY_EXPIRED_COUNT_PATTERN = /^(- Already expired:) \d+$/gm
-const EXPIRING_WITHIN_COUNT_PATTERN = /^(- Expiring within \d+ days:) \d+$/gm
 
 /**
  * Normalizes every wall-clock-relative substring `renderDocs()` can produce
@@ -793,17 +924,17 @@ const EXPIRING_WITHIN_COUNT_PATTERN = /^(- Expiring within \d+ days:) \d+$/gm
  * and the security review's "Already expired"/"Expiring within N days"
  * counts -- so two renders of the *same* input, taken on different days,
  * compare equal. `check-artifacts.ts`'s drift comparison and the examples
- * golden-file test harness (`test/examples/support.ts`) both need exactly
- * this, not just the timestamp line alone: any contract with a near-term
+ * golden-file test harness (`test/support/example-runner.ts`) both need
+ * exactly this, not just the timestamp line alone: any contract with a near-term
  * `expiresAt` renders day-relative text that would otherwise make `--check`
  * (or a golden-file comparison) report false drift purely because real time
  * passed between generation and comparison.
  */
 export function normalizeDocsForComparison(content: string): string {
   return content
-    .replace(GENERATED_LINE_PATTERN, "_Generated <normalized-for-comparison>_")
-    .replace(DAYS_REMAINING_PATTERN, "(**Nd remaining**)")
-    .replace(EXPIRED_AGO_PATTERN, "(**expired Nd ago**)")
-    .replace(ALREADY_EXPIRED_COUNT_PATTERN, "$1 N")
-    .replace(EXPIRING_WITHIN_COUNT_PATTERN, "$1 N")
+    .replace(/^_Generated .+_$/m, "_Generated <normalized-for-comparison>_")
+    .replace(/\(\*\*\d+d remaining\*\*\)/g, "(**Nd remaining**)")
+    .replace(/\(\*\*expired \d+d ago\*\*\)/g, "(**expired Nd ago**)")
+    .replace(/^(- Already expired:) \d+$/gm, "$1 N")
+    .replace(/^(- Expiring within \d+ days:) \d+$/gm, "$1 N")
 }

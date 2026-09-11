@@ -1,0 +1,251 @@
+{
+  "all": [
+    {
+      "severity": "warning",
+      "code": "EXPIRING_SOON",
+      "family": "documentation",
+      "message": "\"STRIPE_KEY\" expires in 16 day(s) (expiresAt: 2026-09-27).",
+      "location": {
+        "model": "contract",
+        "file": "src/env.ts",
+        "exportName": "env",
+        "variable": "STRIPE_KEY"
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "UNCONSUMED_OWNED_VARIABLE",
+      "family": "ownership",
+      "message": "\"DATABASE_URL\" (declared by \"app\") has no consumer found in the scanned repository.",
+      "location": {
+        "model": "ownership",
+        "contractName": "app",
+        "variable": "DATABASE_URL"
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "UNCONSUMED_OWNED_VARIABLE",
+      "family": "ownership",
+      "message": "\"LOG_LEVEL\" (declared by \"app\") has no consumer found in the scanned repository.",
+      "location": {
+        "model": "ownership",
+        "contractName": "app",
+        "variable": "LOG_LEVEL"
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "UNCONSUMED_OWNED_VARIABLE",
+      "family": "ownership",
+      "message": "\"STRIPE_KEY\" (declared by \"app\") has no consumer found in the scanned repository.",
+      "location": {
+        "model": "ownership",
+        "contractName": "app",
+        "variable": "STRIPE_KEY"
+      }
+    }
+  ],
+  "bySeverity": {
+    "warning": [
+      {
+        "severity": "warning",
+        "code": "EXPIRING_SOON",
+        "family": "documentation",
+        "message": "\"STRIPE_KEY\" expires in 16 day(s) (expiresAt: 2026-09-27).",
+        "location": {
+          "model": "contract",
+          "file": "src/env.ts",
+          "exportName": "env",
+          "variable": "STRIPE_KEY"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"DATABASE_URL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "DATABASE_URL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"LOG_LEVEL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "LOG_LEVEL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"STRIPE_KEY\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "STRIPE_KEY"
+        }
+      }
+    ]
+  },
+  "byFamily": {
+    "documentation": [
+      {
+        "severity": "warning",
+        "code": "EXPIRING_SOON",
+        "family": "documentation",
+        "message": "\"STRIPE_KEY\" expires in 16 day(s) (expiresAt: 2026-09-27).",
+        "location": {
+          "model": "contract",
+          "file": "src/env.ts",
+          "exportName": "env",
+          "variable": "STRIPE_KEY"
+        }
+      }
+    ],
+    "ownership": [
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"DATABASE_URL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "DATABASE_URL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"LOG_LEVEL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "LOG_LEVEL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"STRIPE_KEY\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "STRIPE_KEY"
+        }
+      }
+    ]
+  },
+  "byCode": {
+    "EXPIRING_SOON": [
+      {
+        "severity": "warning",
+        "code": "EXPIRING_SOON",
+        "family": "documentation",
+        "message": "\"STRIPE_KEY\" expires in 16 day(s) (expiresAt: 2026-09-27).",
+        "location": {
+          "model": "contract",
+          "file": "src/env.ts",
+          "exportName": "env",
+          "variable": "STRIPE_KEY"
+        }
+      }
+    ],
+    "UNCONSUMED_OWNED_VARIABLE": [
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"DATABASE_URL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "DATABASE_URL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"LOG_LEVEL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "LOG_LEVEL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"STRIPE_KEY\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "STRIPE_KEY"
+        }
+      }
+    ]
+  },
+  "byContract": {
+    "env": [
+      {
+        "severity": "warning",
+        "code": "EXPIRING_SOON",
+        "family": "documentation",
+        "message": "\"STRIPE_KEY\" expires in 16 day(s) (expiresAt: 2026-09-27).",
+        "location": {
+          "model": "contract",
+          "file": "src/env.ts",
+          "exportName": "env",
+          "variable": "STRIPE_KEY"
+        }
+      }
+    ],
+    "app": [
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"DATABASE_URL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "DATABASE_URL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"LOG_LEVEL\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "LOG_LEVEL"
+        }
+      },
+      {
+        "severity": "warning",
+        "code": "UNCONSUMED_OWNED_VARIABLE",
+        "family": "ownership",
+        "message": "\"STRIPE_KEY\" (declared by \"app\") has no consumer found in the scanned repository.",
+        "location": {
+          "model": "ownership",
+          "contractName": "app",
+          "variable": "STRIPE_KEY"
+        }
+      }
+    ]
+  }
+}

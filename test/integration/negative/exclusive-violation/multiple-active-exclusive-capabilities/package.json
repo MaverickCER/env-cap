@@ -1,0 +1,19 @@
+{
+  "name": "env-cap-example-multiple-active-exclusive-capabilities",
+  "private": true,
+  "type": "module",
+  "description": "Deliberately broken: postgres and mongodb both ship active: true while sharing exclusiveGroup \"database\" -- generateEnvManifest() always rejects this at build time (see ADR 0009), never silently double-wiring two interchangeable backends.",
+  "scripts": {
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "start": "npm run generate:env && tsx --env-file=.env src/app.ts"
+  },
+  "dependencies": {
+    "env-cap": "file:../../../../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

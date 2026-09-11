@@ -14,6 +14,21 @@ describe("validators.required", () => {
     expect(validators.required()("value", {})).toBe(true)
     expect(validators.required()(0, {})).toBe(true)
   })
+
+  it("uses the exact same message for undefined/null and for an empty string", () => {
+    const v = validators.required()
+    expect(v(undefined, {})).toBe("This variable is required.")
+    expect(v(null, {})).toBe("This variable is required.")
+    expect(v("", {})).toBe("This variable is required.")
+  })
+
+  it("allows an empty string when allowEmptyString is true", () => {
+    expect(validators.required(true)("", {})).toBe(true)
+  })
+
+  it("never rejects a non-string value whose OWN length happens to be 0 -- the empty-string check is string-typed only", () => {
+    expect(validators.required()([], {})).toBe(true)
+  })
 })
 
 describe("validators.email", () => {
@@ -21,12 +36,25 @@ describe("validators.email", () => {
     expect(validators.email()("a@b.com", {})).toBe(true)
     expect(validators.email()("not-an-email", {})).not.toBe(true)
   })
+
+  it("requires the WHOLE string to match (anchored at both ends), and accepts multi-character local/domain segments", () => {
+    const v = validators.email()
+    expect(v("abc@example.com", {})).toBe(true)
+    // Multi-char local/domain segments -- a single-character-only pattern
+    // would already fail to consume the whole (anchored) string.
+    expect(v("prefix abc@example.com", {})).not.toBe(true)
+    expect(v("abc@example.com suffix", {})).not.toBe(true)
+  })
 })
 
 describe("validators.url", () => {
   it("accepts valid absolute URLs and rejects invalid ones", () => {
     expect(validators.url()("https://example.com", {})).toBe(true)
     expect(validators.url()("not a url", {})).not.toBe(true)
+  })
+
+  it("rejects an invalid URL with the exact failure message", () => {
+    expect(validators.url()("not a url", {})).toBe("Expected a valid absolute URL.")
   })
 })
 
@@ -36,6 +64,11 @@ describe("validators.enum", () => {
     expect(v("stripe", {})).toBe(true)
     expect(v("square", {})).not.toBe(true)
   })
+
+  it("lists every allowed value in the failure message, comma-separated", () => {
+    const v = validators.enum<string>(["stripe", "paypal", "square"] as const)
+    expect(v("adyen", {})).toBe("Expected one of: stripe, paypal, square.")
+  })
 })
 
 describe("validators.range", () => {
@@ -44,6 +77,19 @@ describe("validators.range", () => {
     expect(v(3000, {})).toBe(true)
     expect(v(0, {})).not.toBe(true)
     expect(v(70000, {})).not.toBe(true)
+  })
+
+  it("treats both endpoints as inclusive -- the boundary, not just clearly-inside/-outside", () => {
+    const v = validators.range(1, 65535)
+    expect(v(1, {})).toBe(true)
+    expect(v(65535, {})).toBe(true)
+  })
+
+  it("renders the exact failure message with both bounds", () => {
+    const v = validators.range(1, 65535)
+    expect(v(0, {})).toBe(
+      "Expected a value greater than or equal to 1 and less than or equal to 65535.",
+    )
   })
 })
 
@@ -71,6 +117,14 @@ describe("validators.all", () => {
     const v = validators.all<number>(() => "first failure", second)
     expect(v(5, {})).toBe("first failure")
     expect(second).not.toHaveBeenCalled()
+  })
+
+  it("keeps checking after a validator passes -- a passing first validator must not short-circuit a failing second one", () => {
+    const v = validators.all<number>(
+      () => true,
+      () => "second validator failed",
+    )
+    expect(v(5, {})).toBe("second validator failed")
   })
 })
 
@@ -223,6 +277,17 @@ describe("validators: date comparisons", () => {
   ])("%s against %j -> %j", (_label, validator, input, expected) => {
     expect(validator(input, {})).toBe(expected)
   })
+
+  it("treats a date exactly equal to 'now' as neither future nor past -- the boundary, not just clearly-before/-after", () => {
+    vi.useFakeTimers()
+    try {
+      const now = new Date()
+      expect(validators.future()(now, {})).toBe("Expected a future date.")
+      expect(validators.past()(now, {})).toBe("Expected a past date.")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
 
 describe("validators.uuid", () => {
@@ -237,6 +302,19 @@ describe("validators.uuid", () => {
   it("rejects a UUID whose version isn't in the allowed list", () => {
     const v1 = "6ba7b810-9dad-11d1-80b4-00c04fd430c8" // RFC 4122 example, version 1
     expect(validators.uuid([4])(v1, {})).toBe("Expected UUID version 4.")
+  })
+
+  it("lists every allowed version in the failure message, comma-separated", () => {
+    const v1 = "6ba7b810-9dad-11d1-80b4-00c04fd430c8" // version 1
+    expect(validators.uuid([4, 5])(v1, {})).toBe("Expected UUID version 4, 5.")
+  })
+
+  it("requires the WHOLE string to match (anchored at both ends) -- a valid UUID with extra leading or trailing text is not accepted", () => {
+    const v = validators.uuid()
+    const valid = "110ec58a-a0f2-4ac4-8393-c866d813b8d1"
+    expect(v(valid, {})).toBe(true)
+    expect(v(`prefix-${valid}`, {})).not.toBe(true)
+    expect(v(`${valid}-suffix`, {})).not.toBe(true)
   })
 })
 

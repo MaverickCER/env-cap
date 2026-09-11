@@ -180,7 +180,7 @@ features/
 Move the relevant variable:
 
 ```ts
-import { createEnv, documentEnv } from "@maverickcer/env-cap"
+import { createEnv, documentEnv } from "env-cap"
 
 const paymentsSchema = {
   STRIPE_SECRET_KEY: {

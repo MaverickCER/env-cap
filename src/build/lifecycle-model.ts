@@ -1,4 +1,5 @@
-import path from "node:path"
+import { displayPath } from "./display-path.js"
+import { byContractIdentity } from "./sort-by-identity.js"
 import { computeExpiringEntries } from "./docs.js"
 import type { ExpiringEntry } from "./docs.js"
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
@@ -13,8 +14,13 @@ import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
  */
 
 /** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
-export const LIFECYCLE_MODEL_SCHEMA_VERSION = 1
+export const LIFECYCLE_MODEL_SCHEMA_VERSION = 2
 
+/**
+ * One variable's lifecycle data (expiry, deprecation, rename correlation).
+ *
+ * @see {@link ContractModelVariable} -- this same declared variable's canonical starting point.
+ */
 export interface LifecycleModelVariable {
   readonly key: string
   readonly expiresAt: string | undefined
@@ -24,6 +30,8 @@ export interface LifecycleModelVariable {
   readonly removeBy: string | undefined
   /** The previous variable name this one renames, if set -- see `ManifestChangeReport`'s rename correlation (ADR 0029/0030). */
   readonly renamedFrom: string | undefined
+  /** Descriptive retention policy (e.g. "delete after 90 days") -- a policy statement, never computed or parsed, deliberately independent of `expiresAt`'s actual temporal constraint. See ADR 0035. */
+  readonly retention: string | undefined
 }
 
 export interface LifecycleModelContract {
@@ -34,7 +42,9 @@ export interface LifecycleModelContract {
   readonly expiresAt: string | undefined
   readonly deprecated: boolean | undefined
   readonly deprecatedReason: string | undefined
-  /** Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`) -- same "only what's relevant" scope `renderLifecycleReport()` already uses for its rows. */
+  /** See {@link LifecycleModelVariable.retention}. */
+  readonly retention: string | undefined
+  /** Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`) -- same "only what's relevant" scope `renderLifecycleReport()` already uses for its rows. */
   readonly variables: readonly LifecycleModelVariable[]
 }
 
@@ -54,25 +64,14 @@ export interface LifecycleModel {
   readonly expiring: readonly ExpiringEntry[]
 }
 
-function relativize(root: string, absolutePath: string): string {
-  return path.relative(root, absolutePath).split(path.sep).join("/")
-}
-
-function byIdentity(
-  a: { file: string; exportName: string },
-  b: { file: string; exportName: string },
-): number {
-  if (a.file !== b.file) return a.file < b.file ? -1 : 1
-  return a.exportName < b.exportName ? -1 : a.exportName > b.exportName ? 1 : 0
-}
-
 function hasLifecycleData(variable: DiscoveredVariable): boolean {
   return (
     variable.expiresAt !== undefined ||
     variable.refreshInstructions !== undefined ||
     variable.deprecated !== undefined ||
     variable.removeBy !== undefined ||
-    variable.renamedFrom !== undefined
+    variable.renamedFrom !== undefined ||
+    variable.retention !== undefined
   )
 }
 
@@ -92,7 +91,7 @@ export function buildLifecycleModel(
   for (const contract of contracts) {
     const variables: LifecycleModelVariable[] = [...contract.variables]
       .filter(hasLifecycleData)
-      .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+      .sort((a, b) => a.key.localeCompare(b.key))
       .map((variable) => ({
         key: variable.key,
         expiresAt: variable.expiresAt,
@@ -101,33 +100,36 @@ export function buildLifecycleModel(
         deprecatedReason: variable.deprecatedReason,
         removeBy: variable.removeBy,
         renamedFrom: variable.renamedFrom,
+        retention: variable.retention,
       }))
 
     const hasContractLevelData =
       contract.expiresAt !== undefined ||
       contract.deprecated !== undefined ||
-      contract.deprecatedReason !== undefined
+      contract.deprecatedReason !== undefined ||
+      contract.retention !== undefined
 
     if (!hasContractLevelData && variables.length === 0) continue
 
     modelContracts.push({
-      file: relativize(root, contract.file),
+      file: displayPath(root, contract.file),
       exportName: contract.exportName,
       contractName: contract.contractName,
       expiresAt: contract.expiresAt,
       deprecated: contract.deprecated,
       deprecatedReason: contract.deprecatedReason,
+      retention: contract.retention,
       variables,
     })
   }
-  modelContracts.sort(byIdentity)
+  modelContracts.sort(byContractIdentity)
 
   return {
     schemaVersion: LIFECYCLE_MODEL_SCHEMA_VERSION,
     contracts: modelContracts,
     expiring: computeExpiringEntries(contracts, expiringWithinDays, now).map((entry) => ({
       ...entry,
-      file: relativize(root, entry.file),
+      file: displayPath(root, entry.file),
     })),
   }
 }

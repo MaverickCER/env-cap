@@ -1,6 +1,38 @@
 import { describe, expect, it } from "vitest"
 import type { EvidenceModel } from "../../src/build/evidence-model.js"
-import { defineEvidenceProjection } from "../../src/evidence/define-projection.js"
+import {
+  defineEvidenceProjection,
+  readOnlyMembraneError,
+} from "../../src/evidence/define-projection.js"
+
+// `.toThrow(someString)` is a SUBSTRING match, not exact equality -- every
+// string contains "" as a substring, so `.toThrow("")` trivially passes
+// regardless of what actually threw, defeating the whole point of pinning
+// the exact message (a StringLiteral mutant collapsing the message to ""
+// would sail through unnoticed). Catching directly and asserting exact
+// equality closes that gap.
+// The literal message text is hardcoded here, NOT derived by calling
+// `readOnlyMembraneError()` from inside the assertion -- doing that would
+// compare the (possibly-mutated) thrown message against the SAME
+// (identically-mutated) function's own output, trivially "matching" no
+// matter what the message actually says.
+const READ_ONLY_MESSAGE =
+  "EvidenceModel is read-only inside a projector -- a projection must be a pure function of its evidence argument. See ADR 0032."
+
+function expectReadOnlyThrow(fn: () => unknown): void {
+  expect(fn).toThrow(TypeError)
+  try {
+    fn()
+    expect.fail("should have thrown")
+  } catch (error) {
+    expect(error).toBeInstanceOf(TypeError)
+    expect((error as TypeError).message).toBe(READ_ONLY_MESSAGE)
+  }
+}
+
+it("readOnlyMembraneError() itself carries the exact expected message", () => {
+  expect(readOnlyMembraneError().message).toBe(READ_ONLY_MESSAGE)
+})
 
 function makeEvidenceModel(): EvidenceModel {
   return {
@@ -11,7 +43,7 @@ function makeEvidenceModel(): EvidenceModel {
       commit: "abc123",
     },
     contract: {
-      schemaVersion: 1,
+      schemaVersion: 3,
       contracts: [
         {
           file: "/repo/src/payments/env.schema.ts",
@@ -21,14 +53,22 @@ function makeEvidenceModel(): EvidenceModel {
           category: undefined,
           exclusiveGroup: undefined,
           owner: "payments-team",
-          classification: undefined,
+          sensitivity: undefined,
           expiresAt: undefined,
+          purpose: undefined,
+          legalBasis: undefined,
+          retention: undefined,
+          dataResidency: undefined,
+          auditRequired: undefined,
           metadata: undefined,
           documented: true,
           packageOrigin: undefined,
+          declaration: { file: "/repo/src/payments/env.schema.ts", line: 1, column: 1 },
+          documentation: { file: "/repo/src/payments/env.schema.ts", line: 10, column: 1 },
           variables: [
             {
               key: "STRIPE_KEY",
+              declaration: { file: "/repo/src/payments/env.schema.ts", line: 2, column: 3 },
               hasDefault: false,
               defaultValue: undefined,
               hasProcessor: false,
@@ -39,15 +79,23 @@ function makeEvidenceModel(): EvidenceModel {
               context: undefined,
               description: "Stripe secret key",
               owner: undefined,
-              classification: "secret",
+              sensitivity: "secret",
               expiresAt: undefined,
               refreshInstructions: undefined,
+              setupInstructions: undefined,
               required: true,
-              extra: {},
+              purpose: undefined,
+              legalBasis: undefined,
+              retention: undefined,
+              dataResidency: undefined,
+              auditRequired: undefined,
+              metadata: undefined,
               documented: true,
+              evidence: undefined,
             },
             {
               key: "STRIPE_WEBHOOK_SECRET",
+              declaration: { file: "/repo/src/payments/env.schema.ts", line: 3, column: 3 },
               hasDefault: false,
               defaultValue: undefined,
               hasProcessor: false,
@@ -58,19 +106,26 @@ function makeEvidenceModel(): EvidenceModel {
               context: undefined,
               description: undefined,
               owner: undefined,
-              classification: undefined,
+              sensitivity: undefined,
               expiresAt: undefined,
               refreshInstructions: undefined,
+              setupInstructions: undefined,
               required: true,
-              extra: {},
+              purpose: undefined,
+              legalBasis: undefined,
+              retention: undefined,
+              dataResidency: undefined,
+              auditRequired: undefined,
+              metadata: undefined,
               documented: false,
+              evidence: undefined,
             },
           ],
         },
       ],
     },
     dependency: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       contracts: [
         {
           file: "/repo/src/payments/env.schema.ts",
@@ -79,11 +134,22 @@ function makeEvidenceModel(): EvidenceModel {
           imported: true,
           hasDynamicAccess: false,
           variables: [
-            { key: "STRIPE_KEY", status: "used", lines: [12] },
-            { key: "STRIPE_WEBHOOK_SECRET", status: "unconsumed", lines: [] },
+            {
+              key: "STRIPE_KEY",
+              status: "used",
+              positions: [{ file: "/repo/src/payments/charge.ts", line: 12, column: 5 }],
+              dynamicAccessAssertions: [],
+            },
+            {
+              key: "STRIPE_WEBHOOK_SECRET",
+              status: "unconsumed",
+              positions: [],
+              dynamicAccessAssertions: [],
+            },
           ],
           consumingFiles: ["/repo/src/payments/charge.ts"],
           ambiguousBarrelFiles: [],
+          dynamicAccessSites: [],
         },
       ],
       consumers: [
@@ -93,12 +159,12 @@ function makeEvidenceModel(): EvidenceModel {
             {
               file: "/repo/src/payments/env.schema.ts",
               exportName: "paymentsEnv",
-              contractName: "payments",
             },
           ],
         },
       ],
       warnings: [],
+      scannedSurfaces: [{ label: "application", root: "." }],
     },
     ownership: {
       schemaVersion: 1,
@@ -118,16 +184,16 @@ function makeEvidenceModel(): EvidenceModel {
       unownedVariables: [],
     },
     lifecycle: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       contracts: [],
       expiring: [],
     },
     finding: {
-      schemaVersion: 1,
+      schemaVersion: 3,
       findings: [
         {
           severity: "warning",
-          code: "undocumented-variable",
+          code: "UNDOCUMENTED_VARIABLE",
           family: "documentation",
           message: "STRIPE_WEBHOOK_SECRET is undocumented",
           location: {
@@ -135,6 +201,7 @@ function makeEvidenceModel(): EvidenceModel {
             file: "/repo/src/payments/env.schema.ts",
             exportName: "paymentsEnv",
             variable: "STRIPE_WEBHOOK_SECRET",
+            position: undefined,
           },
         },
       ],
@@ -185,6 +252,22 @@ describe("defineEvidenceProjection", () => {
       "contract.contracts.0.contractName",
     ])
     expect(sources.findingCount).toEqual(["finding", "finding.findings"])
+  })
+
+  it("reports source paths sorted alphabetically, not in read order", () => {
+    const projection = defineEvidenceProjection({
+      // Reads "finding" (a field that alphabetically sorts LAST) before
+      // "contract" (which sorts before it) -- if `readPaths()` returned
+      // paths in read order rather than sorted, this would come back
+      // ["finding", "contract"], not the alphabetical order asserted below.
+      value: (evidence) => {
+        const findingCount = evidence.finding.findings.length
+        const contractCount = evidence.contract.contracts.length
+        return findingCount + contractCount
+      },
+    })
+    const { sources } = projection.project(makeEvidenceModel())
+    expect(sources.value).toEqual(["contract", "contract.contracts", "finding", "finding.findings"])
   })
 
   it("dedupes repeated reads of the same field path within one projector", () => {
@@ -251,7 +334,7 @@ describe("defineEvidenceProjection", () => {
         return "unreachable"
       },
     })
-    expect(() => projection(makeEvidenceModel())).toThrow(TypeError)
+    expectReadOnlyThrow(() => projection(makeEvidenceModel()))
   })
 
   it("throws when a projector deletes an EvidenceModel property", () => {
@@ -261,7 +344,7 @@ describe("defineEvidenceProjection", () => {
         return "unreachable"
       },
     })
-    expect(() => projection(makeEvidenceModel())).toThrow(TypeError)
+    expectReadOnlyThrow(() => projection(makeEvidenceModel()))
   })
 
   it("throws when a projector calls Object.defineProperty on the EvidenceModel", () => {
@@ -271,7 +354,7 @@ describe("defineEvidenceProjection", () => {
         return "unreachable"
       },
     })
-    expect(() => projection(makeEvidenceModel())).toThrow(TypeError)
+    expectReadOnlyThrow(() => projection(makeEvidenceModel()))
   })
 
   it("throws when a projector calls Object.setPrototypeOf on the EvidenceModel", () => {
@@ -281,7 +364,7 @@ describe("defineEvidenceProjection", () => {
         return "unreachable"
       },
     })
-    expect(() => projection(makeEvidenceModel())).toThrow(TypeError)
+    expectReadOnlyThrow(() => projection(makeEvidenceModel()))
   })
 
   it("throws when a projector mutates a nested object, not just the top-level EvidenceModel", () => {
@@ -291,7 +374,7 @@ describe("defineEvidenceProjection", () => {
         return "unreachable"
       },
     })
-    expect(() => projection(makeEvidenceModel())).toThrow(TypeError)
+    expectReadOnlyThrow(() => projection(makeEvidenceModel()))
   })
 
   it("never mutates the caller's original EvidenceModel, even when a projector attempts to", () => {
@@ -302,7 +385,7 @@ describe("defineEvidenceProjection", () => {
         return "unreachable"
       },
     })
-    expect(() => projection(evidence)).toThrow(TypeError)
+    expectReadOnlyThrow(() => projection(evidence))
     expect(evidence.schemaVersion).toBe(1)
   })
 })

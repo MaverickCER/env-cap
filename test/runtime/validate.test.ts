@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest"
+import { getState } from "../../src/runtime/cache.js"
 import { createEnv } from "../../src/runtime/create.js"
 import { EnvNotReadyError, EnvValidationError } from "../../src/runtime/errors.js"
 import { resetEnvCache } from "../../src/runtime/reset.js"
@@ -316,6 +317,31 @@ describe("validateEnv idempotency", () => {
 
     expect(callCount).toBe(1)
     expect(firstError).toBe(secondError)
+  })
+
+  it("returns the shared in-flight run's result instead of starting a new one, when a run is already underway", async () => {
+    // `runValidation()` has no internal `await`, so under any REAL caller
+    // its whole body (including settling `state.status`) completes
+    // synchronously before another call could ever observe `inFlight` as
+    // the relevant branch -- this manufactures the state directly (as
+    // `runtime/cache.ts`'s own exported `getState()` is meant to allow) to
+    // exercise the defensive "share an underway run" branch on its own
+    // terms, distinct from idempotency-after-completion (already covered
+    // below) and from `Promise.all` (which, per the same reasoning, never
+    // actually reaches this branch either).
+    const fakeResult = { contractCount: 999, variableCount: 999 }
+    const state = getState()
+    state.status = "validating"
+    state.inFlight = Promise.resolve(fakeResult)
+
+    const result = await validateEnv({ values: {}, manifest: [] })
+    expect(result).toEqual(fakeResult)
+  })
+
+  it("clears inFlight once a run settles, so a later call doesn't see a stale reference", async () => {
+    const contract = createEnv({ PORT: { default: 3000 } }, { name: "clears-inflight" })
+    await validateEnv({ values: {}, manifest: [contract] })
+    expect(getState().inFlight).toBeUndefined()
   })
 
   it("does not double-process when two calls are issued back-to-back (e.g. via Promise.all)", async () => {

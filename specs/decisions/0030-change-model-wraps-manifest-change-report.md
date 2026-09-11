@@ -3,7 +3,7 @@
 ## Status
 
 Accepted. Implemented in `src/build/change-model.ts` (`buildChangeModel()`,
-`ChangeModel`), exported from `@maverickcer/env-cap/build`. Rename
+`ChangeModel`), exported from `env-cap/build`. Rename
 correlation (`RenamedVariable`, `renamedVariables`) landed as a second
 phase on top of this same file once ADR 0029's `renamedFrom` field existed
 to correlate from.

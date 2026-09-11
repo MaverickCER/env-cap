@@ -19,16 +19,24 @@ function makeVariable(
     context: undefined,
     description: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     refreshInstructions: undefined,
+    setupInstructions: undefined,
     required: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
     removeBy: undefined,
     renamedFrom: undefined,
-    extra: {},
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
+    metadata: undefined,
+    evidence: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
     ...overrides,
   }
 }
@@ -46,12 +54,19 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
     metadata: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
+    documentation: undefined,
     packageOrigin: undefined,
     ...overrides,
   }
@@ -67,6 +82,21 @@ describe("buildOwnershipModel", () => {
     const model = buildOwnershipModel([contract], "/repo")
     expect(model.schemaVersion).toBe(OWNERSHIP_MODEL_SCHEMA_VERSION)
     expect(model.contracts[0]?.file).toBe("a/env.schema.ts")
+  })
+
+  it("sorts contracts by file then exportName, not input order", () => {
+    const zContract = makeContract({
+      file: "/repo/z/env.schema.ts",
+      exportName: "zEnv",
+      variables: [],
+    })
+    const aContract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [],
+    })
+    const model = buildOwnershipModel([zContract, aContract], "/repo")
+    expect(model.contracts.map((c) => c.file)).toEqual(["a/env.schema.ts", "z/env.schema.ts"])
   })
 
   it("resolves each variable's effective owner -- its own override, falling back to the contract's", () => {
@@ -100,11 +130,9 @@ describe("buildOwnershipModel", () => {
     })
     const model = buildOwnershipModel([owned, unowned], "/repo")
 
-    expect(model.unownedContracts).toEqual([
-      { file: "b/env.schema.ts", exportName: "bEnv", contractName: "bEnv" },
-    ])
+    expect(model.unownedContracts).toEqual([{ file: "b/env.schema.ts", exportName: "bEnv" }])
     expect(model.unownedVariables).toEqual([
-      { file: "b/env.schema.ts", exportName: "bEnv", contractName: "bEnv", key: "ORPHAN" },
+      { file: "b/env.schema.ts", exportName: "bEnv", key: "ORPHAN" },
     ])
   })
 
@@ -129,7 +157,7 @@ describe("buildOwnershipModel", () => {
     })
     const model = buildOwnershipModel([contract], "/repo")
     expect(model.unownedVariables).toEqual([
-      { file: "a/env.schema.ts", exportName: "aEnv", contractName: "aEnv", key: "KEY" },
+      { file: "a/env.schema.ts", exportName: "aEnv", key: "KEY" },
     ])
   })
 })

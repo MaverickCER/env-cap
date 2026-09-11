@@ -1,6 +1,6 @@
 ---
 name: env-cap
-description: Guidance for AI coding agents using or extending @maverickcer/env-cap. Load before creating or editing env.schema.ts files, runtime/build APIs, processors, validators, CLI behavior, or artifact generation.
+description: Guidance for AI coding agents using or extending env-cap. Load before creating or editing env.schema.ts files, runtime/build APIs, processors, validators, CLI behavior, or artifact generation.
 ---
 
 # env-cap Usage Skill
@@ -30,7 +30,7 @@ Non-negotiable. Verify any change respects these before finishing.
 ## Avoid
 
 - **Deep/internal imports** — `dist/*.cjs`, `src/build/dependency-graph.ts`, anything not re-exported by the three entry points.
-- **Importing `@maverickcer/env-cap/build` into runtime or browser code** — it's Node-only, dev/CI-only.
+- **Importing `env-cap/build` into runtime or browser code** — it's Node-only, dev/CI-only.
 - **Calling any `generate*()` at application startup or on a request path** — build-time only; wire it into an npm script or CI step.
 - **Dynamically constructed schemas** — `createEnv(buildSchema())`, `createEnv({ ...shared })`, re-exporting a contract from another module. AST discovery can't resolve these; write the schema as a literal directly in the call.
 - **Documentation fields inside `createEnv()`'s schema** — `EnvDefinition` only has `default`/`processor`/`validator`/`context`. `description`/`owner`/`expiresAt`/`category` belong in `documentEnv()` only.
@@ -43,7 +43,7 @@ Non-negotiable. Verify any change respects these before finishing.
 - **Fetching live values or metadata inside `env.schema.ts`** — static `expiresAt` goes in `documentEnv()`; dynamic data goes through the separate `liveExpirationDates` callback (ADR 0012), kept in its own module.
 - **Treating two capabilities declaring the same variable name as automatically wrong** — allowed and common; only provably conflicting processor/validator return types are a hard error.
 - **Trying to relax an exclusive-group violation** — always a hard error (ADR 0009), no throw/warn knob. Set the old contract's `active: false` first.
-- **Manually constructing a contract collection when a generated manifest is available** — regenerate it instead: run the project's `generate:env` script if one exists; otherwise call `generateEnvManifest({ location })` (or `generateEnvArtifacts()` for multiple artifacts) from `@maverickcer/env-cap/build`, or run `npx env-cap --location <path>` from the CLI (see Consumer Usage below for the full call shape and options). Consume the resulting manifest — never hand-assemble the collection it produces.
+- **Manually constructing a contract collection when a generated manifest is available** — regenerate it instead: run the project's `generate:env` script if one exists; otherwise call `generateEnvManifest({ location })` (or `generateEnvArtifacts()` for multiple artifacts) from `env-cap/build`, or run `npx env-cap --location <path>` from the CLI (see Consumer Usage below for the full call shape and options). Consume the resulting manifest — never hand-assemble the collection it produces.
 - **Introducing validation managers, service locators, providers, registries, or other initialization frameworks around `validateEnv()`** — call it directly from the application's existing startup path; env-cap does not need a bootstrapping layer.
 - **Treating `context` as authorization, or as something env-cap detects itself** — it's a plain, application-defined string that only gates whether `validateEnv()` processes a variable; the application always computes `activeContexts` explicitly (never `window`/`NODE_ENV` sniffed inside env-cap), and reading a resolved value is never access-controlled by its `context` (ADR 0022).
 - **Assuming `context`/`activeContexts` is a bundling or security boundary** — it isn't. A `context: "server"` variable in the same schema/manifest as `context: "client"` variables still ships its definition (and any literal `default`) to a client bundle that imports that manifest. Use separate discovery/manifests per contract (ADR 0004) when a variable must never reach client-bound code at all.
@@ -54,7 +54,7 @@ When working with env-cap:
 
 1. Read the existing `env.schema.ts` (and neighboring ones in the same project) before editing — match its processor/validator/documentation conventions.
 2. Identify or preserve capability ownership — a variable belongs in the schema owned by the feature/package that consumes it, never an unrelated one.
-3. Prefer existing `@maverickcer/env-cap/helpers` processors/validators over hand-written logic.
+3. Prefer existing `env-cap/helpers` processors/validators over hand-written logic.
 4. Keep every schema entry a statically analyzable literal.
 5. Add or update the matching `documentEnv()` entry in the same file.
 6. Regenerate dependent generated artifacts if the schema changed (manifest, docs, `.env.example`, ownership report).
@@ -77,12 +77,12 @@ When a change is under-specified, preserve in this order: architecture (Core Pri
 
 Four independent entry points, each its own build output and `package.json` export (plus `./schema`, a static JSON Schema file, and `./package.json`):
 
-| Export                               | Source               | Environment           | Purpose                                                                                  |
-| ------------------------------------ | -------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
-| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract` |
-| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation                                             |
-| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                              |
-| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                           |
+| Export                  | Source               | Environment           | Purpose                                                                                  |
+| ----------------------- | -------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| `env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract` |
+| `env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation                                             |
+| `env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                              |
+| `env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                           |
 
 The `env-cap` CLI (`src/cli/`) is a thin wrapper around `generateEnvArtifacts()`. `GenerateDocumentationResult.contracts` is a summary (file/exportName/contractName/variableCount/active/documented); `GenerateDocumentationResult.catalog` sits alongside it with the same per-variable descriptive content (`description`/`owner`/`expiresAt`/`extra` metadata, ...) `renderDocs()` puts in the generated Markdown Catalog, keyed by variable name within each contract — the field that makes `--json` a full mirror of the docs artifact, not just its findings.
 
@@ -96,8 +96,8 @@ Covers the common case: adding or changing a variable in an app or package that 
 
 ```ts
 // features/database/env.schema.ts
-import { createEnv, documentEnv } from "@maverickcer/env-cap"
-import { processors, validators } from "@maverickcer/env-cap/helpers"
+import { createEnv, documentEnv } from "env-cap"
+import { processors, validators } from "env-cap/helpers"
 
 const databaseSchema = {
   DATABASE_URL: { processor: processors.url() },
@@ -115,13 +115,13 @@ documentEnv(databaseSchema, {
 })
 ```
 
-Always pass `source: import.meta.url` — there's no portable way for `createEnv()` to discover its own caller. Optional/composable capabilities also use `category`, `exclusiveGroup`, and `active` in `documentEnv()` (see `examples/composable-boilerplates/features/postgres/env.schema.ts`) — a build fails if two _active_ contracts share an `exclusiveGroup`.
+Always pass `source: import.meta.url` — there's no portable way for `createEnv()` to discover its own caller. Optional/composable capabilities also use `category`, `exclusiveGroup`, and `active` in `documentEnv()` (see `examples/team-service/features/postgres/env.schema.ts`) — a build fails if two _active_ contracts share an `exclusiveGroup`.
 
 ### Validate at startup
 
 ```ts
 // src/startup.ts — before any capability code executes
-import { validateEnv } from "@maverickcer/env-cap"
+import { validateEnv } from "env-cap"
 import { manifest } from "./generated/env.manifest.js"
 
 await validateEnv({ values: process.env, manifest })
@@ -132,25 +132,26 @@ Returns `{ contractCount, variableCount }`, never resolved values. Read values a
 ### Generate artifacts (build script or CI step — never application code)
 
 ```ts
-import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
+import { generateEnvArtifacts } from "env-cap/build"
 
 await generateEnvArtifacts({
   root,
   manifest: { location: "src/generated/env.manifest.ts" },
   docs: { location: "docs/ENVIRONMENT.md", envExample: { location: ".env.example" } },
   usage: { report: { location: "docs/OWNERSHIP.md" } },
+  evidence: { location: "docs/env.evidence.json" },
 })
 ```
 
-Use a single-purpose orchestrator (`generateEnvManifest()`/`generateDocumentation()`/`generateUsageReport()`) if only one artifact is needed. `onIncompatibility`/`onUndocumented` default to `"warn"`; pass `"throw"` (or CLI `--strict`/`--strict-docs`/`--strict-ownership`) for stricter CI gates. Exclusive-group violations are always a hard error regardless. CLI equivalent: `npx env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --strict --strict-docs`. Add `--json` for a machine-readable report (same result, wrapped in a versioned `{ schemaVersion, kind, toolVersion, ok }` envelope — ADR 0013) instead of formatted text; the first-party GitHub Action (`action.yml`) runs the CLI with `--json` and turns it into PR annotations/a sticky comment.
+Use a single-purpose orchestrator (`generateEnvManifest()`/`generateDocumentation()`/`generateUsageReport()`) if only one artifact is needed. `onIncompatibility` defaults to `"warn"`; pass `"throw"` (or CLI `--strict`) for a stricter CI gate on manifest compatibility/exclusive-group issues — the one provable error category (ADR 0009). Documentation and ownership issues (undocumented variables, unconsumed owned dependencies) never throw, by design (ADR 0038); they're `Finding`s on the evidence artifact (`--evidence <path>`) instead — read `evidence.finding` and gate CI on it yourself if you want that enforced. CLI equivalent: `npx env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --evidence docs/env.evidence.json --strict`. Add `--json` for a machine-readable report (same result, wrapped in a versioned `{ schemaVersion, kind, toolVersion, ok }` envelope — ADR 0013) instead of formatted text; the first-party GitHub Action (`action.yml`) runs the CLI with `--json` and turns it into PR annotations/a sticky comment.
 
 ### Reusable packages
 
-A package ships its own `src/env.schema.ts` exactly like an app feature (`examples/paypal-addon`) — discovered by a consumer's `generateEnvArtifacts()` when its `include` glob reaches the installed package, or by the package's own `generate:env` script scoped to its own `root`.
+A package ships its own `src/env.schema.ts` exactly like an app feature (`test/integration/positive/enterprise/paypal-addon`) — discovered by a consumer's `generateEnvArtifacts()` when its `include` glob reaches the installed package, or by the package's own `generate:env` script scoped to its own `root`.
 
 ### Live/external metadata
 
-Dynamic values (e.g. a secret's real rotation date) can't live in a schema file — it's only ever statically parsed. Pass a `liveExpirationDates` callback to `generateEnvArtifacts()`/`generateDocumentation()` instead; it's invoked once, after discovery, with every discovered variable name, and its ISO-date results become per-variable `expiresAt` overrides (`examples/aws-secrets-manager/src/live-expirations.ts`, ADR 0012). Auth/caching/retries for that call are the consumer's own responsibility.
+Dynamic values (e.g. a secret's real rotation date) can't live in a schema file — it's only ever statically parsed. Pass a `liveExpirationDates` callback to `generateEnvArtifacts()`/`generateDocumentation()` instead; it's invoked once, after discovery, with every discovered variable name, and its ISO-date results become per-variable `expiresAt` overrides (`test/integration/positive/enterprise/aws-secrets-manager/src/live-expirations.ts`, ADR 0012). Auth/caching/retries for that call are the consumer's own responsibility.
 
 ## Migration Guidance
 
@@ -159,7 +160,7 @@ Guides for moving an existing application onto env-cap live in `specs/migrations
 To generate a manifest: check for an existing `generate:env` (or similarly named) npm script first and run that — most consuming projects already wire one up. If none exists:
 
 ```ts
-import { generateEnvManifest } from "@maverickcer/env-cap/build"
+import { generateEnvManifest } from "env-cap/build"
 
 await generateEnvManifest({ location: "src/generated/env.manifest.ts" })
 ```
@@ -170,7 +171,7 @@ or via the CLI:
 npx env-cap --location src/generated/env.manifest.ts
 ```
 
-Add `--docs <path>`/`docs: { location }` and `--env-example <path>`/`envExample: { location }` to generate documentation and a `.env.example` alongside it in one pass (`generateEnvArtifacts()` — see Consumer Usage above), and `--strict`/`--strict-docs`/`--strict-ownership` to make CI fail on incompatibilities instead of warning. Never hand-edit the resulting file — it's marked `AUTO-GENERATED FILE. DO NOT EDIT.`
+Add `--docs <path>`/`docs: { location }` and `--env-example <path>`/`envExample: { location }` to generate documentation and a `.env.example` alongside it in one pass (`generateEnvArtifacts()` — see Consumer Usage above), and `--strict` to make CI fail on manifest incompatibilities instead of warning. Never hand-edit the resulting file — it's marked `AUTO-GENERATED FILE. DO NOT EDIT.`
 
 Across every migration guide, prefer:
 

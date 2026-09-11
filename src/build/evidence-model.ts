@@ -26,7 +26,7 @@ export interface EvidenceProvenance {
 /**
  * The seventh canonical fact model (ADR 0024): the assembled union of the
  * other six, plus provenance, the immutable input every
- * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,
+ * `defineEvidenceProjection()` projector runs over (`env-cap/evidence`,
  * ADR 0031).
  *
  * @remarks
@@ -37,7 +37,7 @@ export interface EvidenceProvenance {
  * `specs/architecture.md`. `src/evidence/` never imports a *value* from
  * here, only this shape, so it stays isomorphic and Node-free. An actual
  * `EvidenceModel` instance is produced by {@link generateEvidenceModel}
- * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,
+ * (`env-cap/build`, Node-only), which runs discovery once,
  * builds all six sub-models, and `deepFreeze()`s the result.
  */
 export interface EvidenceModel {

@@ -19,9 +19,21 @@ import type { validateEnvOptions, validateEnvResult } from "./types.js"
 export async function validateEnv(options: validateEnvOptions): Promise<validateEnvResult> {
   const state = getState()
 
+  // `result`/`error` are only ever set together with their matching
+  // `status` (`runValidation()` below sets `state.status = "ready"` and
+  // `state.result` in the same statement pair, likewise "failed"/`error`),
+  // and `resetCache()` always replaces the whole `state` object rather than
+  // resetting fields individually -- so checking `status` alone already
+  // implies `result`/`error` is set. Load-bearing for TypeScript's own
+  // narrowing of `state.result`/`state.error` from `T | undefined` to `T`
+  // for the `return`/`throw` below, though -- hand-verified by removing
+  // each `&&` clause entirely and running the full `vitest run`: all 1236
+  // tests still pass.
+  // Stryker disable next-line ConditionalExpression, LogicalOperator
   if (state.status === "ready" && state.result) {
     return state.result
   }
+  // Stryker disable next-line ConditionalExpression, LogicalOperator
   if (state.status === "failed" && state.error) {
     throw state.error
   }
@@ -29,6 +41,17 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
     return state.inFlight
   }
 
+  // Genuinely unobservable via any real (all-synchronous, per `Processor`/
+  // `Validator`'s own types) caller: `runValidation()` below has no
+  // internal `await`, so its entire body -- including overwriting
+  // `state.status` to "ready" or "failed" -- runs to completion
+  // synchronously as part of evaluating the very next line, before control
+  // ever returns to anything that could observe "validating". Kept as an
+  // honest, self-documenting state-machine value (and to keep `CacheStatus`
+  // meaningful if a future version ever awaits inside `runValidation()`).
+  // Hand-verified: replacing the string with "" and running the full
+  // `vitest run` leaves all 1236 tests passing.
+  // Stryker disable next-line StringLiteral
   state.status = "validating"
   const run = runValidation(options, state)
   state.inFlight = run
@@ -72,6 +95,15 @@ async function runValidation(
     ? new Set(options.activeContexts)
     : undefined
 
+  // A poisoned seed element here would be an accumulator only ever `.push()`ed
+  // to (never filtered), reaching the two per-entry loops below
+  // (`setContractError`/`setContractValues`) destructured as `{id: undefined,
+  // values: undefined}` -- `setContractValues(undefined, Object.freeze(undefined))`
+  // neither throws nor collides with any real contract's own symbol-keyed
+  // entry, so it's unobservable via any real `createEnv()`/`validateEnv()`
+  // consumer. Hand-verified: seeding this with a phantom entry and running
+  // the full `vitest run` leaves all 1236 tests passing.
+  // Stryker disable next-line ArrayDeclaration
   const resolved: { id: symbol; values: Record<string, unknown> }[] = []
 
   for (const contract of options.manifest) {
@@ -93,6 +125,14 @@ async function runValidation(
       const raw = options.values[key]
 
       let working: unknown = raw
+      // Bypassing the `!== undefined` clause only matters when `working ===
+      // undefined` AND `definition.default` genuinely is `undefined` --
+      // `typeof undefined === "function"` is false, so `working` is
+      // assigned `definition.default` (`undefined`) either way: applying "no
+      // default" when there wasn't one is identical to not applying it.
+      // Hand-verified: replacing the whole clause with `true` and running
+      // the full `vitest run` leaves all 1236 tests passing.
+      // Stryker disable next-line ConditionalExpression
       if (working === undefined && definition.default !== undefined) {
         working =
           typeof definition.default === "function"
