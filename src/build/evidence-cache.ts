@@ -1,6 +1,7 @@
 import crypto from "node:crypto"
 import path from "node:path"
 import { discoverSchemaFiles } from "./discover.js"
+import { displayPath } from "./display-path.js"
 import type { EvidenceModel } from "./evidence-model.js"
 import { readEvidenceSnapshot } from "./evidence-snapshot.js"
 import { defaultExclude, defaultInclude } from "./generate-manifest.js"
@@ -77,7 +78,12 @@ export async function computeSourceFingerprint(
   const hash = crypto.createHash("sha256")
   hash.update(readToolVersion())
   for (const file of allFiles) {
-    hash.update(file)
+    // Root-relative, not the raw absolute path -- an absolute path bakes in
+    // wherever this checkout happens to live (e.g. /home/runner/work/... in
+    // CI vs a contributor's own machine), so hashing it directly made this
+    // fingerprint -- and the committed .fingerprint sidecar that pins it --
+    // differ by checkout location alone, with the file's content unchanged.
+    hash.update(displayPath(root, file))
     try {
       // Empirically confirmed equivalent to omitting the encoding (and thus
       // getting a Buffer back instead of a string): `hash.update()` accepts
