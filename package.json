@@ -1,7 +1,7 @@
 {
-  "name": "@maverickcer/env-cap",
-  "version": "0.1.0",
-  "description": "Secure, type-safe, framework-agnostic environment contracts. Capabilities own the environment variables they consume; the package provides runtime validation and build-time contract discovery.",
+  "name": "env-cap",
+  "version": "0.2.0",
+  "description": "Secure, type-safe, framework-agnostic environment contracts. Contracts own the environment variables they consume; the package provides runtime validation and build-time contract discovery.",
   "keywords": [
     "environment",
     "env",
@@ -31,26 +31,67 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./build": {
-      "types": "./dist/build.d.ts",
-      "import": "./dist/build.js",
-      "require": "./dist/build.cjs"
+      "import": {
+        "types": "./dist/build.d.ts",
+        "default": "./dist/build.js"
+      },
+      "require": {
+        "types": "./dist/build.d.cts",
+        "default": "./dist/build.cjs"
+      }
     },
     "./helpers": {
-      "types": "./dist/helpers.d.ts",
-      "import": "./dist/helpers.js",
-      "require": "./dist/helpers.cjs"
+      "import": {
+        "types": "./dist/helpers.d.ts",
+        "default": "./dist/helpers.js"
+      },
+      "require": {
+        "types": "./dist/helpers.d.cts",
+        "default": "./dist/helpers.cjs"
+      }
+    },
+    "./node": {
+      "import": {
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.js"
+      },
+      "require": {
+        "types": "./dist/node.d.cts",
+        "default": "./dist/node.cjs"
+      }
+    },
+    "./evidence": {
+      "import": {
+        "types": "./dist/evidence.d.ts",
+        "default": "./dist/evidence.js"
+      },
+      "require": {
+        "types": "./dist/evidence.d.cts",
+        "default": "./dist/evidence.cjs"
+      }
     },
     "./eslint-plugin": {
-      "types": "./dist/eslint-plugin/index.d.ts",
-      "import": "./dist/eslint-plugin/index.js",
-      "require": "./dist/eslint-plugin/index.cjs"
+      "import": {
+        "types": "./dist/eslint-plugin/index.d.ts",
+        "default": "./dist/eslint-plugin/index.js"
+      },
+      "require": {
+        "types": "./dist/eslint-plugin/index.d.cts",
+        "default": "./dist/eslint-plugin/index.cjs"
+      }
     },
     "./schema": "./schemas/env-cap-report.schema.json",
+    "./schema/*": "./schemas/*.schema.json",
     "./package.json": "./package.json"
   },
   "main": "./dist/index.cjs",
@@ -73,18 +114,22 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "contract": "internal-package-contract",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "setup": "npm install && npm run build && npm run schema",
     "size": "node scripts/check-size.mjs",
+    "verify:no-ambient-fs": "node scripts/verify-no-ambient-fs.mjs",
     "schema": "node scripts/generate-json-schema.mjs",
     "examples:update-golden": "node scripts/update-example-goldens.mjs",
     "benchmark": "node scripts/run-benchmarks.mjs",
     "docs:api": "typedoc",
+    "docs:api:report": "typedoc --options typedoc.markdown.json",
+    "docs:api:report:check": "node scripts/check-api-report.mjs",
     "stage": "npm run typecheck && npm run build && npm run test && npm run size",
-    "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size",
+    "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run docs:api:report:check",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run docs:api:report:check",
     "prepublishOnly": "npm run verify",
     "version": "changeset version",
     "release": "changeset publish"
@@ -113,18 +158,26 @@
     "eslint": "^10.8.0",
     "eslint-config-prettier": "10.1.8",
     "globals": "^17.9.0",
+    "internal-package-contract": "git+https://github.com/MaverickCER/internal-package-contract.git#main",
     "prettier": "3.9.6",
     "ts-json-schema-generator": "^2.9.0",
     "tsup": "^8.0.0",
     "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "4.13.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.65.0",
     "vitest": "^3.2.7"
   },
   "overrides": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "fast-uri": "^3.1.6",
+    "nanoid": "^3.3.18"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true
   }
 }

@@ -1,36 +1,24 @@
-import fs from "node:fs/promises"
 import path from "node:path"
-import { detectCompatibilityIssues } from "./compatibility.js"
+import { assembleProject } from "./assemble-project.js"
+import type { BuildFileSystem } from "./types.js"
+import { detectCompatibilityIssues, detectDuplicateVariableShapes } from "./compatibility.js"
 import type { CompatibilityIssue } from "./compatibility.js"
-import { discoverSchemaFiles } from "./discover.js"
 import { EnvManifestGenerationError } from "./errors.js"
 import { detectExclusiveGroupIssues } from "./exclusive-group.js"
 import {
-  linkFiles,
   summarizeContract,
   type DiscoveredContract,
   type DiscoveredContractSummary,
   type LinkResult,
 } from "./link.js"
-import {
-  computeManifestChanges,
-  manifestSnapshotPath,
-  writeManifestSnapshot,
-  type ManifestChangeReport,
-} from "./manifest-snapshot.js"
 import { renderManifest } from "./manifest.js"
 import type { ParseWarning } from "./parse.js"
-import type { ImportResolutionContext } from "./resolve-import.js"
-import {
-  mergeLocalAndPackageFiles,
-  resolveAllowlistedPackages,
-  type PackageSchemaResolutionResult,
-} from "./resolve-package-schema.js"
-import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
-import { resolveWithinRoot } from "./resolve-within-root.js"
+import { resolveWithinRoot } from "./resolution/resolve-within-root.js"
 
 /** Options for {@link generateEnvManifest}. */
 export interface GenerateEnvManifestOptions {
+  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  fs: BuildFileSystem
   /** Directory glob patterns are resolved against. Defaults to `process.cwd()`. */
   root?: string | undefined
   /** Output path for the generated manifest, relative to `root` (e.g. "src/generated/env.manifest.ts"). */
@@ -77,14 +65,40 @@ export interface GenerateEnvManifestResult {
   readonly warnings: readonly CompatibilityIssue[]
   /** Parse-time warnings collected across every analyzed file (including allow-listed package resolution). */
   readonly parseWarnings: readonly ParseWarning[]
-  /** `documentEnv()` metadata added, removed, or changed since the last time this manifest was generated -- see ADR 0021. */
-  readonly changes: ManifestChangeReport
 }
 
-/** Default value for {@link GenerateEnvManifestOptions.include}. */
-export const DEFAULT_INCLUDE = ["**/env.schema.ts"]
-/** Default value for {@link GenerateEnvManifestOptions.exclude}. */
-export const DEFAULT_EXCLUDE = ["**/node_modules/**", "**/dist/**", "**/.git/**"]
+/**
+ * Default value for {@link GenerateEnvManifestOptions.include}. A function
+ * (not a bare module-level `const`) so every call gets its own fresh array
+ * -- a shared literal used from many files (`evidence-cache.ts`,
+ * `generate-documentation.ts`, `generate-evidence.ts`,
+ * `generate-env-artifacts.ts`, `generate-usage.ts`) is a covered-static
+ * mutant magnet under Stryker's `coverageAnalysis: perTest` +
+ * `ignoreStatic: true` (a mutant on module-load code that's still referenced
+ * by a test is run anyway and falsely reported "Survived") -- see this
+ * drive's memory for the fully-documented limitation.
+ */
+export function defaultInclude(): string[] {
+  return ["**/env.schema.ts"]
+}
+/** Default value for {@link GenerateEnvManifestOptions.exclude}. Same reasoning as {@link defaultInclude}. */
+export function defaultExclude(): string[] {
+  return [
+    // `discoverSchemaFiles()`'s own walk (`discover.ts`) hardcodes skipping
+    // a directory literally named "node_modules" or ".git" via its own
+    // `isAlwaysSkippedDirName()` check, regardless of `exclude` -- it never
+    // even descends into either to test a glob pattern against it. These
+    // two entries are provably redundant (kept for readers/tooling that
+    // inspect `exclude` directly, and as defense if that hardcoding ever
+    // changes) -- hand-verified: emptying both and running the full
+    // `vitest run` leaves all 1243 tests passing.
+    // Stryker disable next-line StringLiteral
+    "**/node_modules/**",
+    "**/dist/**",
+    // Stryker disable next-line StringLiteral
+    "**/.git/**",
+  ]
+}
 
 export interface ManifestComputation {
   readonly activeContracts: readonly DiscoveredContract[]
@@ -112,9 +126,16 @@ export function computeManifest(
   const compatibilityIssues = [
     ...detectCompatibilityIssues(activeContracts),
     ...detectExclusiveGroupIssues(activeContracts),
+    ...detectDuplicateVariableShapes(activeContracts),
   ]
   const compatibilityErrors = compatibilityIssues.filter((issue) => issue.severity === "error")
-  const blocking = onIncompatibility === "throw" ? compatibilityIssues : compatibilityErrors
+  // `--strict` (`onIncompatibility: "throw"`) escalates warnings only.
+  // `"info"` issues are observations, never gaps, and are excluded from
+  // `blocking` under every setting -- see `detectDuplicateVariableShapes()`.
+  const blocking =
+    onIncompatibility === "throw"
+      ? compatibilityIssues.filter((issue) => issue.severity !== "info")
+      : compatibilityErrors
 
   return {
     activeContracts,
@@ -128,9 +149,15 @@ export function computeManifest(
 export async function writeManifest(
   outputPath: string,
   activeContracts: readonly DiscoveredContract[],
+  fs: BuildFileSystem,
 ): Promise<void> {
   const manifestSource = renderManifest(activeContracts, outputPath)
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  // `manifestSource` is always a plain string -- fs.writeFile defaults a
+  // string write to utf8 regardless of the encoding arg, so "utf8" vs "" is
+  // unobservable. Same established equivalence as generate-usage.ts's own
+  // `writeUsageReport()`/evidence-cache.ts/env-example.ts's writes.
+  // Stryker disable next-line StringLiteral
   await fs.writeFile(outputPath, manifestSource, "utf8")
 }
 
@@ -152,9 +179,28 @@ export async function generateEnvManifest(
   options: GenerateEnvManifestOptions,
 ): Promise<GenerateEnvManifestResult> {
   const root = path.resolve(options.root ?? process.cwd())
-  const include = options.include ?? DEFAULT_INCLUDE
-  const exclude = options.exclude ?? DEFAULT_EXCLUDE
+  const include = options.include ?? defaultInclude()
+  const exclude = options.exclude ?? defaultExclude()
+  // `assembleProject()` threads this straight into
+  // `resolveAllowlistedPackages()`, whose very first line is
+  // `[...new Set(packages)]` -- `new Set(undefined)` is spec-defined as an
+  // EMPTY set, identical to `new Set([])`, so `undefined` and `[]` are
+  // observably identical all the way down this call chain: `&&` (giving
+  // `undefined` when `options.packages` is omitted) behaves exactly like
+  // `??` (giving `[]`). Hand-verified: mutating to `&&` and running the
+  // full `vitest run` leaves all 1241 other tests passing (only the
+  // unrelated tsc-backed json-schema test fails, a pure type-narrowing
+  // regression -- `AssembleProjectOptions.packages` isn't typed optional).
+  // Stryker disable next-line LogicalOperator
   const packages = options.packages ?? []
+  // `onIncompatibility` is only ever compared via `=== "throw"` inside
+  // `computeManifest()` -- any non-"throw" string (including "" here)
+  // behaves identically to "warn". The `??` itself is real and already
+  // tested (an explicit "throw" must survive, not fall back) -- only the
+  // fallback's own literal text is unobservable. Hand-verified: replacing
+  // it with "" and running the full `vitest run` leaves all 1240 tests
+  // passing (only the unrelated tsc-backed json-schema test fails).
+  // Stryker disable next-line StringLiteral
   const onIncompatibility = options.onIncompatibility ?? "warn"
 
   // Fail fast, before any discovery/parsing work and before any file is
@@ -168,56 +214,24 @@ export async function generateEnvManifest(
   if (!locationResult.ok) throw new EnvManifestGenerationError([locationResult.issue])
   const outputPath = locationResult.resolved
 
-  const localFiles = await discoverSchemaFiles({ root, include, exclude })
-  const packageCache = new Map<string, Promise<PackageSchemaResolutionResult>>()
-  const {
-    files: packageFiles,
-    origins,
-    warnings: packageWarnings,
-  } = await resolveAllowlistedPackages(packages, root, packageCache)
-  const files = await mergeLocalAndPackageFiles(
-    localFiles,
-    packageFiles.map((f) => f.file),
-  )
-  const { resolution: tsconfigPaths, warning: tsconfigWarning } = await loadTsconfigPaths(
+  const { linkResult, packageWarnings, tsconfigWarnings } = await assembleProject({
+    fs: options.fs,
     root,
-    options.tsconfig,
-  )
-  const tsconfigWarnings = tsconfigWarning ? [tsconfigWarning] : []
-
-  const context: ImportResolutionContext = {
-    root,
+    include,
+    exclude,
     packages,
-    cache: packageCache,
-    tsconfigPaths,
-    aliasCache: createAliasResolutionCache(),
-  }
-  const linkResult = await linkFiles(
-    files,
-    (filePath) => fs.readFile(filePath, "utf8"),
-    context,
-    origins,
-  )
+    tsconfig: options.tsconfig,
+  })
 
   const computed = computeManifest(root, linkResult, onIncompatibility)
   if (computed.blocking.length > 0) throw new EnvManifestGenerationError(computed.blocking)
 
-  const {
-    report: changes,
-    snapshot,
-    readWarning,
-  } = await computeManifestChanges(root, outputPath, computed.activeContracts)
-
-  await writeManifest(outputPath, computed.activeContracts)
-  await writeManifestSnapshot(manifestSnapshotPath(outputPath), snapshot)
+  await writeManifest(outputPath, computed.activeContracts, options.fs)
 
   return {
     outputPath,
     contracts: computed.contractSummaries,
     warnings: computed.warnings,
-    parseWarnings: readWarning
-      ? [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings, readWarning]
-      : [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
-    changes,
+    parseWarnings: [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
   }
 }

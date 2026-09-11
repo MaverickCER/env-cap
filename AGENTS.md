@@ -2,7 +2,7 @@
 
 Guidance for AI coding agents (Codex, Cursor, Copilot, Continue, and others reading this
 convention) working in `env-cap`'s own source, or in an application that consumes
-`@maverickcer/env-cap`. Claude Code reads the fuller, more detailed version of this same
+`env-cap`. Claude Code reads the fuller, more detailed version of this same
 guidance from [`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md) — read that file
 instead if your tooling supports it; this file is a self-contained distillation for
 agents that don't.
@@ -16,7 +16,7 @@ and aggregated at build time. There is no global `env` object.
 ## Non-negotiable invariants
 
 1. **Static analysis only — schemas are never executed.** The build package
-   (`@maverickcer/env-cap/build`) parses `env.schema.ts` files as TypeScript AST; it never
+   (`env-cap/build`) parses `env.schema.ts` files as TypeScript AST; it never
    `import()`s, `require()`s, or `eval()`s them. Only literal expressions resolve — a
    spread, a factory call, or a re-export resolves as "unknown" and surfaces as a warning,
    never a guess. Keep every schema object passed to `createEnv()`/`documentEnv()` a
@@ -32,9 +32,10 @@ and aggregated at build time. There is no global `env` object.
    Never put `description`/`owner`/`expiresAt` fields inside `createEnv()`; never expect
    `documentEnv()` to affect runtime behavior.
 4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`,
-   `./helpers`, `./eslint-plugin`, `./schema`, and `./package.json`. Import only from
-   these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported build
-   internal (e.g. the dependency-graph engine).
+   `./helpers`, `./evidence`, `./eslint-plugin`, `./schema`, `./schema/*` (one JSON Schema
+   per canonical fact model, e.g. `./schema/contract-model`), and `./package.json`. Import
+   only from these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported
+   build internal (e.g. the dependency-graph engine).
 5. **Runtime and build are strictly separated.** `src/build` uses `node:fs`/`node:path`/
    `typescript` and must never be imported from runtime/browser code. `src/runtime` has
    zero filesystem access and zero dependencies, and is held to a 3KB gzip budget
@@ -61,7 +62,7 @@ activeContexts })` skips any variable whose `context` isn't in that list — no 
 
 - Deep/internal imports (`dist/*.cjs`, `src/build/dependency-graph.ts`, anything not
   re-exported by the public entry points).
-- Importing `@maverickcer/env-cap/build` into runtime or browser code — it is Node-only,
+- Importing `env-cap/build` into runtime or browser code — it is Node-only,
   dev/CI-only.
 - Calling any `generate*()` function at application startup or on a request path —
   build-time only, wired into an npm script or CI step.
@@ -78,7 +79,7 @@ activeContexts })` skips any variable whose `context` isn't in that list — no 
 - Manually constructing a contract collection when a generated manifest is available —
   regenerate it instead: run the project's `generate:env` script if one exists, or call
   `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` from
-  `@maverickcer/env-cap/build`, or run `npx env-cap --location
+  `env-cap/build`, or run `npx env-cap --location
 src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection it
   produces.
 - Validation managers, service locators, providers, registries, or other initialization
@@ -94,7 +95,7 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
 - To generate a manifest: check for an existing `generate:env` (or similarly named) npm
   script first and run that. If none exists, either call
   `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` (import from
-  `@maverickcer/env-cap/build`) from a build script, or run the CLI directly —
+  `env-cap/build`) from a build script, or run the CLI directly —
   `npx env-cap --location src/generated/env.manifest.ts` (add `--docs`, `--env-example`,
   `--strict`, etc. as needed; see the Public API map and `skills/env-cap/SKILL.md` for the
   full option set). Commit the generated file only if the project already commits
@@ -106,12 +107,13 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
 
 ## Public API map
 
-| Export                               | Source               | Environment           | Purpose                                                                                                                                                                                |
-| ------------------------------------ | -------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                                               |
-| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation (see `VERSIONING.md` — only the four `generate*()` orchestrators are Stable; the lower-level primitives it also exports are Experimental) |
-| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                                                                                                                            |
-| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                                                                                                                         |
+| Export                  | Source               | Environment           | Purpose                                                                                                                                                                                |
+| ----------------------- | -------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                                               |
+| `env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation (see `VERSIONING.md` — only the four `generate*()` orchestrators are Stable; the lower-level primitives it also exports are Experimental) |
+| `env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                                                                                                                            |
+| `env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | `defineEvidenceProjection` — pure transforms over the Evidence Model (Experimental, see `VERSIONING.md`)                                                                               |
+| `env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                                                                                                                         |
 
 ## Before finishing a change
 

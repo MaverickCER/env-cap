@@ -42,4 +42,34 @@ describe("globToRegExp", () => {
     expect(re.test("envXschemaXts")).toBe(false)
     expect(re.test("env.schema.ts")).toBe(true)
   })
+
+  // Exact `.source` assertions isolating each clause of the `**` detection
+  // (`char === "*" && pattern[i + 1] === "*"`) and the `(?:.*/)?` vs plain
+  // `.*` branch's own guard (`precededBySlashOrStart && followedBySlash`) --
+  // a bare `.test()` on a hand-picked string can't distinguish every
+  // sub-clause, since several inputs happen to produce the same match result
+  // through a differently-shaped (but still-matching) regex.
+  it.each<[string, string]>([
+    // Leading "**/ " -- i === 0 (the OR's first operand) AND followed by slash.
+    ["**/x", "^(?:.*\\/)?x$"],
+    // Mid-path "**/ " -- NOT i === 0, but preceded by "/" (the OR's second
+    // operand) AND followed by slash.
+    ["a/**/b", "^a\\/(?:.*\\/)?b$"],
+    // Preceded by "/" but NOT followed by slash (trailing "**") -- isolates
+    // `followedBySlash` on its own: without it, this would wrongly also
+    // produce the `(?:.*/)?` form.
+    ["a/**", "^a\\/.*$"],
+    // Followed by slash but NOT preceded by "/" or start -- isolates
+    // `precededBySlashOrStart`, and proves the guard is `&&`, not `||`
+    // (with `||` this would wrongly also produce the `(?:.*/)?` form).
+    ["x**/y", "^x.*\\/y$"],
+    // Neither preceded nor followed by a slash -- the baseline "no special
+    // form at all" case, and the one that most sharply exposes the `i + 1`
+    // "is the NEXT char also a `*`" detection itself being corrupted (a
+    // corrupted detection drops the trailing character entirely instead of
+    // emitting `.*` in the middle).
+    ["a**b", "^a.*b$"],
+  ])("globToRegExp(%j) produces exactly %s", (pattern, expectedSource) => {
+    expect(globToRegExp(pattern).source).toBe(expectedSource)
+  })
 })

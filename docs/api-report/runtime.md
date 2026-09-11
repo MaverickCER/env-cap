@@ -1,0 +1,1217 @@
+# runtime
+
+## Classes
+
+### EnvNotReadyError
+
+Thrown when a contract's value is accessed via property access before
+[validateEnv](#validateenv) has completed successfully for it.
+
+#### Remarks
+
+`code` is a stable, Stable-tier discriminant for programmatic handling --
+prefer it over `.name`/`instanceof` when a message-independent switch is needed.
+
+#### Extends
+
+- `Error`
+
+#### Constructors
+
+##### Constructor
+
+```ts
+new EnvNotReadyError(contractName, key): EnvNotReadyError;
+```
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `contractName` | `string` |
+| `key` | `string` |
+
+###### Returns
+
+[`EnvNotReadyError`](#envnotreadyerror)
+
+###### Overrides
+
+```ts
+Error.constructor
+```
+
+#### Properties
+
+##### code
+
+```ts
+readonly code: "ENV_NOT_READY" = "ENV_NOT_READY";
+```
+
+Stable discriminant for programmatic handling; always `"ENV_NOT_READY"`.
+
+##### message
+
+```ts
+message: string;
+```
+
+###### Inherited from
+
+```ts
+Error.message
+```
+
+##### name
+
+```ts
+name: string;
+```
+
+###### Inherited from
+
+```ts
+Error.name
+```
+
+##### stack?
+
+```ts
+optional stack?: string;
+```
+
+###### Inherited from
+
+```ts
+Error.stack
+```
+
+##### prepareStackTrace?
+
+```ts
+static optional prepareStackTrace?: (err, stackTraces) => any;
+```
+
+Optional override for formatting stack traces
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `err` | `Error` |
+| `stackTraces` | `CallSite`[] |
+
+###### Returns
+
+`any`
+
+###### See
+
+https://v8.dev/docs/stack-trace-api#customizing-stack-traces
+
+###### Inherited from
+
+```ts
+Error.prepareStackTrace
+```
+
+##### stackTraceLimit
+
+```ts
+static stackTraceLimit: number;
+```
+
+###### Inherited from
+
+```ts
+Error.stackTraceLimit
+```
+
+#### Methods
+
+##### captureStackTrace()
+
+```ts
+static captureStackTrace(targetObject, constructorOpt?): void;
+```
+
+Create .stack property on a target object
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `targetObject` | `object` |
+| `constructorOpt?` | `Function` |
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+```ts
+Error.captureStackTrace
+```
+
+***
+
+### EnvValidationError
+
+Thrown by [validateEnv](#validateenv) when one or more variables fail processing or
+validation. Aggregates every failure across every contract in the batch --
+the caller sees the whole picture in one error, not one-at-a-time.
+
+#### Remarks
+
+`code` is a stable, Stable-tier discriminant for programmatic handling --
+prefer it over `.name`/`instanceof` when a message-independent switch is needed.
+
+#### Extends
+
+- `Error`
+
+#### Constructors
+
+##### Constructor
+
+```ts
+new EnvValidationError(failures): EnvValidationError;
+```
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `failures` | readonly [`VariableFailure`](#variablefailure)[] |
+
+###### Returns
+
+[`EnvValidationError`](#envvalidationerror)
+
+###### Overrides
+
+```ts
+Error.constructor
+```
+
+#### Properties
+
+##### code
+
+```ts
+readonly code: "ENV_VALIDATION_FAILED" = "ENV_VALIDATION_FAILED";
+```
+
+Stable discriminant for programmatic handling; always `"ENV_VALIDATION_FAILED"`.
+
+##### failures
+
+```ts
+readonly failures: readonly VariableFailure[];
+```
+
+Every variable failure across every contract in the batch.
+
+##### message
+
+```ts
+message: string;
+```
+
+###### Inherited from
+
+```ts
+Error.message
+```
+
+##### name
+
+```ts
+name: string;
+```
+
+###### Inherited from
+
+```ts
+Error.name
+```
+
+##### stack?
+
+```ts
+optional stack?: string;
+```
+
+###### Inherited from
+
+```ts
+Error.stack
+```
+
+##### prepareStackTrace?
+
+```ts
+static optional prepareStackTrace?: (err, stackTraces) => any;
+```
+
+Optional override for formatting stack traces
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `err` | `Error` |
+| `stackTraces` | `CallSite`[] |
+
+###### Returns
+
+`any`
+
+###### See
+
+https://v8.dev/docs/stack-trace-api#customizing-stack-traces
+
+###### Inherited from
+
+```ts
+Error.prepareStackTrace
+```
+
+##### stackTraceLimit
+
+```ts
+static stackTraceLimit: number;
+```
+
+###### Inherited from
+
+```ts
+Error.stackTraceLimit
+```
+
+#### Methods
+
+##### captureStackTrace()
+
+```ts
+static captureStackTrace(targetObject, constructorOpt?): void;
+```
+
+Create .stack property on a target object
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `targetObject` | `object` |
+| `constructorOpt?` | `Function` |
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+```ts
+Error.captureStackTrace
+```
+
+## Interfaces
+
+### ContractDocs
+
+Contract-level documentation, plus everything [documentEnv](#documentenv)'s options used to carry that
+only the generator ever read.
+
+#### Remarks
+
+Generic over `S`, the exact schema type [documentEnv](#documentenv) infers from its `schema` argument --
+this is what makes `variables` below a closed, checked map (a typo'd or renamed key is a
+compile error, not a silent no-op) rather than an open `Record<string, VariableDocs>` any string
+would satisfy. `S` defaults to the widest possible schema so this type is still nameable on its
+own (e.g. in a helper function's own parameter type) without narrowing to one specific contract.
+
+#### Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `S` *extends* [`EnvSchema`](#envschema) | [`EnvSchema`](#envschema) |
+
+#### Properties
+
+##### active?
+
+```ts
+optional active?: boolean;
+```
+
+When `false`, this contract is excluded from the generated manifest, docs' required section, and exclusiveGroup checks -- it still appears, marked disabled, in the feature catalog. Defaults to `true`.
+
+##### auditRequired?
+
+```ts
+optional auditRequired?: boolean;
+```
+
+Default audit-required assertion for this contract's variables -- see [VariableDocs.auditRequired](#auditrequired-1).
+
+##### category?
+
+```ts
+optional category?: string;
+```
+
+Groups this contract under a heading in the generated docs' feature catalog.
+
+##### dataResidency?
+
+```ts
+optional dataResidency?: string | string[];
+```
+
+Default data residency for this contract's variables -- see [VariableDocs.dataResidency](#dataresidency-1).
+
+##### deprecated?
+
+```ts
+optional deprecated?: boolean;
+```
+
+Marks this whole contract/feature as being phased out. Independent of `active` (on/off, not a phase-out signal).
+
+##### deprecatedReason?
+
+```ts
+optional deprecatedReason?: string;
+```
+
+Why this contract is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`.
+
+##### exclusiveGroup?
+
+```ts
+optional exclusiveGroup?: string;
+```
+
+The generator throws if two *active* contracts declare the same `exclusiveGroup` -- use it to mark interchangeable features (e.g. two database backends) as mutually exclusive.
+
+##### expiresAt?
+
+```ts
+optional expiresAt?: string;
+```
+
+Whole-contract/feature sunset date, ISO date string.
+
+##### legalBasis?
+
+```ts
+optional legalBasis?: string;
+```
+
+Default legal basis for this contract's variables -- see [VariableDocs.legalBasis](#legalbasis-1).
+
+##### metadata?
+
+```ts
+optional metadata?: Record<string, unknown>;
+```
+
+Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this feature -- see [VariableDocs.metadata](#metadata-1).
+
+##### name?
+
+```ts
+optional name?: string;
+```
+
+Overrides the auto-generated label used in generated docs. Purely cosmetic. Wins over `createEnv()`'s own `name` option, which in turn wins over the exported binding name.
+
+##### owner?
+
+```ts
+optional owner?: string;
+```
+
+Default owner for every variable in this contract that doesn't set its own `owner`.
+
+##### purpose?
+
+```ts
+optional purpose?: string;
+```
+
+Default reason this contract's variables' values are collected/used -- see [VariableDocs.purpose](#purpose-1).
+
+##### retention?
+
+```ts
+optional retention?: string;
+```
+
+Default retention policy for this contract's variables -- see [VariableDocs.retention](#retention-1).
+
+##### sensitivity?
+
+```ts
+optional sensitivity?: string;
+```
+
+Default sensitivity for every variable in this contract that doesn't set its own `sensitivity` -- see [VariableDocs.sensitivity](#sensitivity-1) for why this is an open `string`.
+
+##### variables?
+
+```ts
+optional variables?: { readonly [K in string | number | symbol]?: VariableDocs };
+```
+
+Per-variable documentation, keyed by variable name -- keys are checked against `S`'s own keys
+at compile time, so documenting a variable that was renamed or removed from `schema` (or a
+plain typo) is a type error here, not a silently-ignored entry the generator would otherwise
+have to report as "stale" after the fact. A schema key absent from `variables` entirely is
+still valid (not every variable needs documentation) and is reported as undocumented by the
+generator, exactly as before.
+
+***
+
+### CreateEnvOptions
+
+env-cap runtime entry point.
+
+Zero dependencies, isomorphic (no `fs`, no `process` other than the values
+the developer passes in). Handles processing, validation, caching, and
+typed access only -- discovery and manifest generation live in
+`env-cap/build` and are never imported from here.
+
+`documentEnv` is exported from here, not `env-cap/build`, even though
+it exists purely for documentation: it's meant to be called inline in the
+same schema file as `createEnv`, which is ordinary runtime code that may
+end up in any bundle (including a browser one). It must be exactly as
+cheap and safe to import as `createEnv` -- see `document.ts`.
+
+#### Properties
+
+##### name?
+
+```ts
+optional name?: string;
+```
+
+A short, stable label for this contract (e.g. "payments", "database").
+Used in error messages. Defaults to an auto-generated anonymous label if
+omitted -- providing one is strongly recommended for readable validation
+errors.
+
+##### source?
+
+```ts
+optional source?: string;
+```
+
+Pass `import.meta.url` here so validation errors point at the file that
+declared the failing variable (e.g. "features/payments/env.schema.ts")
+instead of just the short `name` label. There is no portable way for
+`createEnv` to discover its caller's module URL on its own -- this is
+always correct and never goes stale, since it's supplied by the JS
+engine rather than hand-typed.
+
+***
+
+### EnvDefinition
+
+Configuration for one schema entry: how to default, process, and validate a single raw environment value.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+#### Properties
+
+##### context?
+
+```ts
+optional context?: string;
+```
+
+The validation context this variable belongs to (e.g. `"server"`,
+`"production"`, `"worker"`) -- entirely application-defined; env-cap
+never interprets, detects, or infers this string. Omitted (the
+default) means the variable participates in every [validateEnv](#validateenv)
+run regardless of `activeContexts`. A variable belongs to at most one
+validation context -- see ADR 0022 for why this is a single `string`
+and not `string[]`; do not widen it to an array to let one variable
+join multiple contexts, that reintroduces the AND/OR ambiguity this
+design deliberately avoids.
+
+###### Remarks
+
+Validation contexts are a participation filter only -- not
+authentication, authorization, or a bundling/security boundary. See
+ADR 0022's Formal Invariants.
+
+##### default?
+
+```ts
+optional default?: unknown;
+```
+
+Literal fallback or lazy thunk used when the raw value is `undefined`.
+
+##### processor?
+
+```ts
+optional processor?: Processor<T>;
+```
+
+Converts the raw (or defaulted) value to `T`; passed through unprocessed when omitted.
+
+##### validator?
+
+```ts
+optional validator?: Validator<T>;
+```
+
+Rejects an invalid processed value; return `true` to accept it.
+
+***
+
+### validateEnvOptions
+
+env-cap runtime entry point.
+
+Zero dependencies, isomorphic (no `fs`, no `process` other than the values
+the developer passes in). Handles processing, validation, caching, and
+typed access only -- discovery and manifest generation live in
+`env-cap/build` and are never imported from here.
+
+`documentEnv` is exported from here, not `env-cap/build`, even though
+it exists purely for documentation: it's meant to be called inline in the
+same schema file as `createEnv`, which is ordinary runtime code that may
+end up in any bundle (including a browser one). It must be exactly as
+cheap and safe to import as `createEnv` -- see `document.ts`.
+
+#### Properties
+
+##### activeContexts?
+
+```ts
+optional activeContexts?: readonly string[];
+```
+
+The validation contexts active for this run (e.g. `["server",
+"production"]`) -- entirely application-defined; env-cap never
+detects or infers these, the caller always computes and passes them
+explicitly. A variable whose `context` isn't in this list is skipped
+entirely (no default/processor/validator runs for it, and it stays in
+its not-ready state, exactly as if this run had never happened for
+it) -- see ADR 0022. A variable with no `context` always participates,
+regardless of what's passed here. Omitted (the default) behaves as an
+empty list: only variables with no `context` participate.
+
+###### Remarks
+
+Not part of the validation cache's identity -- [validateEnv](#validateenv)
+remains one-shot per process exactly as before this option existed. A
+second call does not re-evaluate `activeContexts`; it returns the
+first call's result outright. Different active contexts belong to
+different processes (e.g. a server process and a browser bundle),
+never to two calls within the same one.
+
+##### manifest
+
+```ts
+manifest: readonly EnvContract<any>[];
+```
+
+Every contract to validate -- typically the `contracts` array imported
+from a generated manifest (see [build.generateEnvManifest](build.md#generateenvmanifest)). Pass all of them
+in one call: [validateEnv](#validateenv) only ever initializes once per process, so
+a second call returns the first call's cached result without
+re-running anything, even if it passes a different manifest.
+
+##### values
+
+```ts
+values: RawEnv;
+```
+
+The raw source of environment values, e.g. `process.env` or a resolved secrets bag.
+
+***
+
+### validateEnvResult
+
+Aggregate counts from a completed [validateEnv](#validateenv) run.
+
+#### Properties
+
+##### contractCount
+
+```ts
+readonly contractCount: number;
+```
+
+Number of contracts in the manifest that were validated.
+
+##### variableCount
+
+```ts
+readonly variableCount: number;
+```
+
+Total number of variables validated across all contracts.
+
+***
+
+### VariableDocs
+
+Per-variable documentation. Every field is optional and unconstrained on
+purpose -- there is no required shape, so documenting a variable never
+fights the type checker, and you can add a field the generator doesn't
+know about yet without it being rejected.
+
+#### Properties
+
+##### auditRequired?
+
+```ts
+optional auditRequired?: boolean;
+```
+
+Documentation-level assertion that this variable's handling must be auditable. Overrides the contract's own `auditRequired` for this key.
+
+##### dataResidency?
+
+```ts
+optional dataResidency?: string | string[];
+```
+
+Where this variable's value is/must be stored (a region, or a permitted set of regions). Overrides the contract's own `dataResidency` for this key.
+
+##### deprecated?
+
+```ts
+optional deprecated?: boolean;
+```
+
+Marks this variable as being phased out. Independent of `expiresAt` (a rotation/sunset date) and of the contract-level `active` switch (on/off, not a phase-out signal).
+
+##### deprecatedReason?
+
+```ts
+optional deprecatedReason?: string;
+```
+
+Why this variable is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`.
+
+##### description?
+
+```ts
+optional description?: string;
+```
+
+Human-readable explanation of what this variable is and what it controls.
+
+##### evidence?
+
+```ts
+optional evidence?: VariableEvidenceDocs;
+```
+
+Developer-supplied evidence assertions for this variable -- verified over
+time, unlike every other field above, which is declared and never
+verified. Kept structurally separate for exactly that reason; see
+VariableEvidenceDocs.
+
+##### expiresAt?
+
+```ts
+optional expiresAt?: string;
+```
+
+ISO date string (e.g. "2026-06-01") -- when this variable's current value stops being valid (a key rotation deadline, a sunset date, etc.).
+
+##### legalBasis?
+
+```ts
+optional legalBasis?: string;
+```
+
+The legal basis this variable's collection/use relies on -- framework-agnostic (e.g. "user consent," "contractual necessity"), never a specific statute name. Overrides the contract's own `legalBasis` for this key.
+
+##### metadata?
+
+```ts
+optional metadata?: Record<string, unknown>;
+```
+
+Structured, unsupported-key documentation -- any primitive or object value, for anything that
+doesn't warrant its own named field. A previously-supported top-level key belongs in a named
+field above instead of here once one exists for it.
+
+##### owner?
+
+```ts
+optional owner?: string;
+```
+
+Who owns this variable (a team, a handle, whatever your org uses). Overrides the contract's own `owner` for this key.
+
+##### purpose?
+
+```ts
+optional purpose?: string;
+```
+
+Why this variable's value is collected/used -- a framework-agnostic fact (pairs with `legalBasis`; a specific citation like a GDPR article belongs in `metadata` instead). Overrides the contract's own `purpose` for this key.
+
+##### refreshInstructions?
+
+```ts
+optional refreshInstructions?: string;
+```
+
+How to get a new value before/when it expires (e.g. "Rotate in the Stripe dashboard, then redeploy.").
+
+##### removeBy?
+
+```ts
+optional removeBy?: string;
+```
+
+ISO date string -- by when a deprecated variable must be removed. Only meaningful alongside `deprecated: true`.
+
+##### renamedFrom?
+
+```ts
+optional renamedFrom?: string;
+```
+
+The previous environment variable name this one replaces, if this declaration is the result of a rename. Lets the Change Model correlate a remove+add pair into a single rename entry instead of two unrelated changes.
+
+##### required?
+
+```ts
+optional required?: boolean;
+```
+
+Documentation-level assertion that this variable must be set. Independent of how (or whether) a validator actually enforces it.
+
+##### retention?
+
+```ts
+optional retention?: string;
+```
+
+Descriptive retention policy (e.g. "delete after 90 days"). A policy statement, not a computed value -- unlike `expiresAt`, nothing parses or evaluates this. Overrides the contract's own `retention` for this key.
+
+##### sensitivity?
+
+```ts
+optional sensitivity?: string;
+```
+
+How sensitive this variable's value is. Overrides the contract's own `sensitivity` for this
+key.
+
+###### Remarks
+
+Deliberately an open `string`, not a closed union: an org's own sensitivity vocabulary is its
+own, and a level env-cap doesn't recognize is always honored, never dropped. The generator
+still reports a `NONSTANDARD_SENSITIVITY_LEVEL` finding (severity `info`, never blocking) for
+anything outside `secret`/`credential`/`pii`/`config`, so vocabulary drift stays visible
+without being enforced.
+
+##### setupInstructions?
+
+```ts
+optional setupInstructions?: string;
+```
+
+Explicit, actionable instructions for obtaining this variable's value the *first* time --
+where `refreshInstructions` is "how to rotate it once you already have one," this is "how to
+get one at all" (e.g. "Create a restricted API key in the Stripe dashboard under Developers ->
+API keys, scoped to read/write Charges."). A named field specifically so this can render as
+its own labeled line in generated docs, rather than requiring a `metadata.setup`-style
+convention with no dedicated rendering or type checking.
+
+***
+
+### VariableFailure
+
+One variable's processing or validation failure, as recorded by [validateEnv](#validateenv).
+
+#### Properties
+
+##### contractName
+
+```ts
+readonly contractName: string;
+```
+
+The declaring contract's `name` (see [CreateEnvOptions](#createenvoptions)).
+
+##### kind
+
+```ts
+readonly kind: "processor" | "validator";
+```
+
+Which stage produced the failure.
+
+##### message
+
+```ts
+readonly message: string;
+```
+
+The error message from the developer's own processor/validator, or the thrown error's message.
+
+##### source
+
+```ts
+readonly source: string | undefined;
+```
+
+`import.meta.url` (or similar) passed to `createEnv`'s `source` option, if any. Falls back to `contractName` when absent.
+
+##### variable
+
+```ts
+readonly variable: string;
+```
+
+The schema key that failed.
+
+## Type Aliases
+
+### DefaultValue
+
+```ts
+type DefaultValue = unknown | (() => unknown);
+```
+
+A default may be a literal value, or a zero-arg thunk evaluated lazily when the raw value is
+undefined.
+
+#### Remarks
+
+The union is redundant at the type level (`unknown` alone already accepts a
+function) -- it's kept because this type is public API, and collapsing it to bare `unknown`
+would erase the one thing a reader of the generated `.d.ts` needs to learn here.
+
+***
+
+### EnvContract
+
+```ts
+type EnvContract<S> = { readonly [K in keyof S]: InferEnvValue<S[K]> } & {
+  toString: string;
+};
+```
+
+The object returned by [createEnv](#createenv). Each key is a lazily-resolved getter backed by the
+runtime cache -- there is no global env object, only per-feature contracts like this one.
+
+#### Type Declaration
+
+##### toString()
+
+```ts
+toString(): string;
+```
+
+Returns the redacted `EnvContract("name")` representation, never resolved values -- see ADR 0006.
+
+###### Returns
+
+`string`
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `S` *extends* [`EnvSchema`](#envschema) |
+
+#### Remarks
+
+`toString()` is intersected in (rather than left to the ambient `Object.prototype`
+declaration) because `create.ts` genuinely overrides it to return a redacted
+`EnvContract("name")` representation, never resolved values -- see ADR 0006. Declaring
+it here means the type accurately describes what calling `String(contract)` returns.
+
+***
+
+### EnvSchema
+
+```ts
+type EnvSchema = Record<string, EnvDefinition<any>>;
+```
+
+A schema is a map of variable name -> definition.
+
+#### Remarks
+
+`EnvDefinition<any>` is used only as the generic *bound* here (never surfaced to consumers):
+TypeScript infers a precise, per-key literal type for `S` from the object passed to
+[createEnv](#createenv), so the resolved contract type (see [InferEnvValue](#inferenvvalue)) stays fully
+strict. This is the same variance workaround used by schema libraries like zod/trpc for
+heterogeneous generic maps.
+
+***
+
+### InferEnvValue
+
+```ts
+type InferEnvValue<D> = D extends {
+  processor: Processor<infer P>;
+} ? P : [UnwrapDefault<D>] extends [never] ? string : UnwrapDefault<D>;
+```
+
+Resolves the application-facing type for one schema entry: processor return type, else the
+default's type, else `string` (the shape raw process.env values naturally arrive in).
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `D` *extends* [`EnvDefinition`](#envdefinition)\<`any`\> |
+
+#### Remarks
+
+Same documented generic-bound variance workaround as [EnvSchema](#envschema) above --
+`any` here is never surfaced to a consumer's inferred type.
+
+***
+
+### Processor
+
+```ts
+type Processor<T> = (value) => T;
+```
+
+Processes a raw value into a typed, ready-to-use application value. Must not read any other key.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### Returns
+
+`T`
+
+***
+
+### RawEnv
+
+```ts
+type RawEnv = Readonly<Record<string, unknown>>;
+```
+
+The raw, unprocessed source of environment values (e.g. `process.env`, a resolved secrets bag).
+
+***
+
+### Validator
+
+```ts
+type Validator<T> = (value, rawEnv) => true | string;
+```
+
+Validates an already-processed value; return `true` when valid, or a human-readable error
+string when invalid.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `T` |
+| `rawEnv` | [`RawEnv`](#rawenv) |
+
+#### Returns
+
+`true` \| `string`
+
+#### Remarks
+
+Receives the full raw env for conditional validation (e.g. "required only if X").
+
+## Functions
+
+### createEnv()
+
+```ts
+function createEnv<S>(schema, options?): EnvContract<S>;
+```
+
+Declares a feature's environment contract. Colocate this call with the
+feature that consumes the variables (e.g. `features/payments/env.schema.ts`).
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `S` *extends* [`EnvSchema`](#envschema) |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `schema` | `S` |
+| `options` | [`CreateEnvOptions`](#createenvoptions) |
+
+#### Returns
+
+[`EnvContract`](#envcontract)\<`S`\>
+
+An [EnvContract](#envcontract) exposing one read-only getter per key -- there is no
+global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a
+key throws until [validateEnv](#validateenv) has run successfully for the runtime this contract
+was passed to.
+
+#### Remarks
+
+`createEnv` is runtime-only: `processor`/`validator`/`default` are the
+whole vocabulary, because they're the only fields [validateEnv](#validateenv) actually
+reads. Documentation -- description, ownership, lifecycle, category, and
+everything else that only exists to generate docs -- lives in a separate
+[documentEnv](#documentenv) call (see `document.ts`), which is entirely optional and
+never required for this to work.
+
+***
+
+### documentEnv()
+
+```ts
+function documentEnv<S>(schema, docs): void;
+```
+
+Documents a schema for the generator: explains values, assigns ownership,
+and describes lifecycle, feeding the generated docs artifact and
+`.env.example`. Pass it the *same* schema object given to [createEnv](#createenv), so
+the generator can statically link the two and verify every variable is
+documented -- and so TypeScript can check `docs.variables`' keys against
+`schema`'s own keys, the same object identity doing double duty for both
+the generator's static link and the type checker's.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `S` *extends* [`EnvSchema`](#envschema) |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `schema` | `S` |
+| `docs` | [`ContractDocs`](#contractdocs)\<`S`\> |
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+A no-op at runtime by design -- nothing passed here is retained anywhere,
+and this can never throw, no matter how malformed `schema`/`docs` are.
+Calling it is entirely optional: [createEnv](#createenv) works identically whether or
+not a matching `documentEnv` call exists. The real "is everything
+documented?" check, and every artifact this data drives (the docs
+artifact's ownership matrix, dependency graph, lifecycle report, and
+security review; `.env.example`'s comments), runs entirely inside
+[build.generateEnvManifest](build.md#generateenvmanifest)'s static analysis -- this function's only job at
+runtime is to exist as a safe, harmless marker the AST parser can find,
+and to give you type-checked argument shapes while writing it.
+
+`S` is inferred from `schema`, never written out by hand -- pass the
+schema object literal (or a `const`-inferred reference to it) directly for
+the strongest inference; an explicitly-widened `schema: EnvSchema`
+annotation loses the per-key literal type and falls back to accepting any
+string key in `docs.variables`, same as before this generic existed.
+
+***
+
+### isEnvContract()
+
+```ts
+function isEnvContract(value): value is object;
+```
+
+Type guard: `true` when `value` was created by `createEnv` (i.e. is a registered contract).
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### Returns
+
+`value is object`
+
+***
+
+### resetEnvCache()
+
+```ts
+function resetEnvCache(): void;
+```
+
+Clears cached validation state. Intended for tests and dev tooling (e.g.
+`beforeEach(() => resetEnvCache())` in a test suite that re-validates with
+different fixture values per test) -- production applications validate
+once at startup and should not normally call this.
+
+#### Returns
+
+`void`
+
+***
+
+### validateEnv()
+
+```ts
+function validateEnv(options): Promise<validateEnvResult>;
+```
+
+Validates every variable in every contract in `options.manifest` against
+`options.values`, then caches the results.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options` | [`validateEnvOptions`](#validateenvoptions) |
+
+#### Returns
+
+`Promise`\<[`validateEnvResult`](#validateenvresult)\>
+
+#### Remarks
+
+Idempotent: the first successful (or failed) call is authoritative for the life of the
+process -- later calls return (or re-throw) that same outcome without re-running any
+processor or validator. Concurrent in-flight calls share one underlying run.
+
+#### Throws
+
+If any variable fails processing or validation.

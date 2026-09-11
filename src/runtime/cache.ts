@@ -1,7 +1,7 @@
 import type { EnvValidationError } from "./errors.js"
 import type { validateEnvResult } from "./types.js"
 
-export type CacheStatus = "uninitialized" | "validating" | "ready" | "failed"
+type CacheStatus = "uninitialized" | "validating" | "ready" | "failed"
 
 export interface CacheState {
   status: CacheStatus

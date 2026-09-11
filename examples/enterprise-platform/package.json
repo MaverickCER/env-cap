@@ -1,0 +1,47 @@
+{
+  "name": "env-cap-example-enterprise-platform",
+  "private": true,
+  "type": "module",
+  "description": "A confidential legal-practice matter tracker (TanStack Start + MongoDB) -- the platform/compliance tier: reports, manifests, evidence generation, and a configuration-governance evidence report built on env-cap's exact source-position evidence. Illustrative only, not legal advice.",
+  "scripts": {
+    "dev": "npm run generate:env && vite dev",
+    "build": "npm run generate:env && vite build",
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "generate:env:cli": "env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json",
+    "check": "env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "lint": "eslint .",
+    "start": "npm run generate:env && tsx --env-file=.env src/main-headless.ts",
+    "test:evidence": "vitest run evidence/configuration-governance.test.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "env-cap": "file:../..",
+    "@sentry/node": "^8.0.0",
+    "@tanstack/react-router": "^1.120.0",
+    "@tanstack/react-start": "^1.120.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.0",
+    "mongoose": "^8.9.0",
+    "pino": "^9.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "eslint": "^9.0.0",
+    "mongodb-memory-server": "^10.1.0",
+    "s3rver": "^3.7.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0"
+  }
+}

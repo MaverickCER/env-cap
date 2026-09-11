@@ -1,126 +1,81 @@
-import { spawnSync } from "node:child_process";
-import fs from "node:fs/promises";
-import { existsSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { expect } from "vitest";
-import { normalizeDocsForComparison } from "../../src/build/docs.js";
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import { isInstalled, runScript, runStart } from "../support/example-runner.js"
 
 /**
  * Shared, non-test plumbing for every `test/examples/<name>.test.ts` file --
  * kept out of the `*.test.ts` naming so Vitest never tries to run it
- * directly. Each example is its own npm project with its own node_modules,
- * installed by CI's `examples` job (.github/workflows/ci.yml), not by the
- * root `npm ci`. Every helper below skips gracefully rather than failing
- * when that example's node_modules isn't present -- e.g. a local `npm test`
- * run that hasn't gone through the per-example install steps -- via
- * `isInstalled()`, which every per-example test file gates on.
- */
-
-export const examplesRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../examples");
-
-export function isInstalled(exampleName: string): boolean {
-  return existsSync(path.join(examplesRoot, exampleName, "node_modules"));
-}
-
-interface RunResult {
-  readonly stdout: string;
-  readonly stderr: string;
-  readonly status: number | null;
-}
-
-/**
- * `spawnSync`, not `execFileSync` -- deliberately. `execFileSync` only
- * returns captured output on a *throw* (a non-zero exit); on success it
- * returns stdout alone and silently discards stderr, which would drop any
- * `console.warn`-emitted content (every example script's compatibility-
- * warning output) from a successful run's return value. `spawnSync` always
- * returns both streams, regardless of exit code, so callers below can merge
- * them uniformly either way.
+ * directly. Thin, deliberately: the real subprocess plumbing lives in
+ * `test/support/example-runner.ts`, shared with the `test/integration/`
+ * fixture tier; this module only adds the name-based addressing and the one
+ * freshness assertion the three flagship examples need.
  *
- * `--silent` suppresses only npm's own `> script\n> command\n` preamble
- * (confirmed: the child process's real stdout/stderr, including on
- * failure, is untouched) -- required for `generate:env:json`'s output to
- * be parseable JSON at all, and incidentally keeps every other golden
- * comparison free of npm-version-dependent preamble formatting too.
+ * @remarks
+ * The three flagships have no `expected/` mirror of env-cap's generated
+ * output, and deliberately so. Their committed `docs/ENVIRONMENT.md`,
+ * `docs/OWNERSHIP.md`, `docs/env.evidence.json`, `.env.example`, and
+ * `src/generated/env.manifest.ts` *are* the golden: a reader opening the
+ * example sees the same bytes the test asserts on. A parallel `expected/`
+ * tree meant every artifact existed twice, and a reader had no way to tell
+ * which copy was authoritative -- so a stale mirror could sit next to
+ * correct output indefinitely without any test noticing (see ADR 0034's
+ * three-tier split, which this supersedes for the flagship tier only).
+ *
+ * Freshness is asserted by running each example's own `check` script --
+ * `env-cap --check`, the exact command its README tells a reader to run in
+ * CI. That both verifies the committed output and exercises the drift-guard
+ * itself, rather than re-implementing a byte comparison the tool already
+ * performs. The `test/integration/{positive,negative}` fixtures keep their
+ * `expected/` mirrors: those are behavioral fixtures asserting on
+ * *generator* output for cases with no human reader, where a visible
+ * side-by-side diff is the point.
+ *
+ * Each example is its own npm project with its own node_modules, installed
+ * by CI's `examples` job, not by the root `npm ci`. Every helper skips
+ * gracefully rather than failing when that example's node_modules isn't
+ * present -- via `isInstalled()`, which every test file gates on.
  */
-function runNpmScript(exampleName: string, script: string): RunResult {
-  const result = spawnSync("npm", ["run", "--silent", script], {
-    cwd: path.join(examplesRoot, exampleName),
-    encoding: "utf8",
-  });
-  return { stdout: result.stdout, stderr: result.stderr, status: result.status };
+
+const examplesRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../examples")
+
+/** Absolute path of one example project, by directory name. */
+export function exampleDir(name: string): string {
+  return path.join(examplesRoot, name)
 }
 
-/** Runs any npm script expected to succeed and returns its combined stdout+stderr. Fails the test itself if the script exits non-zero. */
-export function runScript(exampleName: string, script: string): string {
-  const { stdout, stderr, status } = runNpmScript(exampleName, script);
-  if (status !== 0) {
-    throw new Error(`Expected "npm run ${script}" in ${exampleName} to succeed, but it exited ${status}.\n${stdout}${stderr}`);
+/** Whether this example's own `node_modules` is present -- see the module docstring. */
+export function isExampleInstalled(name: string): boolean {
+  return isInstalled(exampleDir(name))
+}
+
+/** Runs one of the example's own npm scripts, by name, returning combined stdout+stderr. */
+export function runExampleScript(name: string, script: string): string {
+  return runScript(exampleDir(name), script)
+}
+
+/** Runs the example's own `npm start` and returns combined stdout+stderr. */
+export function runExampleStart(name: string): string {
+  return runStart(exampleDir(name))
+}
+
+/**
+ * Asserts the example's committed, generated output is exactly what a fresh
+ * run would produce, by running its own `check` script (`env-cap --check`).
+ * Throws with that script's full output when anything is stale or missing,
+ * so a failure names the specific artifact rather than just "exit 1".
+ *
+ * @remarks
+ * Deliberately does not regenerate first. Regenerating and then checking
+ * would assert only that the generator is deterministic -- which
+ * `test/build/` already covers -- while silently repairing exactly the drift
+ * this is meant to catch: committed output that no longer matches its own
+ * source. The committed bytes must already be correct.
+ */
+export function checkArtifactsFresh(name: string): void {
+  const output = runExampleScript(name, "check")
+  if (!output.includes("All generated artifacts are up to date.")) {
+    throw new Error(
+      `Expected "npm run check" in ${name} to report every artifact up to date.\n${output}`,
+    )
   }
-  return `${stdout}${stderr}`;
-}
-
-/** Runs `npm start` and returns its combined stdout+stderr. */
-export function runStart(exampleName: string): string {
-  return runScript(exampleName, "start");
-}
-
-/**
- * Runs an npm script expected to exit non-zero and returns its combined
- * stdout+stderr for assertion. Fails the test itself if the command
- * unexpectedly succeeds -- these examples exist specifically to prove a
- * failure is reported correctly, so a silent "it started passing" is a
- * regression too, not a pleasant surprise.
- */
-export function runExpectingFailure(exampleName: string, script: string): string {
-  const { stdout, stderr, status } = runNpmScript(exampleName, script);
-  if (status === 0) throw new Error(`Expected "npm run ${script}" in ${exampleName} to fail, but it exited 0.`);
-  return `${stdout}${stderr}`;
-}
-
-/**
- * Byte-for-byte (Markdown artifacts: normalized via `normalizeDocsForComparison`
- * first, so the one wall-clock-relative artifact doesn't false-positive)
- * comparison of each of `relativePaths` against its `expected/<same path>`
- * golden copy -- see `examples/README.md`'s "expected/" section. Asserts
- * per-file, not as one bulk diff, so a failure names exactly which artifact
- * drifted.
- */
-export async function compareGoldenArtifacts(exampleName: string, relativePaths: readonly string[]): Promise<void> {
-  const exampleDir = path.join(examplesRoot, exampleName);
-  for (const relativePath of relativePaths) {
-    const [actual, expected] = await Promise.all([
-      fs.readFile(path.join(exampleDir, relativePath), "utf8"),
-      fs.readFile(path.join(exampleDir, "expected", relativePath), "utf8"),
-    ]);
-    const normalize = relativePath.endsWith(".md") ? normalizeDocsForComparison : (s: string): string => s;
-    expect(normalize(actual), `${exampleName}/${relativePath} does not match expected/${relativePath}`).toBe(normalize(expected));
-  }
-}
-
-/**
- * Normalizes a captured CLI output string for golden comparison: substitutes
- * this example's own absolute root path (which differs between machines and
- * CI runners) with a fixed placeholder, collapses the resulting run of
- * spaces `--check`'s column padding (`String.padEnd()`, sized against the
- * *original*, now-replaced path length) leaves behind, and applies the same
- * date-relative-text normalization real file comparisons use. Only
- * `cli-usage` golden-compares raw CLI output (every other example only
- * substring-asserts on runtime output) -- see its test file.
- */
-export function normalizeExampleCliOutput(output: string, exampleName: string): string {
-  const exampleRoot = path.join(examplesRoot, exampleName);
-  const withPlaceholder = output.split(exampleRoot).join("<EXAMPLE_ROOT>");
-  const collapsedPadding = withPlaceholder
-    .split("\n")
-    .map((line) => line.replace(/[ \t]+$/, "").replace(/ {2,}/g, " "))
-    .join("\n");
-  return normalizeDocsForComparison(collapsedPadding);
-}
-
-/** Same substitution `normalizeExampleCliOutput` does, applied to a raw --json payload string before `JSON.parse` -- keeps absolute paths out of the parsed comparison too. */
-export function normalizeExampleJsonOutput(output: string, exampleName: string): unknown {
-  const exampleRoot = path.join(examplesRoot, exampleName);
-  return JSON.parse(output.split(exampleRoot).join("<EXAMPLE_ROOT>"));
 }

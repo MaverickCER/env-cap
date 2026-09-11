@@ -1,0 +1,80 @@
+[
+  {
+    "file": "src/env.ts",
+    "exportName": "env",
+    "contractName": "app",
+    "key": "DATABASE_URL",
+    "description": "Postgres connection string.",
+    "owner": "platform-team",
+    "hasDefault": false,
+    "hasProcessor": true,
+    "hasValidator": false,
+    "dependencyStatus": "unconsumed",
+    "dependencyPositions": []
+  },
+  {
+    "file": "src/env.ts",
+    "exportName": "env",
+    "contractName": "app",
+    "key": "LOG_LEVEL",
+    "description": "Minimum log level for this application's logger.",
+    "owner": "platform-team",
+    "hasDefault": true,
+    "hasProcessor": true,
+    "hasValidator": true,
+    "dependencyStatus": "unconsumed",
+    "dependencyPositions": []
+  },
+  {
+    "file": "src/env.ts",
+    "exportName": "env",
+    "contractName": "app",
+    "key": "PAYMENT_PROVIDER",
+    "description": "Which payment provider this deployment uses.",
+    "owner": "platform-team",
+    "hasDefault": true,
+    "hasProcessor": true,
+    "hasValidator": true,
+    "dependencyStatus": "used",
+    "dependencyPositions": [
+      {
+        "file": "src/server.ts",
+        "line": 8,
+        "column": 34
+      }
+    ]
+  },
+  {
+    "file": "src/env.ts",
+    "exportName": "env",
+    "contractName": "app",
+    "key": "PORT",
+    "description": "Database port.",
+    "owner": "platform-team",
+    "hasDefault": true,
+    "hasProcessor": true,
+    "hasValidator": true,
+    "dependencyStatus": "used",
+    "dependencyPositions": [
+      {
+        "file": "src/server.ts",
+        "line": 7,
+        "column": 47
+      }
+    ]
+  },
+  {
+    "file": "src/env.ts",
+    "exportName": "env",
+    "contractName": "app",
+    "key": "STRIPE_KEY",
+    "description": "Stripe secret key used to authenticate server-side API calls.",
+    "owner": "platform-team",
+    "hasDefault": false,
+    "hasProcessor": true,
+    "hasValidator": true,
+    "expiresAt": "2026-09-27",
+    "dependencyStatus": "unconsumed",
+    "dependencyPositions": []
+  }
+]

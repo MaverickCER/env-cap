@@ -1,0 +1,21 @@
+{
+  "name": "env-cap-example-tsconfig-aliases-consumer",
+  "private": true,
+  "type": "module",
+  "description": "Application that installs @examples/tsconfig-aliases from a real packed tarball (not a monorepo sibling) and discovers its environment contract across the package boundary via generateEnvArtifacts()'s packages option (ADR 0014) -- while its own local contract is organized through its own tsconfig.json path alias (ADR 0023), proving the two mechanisms compose.",
+  "scripts": {
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "start": "npm run generate:env && tsx --env-file=.env src/main.ts",
+    "verify:env": "env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --package @examples/tsconfig-aliases --check"
+  },
+  "dependencies": {
+    "env-cap": "file:../../../../..",
+    "@examples/tsconfig-aliases": "file:../tsconfig-aliases/tsconfig-aliases.tgz"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

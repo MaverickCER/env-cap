@@ -17,12 +17,15 @@ describe("published JSON Schema: freshness", () => {
   // ts-json-schema-generator runs a real TypeScript program/type-check over
   // src/cli/json.ts's whole type graph -- inherently slower than a typical
   // unit test, and slow enough under v8 coverage instrumentation's overhead
-  // to exceed vitest's default 5000ms test timeout.
+  // plus full-suite parallel resource contention to exceed even vitest.config.ts's
+  // raised global 20000ms testTimeout. Kept as its own explicit override,
+  // above the global default, for the same reason the heaviest
+  // enterprise-platform integration tests keep theirs.
   it("matches a fresh generation byte-for-byte (fails if committed but stale)", () => {
     const fresh = `${JSON.stringify(generateReportSchema(), null, 2)}\n`
     const committed = readFileSync(schemaPath, "utf8")
     expect(committed).toBe(fresh)
-  }, 15000)
+  }, 30000)
 })
 
 describe.skipIf(distMissing)(
@@ -49,7 +52,7 @@ describe.skipIf(distMissing)(
       await fs.rm(fixtureRoot, { recursive: true, force: true })
       await write(
         "features/payments/env.schema.ts",
-        `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+        `import { createEnv, documentEnv } from "env-cap";
 const schema = { STRIPE_KEY: {} };
 export const paymentsEnv = createEnv(schema, { name: "payments" });
 documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { description: "Stripe secret key." } } });
@@ -79,7 +82,7 @@ documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { descrip
       await fs.rm(fixtureRoot, { recursive: true, force: true })
       await write(
         "features/payments/env.schema.ts",
-        `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+        `import { createEnv, documentEnv } from "env-cap";
 const schema = { STRIPE_KEY: {} };
 export const paymentsEnv = createEnv(schema, { name: "payments" });
 documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { description: "Stripe secret key." } } });

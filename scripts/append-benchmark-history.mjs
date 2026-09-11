@@ -3,7 +3,7 @@
 // docs/benchmark-history/<name>.json. Called only by the benchmark-main CI
 // job (.github/workflows/benchmarks.yml), in the same step that stages
 // results.json/RESULTS.md for the bot PR -- never by a local `npm run
-// benchmark`, never by the PR job. See examples/PERFORMANCE.md.
+// benchmark`, never by the PR job. See benchmark/README.md.
 //
 // Usage: node scripts/append-benchmark-history.mjs <results.json> <history.json>
 

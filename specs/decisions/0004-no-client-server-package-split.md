@@ -1,10 +1,10 @@
-# 0004: No `@maverickcer/env-cap/client` or `/server` package
+# 0004: No `env-cap/client` or `/server` package
 
 ## Status
 
 Accepted. Reflected in `package.json`'s `exports` map (only `.`, `./build`,
 and `./helpers`) and documented in the README's ["Runtime and build-time are
-intentionally separate"](../../README.md#runtime-and-build-time-are-intentionally-separate)
+intentionally separate"](../../GUIDE.md#runtime-and-build-time-are-intentionally-separate)
 section.
 
 ## Context

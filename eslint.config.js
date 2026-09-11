@@ -1,15 +1,17 @@
 import js from "@eslint/js"
+import eslintConfigPrettier from "eslint-config-prettier/flat"
 import globals from "globals"
 import tseslint from "typescript-eslint"
-import eslintConfigPrettier from "eslint-config-prettier/flat"
 
 /**
  * Scoped to this package's own source (src/, test/) plus its root-level
- * build/CI scripts -- matching tsconfig.json's own include list. Examples
- * under examples/ are separate, self-contained npm projects with their own
- * tsconfig/toolchain and are intentionally not linted here; the website
- * (docs/) is static HTML/CSS/JS reviewed separately, not part of this
- * TypeScript project.
+ * build/CI scripts -- matching tsconfig.json's own include/exclude list.
+ * The three flagship examples under examples/, the benchmark projects
+ * under benchmark/, and every relocated behavioral fixture under
+ * test/integration/{positive,negative}/, are separate, self-contained npm
+ * projects with their own tsconfig/toolchain and are intentionally not
+ * linted here; the website (docs/) is static HTML/CSS/JS reviewed
+ * separately, not part of this TypeScript project.
  */
 export default tseslint.config(
   {
@@ -20,11 +22,32 @@ export default tseslint.config(
     ignores: [
       "dist",
       "coverage",
+      // Stryker's per-mutant sandbox copies of the whole repo -- ephemeral
+      // (created and torn down mid-run) and, being a copy, would just
+      // duplicate whatever findings already apply to the real tree.
+      ".stryker-tmp",
       "examples",
+      "benchmark",
       "docs",
       "node_modules",
       "**/node_modules",
       "test/cross-runtime",
+      // Relocated behavioral fixtures (Part 0 of the examples restructuring,
+      // ADR 0034) -- each is its own self-contained npm project with its own
+      // tsconfig/toolchain, same as everything under examples/ above, just
+      // now nested under test/ instead of being a top-level sibling of it.
+      "test/integration/positive/basic/cli-usage",
+      "test/integration/positive/basic/split-generators",
+      "test/integration/positive/team/validation-contexts",
+      "test/integration/positive/team/duplicate-variable-metadata",
+      "test/integration/positive/enterprise/aws-secrets-manager",
+      "test/integration/positive/enterprise/paypal-addon",
+      "test/integration/positive/enterprise/paypal-consumer",
+      "test/integration/positive/enterprise/tsconfig-aliases",
+      "test/integration/positive/enterprise/tsconfig-aliases-consumer",
+      "test/integration/positive/enterprise/evidence-projections",
+      "test/integration/negative/invalid-config/missing-env-var",
+      "test/integration/negative/exclusive-violation/multiple-active-exclusive-capabilities",
     ],
   },
   {
@@ -75,6 +98,31 @@ export default tseslint.config(
       // deliberately unused by most validators) -- standard underscore-prefix
       // opt-out, not a blanket relaxation.
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    // ADR 0040: every library surface (`.`, `./helpers`, `./build`, ...) must
+    // not acquire a filesystem capability implicitly -- `./build` accepts a
+    // `BuildFileSystem` from its caller instead. Only `src/cli/**` (the
+    // executable capability boundary that constructs the `node:fs/promises`
+    // adapter) may import `node:fs`. The published `env-cap/
+    // eslint-plugin` ships `no-node-fs` for a consumer to enforce the same
+    // discipline; this `no-restricted-imports` block is env-cap's own, needing
+    // no plugin build. `scripts/verify-no-ambient-fs.mjs` is the
+    // release-blocking backstop that checks the actual tarball.
+    files: ["src/**/*.ts"],
+    ignores: ["src/cli/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: ["fs", "node:fs", "fs/promises", "node:fs/promises"].map((name) => ({
+            name,
+            message:
+              "ADR 0040: a library surface must not import node:fs. Accept a BuildFileSystem capability from the caller (see src/build/types.ts). Only src/cli/** may import node:fs.",
+          })),
+        },
+      ],
     },
   },
   {
@@ -141,7 +189,11 @@ export default tseslint.config(
     // mixed value/type specifier list. `consistent-type-imports`'s
     // `disallowTypeAnnotations` (on by default) can't tell the two apart, so
     // it's scoped off just here rather than for the whole test suite.
-    files: ["test/build/generate-env-artifacts.test.ts"],
+    files: [
+      "test/build/generate-env-artifacts.test.ts",
+      "test/build/tool-version.test.ts",
+      "test/build/resolution/resolve-import.test.ts",
+    ],
     rules: {
       "@typescript-eslint/consistent-type-imports": ["error", { disallowTypeAnnotations: false }],
     },

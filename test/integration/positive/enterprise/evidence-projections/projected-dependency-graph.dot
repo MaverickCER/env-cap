@@ -1,0 +1,6 @@
+digraph ConfigurationDependency {
+  rankdir=LR;
+  "contract:src/env.ts#env" [label="app", shape=box];
+  "file:src/server.ts" [label="src/server.ts", shape=ellipse];
+  "file:src/server.ts" -> "contract:src/env.ts#env";
+}

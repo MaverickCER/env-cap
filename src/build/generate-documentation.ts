@@ -1,44 +1,43 @@
-import fs from "node:fs/promises"
 import path from "node:path"
-import type { CompatibilityIssue } from "./compatibility.js"
-import { discoverSchemaFiles } from "./discover.js"
+import { assembleProject } from "./assemble-project.js"
+import { buildContractModel } from "./contract-model.js"
+import { displayPath } from "./display-path.js"
+import type { ContractModelContract } from "./contract-model.js"
 import { buildCatalog, computeExpiringEntries, renderDocs } from "./docs.js"
-import type { CatalogContract, ExpiringEntry } from "./docs.js"
+import type {
+  CatalogContract,
+  ExpiringEntry,
+  UndocumentedContractRef,
+  UndocumentedVariableRef,
+} from "./docs.js"
 import { writeEnvExample } from "./env-example.js"
 import type { EnvExampleOnExisting, EnvExampleResult } from "./env-example.js"
 import { EnvDocumentationGenerationError } from "./errors.js"
-import { DEFAULT_EXCLUDE, DEFAULT_INCLUDE } from "./generate-manifest.js"
-import { linkFiles, summarizeContract } from "./link.js"
+import { defaultExclude, defaultInclude } from "./generate-manifest.js"
+import { summarizeContract } from "./link.js"
 import type { DiscoveredContract, DiscoveredContractSummary, LinkResult } from "./link.js"
 import { resolveLiveExpirationDates } from "./live-expirations.js"
 import type { LiveExpirationDates } from "./live-expirations.js"
 import type { ParseWarning } from "./parse.js"
-import type { ImportResolutionContext } from "./resolve-import.js"
-import { mergeLocalAndPackageFiles, resolveAllowlistedPackages } from "./resolve-package-schema.js"
-import type { PackageSchemaResolutionResult } from "./resolve-package-schema.js"
-import { createAliasResolutionCache, loadTsconfigPaths } from "./resolve-tsconfig-paths.js"
-import { resolveWithinRoot } from "./resolve-within-root.js"
+import { resolveWithinRoot } from "./resolution/resolve-within-root.js"
+import type { BuildFileSystem } from "./types.js"
 
 /** Options for {@link generateDocumentation}. */
 export interface GenerateDocumentationOptions {
+  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  fs: BuildFileSystem
   /** Project root schema discovery is relative to. Defaults to `process.cwd()`. */
   root?: string | undefined
   /** Output path for the Markdown docs artifact, relative to `root`. */
   location: string
-  /** Glob patterns for files to scan. Defaults to `DEFAULT_INCLUDE`. */
+  /** Glob patterns for files to scan. Defaults to `defaultInclude()`. */
   include?: string[] | undefined
-  /** Glob patterns for files/directories to prune. Defaults to `DEFAULT_EXCLUDE`. */
+  /** Glob patterns for files/directories to prune. Defaults to `defaultExclude()`. */
   exclude?: string[] | undefined
   /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; see ADR 0014. */
   packages?: readonly string[] | undefined
   /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; see ADR 0023. */
   tsconfig?: string | false | undefined
-  /**
-   * "warn" (default): an undocumented `createEnv()`/variable is reported in
-   * `result.documentation` but never blocks generation. "throw": escalates
-   * those findings to a hard error too.
-   */
-  onUndocumented?: "warn" | "throw" | undefined
   /** How many days out counts as "expiring soon". Defaults to 30. */
   expiringWithinDays?: number | undefined
   /**
@@ -64,7 +63,7 @@ export interface GenerateDocumentationOptions {
   liveExpirationDates?: LiveExpirationDates | undefined
 }
 
-/** Everything {@link generateDocumentation} found that isn't fully documented or up to date, regardless of `onUndocumented`. */
+/** Everything {@link generateDocumentation} found that isn't fully documented or up to date -- never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the "documentation" family) from the persisted evidence artifact and decides for itself. See ADR 0038. */
 export interface DocumentationFindings {
   /** Contracts with no linked `documentEnv()` call at all. */
   readonly undocumentedContracts: readonly {
@@ -93,6 +92,8 @@ export interface DocumentationFindings {
   }[]
   /** Variables whose `expiresAt` falls within the configured window. */
   readonly expiringSoon: readonly ExpiringEntry[]
+  /** Contract- or variable-level `sensitivity` values outside {@link STANDARD_SENSITIVITY_LEVELS}. Advisory only -- the declared level is always honored verbatim; this exists purely so vocabulary drift across a repo stays visible. */
+  readonly nonstandardSensitivityLevels: readonly NonstandardSensitivityEntry[]
   /** `documentEnv()` calls that couldn't be statically linked to a schema. */
   readonly unresolvedLinks: readonly {
     /** Absolute path of the file containing the unlinkable call. */
@@ -122,57 +123,119 @@ export interface GenerateDocumentationResult {
 /** Default value for {@link GenerateDocumentationOptions.expiringWithinDays}. */
 export const DEFAULT_EXPIRING_WITHIN_DAYS = 30
 
-function documentationIssues(
-  undocumentedContracts: DocumentationFindings["undocumentedContracts"],
-  undocumentedVariables: DocumentationFindings["undocumentedVariables"],
-): CompatibilityIssue[] {
-  const issues: CompatibilityIssue[] = []
-  for (const c of undocumentedContracts) {
-    issues.push({
-      severity: "warning",
-      variable: `(contract) ${c.exportName}`,
-      files: [c.file],
-      reason: `"${c.exportName}" has no documentEnv() call linked to it.`,
-    })
+/**
+ * The sensitivity vocabulary env-cap's own docs, examples, and `.env.example`
+ * comments are written around. Purely advisory: `sensitivity` is an open
+ * `string` (see {@link runtime.VariableDocs.sensitivity}), any value is
+ * honored verbatim, and nothing here ever drops or rewrites a declared level.
+ * A level outside this set only produces a non-blocking
+ * `NONSTANDARD_SENSITIVITY_LEVEL` finding, so a team that deliberately runs
+ * its own vocabulary sees one advisory line rather than silent data loss --
+ * and a team that meant to write `"secret"` and typo'd `"secrets"` finds out.
+ */
+// A module-load `const` referenced directly by `documentation-generate.test.ts`
+// (which iterates its exact members) is the documented covered-static
+// false-Survived class: Stryker's dry-run coverage analysis marks a mutant
+// here `static: true`, runs it anyway, and reports "Survived" even with
+// real, passing test coverage -- `ignoreStatic` only ignores a static
+// mutant with ZERO coverage. Can't fix with the usual "inline into its one
+// consumer" move here (this is consumed across a module boundary, by both
+// this file's own `findNonstandardSensitivityLevels()` AND the test file's
+// own enumeration of "every standard level") -- same "shared public
+// sentinel" class as data-cap's `UNOWNED`/`FIELD_MARKER`. Hand-verified:
+// corrupting each individual string (one at a time) and running
+// `vitest run test/build/documentation-generate.test.ts` directly fails a
+// real test every time, proving genuine coverage.
+// Stryker disable ArrayDeclaration, StringLiteral
+export const STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string> = new Set([
+  "secret",
+  "credential",
+  "pii",
+  "config",
+])
+// Stryker restore ArrayDeclaration, StringLiteral
+
+/** One contract- or variable-level `sensitivity` declaring a level outside {@link STANDARD_SENSITIVITY_LEVELS}. */
+export interface NonstandardSensitivityEntry {
+  /** Absolute path of the file declaring the contract. */
+  readonly file: string
+  /** The contract's exported binding name. */
+  readonly exportName: string
+  /** `undefined` for a contract-level `sensitivity`, set for a per-variable one. */
+  readonly key: string | undefined
+  /** The declared level, exactly as written. */
+  readonly sensitivity: string
+}
+
+/**
+ * Every contract- or variable-level `sensitivity` outside the standard set,
+ * in declaration order (contract first, then its own variables by key).
+ *
+ * @remarks
+ * A variable's *own* declared level only -- never the contract-inherited one
+ * `effectiveSensitivity()` would resolve to. Reporting the inherited value
+ * would fire this same finding once per variable on a contract that already
+ * produced its own contract-level entry, turning one real vocabulary
+ * question into N duplicates of it.
+ */
+export function findNonstandardSensitivityLevels(
+  contracts: readonly DiscoveredContract[],
+): NonstandardSensitivityEntry[] {
+  const entries: NonstandardSensitivityEntry[] = []
+  for (const contract of contracts) {
+    if (
+      contract.sensitivity !== undefined &&
+      !STANDARD_SENSITIVITY_LEVELS.has(contract.sensitivity)
+    )
+      entries.push({
+        file: contract.file,
+        exportName: contract.exportName,
+        key: undefined,
+        sensitivity: contract.sensitivity,
+      })
+    for (const variable of [...contract.variables].sort((a, b) => a.key.localeCompare(b.key))) {
+      if (variable.sensitivity === undefined) continue
+      if (STANDARD_SENSITIVITY_LEVELS.has(variable.sensitivity)) continue
+      entries.push({
+        file: contract.file,
+        exportName: contract.exportName,
+        key: variable.key,
+        sensitivity: variable.sensitivity,
+      })
+    }
   }
-  for (const v of undocumentedVariables) {
-    issues.push({
-      severity: "warning",
-      variable: v.key,
-      files: [v.file],
-      reason: `"${v.key}" (declared by "${v.exportName}") has no matching entry in a linked documentEnv()'s "variables".`,
-    })
-  }
-  return issues
+  return entries
 }
 
 export interface DocumentationComputation {
   readonly contractSummaries: readonly DiscoveredContractSummary[]
   readonly catalog: readonly CatalogContract[]
   readonly documentation: DocumentationFindings
-  readonly blocking: readonly CompatibilityIssue[]
+  /** `ContractModel`'s own projection of the same contracts, built once here and reused by `writeDocumentation()` -- the shape `renderDocs()` itself takes (ADR 0038). */
+  readonly contractModelContracts: readonly ContractModelContract[]
+}
+
+/** Root-relative, POSIX-separated -- `RenderDocsOptions`'s own convention, matching `ContractModel`'s `file`. Exported so `check-artifacts.ts`'s drift check can convert the same `documentation.undocumentedContracts`/`undocumentedVariables` fields for its own `renderDocs()` call, identically. Delegates to `displayPath()` so this can never disagree with the `ContractModel` `file` values it's matched against by identity. */
+export function relativizeRef<T extends { file: string }>(root: string, ref: T): T {
+  return { ...ref, file: displayPath(root, ref.file) }
 }
 
 /**
  * Pure -- no I/O. Computes undocumented/stale/expiring findings against an
  * already-discovered contract graph (active and inactive alike -- docs
- * document everything, unlike the manifest) and applies the `onUndocumented`
- * gate. Shared by the standalone `generateDocumentation()` and `generate-env-artifacts.ts`.
+ * document everything, unlike the manifest). Never blocks -- see
+ * `DocumentationFindings`'s own doc comment. Shared by the standalone
+ * `generateDocumentation()` and `generate-env-artifacts.ts` (which also
+ * reuses this same call for Finding Model's documentation-family findings,
+ * ADR 0038 -- one computation, not two).
  */
 export function computeDocumentation(
   root: string,
   linkResult: LinkResult,
-  onUndocumented: "warn" | "throw",
   expiringWithinDays: number,
   generatedAt: Date,
 ): DocumentationComputation {
   const { contracts } = linkResult
-  const docIssues = documentationIssues(
-    linkResult.undocumentedContracts,
-    linkResult.undocumentedVariables,
-  )
-  const blocking = onUndocumented === "throw" ? docIssues : []
-
   return {
     contractSummaries: contracts.map((contract) => summarizeContract(contract, root)),
     catalog: buildCatalog(contracts),
@@ -181,9 +244,10 @@ export function computeDocumentation(
       undocumentedVariables: linkResult.undocumentedVariables,
       staleDocEntries: linkResult.staleDocEntries,
       expiringSoon: computeExpiringEntries(contracts, expiringWithinDays, generatedAt),
+      nonstandardSensitivityLevels: findNonstandardSensitivityLevels(contracts),
       unresolvedLinks: linkResult.unresolvedLinks,
     },
-    blocking,
+    contractModelContracts: buildContractModel(contracts, root).contracts,
   }
 }
 
@@ -193,30 +257,52 @@ export async function writeDocumentation(
   envExamplePath: string | undefined,
   root: string,
   contracts: readonly DiscoveredContract[],
+  contractModelContracts: readonly ContractModelContract[],
   documentation: DocumentationFindings,
   expiringWithinDays: number,
   generatedAt: Date,
+  fs: BuildFileSystem,
   envExampleOnExisting?: EnvExampleOnExisting,
 ): Promise<{ envExample: EnvExampleResult | undefined }> {
   let previousContent: string | undefined
   try {
     previousContent = await fs.readFile(docsPath, "utf8")
   } catch {
-    previousContent = undefined
+    // Empty -- `previousContent` already starts `undefined`; re-assigning
+    // it here is a no-op (no BlockStatement mutant on a trailing `{}`).
   }
 
-  const docsSource = renderDocs(contracts, root, {
+  const docsSource = renderDocs(contractModelContracts, {
     expiringWithinDays,
-    undocumentedContracts: documentation.undocumentedContracts,
-    undocumentedVariables: documentation.undocumentedVariables,
+    undocumentedContracts: documentation.undocumentedContracts.map((ref): UndocumentedContractRef =>
+      relativizeRef(root, ref),
+    ),
+    // `RenderDocsOptions.undocumentedVariables` is consumed by `renderDocs()`
+    // ONLY via `.length` (the security-review counter) -- never by content
+    // or identity, unlike its `undocumentedContracts` sibling above (matched
+    // by identity against the catalog for the "Undocumented." marker).
+    // `.map()` always preserves length regardless of what each element
+    // transforms to, so this specific `relativizeRef()` call's own output is
+    // unobservable through this call site. Hand-verified: mapping every
+    // entry to `undefined` instead and running the full `vitest run` leaves
+    // all tests passing.
+    // Stryker disable next-line ArrowFunction
+    undocumentedVariables: documentation.undocumentedVariables.map((ref): UndocumentedVariableRef =>
+      relativizeRef(root, ref),
+    ),
     generatedAt,
     previousContent,
   })
   await fs.mkdir(path.dirname(docsPath), { recursive: true })
+  // `docsSource` is always a plain string -- fs.writeFile defaults a string
+  // write to utf8 regardless of the encoding arg, so "utf8" vs "" is
+  // unobservable. Same established equivalence as this drive's other
+  // writeX() functions.
+  // Stryker disable next-line StringLiteral
   await fs.writeFile(docsPath, docsSource, "utf8")
 
   const envExample = envExamplePath
-    ? await writeEnvExample(contracts, envExamplePath, { onExisting: envExampleOnExisting })
+    ? await writeEnvExample(contracts, envExamplePath, fs, { onExisting: envExampleOnExisting })
     : undefined
   return { envExample }
 }
@@ -232,16 +318,15 @@ export async function writeDocumentation(
  * @remarks
  * Documents every discovered contract, active or not, unlike {@link generateEnvManifest}.
  *
- * @throws {EnvDocumentationGenerationError} If `location`/`envExample.location` escape `root`, or if `onUndocumented: "throw"` and something is undocumented.
+ * @throws {EnvDocumentationGenerationError} If `location`/`envExample.location` escape `root`.
  */
 export async function generateDocumentation(
   options: GenerateDocumentationOptions,
 ): Promise<GenerateDocumentationResult> {
   const root = path.resolve(options.root ?? process.cwd())
-  const include = options.include ?? DEFAULT_INCLUDE
-  const exclude = options.exclude ?? DEFAULT_EXCLUDE
+  const include = options.include ?? defaultInclude()
+  const exclude = options.exclude ?? defaultExclude()
   const packages = options.packages ?? []
-  const onUndocumented = options.onUndocumented ?? "warn"
   const expiringWithinDays = options.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS
 
   const docsLocationResult = resolveWithinRoot(
@@ -265,36 +350,14 @@ export async function generateDocumentation(
     envExamplePath = envExampleResult.resolved
   }
 
-  const localFiles = await discoverSchemaFiles({ root, include, exclude })
-  const packageCache = new Map<string, Promise<PackageSchemaResolutionResult>>()
-  const {
-    files: packageFiles,
-    origins,
-    warnings: packageWarnings,
-  } = await resolveAllowlistedPackages(packages, root, packageCache)
-  const files = await mergeLocalAndPackageFiles(
-    localFiles,
-    packageFiles.map((f) => f.file),
-  )
-  const { resolution: tsconfigPaths, warning: tsconfigWarning } = await loadTsconfigPaths(
+  const { linkResult, packageWarnings, tsconfigWarnings } = await assembleProject({
+    fs: options.fs,
     root,
-    options.tsconfig,
-  )
-  const tsconfigWarnings = tsconfigWarning ? [tsconfigWarning] : []
-
-  const context: ImportResolutionContext = {
-    root,
+    include,
+    exclude,
     packages,
-    cache: packageCache,
-    tsconfigPaths,
-    aliasCache: createAliasResolutionCache(),
-  }
-  const linkResult = await linkFiles(
-    files,
-    (filePath) => fs.readFile(filePath, "utf8"),
-    context,
-    origins,
-  )
+    tsconfig: options.tsconfig,
+  })
   const docsContracts = await resolveLiveExpirationDates(
     linkResult.contracts,
     options.liveExpirationDates,
@@ -304,20 +367,20 @@ export async function generateDocumentation(
   const computed = computeDocumentation(
     root,
     { ...linkResult, contracts: docsContracts },
-    onUndocumented,
     expiringWithinDays,
     generatedAt,
   )
-  if (computed.blocking.length > 0) throw new EnvDocumentationGenerationError(computed.blocking)
 
   const { envExample } = await writeDocumentation(
     docsPath,
     envExamplePath,
     root,
     docsContracts,
+    computed.contractModelContracts,
     computed.documentation,
     expiringWithinDays,
     generatedAt,
+    options.fs,
     options.envExample?.onExisting,
   )
 

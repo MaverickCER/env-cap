@@ -1,0 +1,13 @@
+Wrote manifest: <EXAMPLE_ROOT>/src/generated/env.manifest.ts
+Discovered 1 contract(s).
+Wrote docs: <EXAMPLE_ROOT>/docs/ENVIRONMENT.md
+Wrote example: <EXAMPLE_ROOT>/.env.example
+Wrote dependency ownership report: <EXAMPLE_ROOT>/docs/OWNERSHIP.md
+
+2 unconsumed owned variable(s):
+ - DATABASE_URL in app
+ - STRIPE_KEY in app
+Wrote evidence: docs/env.evidence.json
+
+Evidence changes since the last persisted snapshot:
+ No changes.

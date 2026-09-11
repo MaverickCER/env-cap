@@ -1,0 +1,20 @@
+{
+  "name": "env-cap-example-application",
+  "private": true,
+  "type": "module",
+  "description": "Minimal end-to-end example: capability-owned env.schema.ts files, a generated contract, and validateEnv() at startup.",
+  "scripts": {
+    "docs": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --env-example-on-existing overwrite --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json",
+    "check": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
+    "typecheck": "npm run docs && tsc --noEmit",
+    "start": "npm run docs && tsx --env-file=.env src/server.ts"
+  },
+  "dependencies": {
+    "env-cap": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

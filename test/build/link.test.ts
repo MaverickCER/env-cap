@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { nodeBuildFs } from "../support/build-filesystem.js"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 import fs from "node:fs/promises"
-import { linkFiles } from "../../src/build/link.js"
-import type { ImportResolutionContext } from "../../src/build/resolve-import.js"
-import type { PackageSchemaResolutionResult } from "../../src/build/resolve-package-schema.js"
+import { effectiveSensitivity, effectiveOwner, linkFiles } from "../../src/build/link.js"
+import type { DiscoveredContract, DiscoveredVariable } from "../../src/build/link.js"
+import type { ImportResolutionContext } from "../../src/build/resolution/resolve-import.js"
+import type { PackageSchemaResolutionResult } from "../../src/build/resolution/resolve-package-schema.js"
 import {
   createAliasResolutionCache,
   loadTsconfigPaths,
-} from "../../src/build/resolve-tsconfig-paths.js"
+} from "../../src/build/resolution/resolve-tsconfig-paths.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-link")
@@ -25,6 +27,7 @@ const readFile = (filePath: string) => fs.readFile(filePath, "utf8")
 // No test in this file (outside the alias-resolution test below) exercises
 // cross-package discovery (ADR 0014) or tsconfig alias resolution (ADR 0023).
 const context: ImportResolutionContext = {
+  fs: nodeBuildFs,
   root: fixtureRoot,
   packages: [],
   cache: new Map<string, Promise<PackageSchemaResolutionResult>>(),
@@ -59,6 +62,34 @@ describe("linkFiles", () => {
     expect(result.undocumentedVariables).toHaveLength(0)
   })
 
+  it("reads each discovered file exactly once, even when it's ALSO the cross-file import target of another discovered file's documentEnv call", async () => {
+    // schemaFile is pre-analyzed once in the discoveredFiles pre-pass, then
+    // resolved AGAIN as docsFile's import target during linking -- the
+    // second lookup must hit `getAnalysis()`'s own cache, not re-read the
+    // file from disk.
+    const schemaFile = await write(
+      "payments/env.schema.ts",
+      `export const paymentsSchema = { STRIPE_KEY: {} };
+      export const paymentsEnv = createEnv(paymentsSchema, { name: "payments" });`,
+    )
+    const docsFile = await write(
+      "docs/payments.docs.ts",
+      `import { paymentsSchema } from "../payments/env.schema.js";
+      documentEnv(paymentsSchema, { owner: "payments-team" });`,
+    )
+
+    const readCounts = new Map<string, number>()
+    const countingReadFile = async (filePath: string): Promise<string> => {
+      readCounts.set(filePath, (readCounts.get(filePath) ?? 0) + 1)
+      return readFile(filePath)
+    }
+
+    const result = await linkFiles([schemaFile, docsFile], countingReadFile, context)
+    expect(result.contracts[0]?.documented).toBe(true)
+    expect(readCounts.get(schemaFile)).toBe(1)
+    expect(readCounts.get(docsFile)).toBe(1)
+  })
+
   it("links a cross-file createEnv + documentEnv pair via a named import", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",
@@ -71,7 +102,7 @@ describe("linkFiles", () => {
       "docs/payments.docs.ts",
       `
       import { paymentsSchema } from "../payments/env.schema.js";
-      documentEnv(paymentsSchema, { owner: "payments-team", variables: { STRIPE_KEY: { description: "Stripe secret key." } } });
+      documentEnv(paymentsSchema, { owner: "payments-team", sensitivity: "credential", deprecated: true, deprecatedReason: "Superseded by payments-v2.", variables: { STRIPE_KEY: { description: "Stripe secret key.", sensitivity: "secret", removeBy: "2027-01-01", renamedFrom: "STRIPE_SECRET" } } });
       `,
     )
 
@@ -79,7 +110,13 @@ describe("linkFiles", () => {
     expect(result.contracts).toHaveLength(1)
     expect(result.contracts[0]?.documented).toBe(true)
     expect(result.contracts[0]?.owner).toBe("payments-team")
+    expect(result.contracts[0]?.sensitivity).toBe("credential")
+    expect(result.contracts[0]?.deprecated).toBe(true)
+    expect(result.contracts[0]?.deprecatedReason).toBe("Superseded by payments-v2.")
     expect(result.contracts[0]?.variables[0]?.description).toBe("Stripe secret key.")
+    expect(result.contracts[0]?.variables[0]?.sensitivity).toBe("secret")
+    expect(result.contracts[0]?.variables[0]?.removeBy).toBe("2027-01-01")
+    expect(result.contracts[0]?.variables[0]?.renamedFrom).toBe("STRIPE_SECRET")
   })
 
   it("resolves a documentEnv() schema reference imported through a tsconfig path alias (ADR 0023, Experimental)", async () => {
@@ -109,7 +146,7 @@ describe("linkFiles", () => {
       `,
     )
 
-    const { resolution, warning } = await loadTsconfigPaths(fixtureRoot, undefined)
+    const { resolution, warning } = await loadTsconfigPaths(fixtureRoot, undefined, nodeBuildFs)
     expect(warning).toBeUndefined()
     const aliasContext: ImportResolutionContext = {
       ...context,
@@ -169,6 +206,9 @@ describe("linkFiles", () => {
     expect(result.undocumentedVariables).toEqual([
       { file, exportName: "partialEnv", key: "UNDOCUMENTED" },
     ])
+    const variables = result.contracts[0]?.variables
+    expect(variables.find((v) => v.key === "DOCUMENTED")?.documented).toBe(true)
+    expect(variables.find((v) => v.key === "UNDOCUMENTED")?.documented).toBe(false)
   })
 
   it("reports a stale doc entry for a documented key with no matching schema variable", async () => {
@@ -197,6 +237,27 @@ describe("linkFiles", () => {
     const result = await linkFiles([file], readFile, context)
     expect(result.unresolvedLinks).toHaveLength(1)
     expect(result.unresolvedLinks[0]?.file).toBe(file)
+    expect(result.unresolvedLinks[0]?.reason).toBe(
+      "documentEnv() call could not be statically linked to a schema (its first argument isn't an inline object literal or a resolvable local/imported reference).",
+    )
+    expect(result.contracts).toHaveLength(0)
+  })
+
+  it("warns, with the exact message, when a createEnv() call's schema argument isn't statically resolvable", async () => {
+    const file = await write(
+      "unresolvable-schema/env.ts",
+      `
+      export const dynamicEnv = createEnv(someFactory(), { name: "dynamic" });
+      `,
+    )
+
+    const result = await linkFiles([file], readFile, context)
+    expect(result.warnings).toHaveLength(1)
+    expect(result.warnings[0]).toEqual({
+      file,
+      message:
+        'createEnv() call for "dynamicEnv" does not pass an inline object literal or a statically-resolvable schema reference; skipping static analysis for this contract.',
+    })
     expect(result.contracts).toHaveLength(0)
   })
 
@@ -223,6 +284,59 @@ describe("linkFiles", () => {
     expect(result.contracts).toHaveLength(1)
     expect(result.contracts[0]?.documented).toBe(false)
     expect(result.undocumentedContracts).toHaveLength(1)
+  })
+
+  it("two UNRELATED inline schema literals in the same file (one createEnv, one documentEnv) never coincidentally correlate with each other", async () => {
+    // Each inline literal's identity is derived from its own AST node
+    // position -- if that were ever collapsed to a constant, two separate
+    // inline literals in the same file would collide and wrongly link.
+    const file = await write(
+      "unrelated-inline/env.schema.ts",
+      `export const inlineEnv = createEnv({ A: {} }, { name: "inline" });
+      documentEnv({ B: {} }, { owner: "some-other-team" });`,
+    )
+
+    const result = await linkFiles([file], readFile, context)
+    expect(result.contracts).toHaveLength(1)
+    expect(result.contracts[0]?.documented).toBe(false)
+    expect(result.contracts[0]?.owner).toBeUndefined()
+  })
+
+  it("labels a documentEnv() inline schema's own warnings with the exact \"documentEnv() call\" context label -- distinct from createEnv's own label", async () => {
+    // A spread element inside the inline schema literal argument triggers
+    // extractSchemaVariables()'s "Skipped a non-static schema entry in
+    // \"<contextLabel>\"" warning -- the one place `resolveSchema`'s own
+    // "documentEnv() call" label (passed only for a documentEnv ref, never
+    // a createEnv one) is actually observable.
+    const file = await write(
+      "docs-inline-spread/env.schema.ts",
+      `documentEnv({ ...someSpread, A: {} }, {});`,
+    )
+
+    const result = await linkFiles([file], readFile, context)
+    expect(result.warnings.some((w) => w.message.includes('"documentEnv() call"'))).toBe(true)
+  })
+
+  it("surfaces a per-file parse-time warning (an unexported createEnv() call) in the aggregated result.warnings, even with no createEnv/documentEnv resolution work at all", async () => {
+    // `parseSchemaFile()`'s own warning for an unexported call is pushed
+    // during parsing, completely independent of `linkFiles`'s own
+    // createEnv/documentEnv correlation loops (an unexported call is
+    // `continue`d before ever being added to `createEnvCalls`) -- the ONLY
+    // path this warning can reach `result.warnings` through is the final
+    // `for (const analysis of analysisCache.values())` sweep.
+    const file = await write(
+      "unexported/env.schema.ts",
+      `const localEnv = createEnv({ A: {} }, { name: "local" });`,
+    )
+
+    const result = await linkFiles([file], readFile, context)
+    expect(result.contracts).toHaveLength(0)
+    expect(result.warnings).toHaveLength(1)
+    expect(result.warnings[0]).toEqual({
+      file,
+      message:
+        'createEnv() call for "localEnv" is not exported; it can never be included in a generated manifest, so it\'s skipped entirely.',
+    })
   })
 
   it("rejects with the internal map-utils invariant error when a discovered file can't be read", async () => {
@@ -336,5 +450,125 @@ describe("linkFiles", () => {
     )
 
     await expect(linkFiles([file], readFile, context)).resolves.toBeDefined()
+  })
+})
+
+function makeVariable(
+  overrides: Partial<DiscoveredVariable> & { key: string },
+): DiscoveredVariable {
+  return {
+    hasDefault: false,
+    defaultValue: undefined,
+    hasProcessor: false,
+    processorSource: undefined,
+    processorReturnType: undefined,
+    hasValidator: false,
+    validatorSource: undefined,
+    context: undefined,
+    description: undefined,
+    owner: undefined,
+    sensitivity: undefined,
+    expiresAt: undefined,
+    refreshInstructions: undefined,
+    setupInstructions: undefined,
+    required: undefined,
+    deprecated: undefined,
+    deprecatedReason: undefined,
+    removeBy: undefined,
+    renamedFrom: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
+    metadata: undefined,
+    evidence: undefined,
+    documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
+    ...overrides,
+  }
+}
+
+function makeContract(
+  overrides: Partial<DiscoveredContract> & { file: string; exportName: string },
+): DiscoveredContract {
+  return {
+    contractName: overrides.exportName,
+    active: true,
+    category: undefined,
+    exclusiveGroup: undefined,
+    owner: undefined,
+    sensitivity: undefined,
+    expiresAt: undefined,
+    deprecated: undefined,
+    deprecatedReason: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
+    metadata: undefined,
+    variables: [],
+    documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
+    documentation: undefined,
+    packageOrigin: undefined,
+    ...overrides,
+  }
+}
+
+describe("effectiveOwner", () => {
+  it("returns the variable's own owner when it sets one, even if the contract also sets one", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      owner: "contract-team",
+    })
+    const variable = makeVariable({ key: "KEY", owner: "variable-team" })
+    expect(effectiveOwner(contract, variable)).toBe("variable-team")
+  })
+
+  it("falls back to the contract's owner when the variable doesn't set one", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      owner: "contract-team",
+    })
+    const variable = makeVariable({ key: "KEY" })
+    expect(effectiveOwner(contract, variable)).toBe("contract-team")
+  })
+
+  it("returns undefined when neither the variable nor the contract sets an owner", () => {
+    const contract = makeContract({ file: "/repo/a/env.schema.ts", exportName: "aEnv" })
+    const variable = makeVariable({ key: "KEY" })
+    expect(effectiveOwner(contract, variable)).toBeUndefined()
+  })
+})
+
+describe("effectiveSensitivity", () => {
+  it("falls back to the contract's sensitivity when the variable doesn't set one", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      sensitivity: "secret",
+    })
+    const variable = makeVariable({ key: "KEY" })
+    expect(effectiveSensitivity(contract, variable)).toBe("secret")
+  })
+
+  it("returns the variable's own sensitivity when it overrides the contract's", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      sensitivity: "secret",
+    })
+    const variable = makeVariable({ key: "KEY", sensitivity: "config" })
+    expect(effectiveSensitivity(contract, variable)).toBe("config")
+  })
+
+  it("returns the variable's own sensitivity when the contract sets none", () => {
+    const contract = makeContract({ file: "/repo/a/env.schema.ts", exportName: "aEnv" })
+    const variable = makeVariable({ key: "KEY", sensitivity: "secret" })
+    expect(effectiveSensitivity(contract, variable)).toBe("secret")
   })
 })

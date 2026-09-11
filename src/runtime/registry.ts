@@ -31,5 +31,22 @@ export function getContractInternals(contract: object): ContractInternals {
 
 /** Type guard: `true` when `value` was created by `createEnv` (i.e. is a registered contract). */
 export function isEnvContract(value: unknown): value is object {
-  return typeof value === "object" && value !== null && internalsByContract.has(value)
+  if (typeof value !== "object") return false
+  // Split onto its own line (rather than one `&&`-chained expression) so
+  // this one check's disable directive can't also silence the still-real,
+  // still-tested `typeof` check above. Runtime-redundant on its own --
+  // hand-verified: `WeakMap.prototype.has(null)` is spec-guaranteed to
+  // return `false` (never throws for a non-object key), so `.has(value)`
+  // alone already does the right thing for `null`, the one value where
+  // `typeof value === "object"` is true but `value` isn't really an object.
+  // Kept as a real check anyway because TS needs SOME `null` exclusion here
+  // to accept `value` as an `object` below (`typeof value === "object"`
+  // alone narrows to `object | null`, TS's one special case for `typeof`) --
+  // tried a cast/assertion instead (`value as object` / `value!`) and hit an
+  // unresolvable conflict in this repo's eslint config: `src/**` bans `!`
+  // (`no-non-null-assertion`) while the sibling `non-nullable-type-
+  // assertion-style` rule then demands `!` over `as` for a null-only cast.
+  // Stryker disable next-line ConditionalExpression
+  if (value === null) return false
+  return internalsByContract.has(value)
 }

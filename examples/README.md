@@ -1,95 +1,74 @@
 # Examples
 
-Thirteen runnable projects, each demonstrating a distinct part of `env-cap`. Read them in this
-order — each one assumes the concepts the previous ones already covered:
+Three flagship examples, each answering a different question — read them in order, since each
+assumes the concepts the previous one already covered:
 
-1. **[basic-node](basic-node/)** — the simplest possible starting point: one centralized
-   `createEnv()` contract for a whole small app, still getting fail-fast startup
-   validation, generated docs, a generated `.env.example`, and an ownership report.
-   Capability-owned contracts are an adoption target, not a requirement — start here if
-   your app doesn't have (or doesn't yet need) more than one.
+1. **[application](application/)** — *"How does this make my code better?"* The simplest
+   possible starting point: one centralized `createEnv()` contract for a whole small app, still
+   getting fail-fast startup validation, generated docs, a generated `.env.example`, and an
+   ownership report. For an individual developer adopting `env-cap` in their own project.
 
-2. **[cli-usage](cli-usage/)** and **[split-generators](split-generators/)** — the same
-   contract as `basic-node`, generated two different ways: `cli-usage` invokes the packaged
-   `env-cap` CLI binary directly (no custom script at all — `generate:env`/`--check`/`--json`
-   all as plain `package.json` scripts), and `split-generators` calls the three standalone
-   generator functions (`generateEnvManifest`/`generateDocumentation`/`generateUsageReport`)
-   separately instead of the combined `generateEnvArtifacts()` every other example uses. Both
-   produce byte-for-byte identical artifacts to `basic-node`'s own.
+2. **[team-service](team-service/)** — *"How does this help my team?"* Multiple
+   capability-owned contracts spanning two real teams (`data-platform-team`, `security-team`),
+   including two mutually-exclusive database alternatives (`postgres`/`mongodb`) gated by
+   `exclusiveGroup`, a `classification: "secret"` variable that gives the generated security
+   review something real to enumerate, and a `check` script demonstrating the `--check`
+   CI-gate pattern (see [ADR 0016](../specs/decisions/0016-check-mode-compute-before-compare-never-partial-write.md))
+   a real PR check would run.
 
-3. **[composable-boilerplates](composable-boilerplates/)** — multiple capability-owned
-   contracts in one app, including two mutually-exclusive alternatives
-   (`postgres`/`mongodb`) gated by `exclusiveGroup`, and a dormant contract shipped but
-   never wired in via `active: false`.
+3. **[enterprise-platform](enterprise-platform/)** — *"How does this help my organization?"* A
+   real, running application — reports, manifests, evidence generation, and a configuration-governance
+   evidence document built with `defineEvidenceProjection()` — showing what `env-cap` deliberately
+   doesn't own (a database, auth, external services) alongside what it does.
 
-4. **[paypal-addon](paypal-addon/)** and **[paypal-consumer](paypal-consumer/)** — a
-   capability shipped as its own installable package, installed by a consuming
-   application from a real packed tarball (not a monorepo/workspace reference), and
-   discovered across that real package boundary via the Experimental `packages` option
-   (see [ADR 0014](../specs/decisions/0014-cross-package-schema-discovery.md)). Read
-   `paypal-addon`'s README first, then `paypal-consumer`'s.
+Every flagship's own README documents exactly how to run it. All three are validated in CI (see
+`.github/workflows/ci.yml`'s `examples` job and
+[`test/integration/flagships/`](../test/integration/flagships/)) against the real,
+currently-built `env-cap` package, so they stay in sync with the API rather than
+drifting silently.
 
-5. **[aws-secrets-manager](aws-secrets-manager/)** — implementing the
-   `liveExpirationDates` callback to source a variable's `expiresAt` from a live external
-   system (AWS Secrets Manager's rotation metadata) instead of only the static value set
-   in `documentEnv()`.
+## Looking for something specific?
 
-6. **[duplicate-variable-metadata](duplicate-variable-metadata/)** — two independently-owned,
-   both-active contracts document the same variable name differently. Unlike the two examples
-   below, this one is **not broken**: it's a warning (`duplicate-variable-documentation`),
-   never a hard error, unless escalated via `onIncompatibility: "throw"`.
+The three flagships above are for humans exploring `env-cap` for the first time — they're not
+meant to be an exhaustive catalog of every scenario the library handles. Every other behavior
+(the packaged CLI binary, cross-package schema discovery, tsconfig path-alias resolution, the
+`liveExpirationDates` callback, per-variable validation contexts, and more) is still fully tested,
+just relocated to [`test/integration/`](../test/integration/) as a behavioral fixture rather than
+presented as a fourteenth (or fifteenth) example to read through. Each fixture directory still
+has its own runnable `package.json`, the same as a flagship does — see its own `package.json`
+`description` field for what it proves, or the corresponding test file under
+`test/integration/positive/` / `test/integration/negative/`. Examples are for humans; integration
+fixtures are for correctness — zero coverage was dropped in that split, only what's presented as
+"start here" reading.
 
-7. **[missing-env-var](missing-env-var/)** and
-   **[multiple-active-exclusive-capabilities](multiple-active-exclusive-capabilities/)** —
-   deliberately, permanently broken, unlike everything above. Each fixes one specific
-   failure mode in place — a missing required variable, and two active contracts sharing
-   an `exclusiveGroup` — so that exact failure has a committed fixture and a regression
-   test asserting on its real error content, instead of only being demonstrated as prose
-   in another example's README.
+## Golden regression testing
 
-8. **[validation-contexts](validation-contexts/)** — one schema declaring a `context` per
-   variable, validated by two separate entry points (`example:server`/`example:client`),
-   each its own process, each activating a different `activeContexts`. Demonstrates both
-   sides: a variable whose context matches reads normally, and a variable whose context
-   doesn't match this run throws `EnvNotReadyError` — the same failure as reading before
-   `validateEnv()` has run at all (see [ADR 0022](../specs/decisions/0022-validation-contexts.md)).
+The three flagships have **no `expected/` mirror**. Their committed
+`docs/ENVIRONMENT.md`, `docs/OWNERSHIP.md`, `docs/env.evidence.json`,
+`.env.example`, and `src/generated/env.manifest.ts` *are* the golden — a reader
+opening the example sees exactly the bytes CI asserts on. `test/examples/*.test.ts`
+verifies each one by running that example's own `check` script (`env-cap --check`),
+the same command its README tells you to run in CI, so a drifted artifact fails
+the build and the drift guard itself gets exercised at the same time.
 
-9. **[tsconfig-aliases](tsconfig-aliases/)** — a contract imported only through a `"@/*"`
-   `tsconfig.json` path alias, never a relative import, resolved automatically by both the
-   app's own runtime (`tsx`) and `env-cap`'s static analysis (Experimental, on by default,
-   see [ADR 0023](../specs/decisions/0023-tsconfig-path-alias-resolution.md)) — no `tsconfig`
-   option passed. Demonstrates the actual bug this fixes: the generated Dependency &
-   Ownership Report correctly shows the contract's real consumer instead of misreporting it
-   as abandoned. Also installable as its own package, the same way `paypal-addon` is.
+A parallel `expected/` tree used to duplicate every artifact here. It was
+removed: each file existed twice with nothing marking which copy was
+authoritative, so a stale mirror could sit next to correct output indefinitely.
+(`enterprise-platform/expected/output.json` remains — that's the example's own
+runtime self-check, not a copy of anything `env-cap` generates.)
 
-10. **[tsconfig-aliases-consumer](tsconfig-aliases-consumer/)** — installs `tsconfig-aliases`
-    from a real packed tarball, the same producer/consumer shape as `paypal-addon`/
-    `paypal-consumer` above, while organizing its *own* local contract through its *own*
-    `"@/*"` alias. Proves ADR 0023 and ADR 0014 compose correctly in one real install: both
-    the alias-only-imported local contract and the cross-package contract show up as
-    consumed, never abandoned, in the same generated report.
+The integration fixtures under `test/integration/positive/` and
+`test/integration/negative/` **do** keep `expected/` mirrors
+(`multiple-active-exclusive-capabilities` excepted, which by design never
+successfully generates anything). Those have no human reader, and an explicit
+side-by-side diff of generator output is exactly their point. CI regenerates
+each for real and compares byte-for-byte, after normalizing the wall-clock-relative
+parts (the docs Markdown's generation timestamp and any "expiring soon"/"expired"
+annotations). This is what actually catches a regression in the library's output
+formatting, ordering, or serialization — not just "does it still typecheck."
 
-Every example's own README documents exactly how to run it. All thirteen are validated in CI
-(see `.github/workflows/ci.yml`'s `examples` job and [`test/examples/`](../test/examples/),
-one file per example, mirroring this directory 1:1) against the real, currently-built
-`@maverickcer/env-cap` package, so they stay in sync with the API rather than drifting
-silently — the twelve that succeed are asserted on for their expected runtime output, and
-`multiple-active-exclusive-capabilities` is asserted on for its expected failure.
-
-## `expected/` — golden regression fixtures
-
-Twelve of the thirteen examples (every one except `multiple-active-exclusive-capabilities`, which by
-design never successfully generates anything) carry an `expected/` directory mirroring their
-own generated-artifact paths — e.g. `basic-node/expected/src/generated/env.manifest.ts`
-alongside the real `basic-node/src/generated/env.manifest.ts`. CI regenerates each example for
-real and compares the live output against its `expected/` copy byte-for-byte (after normalizing
-the one wall-clock-relative artifact — the docs Markdown's generation timestamp and any
-"expiring soon"/"expired" annotations). This is what actually catches a regression in the
-library's output formatting, ordering, or serialization — not just "does it still typecheck."
-
-`expected/` is a committed regression fixture, not something to hand-edit. When a change to
-`env-cap` intentionally changes generated output (a new field, a reordered section, a wording
-change), regenerate every example's goldens and review the diff:
+When a change to `env-cap` intentionally changes generated output (a new field, a
+reordered section, a wording change), regenerate everything and review the diff:
 
 ```bash
 npm run examples:update-golden
@@ -98,14 +77,9 @@ npm run examples:update-golden
 This is deliberately **not** part of `npm run verify` or CI — it's a human-invoked "I meant to
 change the output, here's the new baseline" step, not something that should ever run silently.
 
-## Performance benchmarks
+## Looking for the performance benchmarks?
 
-[`performance-runtime/`](performance-runtime/) and [`performance-buildtime/`](performance-buildtime/)
-are project confidence tooling, not "start here" adoption samples like the thirteen above — they exist
-to answer "does this scale," "did this regress," and "did that architectural decision actually pay
-off," for maintainers and prospective adopters evaluating env-cap at monorepo scale. Run via
-`npm run benchmark` from the repo root, or `npm run benchmark` inside either directory.
-[`benchmark-fixtures/`](benchmark-fixtures/) is shared support code the two benchmark scripts
-import from — plain `.mjs`, no `package.json` of its own, never run directly. See
-[`PERFORMANCE.md`](../PERFORMANCE.md) for methodology, tier definitions, and what's deliberately
-*not* measured and why.
+They've moved to [`/benchmark`](../benchmark/) — project confidence tooling, not an adoption
+sample like the three flagships above, so it lives as a top-level sibling of `examples/` rather
+than inside it. See [`benchmark/README.md`](../benchmark/README.md) for methodology, tier
+definitions, and what's deliberately not measured and why.

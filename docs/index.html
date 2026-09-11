@@ -8,10 +8,6 @@
       // wrong theme when a stored localStorage choice (env-cap-theme) disagrees
       // with prefers-color-scheme, which script.js's own theme logic (loaded at
       // the end of <body>) would otherwise only correct after first paint.
-      // Mirrors script.js's currentlyDark() precedence (stored choice > OS
-      // preference) but only sets [data-theme] -- the toggle button's
-      // aria-pressed/icon glyph still need script.js's own DOMContentLoaded
-      // wiring, since that element doesn't exist yet this early.
       ;(function () {
         try {
           var stored = window.localStorage.getItem("env-cap-theme")
@@ -28,35 +24,29 @@
         }
       })()
     </script>
-    <title>env-cap — Capability-owned environment contracts for scalable applications</title>
+    <title>env-cap — capability-owned environment contracts</title>
     <meta
       name="description"
-      content="Configuration belongs with the capability that owns it — not a shared file every team edits. env-cap removes the centralized environment bottleneck that slows teams down as applications grow, without giving up the operational visibility every team — or a single developer working solo — depends on."
+      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env — and sits next to your existing validation, not instead of it."
     />
     <link rel="canonical" href="https://maverickcer.github.io/env-cap/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://maverickcer.github.io/env-cap/" />
-    <meta
-      property="og:title"
-      content="env-cap — Capability-owned environment contracts for scalable applications"
-    />
+    <meta property="og:title" content="env-cap — capability-owned environment contracts" />
     <meta
       property="og:description"
-      content="Configuration belongs with the capability that owns it. env-cap removes the centralized environment bottleneck without giving up operational visibility."
+      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. You replace nothing — env-cap sits next to your existing validation, or with none at all."
     />
     <meta property="og:image" content="https://maverickcer.github.io/env-cap/assets/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:title"
-      content="env-cap — Capability-owned environment contracts for scalable applications"
-    />
+    <meta name="twitter:title" content="env-cap — capability-owned environment contracts" />
     <meta
       name="twitter:description"
-      content="Configuration belongs with the capability that owns it. env-cap removes the centralized environment bottleneck without giving up operational visibility."
+      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. You replace nothing — env-cap sits next to your existing validation, or with none at all."
     />
     <meta
       name="twitter:image"
@@ -77,34 +67,24 @@
 
         <nav class="primary-nav" id="primary-nav" aria-label="Primary">
           <ul class="primary-nav-list">
-            <li><a href="#problem">Problem</a></li>
-            <li><a href="#comparison">Comparison</a></li>
-            <li><a href="#solution">Solution</a></li>
-            <li><a href="#why-context">Why Context</a></li>
-            <li><a href="#architecture">Architecture</a></li>
-            <li><a href="#adoption">Adoption</a></li>
-            <li><a href="#faq">FAQ</a></li>
-            <li><a href="#getting-started">Getting Started</a></li>
+            <li><a href="#why">Why it exists</a></li>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#see-it">See it</a></li>
+            <li><a href="#proof">Docs</a></li>
           </ul>
         </nav>
 
         <div class="header-actions">
-          <button
-            class="icon-button"
-            type="button"
-            id="search-trigger"
-            aria-haspopup="dialog"
-            aria-controls="search-dialog"
-          >
-            <span aria-hidden="true">⌘K</span>
-            <span class="sr-only">Search this page</span>
-          </button>
           <button class="icon-button" type="button" id="theme-toggle" aria-pressed="false">
             <span aria-hidden="true" class="theme-toggle-icon">◐</span>
             <span class="sr-only">Toggle dark mode</span>
           </button>
-          <a class="github-link" href="https://github.com/maverickcer/env-cap">GitHub ↗</a>
-          <a class="button button--primary button--header" href="#getting-started">Get Started</a>
+          <a
+            class="button button--primary button--header"
+            href="https://github.com/maverickcer/env-cap#readme"
+          >
+            View on GitHub
+          </a>
           <button
             class="nav-toggle"
             type="button"
@@ -117,368 +97,97 @@
       </div>
     </header>
 
-    <!-- Cmd+K search dialog -->
-    <div class="search-overlay" id="search-overlay" hidden>
-      <div
-        class="search-dialog"
-        id="search-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="search-dialog-title"
-      >
-        <h2 id="search-dialog-title" class="sr-only">Search this page</h2>
-        <div class="search-input-row">
-          <span aria-hidden="true" class="search-icon">🔎</span>
-          <input
-            type="text"
-            id="search-input"
-            class="search-input"
-            placeholder="Search sections, FAQ…"
-            autocomplete="off"
-            aria-label="Search this page"
-            aria-controls="search-results"
-            aria-expanded="false"
-            role="combobox"
-          />
-          <kbd class="search-kbd">Esc</kbd>
-        </div>
-        <ul
-          class="search-results"
-          id="search-results"
-          role="listbox"
-          aria-label="Search results"
-        ></ul>
-        <p class="search-empty" id="search-empty" hidden>No matches.</p>
-      </div>
-    </div>
-
     <main id="main">
       <!-- Hero -->
       <section class="hero" id="top" aria-labelledby="hero-heading">
         <div class="container">
-          <h1 id="hero-heading">Configuration is an application contract.</h1>
+          <p class="section-eyebrow">Configuration, owned</p>
+
+          <h1 id="hero-heading">
+            Every environment variable has an owner, a reason to exist, and a lifecycle you can
+            query.
+          </h1>
 
           <p class="hero-lede">
-            APIs define how systems communicate. Data models define how information is structured.
-            Dependencies define what an application relies on to function. Configuration is another
-            contract: it describes the external requirements needed for the application to operate.
+            env-cap treats configuration the way applications already treat their APIs, data models,
+            and dependencies — not as loose strings read off <code>process.env</code>, but as a
+            capability-owned contract.
           </p>
 
           <p class="hero-support">
-            env-cap makes configuration requirements explicit as part of the application definition
-            while leaving sensitive values and deployment-specific concerns in the systems designed
-            to manage them.
-          </p>
-
-          <ul class="benefit-list">
-            <li>Discover application dependencies.</li>
-            <li>Preserve configuration knowledge.</li>
-            <li>Coordinate configuration changes.</li>
-          </ul>
-
-          <div class="hero-actions">
-            <a class="button button--primary" href="#getting-started">Get Started</a>
-            <a class="button button--secondary button--on-dark" href="#architecture">
-              Read the Architecture
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Problem -->
-      <section class="section" id="problem" aria-labelledby="problem-heading">
-        <div class="container container--narrow">
-          <p class="section-eyebrow">The problem</p>
-
-          <h2 id="problem-heading">
-            Configuration becomes harder to understand as applications grow
-          </h2>
-
-          <p class="section-lede">
-            Environment variables start as simple configuration values, but over time they become
-            critical application dependencies without the context needed to safely manage them.
-          </p>
-
-          <ul class="principles-list">
-            <li>Variables exist without clear ownership or purpose.</li>
-            <li>Removed features leave unused secrets and configuration behind.</li>
-            <li>Teams cannot easily identify which capabilities depend on a variable.</li>
-            <li>
-              Documentation drifts because it lives separately from the code that requires it.
-            </li>
-            <li>
-              Security context is lost because rotation and lifecycle expectations are not tracked.
-            </li>
-            <li>Configuration changes become risky because dependency impact is unclear.</li>
-          </ul>
-
-          <div class="callout callout--note">
-            <p class="callout-title">Cost of the status quo</p>
-            <p>
-              Without application-aware configuration visibility, teams accumulate unknown
-              dependencies, stale variables, undocumented requirements, and operational uncertainty.
-              Configuration remains available, but understanding why it exists becomes increasingly
-              difficult.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Comparison -->
-      <section class="section section--muted" id="comparison" aria-labelledby="comparison-heading">
-        <div class="container">
-          <p class="section-eyebrow">Configuration visibility</p>
-
-          <h2 id="comparison-heading">
-            Configuration values are not the same as configuration understanding
-          </h2>
-
-          <p class="section-lede">
-            Existing tools are excellent at storing, loading, and validating configuration. env-cap
-            adds the missing application context: why dependencies exist, who relies on them, and
-            how they should be maintained over time.
-          </p>
-
-          <div class="table-scroll">
-            <table class="comparison-table">
-              <caption>
-                Comparison of traditional environment configuration and application-aware
-                configuration with env-cap
-              </caption>
-
-              <thead>
-                <tr>
-                  <th scope="col">Topic</th>
-                  <th scope="col">Traditional configuration</th>
-                  <th scope="col">env-cap contracts</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr>
-                  <th scope="row">Purpose</th>
-                  <td>Stores and validates values required by the application</td>
-                  <td>Explains why each dependency exists and how it is used</td>
-                </tr>
-
-                <tr>
-                  <th scope="row">Ownership</th>
-                  <td>
-                    Ownership is often maintained through team knowledge or external documentation
-                  </td>
-                  <td>
-                    Configuration requirements stay connected to the capability that consumes them
-                  </td>
-                </tr>
-
-                <tr>
-                  <th scope="row">Dependency visibility</th>
-                  <td>
-                    Shows available variables, but not always which application areas depend on them
-                  </td>
-                  <td>
-                    Generates visibility into configuration dependencies across the application
-                  </td>
-                </tr>
-
-                <tr>
-                  <th scope="row">Lifecycle management</th>
-                  <td>
-                    Rotation, expiration, and removal policies often live separately from usage
-                  </td>
-                  <td>Tracks lifecycle information alongside the dependency definition</td>
-                </tr>
-
-                <tr>
-                  <th scope="row">Unused configuration</th>
-                  <td>Dead variables can remain after features are removed</td>
-                  <td>
-                    Configuration ownership makes unused dependencies easier to identify and remove
-                  </td>
-                </tr>
-
-                <tr>
-                  <th scope="row">Reusable packages</th>
-                  <td>
-                    Packages must document requirements separately or rely on application
-                    coordination
-                  </td>
-                  <td>
-                    Packages can declare their own environment requirements and contribute them to
-                    the application manifest
-                  </td>
-                </tr>
-
-                <tr>
-                  <th scope="row">Validation</th>
-                  <td>Determines whether configuration values are present and valid</td>
-                  <td>
-                    Validates configuration while preserving application context around each
-                    dependency
-                  </td>
-                </tr>
-
-                <tr>
-                  <th scope="row">Operational understanding</th>
-                  <td>Requires searching code, documentation, and team knowledge</td>
-                  <td>
-                    Provides generated artifacts showing configuration relationships and ownership
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="callout callout--note">
-            <p class="callout-title">Works with existing tools</p>
-            <p>
-              env-cap is not a replacement for secret managers, dotenv, or validation libraries. It
-              adds the application context needed to understand and maintain configuration as
-              systems grow.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Solution -->
-      <section class="section" id="solution" aria-labelledby="solution-heading">
-        <div class="container container--narrow">
-          <p class="section-eyebrow">The solution</p>
-
-          <h2 id="solution-heading">Define configuration as part of the application</h2>
-
-          <p>
-            An environment variable is more than a value. It represents a dependency between an
-            application capability and the systems it relies on. env-cap lets each capability
-            declare its configuration requirements, ownership, and lifecycle information alongside
-            the code that uses them, while build-time tooling creates a complete view of those
-            dependencies.
+            You replace nothing. env-cap sits next to your existing validation — Zod, envalid,
+            t3-env, plain <code>dotenv</code> — or with none at all.
           </p>
 
           <div class="code-block">
             <div class="code-block-header">
-              <span class="code-block-filename">features/payments/env.schema.ts</span>
-              <button class="copy-button" type="button" data-copy-target="solution-code">
+              <span class="code-block-filename">Quick start</span>
+              <button class="copy-button" type="button" data-copy-target="hero-init-snippet">
                 Copy
               </button>
             </div>
 
             <!-- prettier-ignore -->
-            <pre><code id="solution-code">export const paymentsEnv = createEnv({
-  STRIPE_KEY: {
-    validator: all(string(), minLength(1)), // using whatever validation library you prefer
-  },
-});
-
-export const paymentsDoc = documentEnv({
-  STRIPE_KEY: {
-    description:
-      "Payment provider authentication key required by payment processing capability. To rotate this key, reach out to the payments team to have them rotate the STRIPE_KEY for Stripe.",
-    expiresAt: "2026-12-31",
-  },
-});
-
-paymentsEnv.STRIPE_KEY;
-
-// Build artifacts reveal:
-// - who requires this variable
-// - why it exists
-// - how it should be maintained</code></pre>
+            <pre><code id="hero-init-snippet">npm install env-cap
+          npx env-cap init</code></pre>
           </div>
 
-          <p>
-            Runtime access remains local and type-safe, while build artifacts bring configuration
-            context together across the application to make dependencies, ownership, and lifecycle
-            information easier to understand.
+          <div class="hero-actions">
+            <a class="button button--primary" href="#see-it">See it in action</a>
+            <a
+              class="button button--secondary button--on-dark"
+              href="https://github.com/maverickcer/env-cap#readme"
+            >
+              View on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Why it exists -->
+      <section class="section" id="why" aria-labelledby="why-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">Why it exists</p>
+
+          <h2 id="why-heading">Secret managers and validators answer different questions.</h2>
+
+          <p class="section-lede">
+            A secret manager decides where a value lives. A validator decides whether a value is
+            well-formed. Neither one answers:
           </p>
 
+          <ul class="principles-list">
+            <li>Why does this variable exist, and which capability actually depends on it?</li>
+            <li>Who owns it, and who do you page when it needs to rotate?</li>
+            <li>
+              Is it still needed, or is it a leftover from a feature that shipped and moved on?
+            </li>
+          </ul>
+
           <div class="callout callout--note">
+            <p class="callout-title">The cost of not answering them</p>
             <p>
-              <strong>
-                Configuration stays with the application. Understanding scales across the system.
-              </strong>
+              As an application grows past a handful of variables, those questions end up answered
+              nowhere executable — a wiki page, a Slack thread, someone's memory. env-cap makes the
+              answer part of the code: each capability declares the environment it owns, and a
+              build-time pass turns every declaration into a project-wide ownership and lifecycle
+              view.
             </p>
           </div>
         </div>
       </section>
 
-      <!-- Why Configuration Context Matters -->
-      <section
-        class="section section--muted"
-        id="why-context"
-        aria-labelledby="why-context-heading"
-      >
-        <div class="container container--narrow">
-          <p class="section-eyebrow">Why configuration context matters</p>
-
-          <h2 id="why-context-heading">Configuration should explain itself</h2>
-
-          <p class="section-lede">
-            Environment variables are not just values. They are application dependencies with
-            owners, purposes, and lifecycles. As systems grow, keeping that context connected to the
-            code that depends on it becomes increasingly important.
-          </p>
-
-          <ul class="reasoning-list">
-            <li>
-              <strong>Dependencies should have clear ownership.</strong>
-              <p>
-                The teams responsible for application behavior should understand the configuration
-                required to support that behavior. env-cap keeps dependency context close to the
-                capabilities that consume it while still providing a complete application view.
-              </p>
-            </li>
-
-            <li>
-              <strong>Removing capabilities should remove configuration burden.</strong>
-              <p>
-                Configuration often survives longer than the features that required it. Ownership
-                metadata makes unused variables easier to identify and remove instead of allowing
-                forgotten dependencies to accumulate.
-              </p>
-            </li>
-
-            <li>
-              <strong>Configuration changes should be visible during review.</strong>
-              <p>
-                When a capability changes its dependencies, those changes should be reviewed
-                alongside the code that introduced them. This keeps configuration decisions
-                connected to application changes instead of hidden in separate documentation.
-              </p>
-            </li>
-
-            <li>
-              <strong>Reusable packages should declare their own requirements.</strong>
-              <p>
-                Internal libraries and installable capabilities can provide their own environment
-                contracts without requiring every application to manually copy and maintain
-                configuration definitions.
-              </p>
-            </li>
-
-            <li>
-              <strong>Configuration lifecycle should follow application lifecycle.</strong>
-              <p>
-                Rotation schedules, ownership details, and operational notes remain attached to the
-                dependency definition instead of becoming separate documentation that can drift over
-                time.
-              </p>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- Architecture -->
-      <section class="section" id="architecture" aria-labelledby="architecture-heading">
+      <!-- How it works -->
+      <section class="section section--muted" id="how" aria-labelledby="how-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">How it works</p>
 
-          <h2 id="architecture-heading">Runtime and build-time stay separate on purpose</h2>
+          <h2 id="how-heading">Runtime and build-time stay separate on purpose.</h2>
 
           <p class="section-lede">
-            env-cap separates application execution from configuration intelligence. Runtime
-            receives only what the application requires, while build tooling creates the visibility
-            needed to understand and maintain dependencies.
+            Runtime receives only what the application requires — zero dependencies, no filesystem
+            access. Build tooling creates the visibility needed to understand and maintain
+            dependencies, as an explicit development or CI step, never at startup.
           </p>
 
           <div class="diagram">
@@ -487,28 +196,24 @@ paymentsEnv.STRIPE_KEY;
               access and a build path for generated documentation and visibility artifacts.
             </p>
 
-            <ol class="diagram-tree">
+            <ol class="diagram-tree" aria-hidden="true">
               <li>
                 Capability schema file
-
                 <ol class="diagram-branches">
                   <li>
                     <span class="diagram-branch-label">Runtime path</span>
-
                     <ol>
                       <li>createEnv()</li>
                       <li>validateEnv()</li>
-                      <li>Typed application access</li>
+                      <li>Typed, capability-scoped access</li>
                     </ol>
                   </li>
-
                   <li>
                     <span class="diagram-branch-label">Build path</span>
-
                     <ol>
                       <li>documentEnv()</li>
-                      <li>Static analysis (AST parsing — never imported or executed)</li>
-                      <li>Generated visibility artifacts</li>
+                      <li>Static AST analysis — never imported or executed</li>
+                      <li>Generated manifest, docs, ownership report</li>
                     </ol>
                   </li>
                 </ol>
@@ -517,333 +222,248 @@ paymentsEnv.STRIPE_KEY;
           </div>
 
           <p>
-            Runtime stays modular and contains only what the running application requires. It has
-            zero runtime dependencies and no filesystem access. Build tooling provides
-            application-wide visibility as an explicit development or CI step rather than during
-            startup.
+            The build package parses schema files as TypeScript ASTs and never imports or executes
+            them — a static-analysis boundary that prevents unfamiliar code from running as a side
+            effect of generating documentation, manifests, and dependency insight.
+          </p>
+        </div>
+      </section>
+
+      <!-- Why not dotenv/Zod/etc -->
+      <section class="section" id="why-not-x" aria-labelledby="why-not-x-heading">
+        <div class="container">
+          <p class="section-eyebrow">Why not just dotenv, Zod, envalid, or t3-env?</p>
+
+          <h2 id="why-not-x-heading">You keep all of them.</h2>
+
+          <p class="section-lede">
+            env-cap doesn't replace your loader or your validator — it adds the layer none of them
+            cover.
           </p>
 
+          <div class="table-scroll">
+            <table class="comparison-table">
+              <caption>
+                Where common approaches stop and env-cap begins
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Tool</th>
+                  <th scope="col">What it solves</th>
+                  <th scope="col">What it doesn't</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>dotenv</code></th>
+                  <td>Loads values from a <code>.env</code> file into <code>process.env</code></td>
+                  <td>
+                    Says nothing about who owns a value, whether it's still used, or when it expires
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Zod / envalid / t3-env</th>
+                  <td>Validates that a value has the right shape</td>
+                  <td>
+                    Same gap — a well-typed variable can still be an orphaned, unowned, or expired
+                    one
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">A secret manager</th>
+                  <td>Decides where a value physically lives and how it's rotated</td>
+                  <td>Says nothing about which capability in your code actually depends on it</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
           <p>
-            The build package parses schema files as TypeScript ASTs and never imports or executes
-            them. This creates a static-analysis boundary that prevents unfamiliar code from running
-            as a side effect while generating documentation, manifests, and dependency insights.
+            Plug an existing <code>Validator&lt;T&gt;</code>/<code>Processor&lt;T&gt;</code>
+            function straight into a contract, or use env-cap's own lightweight helpers when a
+            validation library is more than the variable needs. What env-cap adds is ownership,
+            lifecycle, and a static-analysis pass that can tell you a capability declares owning a
+            variable nothing actually reads.
+          </p>
+        </div>
+      </section>
+
+      <!-- See it -->
+      <section class="section section--muted" id="see-it" aria-labelledby="see-it-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">See it</p>
+
+          <h2 id="see-it-heading">Not a mockup — real output from this repository.</h2>
+
+          <p class="section-lede">
+            Run against
+            <a href="https://github.com/maverickcer/env-cap/tree/main/examples/application"
+              >examples/application</a
+            >
+            in this repo:
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">npx env-cap --docs ... --ownership ...</span>
+              <button class="copy-button" type="button" data-copy-target="demo-output">Copy</button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="demo-output">Wrote manifest: src/generated/env.manifest.ts
+            Discovered 1 contract(s).
+            Wrote docs: docs/ENVIRONMENT.md
+
+1 variable(s)/contract(s) expiring soon or already expired:
+- STRIPE_KEY in env: 2026-09-01 (expired 9d ago)
+Wrote dependency ownership report: docs/OWNERSHIP.md
+
+2 unconsumed owned variable(s):
+- DATABASE_URL in app
+- STRIPE_KEY in app</code></pre>
+          </div>
+
+          <p>
+            Not "CI failed" — a rotation deadline that already passed, and two variables a
+            capability declares owning but nothing in the codebase actually reads. Both are real,
+            provable facts about this fixture, not synthetic examples.
           </p>
         </div>
       </section>
 
       <!-- Adoption -->
-      <section class="section section--muted" id="adoption" aria-labelledby="adoption-heading">
-        <div class="container">
+      <section class="section" id="adoption" aria-labelledby="adoption-heading">
+        <div class="container container--narrow">
           <p class="section-eyebrow">Adoption</p>
 
-          <h2 id="adoption-heading">Keep what you already have</h2>
+          <h2 id="adoption-heading">From one schema to capability-owned contracts.</h2>
 
           <p class="section-lede">
-            Keep your secret manager, your loader, and your validation library. env-cap adds
-            ownership and lifecycle context on top of what you already run.
+            Most applications start with a single, centralized schema — and that's a fine place to
+            stay if it's working. As ownership boundaries start to matter, contracts move closer to
+            the capability that consumes them, with no change to the runtime model.
           </p>
+
           <div class="callout callout--note">
-            <p class="callout-title">For decision-makers evaluating adoption</p>
+            <p class="callout-title">You probably don't need it when</p>
             <p>
-              Zero runtime dependencies — nothing pulled into your production
-              <code>node_modules</code>. A hard 3&nbsp;KB gzip budget enforced at publish, not just
-              checked in CI. Releases publish through npm's OIDC trusted publishing with provenance
-              attestation, so a consumer can verify a build came from this repository's own CI, not
-              a maintainer's laptop. env-cap has not reached a 1.0 release yet — see
-              <a
-                href="https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md#versioning-stability-and-long-term-support"
-                >the versioning and LTS section</a
-              >
-              of ADOPTION.md for exactly what that means for support today versus after 1.0.
+              Your application is small, one team owns every configuration decision, environment
+              variables are few and stable, and you already have enough visibility into your
+              dependencies. A validation library alone, or plain <code>dotenv</code>, may be all you
+              need.
             </p>
           </div>
+        </div>
+      </section>
+
+      <!-- Proof -->
+      <section class="section section--muted" id="proof" aria-labelledby="proof-heading">
+        <div class="container">
+          <p class="section-eyebrow">Go deeper</p>
+
+          <h2 id="proof-heading">Read past the pitch.</h2>
+
+          <p class="section-lede">
+            The output above comes from
+            <a href="https://github.com/maverickcer/env-cap/tree/main/examples/application"
+              >examples/application</a
+            >
+            in this repo — a real fixture, not a mockup. These are the documents behind it: the full
+            workflow, the architecture invariants, the security model, and the generated API
+            surface.
+          </p>
 
           <div class="adoption-grid">
-            <a
-              class="adoption-card"
-              href="https://github.com/maverickcer/env-cap/blob/main/specs/migrations/from-dotenv.md"
-            >
-              <span class="adoption-card-title">Environment loaders</span>
+            <a class="adoption-card" href="https://github.com/maverickcer/env-cap#readme">
+              <span class="adoption-card-title">README</span>
               <span class="adoption-card-desc">
-                Continue loading values however you already do. Add contracts and visibility on top.
+                The pitch, a minimal first contract, and when env-cap is and isn't worth adopting.
               </span>
-              <span class="external-link-note">Opens on GitHub ↗</span>
+              <span class="external-link-note">Read the README ↗</span>
             </a>
 
             <a
               class="adoption-card"
-              href="https://github.com/maverickcer/env-cap/blob/main/specs/migrations/from-process-env.md"
+              href="https://github.com/maverickcer/env-cap/blob/main/GUIDE.md"
             >
-              <span class="adoption-card-title">Existing process.env usage</span>
+              <span class="adoption-card-title">Guide</span>
               <span class="adoption-card-desc">
-                Replace scattered configuration access with documented, validated dependencies.
+                The full generate/validate workflow, validation contexts, reusable packages, and the
+                CLI.
               </span>
-              <span class="external-link-note">Opens on GitHub ↗</span>
+              <span class="external-link-note">Read the Guide ↗</span>
             </a>
 
             <a
               class="adoption-card"
-              href="https://github.com/maverickcer/env-cap/blob/main/specs/migrations/from-zod.md"
+              href="https://github.com/maverickcer/env-cap/blob/main/specs/architecture.md"
             >
-              <span class="adoption-card-title">Validation libraries</span>
+              <span class="adoption-card-title">Architecture</span>
               <span class="adoption-card-desc">
-                Keep Zod and other validators while adding ownership, lifecycle, and dependency
-                context.
+                The core invariants — runtime/build-time separation, self-redacting contracts, and
+                why the build tool never acquires a filesystem capability itself.
               </span>
-              <span class="external-link-note">Opens on GitHub ↗</span>
+              <span class="external-link-note">Read architecture.md ↗</span>
             </a>
 
             <a
               class="adoption-card"
-              href="https://github.com/maverickcer/env-cap/blob/main/specs/migrations/from-t3-env.md"
+              href="https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
             >
-              <span class="adoption-card-title">Existing environment schemas</span>
+              <span class="adoption-card-title">Security model</span>
               <span class="adoption-card-desc">
-                Preserve your validation approach while distributing configuration context closer to
-                usage.
+                Zero runtime dependencies, self-redacting contracts, and what stays an application
+                responsibility.
               </span>
-              <span class="external-link-note">Opens on GitHub ↗</span>
+              <span class="external-link-note">Read the security model ↗</span>
             </a>
 
             <a
               class="adoption-card"
-              href="https://github.com/maverickcer/env-cap/blob/main/specs/migrations/from-envalid.md"
+              href="https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md"
             >
-              <span class="adoption-card-title">Platform configuration</span>
+              <span class="adoption-card-title">Adoption guide</span>
               <span class="adoption-card-desc">
-                Keep centralized operational control while adding application-level dependency
-                insight.
+                A decision-maker summary: security posture, bundle size, and versioning/LTS stance.
               </span>
-              <span class="external-link-note">Opens on GitHub ↗</span>
+              <span class="external-link-note">Read ADOPTION.md ↗</span>
             </a>
 
-            <a
-              class="adoption-card"
-              href="https://github.com/maverickcer/env-cap/blob/main/specs/migrations/from-centralized-schema.md"
-            >
-              <span class="adoption-card-title">Centralized schemas</span>
+            <a class="adoption-card" href="api/index.html">
+              <span class="adoption-card-title">API reference</span>
               <span class="adoption-card-desc">
-                Add distributed ownership and lifecycle awareness without losing project-wide
-                visibility.
+                Every exported symbol, generated from source so it cannot drift.
               </span>
-              <span class="external-link-note">Opens on GitHub ↗</span>
+              <span class="external-link-note">Read the API reference ↗</span>
             </a>
           </div>
-
-          <h3>Evaluating this for your organization?</h3>
-          <p>
-            <a href="https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md">ADOPTION.md</a>
-            explains the security model, adoption strategy, and migration approach for introducing
-            application-aware configuration into existing systems.
-            <a href="https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md"
-              >VERSIONING.md</a
-            >
-            covers stability guarantees, experimental features, and release commitments.
-          </p>
         </div>
       </section>
 
-      <!-- FAQ -->
-      <section class="section" id="faq" aria-labelledby="faq-heading">
+      <!-- Final CTA -->
+      <section class="section" id="fit" aria-labelledby="fit-heading">
         <div class="container container--narrow">
-          <p class="section-eyebrow">FAQ</p>
+          <p class="section-eyebrow">Next</p>
 
-          <h2 id="faq-heading">Common architecture questions</h2>
-
-          <details class="faq-item">
-            <summary>Why does configuration need more context than validation provides?</summary>
-            <p>
-              Validation answers whether an application has acceptable configuration values. It does
-              not explain why those values exist, which capabilities depend on them, how they should
-              be maintained, or whether they are still needed.
-            </p>
-            <p>
-              env-cap adds application context around configuration dependencies so teams can
-              understand the relationship between their code and the environment variables required
-              to run it.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>How does env-cap know which configuration is required?</summary>
-            <p>
-              Required configuration is determined during build time. env-cap discovers environment
-              contracts from the application and its dependencies, including reusable packages
-              installed through <code>node_modules</code>. This allows internal libraries and shared
-              capabilities to declare their own requirements without requiring applications to
-              manually copy or pass configuration definitions around.
-            </p>
-            <p>
-              env-cap generates a central manifest containing the active environment contracts
-              required by the application. At startup, <code>validateEnv()</code> uses that manifest
-              to quickly validate the complete environment before the application serves traffic.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>What happens when capabilities define conflicting requirements?</summary>
-            <p>
-              env-cap surfaces conflicting definitions during build-time artifact generation. This
-              allows teams to determine whether similar requirements represent the same dependency,
-              need to be synchronized, or should remain separate because they represent different
-              resources.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              What happens when two capabilities use the same variable name differently?
-            </summary>
-            <p>
-              Identical variable names do not automatically represent identical dependencies. Each
-              capability defines how a variable is obtained, validated, and used. Generated
-              artifacts make these relationships visible so teams can decide whether capabilities
-              should share a configuration value or use separate resources.
-            </p>
-            <p>
-              Runtime validation can detect incompatibilities based on how a variable is used, not
-              only whether the value exists. This helps identify cases where configuration appears
-              valid but does not satisfy the capability that consumes it.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>Why is adding configuration context worth the additional structure?</summary>
-            <p>
-              Environment variables are easy to create but difficult to maintain when their purpose,
-              ownership, and lifecycle become unclear. env-cap connects configuration requirements
-              to the application context needed to operate them safely.
-            </p>
-            <ul>
-              <li>
-                Developers understand why each variable exists, where it is used, and which
-                capabilities depend on it.
-              </li>
-              <li>
-                New contributors can discover requirements from the code that consumes them instead
-                of searching through outdated documentation or historical pull requests.
-              </li>
-              <li>
-                Teams can identify unused, undocumented, or orphaned configuration that accumulates
-                after features change or are removed.
-              </li>
-              <li>
-                Operations teams gain visibility into configuration dependencies, ownership, and
-                lifecycle information before changes become incidents.
-              </li>
-              <li>
-                Security teams gain additional context around sensitive configuration, including the
-                capabilities that require access and expected lifecycle management.
-              </li>
-              <li>
-                Teams can reason about configuration changes as application dependency changes
-                instead of treating environment variables as unrelated key-value pairs.
-              </li>
-            </ul>
-          </details>
-
-          <details class="faq-item">
-            <summary>Do I need to reorganize my application to adopt env-cap?</summary>
-            <p>
-              No. env-cap does not require replacing centralized configuration approaches. Teams can
-              keep existing schemas, loaders, and validation patterns while adding contracts to gain
-              improved visibility, documentation, and lifecycle information.
-            </p>
-            <p>
-              Capability ownership is an adoption pattern for teams that want configuration
-              requirements to live closer to the code that consumes them. Teams can introduce
-              ownership boundaries incrementally where they provide value.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>How does env-cap handle sensitive configuration?</summary>
-            <p>
-              env-cap does not store, fetch, transmit, or manage secrets. Secret storage remains the
-              responsibility of your deployment environment or secret manager.
-            </p>
-            <p>
-              env-cap provides context around configuration dependencies while keeping sensitive
-              values out of generated artifacts. Documentation metadata should describe
-              requirements, ownership, and lifecycle information, never credentials.
-            </p>
-            <p>
-              For complete security boundaries and threat considerations, see
-              <a href="https://github.com/maverickcer/env-cap/blob/main/SECURITY.md">
-                SECURITY.md </a
-              >.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>Does env-cap execute application code during analysis?</summary>
-            <p>
-              No. Build-time analysis parses schema files as TypeScript ASTs and never imports or
-              executes them. This prevents unexpected code execution while generating documentation
-              and manifests.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>Does env-cap add runtime overhead?</summary>
-            <p>
-              Yes. Like any configuration validation system, env-cap performs work during
-              initialization. The difference is that the cost is bounded and predictable.
-            </p>
-            <p>
-              Environment setup and validation scale linearly with the number of configured
-              variables:
-            </p>
-            <ul>
-              <li>Creating the environment interface: O(N)</li>
-              <li>Running initial validation: O(N)</li>
-            </ul>
-            <p>After initialization:</p>
-            <ul>
-              <li>Reading environment values: O(1)</li>
-              <li>Re-validating: O(1) because validation results are cached</li>
-            </ul>
-            <p>
-              This design keeps configuration safety checks at startup instead of repeatedly adding
-              processing overhead throughout application execution.
-            </p>
-            <p>
-              For enterprise-scale configurations, env-cap benchmarks initialization against
-              thousands of variables to detect performance regressions.
-            </p>
-            <p>
-              For complete performance characteristics powered by real benchmarks, see
-              <a href="https://github.com/maverickcer/env-cap/blob/main/PERFORMANCE.md">
-                PERFORMANCE.md </a
-              >.
-            </p>
-          </details>
-        </div>
-      </section>
-
-      <!-- Getting Started -->
-      <section class="section section--muted" id="getting-started">
-        <div class="container container--narrow">
-          <p class="section-eyebrow">Getting started</p>
-
-          <h2>Ready to understand your configuration dependencies?</h2>
+          <h2 id="fit-heading">See whether this model fits your configuration.</h2>
 
           <p class="section-lede">
-            Start with a single contract, generate your first configuration report, and adopt
-            incrementally alongside your existing validation and deployment workflows.
+            env-cap is pre-1.0. Per <code>VERSIONING.md</code>, a minor release may still include a
+            breaking change to the Stable tier before 1.0 — pin accordingly and read the changelog
+            on every minor upgrade.
           </p>
 
           <div class="hero-actions">
-            <a
-              class="button button--primary"
-              href="https://github.com/maverickcer/env-cap#quick-start"
-            >
-              Read the Quick Start
-            </a>
-
-            <a class="button button--secondary" href="https://github.com/maverickcer/env-cap">
+            <a class="button button--primary" href="https://github.com/maverickcer/env-cap#readme">
               View on GitHub
             </a>
+            <a
+              class="button button--secondary"
+              href="https://github.com/maverickcer/env-cap/tree/main/examples"
+            >
+              View the examples
+            </a>
+            <a class="button button--secondary" href="api/index.html">Browse the API</a>
           </div>
         </div>
       </section>
@@ -853,23 +473,19 @@ paymentsEnv.STRIPE_KEY;
     <footer class="site-footer">
       <div class="container footer-inner">
         <ul class="footer-nav">
-          <li><a href="#problem">Problem</a></li>
-          <li><a href="#comparison">Comparison</a></li>
-          <li><a href="#architecture">Architecture</a></li>
-          <li><a href="#adoption">Adoption</a></li>
-          <li><a href="#getting-started">Getting Started</a></li>
-          <li>
-            <a href="https://github.com/maverickcer/env-cap"> GitHub ↗ </a>
-          </li>
-          <li>
-            <a href="https://github.com/maverickcer/env-cap/issues"> Issues ↗ </a>
-          </li>
+          <li><a href="#why">Why it exists</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#see-it">See it</a></li>
+          <li><a href="#proof">Docs</a></li>
+          <li><a href="api/index.html">API reference</a></li>
+          <li><a href="https://github.com/maverickcer/env-cap#readme">README ↗</a></li>
+          <li><a href="https://github.com/maverickcer/env-cap/issues">Issues ↗</a></li>
         </ul>
 
         <p class="footer-meta">
           <span>© env-cap contributors</span>
           <span>
-            <a href="https://github.com/maverickcer/env-cap/blob/main/LICENSE"> MIT License </a>
+            <a href="https://github.com/maverickcer/env-cap/blob/main/LICENSE">MIT License</a>
           </span>
         </p>
       </div>

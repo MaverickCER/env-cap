@@ -1,0 +1,34 @@
+{
+  "dependencyOwnership": [
+    {
+      "contractName": "app",
+      "file": "src/env.ts",
+      "owner": "platform-team",
+      "variableCount": 5,
+      "consumers": [
+        "src/server.ts"
+      ]
+    }
+  ],
+  "abandonedContracts": [],
+  "unresolvedConsumers": [],
+  "unconsumedOwnedVariables": [
+    {
+      "contractName": "app",
+      "owner": "platform-team",
+      "key": "DATABASE_URL"
+    },
+    {
+      "contractName": "app",
+      "owner": "platform-team",
+      "key": "LOG_LEVEL"
+    },
+    {
+      "contractName": "app",
+      "owner": "platform-team",
+      "key": "STRIPE_KEY"
+    }
+  ],
+  "indeterminate": [],
+  "parseWarnings": []
+}

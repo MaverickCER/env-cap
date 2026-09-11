@@ -1,8 +1,0 @@
-Checking for drift (--check: nothing will be written)...
-
- manifest <EXAMPLE_ROOT>/src/generated/env.manifest.ts OK
- docs <EXAMPLE_ROOT>/docs/ENVIRONMENT.md OK
- envExample <EXAMPLE_ROOT>/.env.example OK
- usage <EXAMPLE_ROOT>/docs/OWNERSHIP.md OK
-
-All generated artifacts are up to date.
