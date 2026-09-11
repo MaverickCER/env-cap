@@ -10,15 +10,15 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const examplesRoot = path.join(root, "examples")
+const benchmarkRoot = path.join(root, "benchmark")
 
 const EXAMPLES = ["performance-runtime", "performance-buildtime"]
 
 for (const name of EXAMPLES) {
-  const exampleDir = path.join(examplesRoot, name)
+  const exampleDir = path.join(benchmarkRoot, name)
   if (!existsSync(path.join(exampleDir, "node_modules"))) {
     console.log(
-      `[skip] ${name}: node_modules not installed (run npm install in examples/${name} first)`,
+      `[skip] ${name}: node_modules not installed (run npm install in benchmark/${name} first)`,
     )
     continue
   }

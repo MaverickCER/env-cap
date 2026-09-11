@@ -116,26 +116,11 @@ choice.
 
 ## Release process (maintainers)
 
-Releases are automated via [Changesets](https://github.com/changesets/changesets)
-and npm's OIDC trusted publishing (`.github/workflows/release.yml`) — no
-`NPM_TOKEN` secret exists in this repository. Every merged PR with a pending
-changeset causes the workflow to open/update a "Version Packages" PR;
-merging that PR runs `npm run verify` and publishes.
-
-**One-time setup required before the first automated release** (cannot be
-done from a PR — it requires npm account access):
-
-1. On [npmjs.com](https://www.npmjs.com), open `@maverickcer/env-cap`'s
-   package settings and add a trusted publisher for GitHub Actions:
-   - Organization/user: `maverickcer`
-   - Repository: `env-cap`
-   - Workflow filename: `release.yml` (exactly — not a path, just the
-     filename; a mismatch here is the most common cause of the OIDC flow
-     failing with a misleading `E404`)
-   - Environment: leave blank unless the workflow is later scoped to a
-     GitHub Environment
-2. That's it — no token to copy anywhere. The workflow's `id-token: write`
-   permission plus this registration is the entire trust relationship.
+Releases are fully automated (Changesets + npm OIDC trusted publishing). The
+whole process — the normal flow, first-time trusted-publisher setup, and
+how to recover a failed or wrong publish — lives in
+[`RELEASING.md`](RELEASING.md). Contributors don't run any of it; a change
+ships by merging a PR that carries a changeset.
 
 ## Versioning and stability
 

@@ -38,7 +38,7 @@ decision, see a schema that exists only inside an installed package's
    `undefined` for bare/package specifiers -- only `./`- and `../`-prefixed
    specifiers ever resolve.
 
-`examples/paypal-consumer`'s README documented this honestly as "a real
+`test/integration/positive/enterprise/paypal-consumer`'s README documented this honestly as "a real
 discovery boundary, not glossed over," worked around only by pointing `root`
 at a shared parent directory of monorepo-sibling source folders -- a
 technique that provides no help for a genuinely separately-published npm

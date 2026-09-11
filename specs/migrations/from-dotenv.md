@@ -95,7 +95,7 @@ Example:
 ```ts
 // features/payments/env.schema.ts
 
-import { createEnv, documentEnv } from "@maverickcer/env-cap"
+import { createEnv, documentEnv } from "env-cap"
 
 const paymentsSchema = {
   STRIPE_SECRET_KEY: {
@@ -153,7 +153,7 @@ Example startup:
 
 ```ts
 import "dotenv/config"
-import { validateEnv } from "@maverickcer/env-cap"
+import { validateEnv } from "env-cap"
 import { manifest } from "./generated/env.manifest"
 
 await validateEnv({

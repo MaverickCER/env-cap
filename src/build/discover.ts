@@ -1,9 +1,11 @@
-import { readdir } from "node:fs/promises"
 import path from "node:path"
 import { globToRegExp } from "./glob.js"
+import type { BuildFileSystem } from "./types.js"
 
 /** Options for {@link discoverSchemaFiles}. */
 export interface DiscoverOptions {
+  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  readonly fs: BuildFileSystem
   /** Absolute path to search under. */
   readonly root: string
   /** Glob patterns (relative to `root`) a file must match at least one of to be included. */
@@ -12,7 +14,13 @@ export interface DiscoverOptions {
   readonly exclude: readonly string[]
 }
 
-const ALWAYS_SKIP_DIR_NAMES = new Set(["node_modules", ".git"])
+// A predicate, not a module-level `Set` -- a `Set` of string literals is
+// evaluated once at module load, which `perTest` coverage analysis can't
+// attribute to a covering test (a documented Stryker false-Survivor; see
+// [[feedback_stryker_mutation_score_formula]]).
+function isAlwaysSkippedDirName(name: string): boolean {
+  return name === "node_modules" || name === ".git"
+}
 
 /**
  * Finds every schema file matching `include`/`exclude` under `root`, returned
@@ -26,7 +34,7 @@ const ALWAYS_SKIP_DIR_NAMES = new Set(["node_modules", ".git"])
  * meant to run against real projects.
  */
 export async function discoverSchemaFiles(options: DiscoverOptions): Promise<string[]> {
-  const files = await walkDirectory(options.root, options.root, options.exclude)
+  const files = await walkDirectory(options.root, options.root, options.exclude, options.fs)
 
   const included = files.filter((file) => {
     const relativePath = toPosixRelative(options.root, file)
@@ -39,6 +47,11 @@ export async function discoverSchemaFiles(options: DiscoverOptions): Promise<str
   // Two-way compare only -- every entry is a distinct file's absolute path,
   // so `a === b` can never happen here (unlike a comparator keyed by a
   // free-form label, where an "equal" case is a real, reachable outcome).
+  // `<=` vs `<` only changes tie-breaking when `a === b` -- impossible here:
+  // `included` comes from a single directory walk that visits each real file
+  // exactly once, so no two entries can ever be the same path. Hand-verified:
+  // mutating this to `<=` and running the real suite passes unchanged.
+  // Stryker disable next-line EqualityOperator
   return included.map((file) => path.normalize(file)).sort((a, b) => (a < b ? -1 : 1))
 }
 
@@ -46,8 +59,9 @@ async function walkDirectory(
   directory: string,
   root: string,
   exclude: readonly string[],
+  fs: BuildFileSystem,
 ): Promise<string[]> {
-  const entries = await readdir(directory, { withFileTypes: true })
+  const entries = await fs.readdir(directory, { withFileTypes: true })
   const results: string[] = []
 
   for (const entry of entries) {
@@ -62,13 +76,13 @@ async function walkDirectory(
     // reintroduce that infinite-recursion risk -- see
     // test/build/discover.test.ts's symlink-cycle regression test.
     if (entry.isDirectory()) {
-      if (ALWAYS_SKIP_DIR_NAMES.has(entry.name)) continue
+      if (isAlwaysSkippedDirName(entry.name)) continue
       // Test as a directory (trailing slash) so a pattern like "**/node_modules/**"
       // -- which is meant to match *files inside* the directory -- also prunes
       // the directory itself before we ever read its contents.
       const relativeDir = `${toPosixRelative(root, fullPath)}/`
       if (matchesAnyPattern(relativeDir, exclude)) continue
-      results.push(...(await walkDirectory(fullPath, root, exclude)))
+      results.push(...(await walkDirectory(fullPath, root, exclude, fs)))
       continue
     }
 

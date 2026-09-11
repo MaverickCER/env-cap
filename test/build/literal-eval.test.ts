@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import ts from "typescript"
-import { evaluateLiteral } from "../../src/build/literal-eval.js"
+import { evaluateLiteral, getStaticPropertyName } from "../../src/build/literal-eval.js"
 
 function expressionOf(sourceExpression: string): ts.Expression {
   const sourceFile = ts.createSourceFile(
@@ -15,6 +15,44 @@ function expressionOf(sourceExpression: string): ts.Expression {
   if (!declaration.initializer) throw new Error("expected an initializer")
   return declaration.initializer
 }
+
+function propertyNameOf(objectLiteralExpression: string): ts.PropertyName {
+  const obj = expressionOf(objectLiteralExpression)
+  if (!ts.isObjectLiteralExpression(obj)) throw new Error("expected an object literal expression")
+  const prop = obj.properties[0]
+  if (!ts.isPropertyAssignment(prop)) throw new Error("expected a property assignment")
+  return prop.name
+}
+
+describe("getStaticPropertyName", () => {
+  it("reads an identifier key's text", () => {
+    expect(getStaticPropertyName(propertyNameOf(`{ description: 1 }`))).toBe("description")
+  })
+
+  it("reads a string-literal key's text", () => {
+    expect(getStaticPropertyName(propertyNameOf(`{ "has spaces": 1 }`))).toBe("has spaces")
+  })
+
+  it("reads a numeric-literal key's text", () => {
+    expect(getStaticPropertyName(propertyNameOf(`{ 42: 1 }`))).toBe("42")
+  })
+
+  it("returns undefined for a computed key", () => {
+    expect(getStaticPropertyName(propertyNameOf(`{ [someExpr]: 1 }`))).toBeUndefined()
+  })
+
+  it("returns undefined for a private-identifier-shaped key -- syntactically parseable (TS's error-tolerant parser still produces a PrivateIdentifier node here), even though it's not valid outside a class body", () => {
+    // Every OTHER recognized `PropertyName` kind (Identifier, StringLiteral,
+    // NumericLiteral) happens to share the exact same `.text` semantics, so
+    // this is the one input that actually distinguishes "properly matched
+    // by its own specific type guard" from "coincidentally read `.text` off
+    // whichever guard matched first" -- a `PrivateIdentifier`'s `.text`
+    // (`"#foo"`, confirmed via a real parse) is neither `undefined` nor any
+    // other branch's value, so only the real, unmutated chain of checks
+    // correctly falls through to `undefined` for it.
+    expect(getStaticPropertyName(propertyNameOf(`{ #foo: 1 }`))).toBeUndefined()
+  })
+})
 
 describe("evaluateLiteral", () => {
   it("resolves string, number, boolean, and null literals", () => {
@@ -70,6 +108,13 @@ describe("evaluateLiteral", () => {
   it("does not resolve a unary minus applied to a non-number", () => {
     expect(evaluateLiteral(expressionOf(`-someIdentifier`))).toEqual({ ok: false })
     expect(evaluateLiteral(expressionOf(`-"1"`))).toEqual({ ok: false })
+  })
+
+  it("does not resolve a DIFFERENT prefix unary operator, even applied to a real number literal -- only a leading minus is a resolvable literal", () => {
+    // `+1`/`~1`/`!1` are all `ts.isPrefixUnaryExpression` too; only the
+    // specific `MinusToken` operator is meant to resolve.
+    expect(evaluateLiteral(expressionOf(`+1`))).toEqual({ ok: false })
+    expect(evaluateLiteral(expressionOf(`~1`))).toEqual({ ok: false })
   })
 
   it("does not resolve an array containing a non-literal, non-spread element", () => {

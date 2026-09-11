@@ -1,0 +1,321 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maverickcer.github.io/env-cap/schema/contract-model.schema.json",
+  "title": "env-cap Contract Model",
+  "description": "Canonical, versioned projection of every declared environment-variable contract, active or not (see ADR 0024, ADR 0025). Generated from src/build/contract-model.ts's ContractModel type -- never hand-authored.",
+  "$ref": "#/definitions/ContractModel",
+  "definitions": {
+    "ContractModel": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 3
+        },
+        "contracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContractModelContract"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "contracts"
+      ],
+      "additionalProperties": false
+    },
+    "ContractModelContract": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "sensitivity": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "legalBasis": {
+          "type": "string"
+        },
+        "retention": {
+          "type": "string"
+        },
+        "dataResidency": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "auditRequired": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated -- matches `DiscoveredContractSummary.file`."
+        },
+        "exportName": {
+          "type": "string"
+        },
+        "contractName": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "category": {
+          "type": "string"
+        },
+        "exclusiveGroup": {
+          "type": "string"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContractModelVariable"
+          }
+        },
+        "documented": {
+          "type": "boolean"
+        },
+        "packageOrigin": {
+          "$ref": "#/definitions/PackageOrigin"
+        },
+        "declaration": {
+          "$ref": "#/definitions/SourcePosition",
+          "description": "Where this contract's `createEnv(...)` call is declared. Always present. See ADR 0036."
+        },
+        "documentation": {
+          "$ref": "#/definitions/SourcePosition",
+          "description": "Where this contract's `documentEnv(...)` call is declared, if one exists. See ADR 0036."
+        }
+      },
+      "required": [
+        "file",
+        "exportName",
+        "contractName",
+        "active",
+        "variables",
+        "documented",
+        "declaration"
+      ],
+      "additionalProperties": false,
+      "description": "One `createEnv()` contract's full statically-discoverable contract, active or not."
+    },
+    "ContractModelVariable": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "sensitivity": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "legalBasis": {
+          "type": "string"
+        },
+        "retention": {
+          "type": "string"
+        },
+        "dataResidency": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "auditRequired": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "key": {
+          "type": "string"
+        },
+        "hasDefault": {
+          "type": "boolean"
+        },
+        "defaultValue": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "ok": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "value": {}
+              },
+              "required": [
+                "ok",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "ok": {
+                  "type": "boolean",
+                  "const": false
+                }
+              },
+              "required": [
+                "ok"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "hasProcessor": {
+          "type": "boolean"
+        },
+        "processorSource": {
+          "type": "string"
+        },
+        "processorReturnType": {
+          "type": "string"
+        },
+        "hasValidator": {
+          "type": "boolean"
+        },
+        "validatorSource": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "refreshInstructions": {
+          "type": "string"
+        },
+        "setupInstructions": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "documented": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "$ref": "#/definitions/DiscoveredVariableEvidence",
+          "description": "The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See runtime.VariableEvidenceDocs and ADR 0037."
+        },
+        "declaration": {
+          "$ref": "#/definitions/SourcePosition",
+          "description": "Where this variable's own schema property is declared. See ADR 0036."
+        }
+      },
+      "required": [
+        "key",
+        "hasDefault",
+        "hasProcessor",
+        "hasValidator",
+        "documented",
+        "declaration"
+      ],
+      "additionalProperties": false,
+      "description": "One variable's full statically-discoverable contract: schema-shaped facts plus linked documentation."
+    },
+    "DiscoveredVariableEvidence": {
+      "type": "object",
+      "properties": {
+        "dynamicAccess": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Well-formed `\"path:line:column\"` entries from `evidence.dynamicAccess`, if set to an array of string literals -- a malformed entry warns and is dropped, never included here. See ADR 0037."
+        }
+      },
+      "additionalProperties": false,
+      "description": "The statically-extracted contents of one variable's `evidence` sub-object. See runtime.VariableEvidenceDocs."
+    },
+    "SourcePosition": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Root-relative, POSIX-separated."
+        },
+        "line": {
+          "type": "number",
+          "description": "1-indexed line number."
+        },
+        "column": {
+          "type": "number",
+          "description": "1-indexed column number."
+        }
+      },
+      "required": [
+        "file",
+        "line",
+        "column"
+      ],
+      "additionalProperties": false,
+      "description": "A precise pointer into a source file -- the shared shape every exact-position fact in the build pipeline (declaration sites, usage sites, dynamic-access sites) uses, so a consumer never has to reconcile three ad hoc `{ file; line; column }` shapes that happen to mean the same thing. See ADR 0036."
+    },
+    "PackageOrigin": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "type": "string",
+          "description": "The allow-listed package name that declared this schema."
+        },
+        "declaredField": {
+          "type": "string",
+          "description": "The `\"envCap.schema\"` value exactly as the package author wrote it."
+        },
+        "resolvedFile": {
+          "type": "string",
+          "description": "Absolute, realpath-canonicalized path to the resolved schema file."
+        },
+        "packageDir": {
+          "type": "string",
+          "description": "Absolute, realpath-canonicalized path to the package's own directory."
+        }
+      },
+      "required": [
+        "packageName",
+        "declaredField",
+        "resolvedFile",
+        "packageDir"
+      ],
+      "additionalProperties": false,
+      "description": "Both the authored and resolved forms are kept -- diagnostics benefit from showing exactly what a package author wrote versus what it resolved to."
+    }
+  }
+}

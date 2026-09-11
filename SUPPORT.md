@@ -1,6 +1,6 @@
 # Support
 
-Thank you for using `@maverickcer/env-cap`.
+Thank you for using `env-cap`.
 
 This document explains how to get help, report issues, and request improvements.
 
@@ -32,7 +32,7 @@ If you believe you have found a bug, please open a **GitHub Issue**.
 
 When reporting a bug, include:
 
-- The version of `@maverickcer/env-cap`
+- The version of `env-cap`
 - Your Node.js version
 - Your operating system
 - Steps to reproduce the issue
@@ -69,6 +69,6 @@ Older releases may receive limited support or no updates.
 
 ## Response Expectations
 
-`@maverickcer/env-cap` is maintained as an open source project.
+`env-cap` is maintained as an open source project.
 
 While all Issues and Discussions are appreciated, response times cannot be guaranteed. Community participation is encouraged, and well-documented bug reports and feature proposals help improve the project for everyone.

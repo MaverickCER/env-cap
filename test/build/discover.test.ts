@@ -3,6 +3,7 @@ import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { discoverSchemaFiles } from "../../src/build/discover.js"
+import { createInMemoryBuildFs, nodeBuildFs } from "../support/build-filesystem.js"
 
 let root: string
 
@@ -26,7 +27,12 @@ describe("discoverSchemaFiles", () => {
     await touch("packages/database/env.schema.ts")
     await touch("features/payments/index.ts") // not a schema file, should be ignored
 
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
 
     expect(files).toHaveLength(2)
     expect(files.every((f) => f.endsWith("env.schema.ts"))).toBe(true)
@@ -35,7 +41,12 @@ describe("discoverSchemaFiles", () => {
   it("matches a root-level file with a leading ** pattern (zero path segments)", async () => {
     await touch("env.schema.ts")
 
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
 
     expect(files).toHaveLength(1)
   })
@@ -45,7 +56,12 @@ describe("discoverSchemaFiles", () => {
     await touch("a-feature/env.schema.ts")
     await touch("m-feature/env.schema.ts")
 
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
     const sorted = [...files].sort()
 
     expect(files).toEqual(sorted)
@@ -60,7 +76,12 @@ describe("discoverSchemaFiles", () => {
       await touch(`${name}/env.schema.ts`)
     }
 
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
 
     expect(files).toEqual([...files].sort())
     expect(files.map((f) => path.basename(path.dirname(f)))).toEqual([
@@ -79,7 +100,12 @@ describe("discoverSchemaFiles", () => {
     await touch("node_modules/some-package/env.schema.ts")
     await touch(".git/env.schema.ts")
 
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
 
     expect(files).toHaveLength(1)
     expect(files[0]).toContain("payments")
@@ -90,6 +116,7 @@ describe("discoverSchemaFiles", () => {
     await touch("node_modules/some-package/nested/env.schema.ts")
 
     const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
       root,
       include: ["**/env.schema.ts"],
       exclude: ["**/node_modules/**"],
@@ -103,9 +130,31 @@ describe("discoverSchemaFiles", () => {
     await touch("features/experimental/env.schema.ts")
 
     const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
       root,
       include: ["**/env.schema.ts"],
       exclude: ["**/experimental/**"],
+    })
+
+    expect(files).toHaveLength(1)
+    expect(files[0]).toContain("payments")
+  })
+
+  it("prunes a directory matched by a trailing-slash, directory-only exclude pattern -- distinct from the file-level exclude filter, which a pattern with no trailing content after the slash can never match", async () => {
+    // "features/experimental/" (trailing slash, nothing after) can only ever
+    // match the directory-pruning check's own `${relativeDir}/`-suffixed
+    // string -- it can't match a real file path (which never ends in "/"),
+    // so this specifically exercises the directory-level prune, not the
+    // file-level `included = files.filter(...)` exclude check the other
+    // exclude tests above already cover.
+    await touch("features/payments/env.schema.ts")
+    await touch("features/experimental/env.schema.ts")
+
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: ["features/experimental/"],
     })
 
     expect(files).toHaveLength(1)
@@ -123,7 +172,12 @@ describe("discoverSchemaFiles", () => {
     await touch("database/env.schema.ts")
     await touch("database-legacy/env.schema.ts")
 
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
 
     expect(files.map((f) => path.basename(path.dirname(f)))).toEqual([
       "database-legacy",
@@ -133,8 +187,24 @@ describe("discoverSchemaFiles", () => {
 
   it("returns an empty array when nothing matches", async () => {
     await touch("features/payments/index.ts")
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
     expect(files).toEqual([])
+  })
+
+  it("returns exactly the files it walked, with no extra entries -- the accumulator starts genuinely empty", async () => {
+    await touch("features/payments/env.schema.ts")
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/*"],
+      exclude: [],
+    })
+    expect(files).toEqual([path.join(root, "features/payments/env.schema.ts")])
   })
 
   it("does not recurse into (or hang on) a directory symlink, including a self-referential cycle", async () => {
@@ -142,9 +212,55 @@ describe("discoverSchemaFiles", () => {
     await fs.mkdir(path.join(root, "cyclic"))
     await fs.symlink(path.join(root, "cyclic"), path.join(root, "cyclic/self"), "dir")
 
-    const files = await discoverSchemaFiles({ root, include: ["**/env.schema.ts"], exclude: [] })
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
 
     expect(files).toHaveLength(1)
     expect(files[0]).toContain("payments")
   }, 5000)
+})
+
+// ADR 0040: `src/build/**` depends on the `BuildFileSystem` *contract*, not on
+// `node:fs`. Running the exact same discovery against a `Map`-backed fake --
+// no real disk anywhere -- is the proof: if `discover.ts` reached for
+// `node:fs` itself, these would not pass.
+describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
+  const memRoot = path.normalize("/project")
+
+  it("walks the seeded tree and applies include/exclude, pruning node_modules", async () => {
+    const inMemoryFs = createInMemoryBuildFs({
+      [`${memRoot}/features/payments/env.schema.ts`]: "// contract\n",
+      [`${memRoot}/packages/database/env.schema.ts`]: "// contract\n",
+      [`${memRoot}/features/payments/index.ts`]: "// not a schema\n",
+      [`${memRoot}/node_modules/dep/env.schema.ts`]: "// must be pruned\n",
+      [`${memRoot}/legacy/env.schema.ts`]: "// excluded by pattern\n",
+    })
+
+    const files = await discoverSchemaFiles({
+      fs: inMemoryFs,
+      root: memRoot,
+      include: ["**/env.schema.ts"],
+      exclude: ["legacy/**"],
+    })
+
+    expect(files).toEqual([
+      path.normalize(`${memRoot}/features/payments/env.schema.ts`),
+      path.normalize(`${memRoot}/packages/database/env.schema.ts`),
+    ])
+  })
+
+  it("returns an empty array when the fake holds no matching file", async () => {
+    const inMemoryFs = createInMemoryBuildFs({ [`${memRoot}/src/index.ts`]: "" })
+    const files = await discoverSchemaFiles({
+      fs: inMemoryFs,
+      root: memRoot,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
+    expect(files).toEqual([])
+  })
 })

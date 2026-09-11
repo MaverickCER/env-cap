@@ -81,7 +81,7 @@ The database capability owns database configuration:
 ```ts
 // database/env.schema.ts
 
-import { createEnv } from "@maverickcer/env-cap"
+import { createEnv } from "env-cap"
 
 const databaseSchema = {
   DATABASE_URL: {
@@ -101,7 +101,7 @@ The payments capability owns payment configuration:
 ```ts
 // payments/env.schema.ts
 
-import { createEnv } from "@maverickcer/env-cap"
+import { createEnv } from "env-cap"
 
 const paymentsSchema = {
   STRIPE_SECRET_KEY: {
@@ -286,7 +286,7 @@ PORT: {
 Add operational metadata separately:
 
 ```ts
-import { documentEnv } from "@maverickcer/env-cap"
+import { documentEnv } from "env-cap"
 
 documentEnv(databaseSchema, {
   owner: "platform",

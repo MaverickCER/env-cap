@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json",
+  // Same rule baseline internal-package-contract's bundled DocsMarkdown check
+  // falls back to (see internal-package-contract/config/markdownlint.jsonc) --
+  // written out here only so `ignores` below can be added; the rule set
+  // itself is unchanged.
+  "config": {
+    "default": true,
+    "MD013": false, // line length
+    "MD033": false, // inline HTML -- badges, <details>, <sub>
+    "MD041": false, // first line must be a heading -- badge blocks come first
+    "MD024": { "siblings_only": true }, // duplicate headings ok across sections
+    "MD029": { "style": "ordered" },
+    "MD004": false, // unordered-list marker style -- preference, not correctness
+    "MD036": false, // emphasis-as-heading -- false-positives on legitimate lead-in bold
+  },
+  // `docs/api-report/` and `docs/api/` are machine-generated verbatim by
+  // `npm run docs:api`/`docs:api:report` (TypeDoc + typedoc-plugin-markdown)
+  // from JSDoc content -- never hand-authored, fully regenerated on every
+  // build, and already drift-checked separately (scripts/check-api-report.mjs).
+  // `.prettierignore` excludes the same paths for the identical reason ("avoid
+  // check flap"). Linting the generator's own output against rules meant for
+  // human-authored prose (bare URLs from JSDoc `@see` links, list indentation
+  // and heading structure TypeDoc's markdown theme controls, not us) produces
+  // findings nobody can fix without hand-patching output the next build
+  // discards -- so it is excluded here rather than hand-edited.
+  "ignores": ["docs/api-report/**", "docs/api/**"],
+}

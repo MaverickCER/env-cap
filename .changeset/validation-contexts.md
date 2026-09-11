@@ -1,5 +1,0 @@
----
-"@maverickcer/env-cap": minor
----
-
-Add generic, framework-agnostic validation contexts. A schema entry may declare a `context` (e.g. `"server"`, `"production"`, `"worker"` -- entirely application-defined, never interpreted by env-cap), and `validateEnv()` accepts the `activeContexts` active for a run. A variable with no `context` always participates; a variable with a `context` participates only when `activeContexts` includes it, otherwise it's skipped entirely (no default/processor/validator runs, and it stays in its not-ready state). Existing schemas that never set `context` are unaffected. Generated docs and `.env.example` surface a variable's validation context alongside a caveat that it's a participation filter only, not a bundling/security boundary or an authorization mechanism. When at least one variable declares a `context`, the generated manifest also exports `activeContexts` -- every context found across its (active) contracts -- so application code can pass it straight to `validateEnv()` without hand-typing the list. See [ADR 0022](specs/decisions/0022-validation-contexts.md).

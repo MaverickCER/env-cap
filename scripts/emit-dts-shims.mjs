@@ -19,7 +19,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const ENTRIES = [
   { name: "index", dtsPath: "./.dts/runtime/index.js" },
   { name: "build", dtsPath: "./.dts/build/index.js" },
+  { name: "node", dtsPath: "./.dts/node/index.js" },
   { name: "helpers", dtsPath: "./.dts/helpers/index.js" },
+  { name: "evidence", dtsPath: "./.dts/evidence/index.js" },
   { name: "eslint-plugin/index", dtsPath: "../.dts/eslint-plugin/index.js" },
 ]
 

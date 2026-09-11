@@ -6,15 +6,13 @@ responsibilities remain with the application, and why those boundaries exist.
 
 For implementation details such as contract redaction, error handling,
 `.env.example` generation, and documentation handling, see the [Security
-section of the README](README.md#security-model). This document describes the policy
+section of the Guide](GUIDE.md#security-model). This document describes the policy
 those mechanisms enforce rather than duplicating their implementation details.
 
 ## Reporting a vulnerability
 
-Report suspected security vulnerabilities privately through a GitHub security
-advisory:
-
-https://github.com/maverickcer/env-cap/security/advisories/new
+Report suspected security vulnerabilities privately through a
+[GitHub security advisory](https://github.com/maverickcer/env-cap/security/advisories/new).
 
 Alternatively, contact the maintainer through the contact information
 provided on the npm package page.
@@ -77,6 +75,35 @@ Runtime contracts intentionally contain only:
 Information that exists only for humans, operators, or generated artifacts
 belongs in `documentEnv()`. Responsibilities such as secret storage, rotation,
 telemetry, and access auditing belong to infrastructure outside this package.
+
+## Dual-package hazard
+
+The runtime keeps identity-sensitive state in module scope: the private
+`WeakMap` that associates a contract object with its schema
+(`src/runtime/registry.ts`), and the validation cache
+(`src/runtime/cache.ts`). If a consumer's dependency tree resolves
+`env-cap` through two different specifiers — one importer
+getting the ESM build, one `require()`r getting the CJS build, via a mixed
+ESM/CJS dependency graph or a re-exporting intermediate package — Node
+loads two entirely separate module instances, each with its own registry
+and cache. No npm package that ships both ESM and CJS builds can prevent
+this; it is a property of how Node's two module systems resolve
+independently.
+
+`env-cap` treats this as a checked, documented risk class rather than an
+unstated unknown
+([ADR 0041](specs/decisions/0041-dual-package-hazard-checked-documented.md));
+`test/runtime/dual-package-hazard.test.ts` pins the exact consequence in
+CI. That consequence is **fail-fast, not silent corruption**: a contract
+created by `createEnv()` in one instance and passed to `validateEnv()`,
+`resetEnvCache()`, or `isEnvContract()` resolved from the other instance is
+not recognized — `validateEnv()`/`resetEnvCache()` throw a `TypeError`
+("this value was not created by createEnv()") and `isEnvContract()` returns
+`false`, immediately and visibly, rather than validating against the wrong
+schema or reading a stale cache. Keep each capability's `createEnv()` call
+and the `validateEnv()` call that consumes its manifest resolving through
+the same module specifier (the normal case for an application that imports
+`env-cap` one way throughout).
 
 ## Build-time security model
 
@@ -184,6 +211,23 @@ Applications remain responsible for:
   Obtaining, storing, rotating, and revoking secrets are infrastructure
   responsibilities. `env-cap` validates configuration after it has been
   supplied; it does not replace a secret-management system.
+
+## Supply-chain posture
+
+For a reviewer checking this project's publish/build pipeline rather than
+its runtime API: releases are published via npm's OIDC trusted publishing
+(`.github/workflows/release.yml`) — there is no long-lived `NPM_TOKEN`
+secret in this repository to leak, rotate, or scope. The workflow's
+`id-token: write` permission is exchanged for a short-lived publish
+credential per run, tied to this exact repository and workflow file, and
+the same OIDC flow attaches npm provenance attestations to each published
+version. The runtime and helpers entry points are verified against real
+Node, Bun, and Deno engines in CI (`test/cross-runtime/`), not merely
+asserted to be isomorphic by inspection. Test coverage is enforced
+ratchet-up-only (see `vitest.config.ts`; [`CONTRIBUTING.md`](CONTRIBUTING.md)
+forbids lowering a threshold to accommodate a drop). See
+[`RELEASING.md`](RELEASING.md#first-time-setup) for the one-time
+trusted-publisher setup this depends on.
 
 ## Supported versions
 

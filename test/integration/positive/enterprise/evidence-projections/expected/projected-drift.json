@@ -1,0 +1,22 @@
+{
+  "hasDrift": false,
+  "stale": [],
+  "missing": [],
+  "ok": [
+    {
+      "artifact": "manifest",
+      "path": "src/generated/env.manifest.ts",
+      "status": "ok"
+    },
+    {
+      "artifact": "docs",
+      "path": "docs/ENVIRONMENT.md",
+      "status": "ok"
+    },
+    {
+      "artifact": "envExample",
+      "path": ".env.example",
+      "status": "ok"
+    }
+  ]
+}

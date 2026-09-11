@@ -1,0 +1,15 @@
+{
+  "name": "env-cap-example-performance-buildtime",
+  "private": true,
+  "type": "module",
+  "description": "Build-time codegen benchmark: discovery, parsing/linking, and manifest/docs/usage generation cost as monorepo size scales.",
+  "scripts": {
+    "benchmark": "node --expose-gc scripts/run-benchmark.mjs"
+  },
+  "dependencies": {
+    "env-cap": "file:../.."
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

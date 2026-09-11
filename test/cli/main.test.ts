@@ -31,7 +31,7 @@ beforeEach(async () => {
   // (UNDOCUMENTED_VAR) so the docs pass has something real to report.
   await write(
     "features/payments/env.schema.ts",
-    `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+    `import { createEnv, documentEnv } from "env-cap";
 
 const schema = {
   STRIPE_KEY: {},
@@ -91,6 +91,16 @@ describe("main() -- real --location/--docs run", () => {
     expect(output).toContain("1 undocumented variable(s):")
     expect(output).toContain("  - UNDOCUMENTED_VAR in paymentsEnv")
 
+    // No parse warnings and no unresolved documentEnv() links in this clean
+    // fixture -- the ⚠ banner (gated on totalWarnings > 0) must not print.
+    expect(output).not.toContain("⚠")
+
+    // --evidence was not passed -- neither the "Wrote evidence:" line nor
+    // the evidence-changes section (both gated on `if (args.evidence)`)
+    // should print.
+    expect(output).not.toContain("Wrote evidence:")
+    expect(output).not.toContain("Evidence changes since the last persisted snapshot:")
+
     await expect(
       fs.access(path.join(fixtureRoot, "src/generated/env.manifest.ts")),
     ).resolves.toBeUndefined()
@@ -105,7 +115,7 @@ describe("main() -- unresolved/dropped-schema warning banner", () => {
     // warning instead of silently guessing.
     await write(
       "features/dynamic/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";
+      `import { createEnv } from "env-cap";
 
 function buildSchema() {
   return { DYNAMIC_VAR: {} };
@@ -130,6 +140,51 @@ export const dynamicEnv = createEnv(buildSchema(), { name: "dynamic" });
 
     expect(output).toContain("⚠ 1 unresolved/dropped-schema warning(s) found")
     expect(output.indexOf("⚠")).toBeLessThan(output.indexOf("Wrote manifest:"))
+  })
+
+  it("sums manifest parseWarnings, docs unresolvedLinks, AND usage parseWarnings together, not just some of them", async () => {
+    // Three INDEPENDENT-looking terms, all nonzero at once -- a manifest-side
+    // parse warning (dynamic schema, also shared onto usage's own
+    // parseWarnings since discovery runs once) and a docs-side unresolved
+    // documentEnv() link -- so the exact total (3) can only come from summing
+    // all three terms; an ArithmeticOperator mutant flipping either `+` to
+    // `-` would report a different (wrong) total.
+    await write(
+      "features/dynamic/env.schema.ts",
+      `import { createEnv } from "env-cap";
+
+function buildSchema() {
+  return { DYNAMIC_VAR: {} };
+}
+
+export const dynamicEnv = createEnv(buildSchema(), { name: "dynamic" });
+`,
+    )
+    await write(
+      "features/unresolved-link/env.schema.ts",
+      `import { documentEnv } from "env-cap";
+import { someSchema } from "some-external-package";
+documentEnv(someSchema, {});
+`,
+    )
+
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--location",
+      "src/generated/env.manifest.ts",
+      "--docs",
+      "docs/ENVIRONMENT.md",
+      "--ownership",
+      "docs/OWNERSHIP.md",
+    ]
+
+    await main()
+
+    const output = writes.join("")
+    expect(output).toContain("⚠ 3 unresolved/dropped-schema warning(s) found")
   })
 })
 
@@ -162,6 +217,11 @@ describe("main() -- --check", () => {
 
     const output = writes.join("")
     expect(output).toContain("All generated artifacts are up to date.")
+    // Exact per-finding line format: artifact/path columns padded, status
+    // upper-cased, and no trailing "(detail)" parenthetical for an "ok" finding.
+    expect(output).toContain(
+      `  manifest   ${path.join(fixtureRoot, "src/generated/env.manifest.ts").padEnd(50)} OK\n`,
+    )
     expect(process.exitCode).toBe(0)
     expect(await fs.readFile(manifestPath, "utf8")).toBe(before)
   })
@@ -184,7 +244,7 @@ describe("main() -- --check", () => {
     // contracts) -- a new variable on the existing contract alone would not.
     await write(
       "features/notifications/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { SLACK_WEBHOOK: {} };
 export const notificationsEnv = createEnv(schema, { name: "notifications" });
 documentEnv(schema, { owner: "platform-team", variables: { SLACK_WEBHOOK: { description: "Slack webhook." } } });
@@ -205,6 +265,11 @@ documentEnv(schema, { owner: "platform-team", variables: { SLACK_WEBHOOK: { desc
 
     const output = writes.join("")
     expect(output).toContain("artifact(s) are stale or missing")
+    // Exact per-finding line for a stale finding, including the
+    // "(<detail>)" parenthetical a fresh/"ok" finding never gets.
+    expect(output).toContain(
+      `  manifest   ${manifestPath.padEnd(50)} STALE (generated content differs from what's committed)\n`,
+    )
     expect(process.exitCode).toBe(1)
     expect(await fs.readFile(manifestPath, "utf8")).toBe(before)
   })
@@ -234,25 +299,37 @@ describe("main() -- --json wiring", () => {
     expect(payload.docs?.documentation?.undocumentedVariables).toHaveLength(1)
   })
 
-  it("emits a parseable ok:false JSON report when --strict-docs turns an undocumented variable into a hard failure", async () => {
+  it("includes the evidence key only when --evidence was passed", async () => {
     process.argv = [
       "node",
       "env-cap",
       "--root",
       fixtureRoot,
-      "--docs",
-      "docs/ENVIRONMENT.md",
-      "--strict-docs",
+      "--location",
+      "src/generated/no-evidence.manifest.ts",
       "--json",
     ]
-
     await main()
+    const withoutEvidence = JSON.parse(writes.join("")) as { evidence?: unknown }
+    expect(withoutEvidence.evidence).toBeUndefined()
+    expect("evidence" in withoutEvidence).toBe(false)
 
-    const output = writes.join("")
-    const payload = JSON.parse(output) as { ok: boolean; error?: { name: string } }
-    expect(payload.ok).toBe(false)
-    expect(payload.error?.name).toBe("EnvProjectGenerationError")
-    expect(process.exitCode).toBe(1)
+    writes = []
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--location",
+      "src/generated/with-evidence.manifest.ts",
+      "--evidence",
+      "docs/with-evidence.evidence.json",
+      "--json",
+    ]
+    await main()
+    const withEvidence = JSON.parse(writes.join("")) as { evidence?: unknown }
+    expect("evidence" in withEvidence).toBe(true)
+    expect(withEvidence.evidence).toBeDefined()
   })
 })
 
@@ -289,17 +366,17 @@ describe("main() -- none of --location/--docs/--ownership given", () => {
     const payload = JSON.parse(output) as { ok: boolean; error?: { message: string } }
     expect(payload.ok).toBe(false)
     expect(payload.error?.message).toContain(
-      "At least one of --location, --docs, or --ownership is required.",
+      "At least one of --location, --docs, --ownership, or --evidence is required.",
     )
     expect(process.exitCode).toBe(1)
   })
 })
 
 describe("main() -- --check exercises every options-ternary (docs/env-example/ownership, all true)", () => {
-  it("--location --docs --env-example --ownership --strict --strict-docs --strict-ownership together, on a clean/fully-consumed fixture, still reports up to date", async () => {
+  it("--location --docs --env-example --ownership --strict together, on a clean/fully-consumed fixture, still reports up to date", async () => {
     await write(
       "features/check-clean/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { CLEAN_KEY: {} };
 export const cleanEnv = createEnv(schema, { name: "check-clean" });
 documentEnv(schema, { owner: "clean-team", variables: { CLEAN_KEY: { description: "A clean variable." } } });
@@ -326,8 +403,6 @@ documentEnv(schema, { owner: "clean-team", variables: { CLEAN_KEY: { description
       "--ownership",
       "docs/check-clean.OWNERSHIP.md",
       "--strict",
-      "--strict-docs",
-      "--strict-ownership",
     ]
 
     process.argv = [...flags]
@@ -343,10 +418,10 @@ documentEnv(schema, { owner: "clean-team", variables: { CLEAN_KEY: { description
     expect(process.exitCode).toBe(0)
   })
 
-  it('--docs without --env-example hits the envExample:false branch of the docs ternary, and --ownership without --strict-ownership hits onOwnershipIssue:"warn" inside --check', async () => {
+  it("--docs without --env-example hits the envExample:false branch of the docs ternary, inside --check", async () => {
     await write(
       "features/check-clean-2/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { CLEAN_KEY_2: {} };
 export const cleanEnv2 = createEnv(schema, { name: "check-clean-2" });
 documentEnv(schema, { variables: { CLEAN_KEY_2: { description: "Another clean variable." } } });
@@ -418,17 +493,60 @@ describe("main() -- --check --json success", () => {
     expect(payload.checkResult?.stale).toEqual([])
     expect(process.exitCode).toBe(0)
   })
+
+  it("reports the stale artifact's name in checkResult.stale, and ok:false, once the schema changes after generation", async () => {
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--location",
+      "src/generated/env.manifest.ts",
+    ]
+    await main()
+
+    await write(
+      "features/notifications/env.schema.ts",
+      `import { createEnv, documentEnv } from "env-cap";
+const schema = { SLACK_WEBHOOK: {} };
+export const notificationsEnv = createEnv(schema, { name: "notifications" });
+documentEnv(schema, { owner: "platform-team", variables: { SLACK_WEBHOOK: { description: "Slack webhook." } } });
+`,
+    )
+
+    writes = []
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--location",
+      "src/generated/env.manifest.ts",
+      "--check",
+      "--json",
+    ]
+    await main()
+
+    const output = writes.join("")
+    const payload = JSON.parse(output) as {
+      ok: boolean
+      checkResult?: { ok: boolean; stale: string[] }
+    }
+    expect(payload.checkResult?.ok).toBe(false)
+    expect(payload.checkResult?.stale).toEqual(["manifest"])
+    expect(process.exitCode).toBe(1)
+  })
 })
 
 describe("main() -- --check --strict throws on a real blocking incompatibility", () => {
   async function writeConflictingFixture(): Promise<void> {
     await write(
       "features/check-broken-a/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const brokenAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "check-broken-a" });\n`,
+      `import { createEnv } from "env-cap";\nexport const brokenAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "check-broken-a" });\n`,
     )
     await write(
       "features/check-broken-b/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const brokenBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "check-broken-b" });\n`,
+      `import { createEnv } from "env-cap";\nexport const brokenBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "check-broken-b" });\n`,
     )
   }
 
@@ -480,17 +598,59 @@ describe("main() -- --check --strict throws on a real blocking incompatibility",
 
 describe("main() -- normal-flow non--json error propagation", () => {
   it("propagates the raw error via a bare throw when --json was not passed", async () => {
+    await write(
+      "features/propagation-a/env.schema.ts",
+      `import { createEnv } from "env-cap";\nexport const propagationAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "propagation-a" });\n`,
+    )
+    await write(
+      "features/propagation-b/env.schema.ts",
+      `import { createEnv } from "env-cap";\nexport const propagationBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "propagation-b" });\n`,
+    )
+
     process.argv = [
       "node",
       "env-cap",
       "--root",
       fixtureRoot,
-      "--docs",
-      "docs/ENVIRONMENT.md",
-      "--strict-docs",
+      "--include",
+      "features/propagation-*/env.schema.ts",
+      "--location",
+      "src/generated/propagation.manifest.ts",
+      "--strict",
     ]
 
     await expect(main()).rejects.toThrow(EnvProjectGenerationError)
+  })
+
+  it("writes a serialized failure and exits 1, instead of throwing, when --json IS passed (no --check)", async () => {
+    await write(
+      "features/propagation-json-a/env.schema.ts",
+      `import { createEnv } from "env-cap";\nexport const propagationJsonAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "propagation-json-a" });\n`,
+    )
+    await write(
+      "features/propagation-json-b/env.schema.ts",
+      `import { createEnv } from "env-cap";\nexport const propagationJsonBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "propagation-json-b" });\n`,
+    )
+
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--include",
+      "features/propagation-json-*/env.schema.ts",
+      "--location",
+      "src/generated/propagation-json.manifest.ts",
+      "--json",
+    ]
+
+    await main()
+
+    const output = writes.join("")
+    const payload = JSON.parse(output) as { ok: boolean; error?: { name: string } }
+    expect(payload.ok).toBe(false)
+    expect(payload.error?.name).toBe("EnvProjectGenerationError")
+    expect(process.exitCode).toBe(1)
   })
 })
 
@@ -498,7 +658,7 @@ describe("main() -- normal flow with docs + env-example + ownership all requeste
   it("exercises the docs/envExample/usage ternaries in the non---check generation path", async () => {
     await write(
       "features/full-flow/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { FULL_FLOW_KEY: {} };
 export const fullFlowEnv = createEnv(schema, { name: "full-flow" });
 documentEnv(schema, { owner: "full-flow-team", variables: { FULL_FLOW_KEY: { description: "A fully documented variable." } } });
@@ -547,11 +707,11 @@ describe("main() -- --exclude and --package flow through to generateEnvArtifacts
   it("--exclude narrows discovery and --package (an unresolvable name) surfaces as a harmless parse warning", async () => {
     await write(
       "features/wpe-excluded/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const wpeExcludedEnv = createEnv({ EXCLUDED_VAR: {} }, { name: "wpe-excluded" });\n`,
+      `import { createEnv } from "env-cap";\nexport const wpeExcludedEnv = createEnv({ EXCLUDED_VAR: {} }, { name: "wpe-excluded" });\n`,
     )
     await write(
       "features/wpe-included/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const wpeIncludedEnv = createEnv({ INCLUDED_VAR: {} }, { name: "wpe-included" });\n`,
+      `import { createEnv } from "env-cap";\nexport const wpeIncludedEnv = createEnv({ INCLUDED_VAR: {} }, { name: "wpe-included" });\n`,
     )
 
     process.argv = [
@@ -586,7 +746,7 @@ describe("main() -- --tsconfig/--no-tsconfig flow through to generateEnvArtifact
     )
     await write(
       "features/alias-billing/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "alias-billing" });\n`,
+      `import { createEnv } from "env-cap";\nexport const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "alias-billing" });\n`,
     )
     await write(
       "src/alias-consumer.ts",
@@ -637,11 +797,11 @@ describe("main() -- manifest.warnings (compatibility warnings, non-strict)", () 
   it("prints the compatibility-warning section when two contracts declare the same variable with differing, unannotated processors", async () => {
     await write(
       "features/warn-a/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const warnAEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v) } }, { name: "warn-a" });\n`,
+      `import { createEnv } from "env-cap";\nexport const warnAEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v) } }, { name: "warn-a" });\n`,
     )
     await write(
       "features/warn-b/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const warnBEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v).trim() } }, { name: "warn-b" });\n`,
+      `import { createEnv } from "env-cap";\nexport const warnBEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v).trim() } }, { name: "warn-b" });\n`,
     )
 
     process.argv = [
@@ -659,18 +819,29 @@ describe("main() -- manifest.warnings (compatibility warnings, non-strict)", () 
 
     const output = writes.join("")
     expect(output).toContain("compatibility warning(s):")
-    expect(output).toContain("- SHARED_VAR:")
+    expect(output).toContain("- [PROCESSOR_SOURCE_CONFLICT] SHARED_VAR:")
   })
 })
 
-describe("main() -- manifest changes since last execution", () => {
+describe("main() -- evidence changes since the last persisted snapshot (ADR 0038)", () => {
   it("reports everything as added on the first run, and 'No changes.' on an immediate rerun against the same source", async () => {
     const location = "src/generated/changes.manifest.ts"
-    process.argv = ["node", "env-cap", "--root", fixtureRoot, "--location", location]
+    const evidence = "docs/changes.evidence.json"
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--location",
+      location,
+      "--evidence",
+      evidence,
+    ]
 
     await main()
     const firstOutput = writes.join("")
-    expect(firstOutput).toContain("Manifest changes since last execution:")
+    expect(firstOutput).toContain(`Wrote evidence: ${evidence}\n`)
+    expect(firstOutput).toContain("Evidence changes since the last persisted snapshot:")
     expect(firstOutput).toContain("Added:")
     expect(firstOutput).toContain('contract "payments"')
     expect(firstOutput).toContain('STRIPE_KEY in "payments"')
@@ -678,20 +849,30 @@ describe("main() -- manifest changes since last execution", () => {
     writes.length = 0
     await main()
     const secondOutput = writes.join("")
-    expect(secondOutput).toContain("Manifest changes since last execution:")
+    expect(secondOutput).toContain("Evidence changes since the last persisted snapshot:")
     expect(secondOutput).toContain("No changes.")
     expect(secondOutput).not.toContain("Added:")
   })
 
   it("reports an Updated: section with the changed field's before/after values after a documentEnv() edit", async () => {
     const location = "src/generated/changes-updated.manifest.ts"
-    process.argv = ["node", "env-cap", "--root", fixtureRoot, "--location", location]
+    const evidence = "docs/changes-updated.evidence.json"
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--location",
+      location,
+      "--evidence",
+      evidence,
+    ]
     await main()
     writes.length = 0
 
     await write(
       "features/payments/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 
 const schema = {
   STRIPE_KEY: {},
@@ -703,7 +884,12 @@ export const paymentsEnv = createEnv(schema, { name: "payments" });
 documentEnv(schema, {
   owner: "payments-team",
   variables: {
-    STRIPE_KEY: { description: "Stripe secret key -- rotate quarterly." },
+    // \`description\` drops to unset (was "Stripe secret key.") and
+    // \`sensitivity\` goes from unset to defined -- exercises BOTH sides of
+    // formatFieldChanges()'s "previous ?? \\"unset\\""/"current ?? \\"unset\\""
+    // fallback in one field-change list, and (being two field changes on the
+    // same variable) its ", "-joined output too.
+    STRIPE_KEY: { sensitivity: "secret" },
   },
 });
 `,
@@ -712,7 +898,9 @@ documentEnv(schema, {
     await main()
     const output = writes.join("")
     expect(output).toContain("Updated:")
-    expect(output).toContain('STRIPE_KEY in "payments": description (')
+    expect(output).toContain(
+      'STRIPE_KEY in "payments": description (Stripe secret key. -> unset), sensitivity (unset -> secret)',
+    )
     expect(output).not.toContain("Added:")
   })
 })
@@ -721,7 +909,7 @@ describe("main() -- --env-example output formatting", () => {
   beforeEach(async () => {
     await write(
       "features/example-active/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { REQUIRED_NEW_VAR: {}, EXISTING_VAR: {} };
 export const exampleActiveEnv = createEnv(schema, { name: "example-active" });
 documentEnv(schema, {
@@ -734,7 +922,7 @@ documentEnv(schema, {
     )
     await write(
       "features/example-inactive/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema2 = { TO_BE_COMMENTED: {} };
 export const exampleInactiveEnv = createEnv(schema2, { name: "example-inactive" });
 documentEnv(schema2, { active: false, variables: { TO_BE_COMMENTED: { description: "No longer active." } } });
@@ -809,7 +997,7 @@ describe("main() -- doc.undocumentedContracts (no documentEnv() call at all)", (
   it("lists a contract with zero linked documentEnv() calls under 'undocumented contract(s)'", async () => {
     await write(
       "features/no-docs-at-all/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const noDocsAtAllEnv = createEnv({ ORPHAN_VAR: {} }, { name: "no-docs-at-all" });\n`,
+      `import { createEnv } from "env-cap";\nexport const noDocsAtAllEnv = createEnv({ ORPHAN_VAR: {} }, { name: "no-docs-at-all" });\n`,
     )
 
     process.argv = [
@@ -835,7 +1023,7 @@ describe("main() -- doc.staleDocEntries", () => {
   it("lists a documentEnv() entry whose key no longer exists in the schema", async () => {
     await write(
       "features/stale-doc/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { STILL_HERE: {} };
 export const staleDocEnv = createEnv(schema, { name: "stale-doc" });
 documentEnv(schema, { variables: { STILL_HERE: {}, LONG_GONE: { description: "No longer in the schema." } } });
@@ -867,17 +1055,22 @@ describe("main() -- doc.expiringSoon", () => {
     const expiredDate = new Date(Date.now() - 5 * msPerDay).toISOString().slice(0, 10)
     const soonDate = new Date(Date.now() + 10 * msPerDay).toISOString().slice(0, 10)
     const contractSoonDate = new Date(Date.now() + 15 * msPerDay).toISOString().slice(0, 10)
+    // Exactly 0 days remaining (expires today) -- the `daysRemaining < 0`
+    // boundary: `<=` would wrongly report this as "expired 0d ago" instead
+    // of "0d remaining".
+    const todayDate = new Date().toISOString().slice(0, 10)
 
     await write(
       "features/expiring/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
-const schema = { EXPIRED_VAR: {}, SOON_VAR: {} };
+      `import { createEnv, documentEnv } from "env-cap";
+const schema = { EXPIRED_VAR: {}, SOON_VAR: {}, TODAY_VAR: {} };
 export const expiringEnv = createEnv(schema, { name: "expiring" });
 documentEnv(schema, {
   expiresAt: "${contractSoonDate}",
   variables: {
     EXPIRED_VAR: { expiresAt: "${expiredDate}" },
     SOON_VAR: { expiresAt: "${soonDate}" },
+    TODAY_VAR: { expiresAt: "${todayDate}" },
   },
 });
 `,
@@ -900,6 +1093,7 @@ documentEnv(schema, {
     expect(output).toContain("variable(s)/contract(s) expiring soon or already expired:")
     expect(output).toMatch(/EXPIRED_VAR in expiringEnv: \d{4}-\d{2}-\d{2} \(expired \d+d ago\)/)
     expect(output).toMatch(/SOON_VAR in expiringEnv: \d{4}-\d{2}-\d{2} \(\d+d remaining\)/)
+    expect(output).toMatch(/TODAY_VAR in expiringEnv: \d{4}-\d{2}-\d{2} \(0d remaining\)/)
     // Contract-level expiresAt (no variable key) -- label falls back to the
     // bare exportName, exercising the e.key ? ... : e.exportName ternary's
     // other branch.
@@ -911,7 +1105,7 @@ describe("main() -- doc.unresolvedLinks", () => {
   it("lists a documentEnv() call that could not be statically linked to any schema", async () => {
     await write(
       "features/unresolved-link/env.schema.ts",
-      `import { documentEnv } from "@maverickcer/env-cap";
+      `import { documentEnv } from "env-cap";
 import { someSchema } from "some-external-package";
 documentEnv(someSchema, {});
 `,
@@ -941,7 +1135,7 @@ describe("main() -- --ownership output block", () => {
     // Never imported anywhere -- abandoned.
     await write(
       "features/owner-abandoned/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { OLD_KEY: {} };
 export const ownerAbandonedEnv = createEnv(schema, { name: "owner-abandoned" });
 documentEnv(schema, { owner: "legacy-team" });
@@ -951,7 +1145,7 @@ documentEnv(schema, { owner: "legacy-team" });
     // Only reachable through an unresolved "export * from" barrel -- unresolvedConsumers, never abandoned.
     await write(
       "features/owner-barrel/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const ownerBarrelEnv = createEnv({ BARREL_KEY: {} }, { name: "owner-barrel" });\n`,
+      `import { createEnv } from "env-cap";\nexport const ownerBarrelEnv = createEnv({ BARREL_KEY: {} }, { name: "owner-barrel" });\n`,
     )
     await write("features/owner-barrel/index.ts", `export * from "./env.schema.js";\n`)
     await write(
@@ -959,11 +1153,15 @@ documentEnv(schema, { owner: "legacy-team" });
       `import { ownerBarrelEnv } from "../features/owner-barrel/index.js";\nownerBarrelEnv.BARREL_KEY;\n`,
     )
 
-    // Imported and referenced (contract-level coupling proven), but its one
-    // variable is never actually read -- unconsumedOwnedVariables.
+    // Imported (contract-level coupling proven), but never referenced past
+    // the import at all, and its one variable is never actually read --
+    // unconsumedOwnedVariables. (Deliberately NOT a bare reference like
+    // `initialize(ownerUnconsumedEnv)` -- since ADR 0039, that would itself
+    // be an escape site and produce "indeterminate" instead, which is
+    // `owner-indeterminate`'s job below, not this fixture's.)
     await write(
       "features/owner-unconsumed/env.schema.ts",
-      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+      `import { createEnv, documentEnv } from "env-cap";
 const schema = { OWNED_UNUSED: {} };
 export const ownerUnconsumedEnv = createEnv(schema, { name: "owner-unconsumed" });
 documentEnv(schema, { owner: "team-x" });
@@ -971,13 +1169,13 @@ documentEnv(schema, { owner: "team-x" });
     )
     await write(
       "src/owner-unconsumed-consumer.ts",
-      `import { ownerUnconsumedEnv } from "../features/owner-unconsumed/env.schema.js";\ninitialize(ownerUnconsumedEnv);\n`,
+      `import { ownerUnconsumedEnv } from "../features/owner-unconsumed/env.schema.js";\n`,
     )
 
     // Dynamic (computed) property access observed on the contract -- indeterminate, never unconsumed.
     await write(
       "features/owner-indeterminate/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";\nexport const ownerIndeterminateEnv = createEnv({ DYN_KEY: {} }, { name: "owner-indeterminate" });\n`,
+      `import { createEnv } from "env-cap";\nexport const ownerIndeterminateEnv = createEnv({ DYN_KEY: {} }, { name: "owner-indeterminate" });\n`,
     )
     await write(
       "src/owner-indeterminate-consumer.ts",
@@ -990,7 +1188,7 @@ ownerIndeterminateEnv[dynamicKey];
     // A dynamically-constructed schema can't be statically resolved -- contributes a parse warning.
     await write(
       "features/owner-dynamic/env.schema.ts",
-      `import { createEnv } from "@maverickcer/env-cap";
+      `import { createEnv } from "env-cap";
 function buildOwnerSchema() {
   return { DYNAMIC_OWNER_VAR: {} };
 }
@@ -1031,5 +1229,156 @@ export const ownerDynamicEnv = createEnv(buildOwnerSchema(), { name: "owner-dyna
     await expect(
       fs.access(path.join(fixtureRoot, "docs/owner.OWNERSHIP.md")),
     ).resolves.toBeUndefined()
+  })
+})
+
+// The default fixture (see beforeEach) always has an undocumented variable
+// (UNDOCUMENTED_VAR) and a contract nothing imports, so it produces both a
+// documentation-family and an ownership-family warning without any extra
+// setup -- exactly what these two scoped flags gate on.
+describe("main() -- --strict-docs / --strict-ownership", () => {
+  it("writes artifacts and exits cleanly without either flag, however many warnings exist", async () => {
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--docs",
+      "docs/ENVIRONMENT.md",
+      "--ownership",
+      "docs/OWNERSHIP.md",
+    ]
+
+    await main()
+
+    const output = writes.join("")
+    expect(output).toContain("undocumented variable(s)")
+    expect(process.exitCode).not.toBe(1)
+    await expect(fs.stat(path.join(fixtureRoot, "docs/ENVIRONMENT.md"))).resolves.toBeDefined()
+  })
+
+  it("throws on a documentation-family warning under --strict-docs, writing nothing", async () => {
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--docs",
+      "docs/STRICT_DOCS.md",
+      "--strict-docs",
+    ]
+
+    await expect(main()).rejects.toBeInstanceOf(EnvProjectGenerationError)
+    // Atomic: the blocking check runs before any pass writes.
+    await expect(fs.stat(path.join(fixtureRoot, "docs/STRICT_DOCS.md"))).rejects.toThrow()
+  })
+
+  it("names the offending finding code in the thrown error, not just a count", async () => {
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--docs",
+      "docs/STRICT_DOCS.md",
+      "--strict-docs",
+    ]
+
+    await expect(main()).rejects.toThrow(/UNDOCUMENTED_VARIABLE/)
+  })
+
+  it("throws on an ownership-family warning under --strict-ownership, writing nothing", async () => {
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--ownership",
+      "docs/STRICT_OWNERSHIP.md",
+      "--strict-ownership",
+    ]
+
+    await expect(main()).rejects.toThrow(/ABANDONED_CONTRACT/)
+    await expect(fs.stat(path.join(fixtureRoot, "docs/STRICT_OWNERSHIP.md"))).rejects.toThrow()
+  })
+
+  it("--strict-docs leaves ownership findings alone, and vice versa -- the two families are independent", async () => {
+    // Only an --ownership pass is requested, so no docs artifact is involved
+    // at all; --strict-docs must still not fire on ownership warnings.
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--ownership",
+      "docs/OWNERSHIP_ONLY.md",
+      "--strict-ownership",
+    ]
+    await expect(main()).rejects.toThrow(/ABANDONED_CONTRACT/)
+
+    writes = []
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--location",
+      "src/generated/env.manifest.ts",
+      "--strict",
+    ]
+    // The blanket --strict gates the compatibility family only -- the same
+    // fixture's documentation/ownership warnings must not block it.
+    await expect(main()).resolves.toBeUndefined()
+  })
+
+  it("lists --strict-docs and --strict-ownership in --help", async () => {
+    process.argv = ["node", "env-cap", "--help"]
+    await main()
+    const output = writes.join("")
+    expect(output).toContain("--strict-docs")
+    expect(output).toContain("--strict-ownership")
+  })
+
+  it("lists the init subcommand in --help", async () => {
+    process.argv = ["node", "env-cap", "--help"]
+    await main()
+    expect(writes.join("")).toContain("env-cap init")
+  })
+})
+
+describe("main() -- init subcommand dispatch", () => {
+  it("routes `init` (first positional token) to the scaffolder, not parseArgs", async () => {
+    // parseArgs() would throw "Unknown argument: init" -- reaching the init
+    // help text at all proves main() intercepted before parseArgs.
+    process.argv = ["node", "env-cap", "init", "--help"]
+
+    await main()
+
+    expect(writes.join("")).toContain("Usage: env-cap init")
+    expect(process.exitCode).toBe(0)
+  })
+
+  it("scaffolds into the current directory and exits 0", async () => {
+    process.argv = ["node", "env-cap", "init"]
+    const originalCwd = process.cwd()
+    process.chdir(fixtureRoot)
+    await fs.writeFile(path.join(fixtureRoot, "package.json"), '{"name": "demo"}')
+    try {
+      await main()
+    } finally {
+      process.chdir(originalCwd)
+    }
+
+    expect(process.exitCode).toBe(0)
+    expect(writes.join("")).toContain("env-cap initialized")
+    await expect(fs.access(path.join(fixtureRoot, "env.schema.ts"))).resolves.toBeUndefined()
+  })
+
+  it("`--help` alone (no init token) still prints the generator help, not init help", async () => {
+    process.argv = ["node", "env-cap", "--help"]
+    await main()
+    const output = writes.join("")
+    expect(output).toContain("generate a manifest, docs")
+    expect(output).not.toContain("Usage: env-cap init\n\nScaffolds")
   })
 })

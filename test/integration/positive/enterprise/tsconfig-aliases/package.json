@@ -1,0 +1,35 @@
+{
+  "name": "@examples/tsconfig-aliases",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A tsconfig.json path alias (\"@/*\") used both by the app's own runtime import and resolved by env-cap's static analysis (ADR 0023), so the aliased contract is neither abandoned in the Dependency & Ownership Report nor left undocumented. Also installable as its own package -- see examples/tsconfig-aliases-consumer, which installs it from a real packed tarball and discovers its contract via the `packages` allowlist (ADR 0014), alongside its own, separately alias-organized, local contract.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "src/features/payments/env.schema.ts"
+  ],
+  "envCap": {
+    "schema": "./src/features/payments/env.schema.ts"
+  },
+  "scripts": {
+    "generate:env": "node scripts/generate-manifest.mjs",
+    "typecheck": "npm run generate:env && tsc --noEmit",
+    "start": "npm run generate:env && tsx --env-file=.env src/server.ts",
+    "verify:env": "env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
+    "build": "tsc -p tsconfig.build.json",
+    "pack:local": "npm run build && npm pack --pack-destination . && mv examples-tsconfig-aliases-*.tgz tsconfig-aliases.tgz"
+  },
+  "dependencies": {
+    "env-cap": "file:../../../../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0"
+  }
+}

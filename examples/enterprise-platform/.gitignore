@@ -1,0 +1,6 @@
+node_modules
+.tanstack
+dist
+# only node_modules/build output should be ignored in this example repo -- we want to show the
+# output of the package (generated manifest/docs, and .env for a runnable demo).
+!.env

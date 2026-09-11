@@ -3,7 +3,7 @@
  * Entirely separate from the core runtime -- `defineEnv`/`validateEnv` have
  * no knowledge of this module and work identically without it.
  *
- * Usage: `processors.number()`, `validators.range(1, 65535)`.
+ * Usage: `processors.toNumber()`, `validators.range(1, 65535)`.
  *
  * Deliberately built from explicit named imports assembled into plain object
  * literals, not `export * as processors from "./processors.js"`. A bundler
@@ -13,24 +13,24 @@
  * this already-bundled package): importing only `processors` would still
  * ship all of `validators`' code. A plain object literal of already-imported
  * bindings has no such call in the way, so `import { processors } from
- * "@maverickcer/env-cap/helpers"` alone drops `validators` entirely.
+ * "env-cap/helpers"` alone drops `validators` entirely.
  */
 import {
-  array,
   base64,
-  bigint,
-  boolean,
-  date,
-  integer,
-  json,
-  lowercase,
-  number,
-  regexp,
+  parseJSON,
   split,
-  string,
+  toArray,
+  toBigInt,
+  toBoolean,
+  toDate,
+  toInteger,
+  toLowerCase,
+  toNumber,
+  toRegExp,
+  toString,
+  toURL,
+  toUpperCase,
   trim,
-  uppercase,
-  url,
 } from "./processors.js"
 import {
   after,
@@ -68,38 +68,47 @@ import {
   uuidVersion,
 } from "./validators.js"
 
-/** Convenience {@link runtime.Processor} implementations for common coercion patterns (e.g. `processors.number()`). */
+/**
+ * Convenience {@link runtime.Processor} implementations for common coercion
+ * patterns (e.g. `processors.toNumber()`).
+ *
+ * @remarks
+ * Naming matches `@maverickcer/data-cap`'s `helpers.processors` -- but these
+ * throw with a formatted `Error` message on invalid input, where data-cap's
+ * silently return `undefined`. Do not assume the same failure mode when
+ * moving between packages.
+ */
 export const processors = {
-  /** Splits a delimited string (or passes through an array) into items, running each through `processors` in order. */
-  array,
   /** Decodes a base64 string into a `Buffer`. */
   base64,
-  /** Coerces a value to a `bigint`. */
-  bigint,
-  /** Coerces common boolean-like strings (`true`/`1`/`yes`/`on`, and their opposites) into a real boolean. */
-  boolean,
-  /** Parses a value into a `Date`. */
-  date,
-  /** Coerces a value to a number and requires it to be an integer. */
-  integer,
   /** Parses a JSON string; passes non-string values through unchanged. */
-  json,
-  /** Lowercases a string (coercing nullish values to `""` first). */
-  lowercase,
-  /** Coerces a value to a number, rejecting empty/whitespace-only strings instead of silently resolving to `0`. */
-  number,
-  /** Compiles a value into a `RegExp`. */
-  regexp,
+  parseJSON,
   /** Splits a string on `separator` into a trimmed string array; returns `[]` for non-string input. */
   split,
+  /** Splits a delimited string (or passes through an array) into items, running each through `processors` in order. */
+  toArray,
+  /** Coerces a value to a `bigint`. */
+  toBigInt,
+  /** Coerces common boolean-like strings (`true`/`1`/`yes`/`on`, and their opposites) into a real boolean. */
+  toBoolean,
+  /** Parses a value into a `Date`. */
+  toDate,
+  /** Coerces a value to a number and requires it to be an integer. */
+  toInteger,
+  /** Lowercases a string (coercing nullish values to `""` first). */
+  toLowerCase,
+  /** Coerces a value to a number, rejecting empty/whitespace-only strings instead of silently resolving to `0`. */
+  toNumber,
+  /** Compiles a value into a `RegExp`. */
+  toRegExp,
   /** Coerces a value to a string, treating nullish values as `""`. */
-  string,
+  toString,
+  /** Parses a value into a `URL`, treating nullish values as `""` first. */
+  toURL,
+  /** Uppercases a string (coercing nullish values to `""` first). */
+  toUpperCase,
   /** Trims surrounding whitespace from a string (coercing nullish values to `""` first). */
   trim,
-  /** Uppercases a string (coercing nullish values to `""` first). */
-  uppercase,
-  /** Parses a value into a `URL`, treating nullish values as `""` first. */
-  url,
 }
 /** Convenience {@link runtime.Validator} implementations for common validation patterns (e.g. `validators.range(1, 65535)`). */
 export const validators = {

@@ -37,6 +37,11 @@ jobs:
       - run: npm run build
       - run: npm run test:coverage
       - run: npm run size
+      - run: npm run verify:no-ambient-fs
+      # The committed Markdown API report (docs/api-report/) must match a
+      # fresh `typedoc --options typedoc.markdown.json` -- a public API
+      # change can't land without the report, and the PR diff, updated too.
+      - run: npm run docs:api:report:check
 
   verify-current:
     runs-on: ubuntu-latest
@@ -86,10 +91,10 @@ jobs:
       # `npm run typecheck` against source in the `verify` job above.
       - run: deno test --no-check --allow-read test/cross-runtime/deno.test.ts
 
-  # Proves the reference examples still install and generate cleanly against
-  # the real, just-built package -- each depends on the root package via
-  # `file:../..`, which needs `dist/` to already exist. Without this job, an
-  # API change could silently break every example's env.schema.ts with
+  # Proves the three flagship examples still install and generate cleanly
+  # against the real, just-built package -- each depends on the root package
+  # via `file:../..`, which needs `dist/` to already exist. Without this job,
+  # an API change could silently break a flagship's env.schema.ts with
   # nothing to catch it until a human runs one by hand.
   examples:
     runs-on: ubuntu-latest
@@ -104,99 +109,114 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: basic-node
-        working-directory: examples/basic-node
+      - name: application
+        working-directory: examples/application
         run: |
           npm install
           npm run typecheck
 
-      # Same contract as basic-node, generated via the packaged env-cap CLI
+      - name: team-service
+        working-directory: examples/team-service
+        run: |
+          npm install
+          npm run typecheck
+
+      - name: enterprise-platform
+        working-directory: examples/enterprise-platform
+        run: |
+          npm install
+          npm run typecheck
+          npm run test:evidence
+          npm start
+
+      # Runs each flagship's real npm scripts against its own committed,
+      # fake-but-plausible `.env` file and asserts on real stdout -- the
+      # actual runtime path (validateEnv -> read a validated value), not just
+      # that the schema typechecks -- then asserts its committed generated
+      # output is exactly what a fresh run produces, via that example's own
+      # `check` script (`env-cap --check`). No `expected/` mirror tree: the
+      # committed docs/manifest/.env.example are themselves the golden.
+      # One file per flagship -- see test/examples/support.ts.
+      - run: npx vitest run test/examples/
+
+  # Proves every relocated behavioral fixture (Part 0 of the examples
+  # restructuring -- see examples/README.md) still installs and generates
+  # cleanly against the real, just-built package. These are no longer
+  # presented to human readers as examples (see examples/README.md), but
+  # every scenario they prove still runs in CI exactly as it did before the
+  # restructuring -- zero coverage loss, just de-emphasized.
+  integration-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      # Same contract as application, generated via the packaged env-cap CLI
       # binary instead of a custom .mjs script -- proves the real bin entry
-      # resolves and behaves as documented (see test/examples/cli-usage.test.ts).
+      # resolves and behaves as documented.
       - name: cli-usage
-        working-directory: examples/cli-usage
+        working-directory: test/integration/positive/basic/cli-usage
         run: |
           npm install
           npm run typecheck
 
-      - name: composable-boilerplates
-        working-directory: examples/composable-boilerplates
-        run: |
-          npm install
-          npm run typecheck
-
-      # paypal-consumer installs paypal-addon from a real packed tarball, not
-      # a workspace/symlink reference (see both examples' READMEs for why) --
-      # paypal-addon must be built and packed before paypal-consumer installs.
-      - name: paypal-addon (typecheck, build, pack)
-        working-directory: examples/paypal-addon
-        run: |
-          npm install
-          npm run typecheck
-          npm run pack:local
-
-      - name: paypal-consumer (installs paypal-addon's packed tarball)
-        working-directory: examples/paypal-consumer
-        run: |
-          npm install
-          npm run typecheck
-
-      # Deliberately, permanently broken by design (see its README) -- a
-      # missing required variable, asserted on by
-      # test/examples/missing-env-var.test.ts below. `typecheck` succeeds here
-      # (static discovery never reads .env values); only `start`, which
-      # actually calls validateEnv(), is expected to fail.
-      - name: missing-env-var
-        working-directory: examples/missing-env-var
-        run: |
-          npm install
-          npm run typecheck
-
-      # Not broken -- two independently-owned, both-active contracts document
-      # the same variable name differently, always a warning (never an
-      # error) by default. See test/examples/duplicate-variable-metadata.test.ts.
-      - name: duplicate-variable-metadata
-        working-directory: examples/duplicate-variable-metadata
-        run: |
-          npm install
-          npm run typecheck
-
-      # Deliberately, permanently broken by design (see its README) -- two
-      # active contracts sharing an exclusiveGroup, asserted on by
-      # test/examples/multiple-active-exclusive-capabilities.test.ts below.
-      # `generate:env` (and therefore `typecheck`/`start`, which both run it
-      # first) always fails here, so -- unlike every other example in this
-      # job -- there is no typecheck step: it would never get past
-      # generation to reach `tsc` anyway.
-      - name: multiple-active-exclusive-capabilities
-        working-directory: examples/multiple-active-exclusive-capabilities
-        run: npm install
-
-      # No AWS credentials are configured in this job on purpose: a failed
-      # DescribeSecretCommand call is caught per-variable and falls back to
-      # the static expiresAt (see live-expirations.ts) -- generate:env, and
-      # therefore typecheck, is designed to still succeed without them.
-      - name: aws-secrets-manager
-        working-directory: examples/aws-secrets-manager
-        run: |
-          npm install
-          npm run typecheck
-
-      # basic-node's exact contract, generated via three separate standalone
+      # application's exact contract, generated via three separate standalone
       # calls (generateEnvManifest/generateDocumentation/generateUsageReport)
-      # instead of one generateEnvArtifacts() call -- see
-      # test/examples/split-generators.test.ts.
+      # instead of one generateEnvArtifacts() call.
       - name: split-generators
-        working-directory: examples/split-generators
+        working-directory: test/integration/positive/basic/split-generators
         run: |
           npm install
           npm run typecheck
 
       # One schema/manifest, validated by two separate entry points
       # (example:server/example:client) with different activeContexts --
-      # see test/examples/validation-contexts.test.ts and ADR 0022.
+      # see ADR 0022.
       - name: validation-contexts
-        working-directory: examples/validation-contexts
+        working-directory: test/integration/positive/team/validation-contexts
+        run: |
+          npm install
+          npm run typecheck
+
+      # Not broken -- two independently-owned, both-active contracts document
+      # the same variable name differently, always a warning (never an
+      # error) by default.
+      - name: duplicate-variable-metadata
+        working-directory: test/integration/positive/team/duplicate-variable-metadata
+        run: |
+          npm install
+          npm run typecheck
+
+      # No AWS credentials are configured in this job on purpose: a failed
+      # DescribeSecretCommand call is caught per-variable and falls back to
+      # the static expiresAt (see live-expirations.ts) -- generate:env, and
+      # therefore typecheck, is designed to still succeed without them.
+      - name: aws-secrets-manager
+        working-directory: test/integration/positive/enterprise/aws-secrets-manager
+        run: |
+          npm install
+          npm run typecheck
+
+      # paypal-consumer installs paypal-addon from a real packed tarball, not
+      # a workspace/symlink reference (see both fixtures' package.json
+      # descriptions for why) -- paypal-addon must be built and packed before
+      # paypal-consumer installs.
+      - name: paypal-addon (typecheck, build, pack)
+        working-directory: test/integration/positive/enterprise/paypal-addon
+        run: |
+          npm install
+          npm run typecheck
+          npm run pack:local
+
+      - name: paypal-consumer (installs paypal-addon's packed tarball)
+        working-directory: test/integration/positive/enterprise/paypal-consumer
         run: |
           npm install
           npm run typecheck
@@ -204,11 +224,11 @@ jobs:
       # A contract imported only through a "@/*" tsconfig.json path alias,
       # never a relative import, resolved automatically (no `tsconfig` option
       # passed) by both env-cap's static analysis and tsx at runtime -- see
-      # test/examples/tsconfig-aliases.test.ts and ADR 0023. Also installable
-      # as its own package (like paypal-addon) -- built and packed here so
-      # tsconfig-aliases-consumer below can install it from a real tarball.
+      # ADR 0023. Also installable as its own package (like paypal-addon) --
+      # built and packed here so tsconfig-aliases-consumer below can install
+      # it from a real tarball.
       - name: tsconfig-aliases (typecheck, build, pack)
-        working-directory: examples/tsconfig-aliases
+        working-directory: test/integration/positive/enterprise/tsconfig-aliases
         run: |
           npm install
           npm run typecheck
@@ -217,21 +237,52 @@ jobs:
       # Installs tsconfig-aliases's packed tarball and discovers its contract
       # via `packages` (ADR 0014), while this app's own local contract is
       # organized through its own "@/*" alias (ADR 0023) -- proves the two
-      # mechanisms compose in one real install. See
-      # test/examples/tsconfig-aliases-consumer.test.ts.
+      # mechanisms compose in one real install.
       - name: tsconfig-aliases-consumer (installs tsconfig-aliases's packed tarball)
-        working-directory: examples/tsconfig-aliases-consumer
+        working-directory: test/integration/positive/enterprise/tsconfig-aliases-consumer
         run: |
           npm install
           npm run typecheck
 
-      # Runs each example's real npm scripts against its own committed,
-      # fake-but-plausible `.env` file and asserts on real stdout -- the
-      # actual runtime path (validateEnv -> read a validated value), not just
-      # that the schema typechecks -- and golden-compares every generated
-      # artifact byte-for-byte against its committed expected/ copy. One file
-      # per example, mirroring examples/ 1:1 -- see test/examples/support.ts.
-      - run: npx vitest run test/examples/
+      # env-cap's own first-party Evidence Model projections -- the original
+      # ten (ADR 0024/0031/0032) plus an eleventh, Joined Variable View,
+      # added afterward -- built entirely through the public API
+      # (generateEvidenceModel() from /build, defineEvidenceProjection()
+      # from /evidence) -- reuses application's exact schema so each
+      # projection's output can be golden-compared against the existing,
+      # already-tested rendering path.
+      - name: evidence-projections
+        working-directory: test/integration/positive/enterprise/evidence-projections
+        run: |
+          npm install
+          npm run typecheck
+
+      # Deliberately, permanently broken by design -- a missing required
+      # variable. `typecheck` succeeds here (static discovery never reads
+      # .env values); only `start`, which actually calls validateEnv(), is
+      # expected to fail.
+      - name: missing-env-var
+        working-directory: test/integration/negative/invalid-config/missing-env-var
+        run: |
+          npm install
+          npm run typecheck
+
+      # Deliberately, permanently broken by design -- two active contracts
+      # sharing an exclusiveGroup. `generate:env` (and therefore
+      # `typecheck`/`start`, which both run it first) always fails here, so
+      # -- unlike every other fixture in this job -- there is no typecheck
+      # step: it would never get past generation to reach `tsc` anyway.
+      - name: multiple-active-exclusive-capabilities
+        working-directory: test/integration/negative/exclusive-violation/multiple-active-exclusive-capabilities
+        run: npm install
+
+      # Runs each fixture's real npm scripts against its own committed,
+      # fake-but-plausible `.env` file and asserts on real stdout, and
+      # golden-compares every generated artifact byte-for-byte against its
+      # committed expected/ copy. One file per fixture, mirroring
+      # test/integration/{positive,negative}/ 1:1 -- see
+      # test/support/example-runner.ts.
+      - run: npx vitest run test/integration/positive/ test/integration/negative/
 
   # Coverage/bundle-size badges (item B) -- only on a push to main, never on a
   # PR run (a job whose `if` is false is skipped, and everything downstream
@@ -289,6 +340,16 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Verify site entry point exists
         run: test -f docs/index.html
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      # The rendered HTML API reference is generated fresh here, never
+      # committed -- it lands at maverickcer.github.io/env-cap/api/ alongside
+      # the hand-authored landing page. The Markdown report drift check in
+      # the `verify` job is what guards the API surface itself.
+      - run: npm run docs:api
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: docs-badges

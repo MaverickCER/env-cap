@@ -1,5 +1,8 @@
-import { readFileSync } from "node:fs"
-import type { CompatibilityIssue, GenerateEnvArtifactsResult } from "../build/index.js"
+import {
+  readToolVersion,
+  type CompatibilityIssue,
+  type GenerateEnvArtifactsResult,
+} from "../build/index.js"
 
 /**
  * `--json`'s machine-readable contract lives here, in one place, so it's
@@ -12,24 +15,52 @@ import type { CompatibilityIssue, GenerateEnvArtifactsResult } from "../build/in
  *  misinterpret the new payload (a field changes type/meaning, or is
  *  removed) -- NOT for every additive field. See ADR 0013. */
 export const JSON_SCHEMA_VERSION = 1
-const JSON_KIND = "env-cap-report"
 
-// Read once per process, not once per invocation of serializeSuccess()/
-// serializeFailure() -- resolved via import.meta.url (not process.cwd()) so
-// it always reflects the installed package's own version regardless of
-// where the CLI is invoked from (npx, a local devDependency, a global install).
-const TOOL_VERSION: string = (
-  JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as {
-    version: string
-  }
-).version
+// One version source, shared with the `./build` entry -- `readToolVersion()`
+// returns `tsup`'s build-time constant, so the CLI never reads its own
+// manifest at runtime. See ADR 0040.
+const TOOL_VERSION: string = readToolVersion()
+
+/**
+ * Which passes this invocation actually asked for -- recorded explicitly so a
+ * consumer never has to infer intent from which top-level keys happen to be
+ * present.
+ *
+ * @remarks
+ * Without this, `"manifest": undefined` is genuinely ambiguous: it could mean
+ * "no `--location` was passed" or "the manifest pass ran and produced
+ * nothing," and telling those apart required knowing which CLI flags the run
+ * was invoked with -- information the envelope itself never carried. A CI step
+ * gating on "did the docs pass run?" would otherwise have to reconstruct the
+ * command line. `evidence` records the request specifically (the model itself
+ * is always computed, per ADR 0038, but only *included* in this envelope on
+ * request -- see `JsonSuccessPayload.evidence`).
+ */
+export interface JsonRequestedPasses {
+  /** `--location` was passed. */
+  readonly manifest: boolean
+  /** `--docs` was passed. */
+  readonly docs: boolean
+  /** `--ownership` was passed. */
+  readonly usage: boolean
+  /** `--evidence` was passed. */
+  readonly evidence: boolean
+}
 
 /** The `--json` envelope for a successful run (generation completed without throwing). */
-export interface JsonSuccessPayload extends GenerateEnvArtifactsResult {
+export interface JsonSuccessPayload extends Omit<GenerateEnvArtifactsResult, "evidence"> {
   readonly schemaVersion: typeof JSON_SCHEMA_VERSION
-  readonly kind: typeof JSON_KIND
+  readonly kind: "env-cap-report"
   readonly toolVersion: string
   readonly ok: true
+  /** Which passes this invocation requested -- always present, so "not requested" is never confused with "computed empty." See {@link JsonRequestedPasses}. */
+  readonly requested: JsonRequestedPasses
+  /** Present only when the caller actually requested `--evidence` --
+   *  `GenerateEnvArtifactsResult.evidence` itself is always populated (ADR
+   *  0038, "free to compute, always real"), but the `--json` envelope omits
+   *  it by default so an ordinary `--location`/`--docs`/`--ownership` report
+   *  doesn't silently grow by the full evidence model every time. */
+  readonly evidence?: GenerateEnvArtifactsResult["evidence"]
   /** Present only when invoked with --check. Governs --check's own pass/fail
    *  exit code, independent of this envelope's top-level `ok` (which keeps
    *  its existing, unrelated meaning: "did generation complete without
@@ -48,7 +79,7 @@ export interface JsonErrorInfo {
 /** The `--json` envelope for a failed run (generation threw). */
 export interface JsonErrorPayload {
   readonly schemaVersion: typeof JSON_SCHEMA_VERSION
-  readonly kind: typeof JSON_KIND
+  readonly kind: "env-cap-report"
   readonly toolVersion: string
   readonly ok: false
   readonly error: JsonErrorInfo
@@ -62,17 +93,41 @@ function hasIssues(error: unknown): error is { issues: readonly CompatibilityIss
   )
 }
 
-/** Wraps a completed {@link generateEnvArtifacts} result in the `--json` success envelope. */
+/**
+ * Wraps a completed {@link generateEnvArtifacts} result in the `--json`
+ * success envelope. `includeEvidence` (default `false`) controls whether
+ * `result.evidence` -- always populated on `result` itself, per ADR 0038 --
+ * is actually included in the envelope; the CLI passes `true` only when the
+ * caller requested `--evidence`.
+ *
+ * `requested` is supplied by the caller rather than inferred from `result`'s
+ * own populated keys -- inferring it would reproduce exactly the ambiguity
+ * this field exists to remove (see {@link JsonRequestedPasses}). It defaults
+ * to deriving each pass from whether its result is present, which is correct
+ * for a normal generate run and keeps this callable from a test without
+ * threading flags through; the CLI always passes the real flags.
+ */
 export function serializeSuccess(
-  result: GenerateEnvArtifactsResult,
+  result: Omit<GenerateEnvArtifactsResult, "evidence"> &
+    Partial<Pick<GenerateEnvArtifactsResult, "evidence">>,
   checkResult?: { readonly ok: boolean; readonly stale: readonly string[] },
+  includeEvidence = false,
+  requested?: JsonRequestedPasses,
 ): JsonSuccessPayload {
+  const { evidence, ...rest } = result
   return {
     schemaVersion: JSON_SCHEMA_VERSION,
-    kind: JSON_KIND,
+    kind: "env-cap-report",
     toolVersion: TOOL_VERSION,
     ok: true,
-    ...result,
+    requested: requested ?? {
+      manifest: rest.manifest !== undefined,
+      docs: rest.docs !== undefined,
+      usage: rest.usage !== undefined,
+      evidence: includeEvidence,
+    },
+    ...rest,
+    ...(includeEvidence ? { evidence } : {}),
     ...(checkResult ? { checkResult } : {}),
   }
 }
@@ -81,7 +136,7 @@ export function serializeSuccess(
 export function serializeFailure(error: unknown): JsonErrorPayload {
   return {
     schemaVersion: JSON_SCHEMA_VERSION,
-    kind: JSON_KIND,
+    kind: "env-cap-report",
     toolVersion: TOOL_VERSION,
     ok: false,
     error: {

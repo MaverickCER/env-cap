@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Patches dist/eslint-plugin/index.cjs so `require("@maverickcer/env-cap/eslint-plugin")`
+// Patches dist/eslint-plugin/index.cjs so `require("env-cap/eslint-plugin")`
 // resolves directly to the plugin object, matching the ESM entry point's
 // `import envCapPlugin from "..."` ergonomics documented in the README.
 //

@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { createEnv } from "../../src/runtime/create.js"
-import { getContractInternals, isEnvContract } from "../../src/runtime/registry.js"
+import {
+  getContractInternals,
+  isEnvContract,
+  registerContract,
+} from "../../src/runtime/registry.js"
 
 describe("isEnvContract", () => {
   it("returns true for objects returned by createEnv", () => {
@@ -15,6 +19,19 @@ describe("isEnvContract", () => {
     expect(isEnvContract(undefined)).toBe(false)
     expect(isEnvContract("STRIPE_KEY")).toBe(false)
   })
+
+  it("returns false for a registered function -- the typeof guard excludes functions even though WeakMap accepts them as keys", () => {
+    // `object` (`registerContract`'s parameter type) structurally includes
+    // function types, and a function IS a valid `WeakMap` key -- so this is
+    // the one case that actually distinguishes the `typeof value ===
+    // "object"` guard from a bare `internalsByContract.has(value)` call: a
+    // registered non-object key must still read as "not a contract".
+    const fn = (): void => {
+      /* no-op stand-in for a "contract" -- never actually called */
+    }
+    registerContract(fn, { name: "fn-contract", schema: {}, id: Symbol("fn"), source: undefined })
+    expect(isEnvContract(fn)).toBe(false)
+  })
 })
 
 describe("getContractInternals", () => {
@@ -26,8 +43,11 @@ describe("getContractInternals", () => {
     expect(typeof internals.id).toBe("symbol")
   })
 
-  it("throws a clear TypeError for a value that was not created by createEnv", () => {
+  it("throws a clear TypeError with the exact message for a value that was not created by createEnv", () => {
     expect(() => getContractInternals({})).toThrow(TypeError)
-    expect(() => getContractInternals({})).toThrow(/createEnv/)
+    expect(() => getContractInternals({})).toThrow(
+      "env-cap: this value was not created by createEnv(). " +
+        "validateEnv() and resetEnvCache() only accept contracts returned from createEnv().",
+    )
   })
 })

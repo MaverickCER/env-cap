@@ -1,5 +1,5 @@
 import path from "node:path"
-import { tsBannerLines } from "./generated-banner.js"
+import { generatedBanner } from "./generated-banner.js"
 import type { DiscoveredContract } from "./link.js"
 
 /**
@@ -46,7 +46,7 @@ export function renderManifest(
   contracts: readonly DiscoveredContract[],
   outputFile: string,
 ): string {
-  const sorted = [...contracts].sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0))
+  const sorted = [...contracts].sort((a, b) => a.file.localeCompare(b.file))
   const outputDir = path.dirname(outputFile)
   const usedNames = new Set<string>()
 
@@ -95,7 +95,7 @@ export function renderManifest(
       : []
 
   const lines = [
-    ...tsBannerLines(),
+    generatedBanner("ts"),
     "",
     ...importLines,
     "",

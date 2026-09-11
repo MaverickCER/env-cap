@@ -1,0 +1,23 @@
+{
+  "nodes": [
+    {
+      "id": "contract:src/env.ts#env",
+      "type": "contract",
+      "label": "app",
+      "file": "src/env.ts",
+      "exportName": "env"
+    },
+    {
+      "id": "file:src/server.ts",
+      "type": "file",
+      "label": "src/server.ts",
+      "file": "src/server.ts"
+    }
+  ],
+  "edges": [
+    {
+      "from": "file:src/server.ts",
+      "to": "contract:src/env.ts#env"
+    }
+  ]
+}
