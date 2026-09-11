@@ -218,6 +218,7 @@ export async function generateEvidenceModel(
   )
 
   const finding = buildFindingModel({
+    root,
     compatibilityIssues: detectCompatibilityIssues(activeContracts),
     exclusiveGroupIssues: detectExclusiveGroupIssues(activeContracts),
     documentation: documentationComputed.documentation,

@@ -459,6 +459,7 @@ export async function computeArtifacts(
     evidenceChanges?.dynamicAccessAcknowledgments,
   )
   const finding = buildFindingModel({
+    root,
     compatibilityIssues: [
       ...detectCompatibilityIssues(activeContracts),
       ...detectDuplicateVariableShapes(activeContracts),

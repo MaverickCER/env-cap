@@ -1,5 +1,6 @@
 import type { ArtifactCheckFinding } from "./check-artifacts.js"
 import type { CompatibilityIssue, CompatibilityIssueCode } from "./compatibility.js"
+import { displayPath } from "./display-path.js"
 import type { EvidenceReference } from "./evidence-reference.js"
 import type { DocumentationFindings } from "./generate-documentation.js"
 import type { DynamicAccessCitationProblem } from "./citation-verification.js"
@@ -76,6 +77,8 @@ export interface FindingModel {
  * top-level fields are each independently optional.
  */
 export interface BuildFindingModelInput {
+  /** Every `EvidenceReference.file` below is rendered relative to this, matching every other rendered path in this package's output -- see `displayPath()`. */
+  readonly root: string
   /** From `detectCompatibilityIssues()`. */
   readonly compatibilityIssues?: readonly CompatibilityIssue[]
   /** From `detectExclusiveGroupIssues()` -- kept separate from `compatibilityIssues` since it never sets its own `code` yet (ADR 0009), so this adapter synthesizes `"EXCLUSIVE_GROUP_VIOLATION"` for every entry. */
@@ -109,7 +112,11 @@ export interface BuildFindingModelInput {
 // extended to carry one.
 const NO_POSITION = undefined
 
-function fromCompatibilityIssue(issue: CompatibilityIssue, code: FindingCode): Finding {
+function fromCompatibilityIssue(
+  root: string,
+  issue: CompatibilityIssue,
+  code: FindingCode,
+): Finding {
   return {
     severity: issue.severity,
     code,
@@ -117,7 +124,7 @@ function fromCompatibilityIssue(issue: CompatibilityIssue, code: FindingCode): F
     message: issue.reason,
     location: {
       model: "contract",
-      file: issue.files[0],
+      file: displayPath(root, issue.files[0]),
       exportName: undefined,
       variable: issue.variable,
       position: NO_POSITION,
@@ -133,16 +140,19 @@ function fromCompatibilityIssue(issue: CompatibilityIssue, code: FindingCode): F
  * sorts it themselves.
  */
 export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
+  const { root } = input
   const findings: Finding[] = []
 
   for (const issue of input.compatibilityIssues ?? []) {
     // Every check in detectCompatibilityIssues() sets a code as of ADR 0026 --
     // the fallback exists only for defense against a future check that forgets to.
-    findings.push(fromCompatibilityIssue(issue, issue.code ?? "DUPLICATE_VARIABLE_DOCUMENTATION"))
+    findings.push(
+      fromCompatibilityIssue(root, issue, issue.code ?? "DUPLICATE_VARIABLE_DOCUMENTATION"),
+    )
   }
 
   for (const issue of input.exclusiveGroupIssues ?? []) {
-    findings.push(fromCompatibilityIssue(issue, "EXCLUSIVE_GROUP_VIOLATION"))
+    findings.push(fromCompatibilityIssue(root, issue, "EXCLUSIVE_GROUP_VIOLATION"))
   }
 
   for (const check of input.artifactCheckFindings ?? []) {
@@ -166,7 +176,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
         message: `"${c.exportName}" has no documentEnv() call linked to it.`,
         location: {
           model: "contract",
-          file: c.file,
+          file: displayPath(root, c.file),
           exportName: c.exportName,
           variable: undefined,
           position: NO_POSITION,
@@ -181,7 +191,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
         message: `"${v.key}" (declared by "${v.exportName}") has no matching entry in a linked documentEnv()'s "variables".`,
         location: {
           model: "contract",
-          file: v.file,
+          file: displayPath(root, v.file),
           exportName: v.exportName,
           variable: v.key,
           position: NO_POSITION,
@@ -196,7 +206,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
         message: `"${s.key}" is documented under "${s.exportName}" but no longer exists in that contract's schema.`,
         location: {
           model: "contract",
-          file: s.file,
+          file: displayPath(root, s.file),
           exportName: s.exportName,
           variable: s.key,
           position: NO_POSITION,
@@ -214,7 +224,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
           : `"${e.key ?? e.exportName}" expires in ${e.daysRemaining} day(s) (expiresAt: ${e.expiresAt}).`,
         location: {
           model: "contract",
-          file: e.file,
+          file: displayPath(root, e.file),
           exportName: e.exportName,
           variable: e.key,
           position: NO_POSITION,
@@ -231,7 +241,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
           "levels (secret/credential/pii/config) -- still honored verbatim, just flagged for vocabulary drift.",
         location: {
           model: "contract",
-          file: n.file,
+          file: displayPath(root, n.file),
           exportName: n.exportName,
           variable: n.key,
           position: NO_POSITION,
@@ -246,7 +256,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
         message: u.reason,
         location: {
           model: "contract",
-          file: u.file,
+          file: displayPath(root, u.file),
           exportName: undefined,
           variable: undefined,
           position: NO_POSITION,
@@ -264,6 +274,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
       location: {
         model: "ownership",
         contractName: a.contractName,
+        // a.file (AbandonedContractFinding.file) is already root-relative.
         file: a.file,
         variable: undefined,
         position: NO_POSITION,
@@ -279,6 +290,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
       location: {
         model: "ownership",
         contractName: u.contractName,
+        // u.file (UnresolvedConsumerFinding.file) is already root-relative.
         file: u.file,
         variable: undefined,
         position: NO_POSITION,
@@ -330,6 +342,9 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
       location: {
         model: "ownership",
         contractName: p.contractName,
+        // p.file (DynamicAccessCitationProblem.file) is already
+        // root-relative -- unlike every other .file above, not a raw
+        // absolute path -- so no displayPath() conversion here.
         file: p.file,
         variable: p.key,
         // The one ownership-family finding with a genuinely meaningful

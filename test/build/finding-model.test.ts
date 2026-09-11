@@ -6,7 +6,7 @@ import type { DocumentationFindings } from "../../src/build/generate-documentati
 
 describe("buildFindingModel", () => {
   it("carries the current schema version and produces no findings for an empty input", () => {
-    const model = buildFindingModel({})
+    const model = buildFindingModel({ root: "/repo" })
     expect(model.schemaVersion).toBe(FINDING_MODEL_SCHEMA_VERSION)
     expect(model.findings).toEqual([])
   })
@@ -19,7 +19,7 @@ describe("buildFindingModel", () => {
       reason: "Processor return types are declared incompatible.",
       code: "PROCESSOR_RETURN_TYPE_CONFLICT",
     }
-    const model = buildFindingModel({ compatibilityIssues: [issue] })
+    const model = buildFindingModel({ root: "/repo", compatibilityIssues: [issue] })
     expect(model.findings).toEqual([
       {
         severity: "error",
@@ -28,7 +28,7 @@ describe("buildFindingModel", () => {
         message: issue.reason,
         location: {
           model: "contract",
-          file: "/repo/a/env.schema.ts",
+          file: "a/env.schema.ts",
           exportName: undefined,
           variable: "PORT",
         },
@@ -43,7 +43,7 @@ describe("buildFindingModel", () => {
       files: ["/repo/a/env.schema.ts"],
       reason: "unlikely, but defended against",
     }
-    const model = buildFindingModel({ compatibilityIssues: [issue] })
+    const model = buildFindingModel({ root: "/repo", compatibilityIssues: [issue] })
     expect(model.findings[0]?.code).toBe("DUPLICATE_VARIABLE_DOCUMENTATION")
   })
 
@@ -54,7 +54,7 @@ describe("buildFindingModel", () => {
       files: ["/repo/a/env.schema.ts", "/repo/b/env.schema.ts"],
       reason: "Both active and both declare exclusiveGroup.",
     }
-    const model = buildFindingModel({ exclusiveGroupIssues: [issue] })
+    const model = buildFindingModel({ root: "/repo", exclusiveGroupIssues: [issue] })
     expect(model.findings).toHaveLength(1)
     expect(model.findings[0]?.code).toBe("EXCLUSIVE_GROUP_VIOLATION")
     expect(model.findings[0]?.family).toBe("compatibility")
@@ -76,7 +76,7 @@ describe("buildFindingModel", () => {
         detail: "not yet generated",
       },
     ]
-    const model = buildFindingModel({ artifactCheckFindings: findings })
+    const model = buildFindingModel({ root: "/repo", artifactCheckFindings: findings })
     expect(model.findings).toEqual([
       {
         severity: "warning",
@@ -99,7 +99,7 @@ describe("buildFindingModel", () => {
     const findings: ArtifactCheckFinding[] = [
       { artifact: "manifest", path: "/repo/env.manifest.ts", status: "stale" },
     ]
-    const model = buildFindingModel({ artifactCheckFindings: findings })
+    const model = buildFindingModel({ root: "/repo", artifactCheckFindings: findings })
     expect(model.findings[0]?.message).toBe("manifest artifact is stale.")
   })
 
@@ -134,7 +134,7 @@ describe("buildFindingModel", () => {
       ],
       unresolvedLinks: [{ file: "/repo/a/docs.ts", reason: "could not be statically linked" }],
     }
-    const model = buildFindingModel({ documentation })
+    const model = buildFindingModel({ root: "/repo", documentation })
     expect(model.findings).toEqual([
       {
         severity: "warning",
@@ -143,7 +143,7 @@ describe("buildFindingModel", () => {
         message: '"aEnv" has no documentEnv() call linked to it.',
         location: {
           model: "contract",
-          file: "/repo/a/env.schema.ts",
+          file: "a/env.schema.ts",
           exportName: "aEnv",
           variable: undefined,
           position: undefined,
@@ -157,7 +157,7 @@ describe("buildFindingModel", () => {
           '"KEY" (declared by "aEnv") has no matching entry in a linked documentEnv()\'s "variables".',
         location: {
           model: "contract",
-          file: "/repo/a/env.schema.ts",
+          file: "a/env.schema.ts",
           exportName: "aEnv",
           variable: "KEY",
           position: undefined,
@@ -171,7 +171,7 @@ describe("buildFindingModel", () => {
           '"OLD_KEY" is documented under "aEnv" but no longer exists in that contract\'s schema.',
         location: {
           model: "contract",
-          file: "/repo/a/env.schema.ts",
+          file: "a/env.schema.ts",
           exportName: "aEnv",
           variable: "OLD_KEY",
           position: undefined,
@@ -184,7 +184,7 @@ describe("buildFindingModel", () => {
         message: '"EXPIRED_KEY" expired 10 day(s) ago (expiresAt: 2025-01-01).',
         location: {
           model: "contract",
-          file: "/repo/a/env.schema.ts",
+          file: "a/env.schema.ts",
           exportName: "aEnv",
           variable: "EXPIRED_KEY",
           position: undefined,
@@ -197,7 +197,7 @@ describe("buildFindingModel", () => {
         message: '"SOON_KEY" expires in 5 day(s) (expiresAt: 2026-01-15).',
         location: {
           model: "contract",
-          file: "/repo/a/env.schema.ts",
+          file: "a/env.schema.ts",
           exportName: "aEnv",
           variable: "SOON_KEY",
           position: undefined,
@@ -211,7 +211,7 @@ describe("buildFindingModel", () => {
           '"WEIRD_KEY" declares sensitivity "top-secret", which isn\'t one of the standard levels (secret/credential/pii/config) -- still honored verbatim, just flagged for vocabulary drift.',
         location: {
           model: "contract",
-          file: "/repo/a/env.schema.ts",
+          file: "a/env.schema.ts",
           exportName: "aEnv",
           variable: "WEIRD_KEY",
           position: undefined,
@@ -224,7 +224,7 @@ describe("buildFindingModel", () => {
         message: "could not be statically linked",
         location: {
           model: "contract",
-          file: "/repo/a/docs.ts",
+          file: "a/docs.ts",
           exportName: undefined,
           variable: undefined,
           position: undefined,
@@ -257,7 +257,7 @@ describe("buildFindingModel", () => {
       ],
       unresolvedLinks: [],
     }
-    const model = buildFindingModel({ documentation })
+    const model = buildFindingModel({ root: "/repo", documentation })
     expect(model.findings[0]?.message).toBe('"aEnv" expires in 5 day(s) (expiresAt: 2026-01-15).')
     expect(model.findings[1]?.message).toContain('"aEnv" declares sensitivity "top-secret"')
   })
@@ -279,13 +279,14 @@ describe("buildFindingModel", () => {
       nonstandardSensitivityLevels: [],
       unresolvedLinks: [],
     }
-    const model = buildFindingModel({ documentation })
+    const model = buildFindingModel({ root: "/repo", documentation })
     expect(model.findings[0]?.code).toBe("EXPIRING_SOON")
     expect(model.findings[0]?.message).toBe('"KEY" expires in 0 day(s) (expiresAt: 2026-01-15).')
   })
 
   it("adapts every ownership finding family, referencing the ownership model by contractName", () => {
     const model = buildFindingModel({
+      root: "/repo",
       abandonedContracts: [
         { contractName: "aEnv", file: "/repo/a/env.schema.ts", owner: "team-a" },
       ],
@@ -364,6 +365,7 @@ describe("buildFindingModel", () => {
 
   it("adapts a missing dynamic-access citation, citing the exact position", () => {
     const model = buildFindingModel({
+      root: "/repo",
       dynamicAccessCitationProblems: [
         {
           contractName: "eEnv",
@@ -394,6 +396,7 @@ describe("buildFindingModel", () => {
 
   it("adapts a stale dynamic-access citation, distinct from a missing one", () => {
     const model = buildFindingModel({
+      root: "/repo",
       dynamicAccessCitationProblems: [
         {
           contractName: "fEnv",

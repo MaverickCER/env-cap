@@ -2011,7 +2011,7 @@
         },
         "file": {
           "type": "string",
-          "description": "Absolute path of the file declaring the contract, when known."
+          "description": "Root-relative, POSIX-separated path of the file declaring the contract, when known -- see `displayPath()`."
         },
         "exportName": {
           "type": "string",
