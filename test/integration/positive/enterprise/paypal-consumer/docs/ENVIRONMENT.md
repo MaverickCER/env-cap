@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-11T05:55:43.473Z_
+_Generated 2026-09-11T07:14:43.482Z_
 
 ## Changes since last report
 
@@ -44,6 +44,7 @@ PayPal REST API client ID for this application's PayPal app.
 - Processor: yes
 - Validator: yes
 - Owner: paypal-addon-maintainers
+- Setup instructions: Create an app in the PayPal Developer Dashboard and copy its client ID.
 
 <a id="paypal-addon-paypal_client_secret"></a>
 ### `PAYPAL_CLIENT_SECRET`
@@ -67,6 +68,7 @@ Webhook ID PayPal uses to sign event notifications sent to this app.
 - Processor: yes
 - Validator: yes
 - Owner: paypal-addon-maintainers
+- Setup instructions: Copy the webhook ID from the PayPal Developer Dashboard's Webhooks page.
 
 <a id="contract-paypal-consumer-app"></a>
 ## paypal-consumer-app
