@@ -40,7 +40,7 @@ Most applications start with a centralized environment configuration model:
 ```ts
 // src/env.ts
 
-import { createEnv } from "env-cap"
+import { createEnv } from "@maverickcer/env-cap"
 
 const schema = {
   DATABASE_URL: {
@@ -84,7 +84,7 @@ Each capability defines its own environment requirements while the application c
 ```ts
 // features/payments/env.schema.ts
 
-import { createEnv, documentEnv } from "env-cap"
+import { createEnv, documentEnv } from "@maverickcer/env-cap"
 
 const paymentsSchema = {
   STRIPE_KEY: {
@@ -148,7 +148,7 @@ Instead, each capability exposes only the configuration it owns.
 At application startup, `validateEnv()` provides fail-fast verification across the complete application when paired with a generated manifest:
 
 ```ts
-import { validateEnv } from "env-cap"
+import { validateEnv } from "@maverickcer/env-cap"
 import { manifest } from "./generated/env.manifest"
 
 await validateEnv({
@@ -177,7 +177,7 @@ Helpers are intentionally not the core `env-cap` workflow. They are provided for
 Already using Zod, envalid, or another validation library? Keep it and integrate it directly with env-cap contracts — helpers exist for when a lighter API is enough, not as a reason to switch.
 
 ```ts
-import { createEnv } from "env-cap"
+import { createEnv } from "@maverickcer/env-cap"
 import { processors, validators } from "env-cap/helpers"
 
 export const databaseEnv = createEnv(
@@ -224,7 +224,7 @@ The helper package is optional and has no impact on the core runtime when unused
 For existing applications, start by wrapping your current environment requirements:
 
 ```ts
-import { createEnv } from "env-cap"
+import { createEnv } from "@maverickcer/env-cap"
 
 export const env = createEnv(
   {
@@ -348,7 +348,7 @@ features that happen to reuse a name, each with its own `description`/`owner`), 
 ### 3. Validate once during startup
 
 ```ts
-import { validateEnv } from "env-cap"
+import { validateEnv } from "@maverickcer/env-cap"
 import { manifest } from "./generated/env.manifest"
 
 await validateEnv({
@@ -602,7 +602,7 @@ Continue loading variables with dotenv.
 Add validated contracts on top:
 
 ```ts
-import { createEnv } from "env-cap"
+import { createEnv } from "@maverickcer/env-cap"
 
 export const env = createEnv({
   DATABASE_URL: {

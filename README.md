@@ -22,7 +22,7 @@ A capability declares the environment it owns alongside the validation already n
 ```ts
 // features/payments/env.schema.ts
 
-import { createEnv, documentEnv } from "env-cap"
+import { createEnv, documentEnv } from "@maverickcer/env-cap"
 
 const paymentsSchema = {
   STRIPE_KEY: {
@@ -111,7 +111,7 @@ The distinction is simple:
 **Start with one capability.**
 
 ```bash
-npm install env-cap
+npm install @maverickcer/env-cap
 npx env-cap init
 ```
 
@@ -124,7 +124,7 @@ If you prefer to create the contract yourself, the minimum setup is:
 ```ts
 // features/payments/env.schema.ts
 
-import { createEnv } from "env-cap"
+import { createEnv } from "@maverickcer/env-cap"
 
 export const paymentsEnv = createEnv(
   {
@@ -142,7 +142,7 @@ Then validate the generated project manifest before using the capability:
 ```ts
 // app.ts
 
-import { validateEnv } from "env-cap"
+import { validateEnv } from "@maverickcer/env-cap"
 
 import { manifest } from "./generated/env.manifest"
 import { paymentsEnv } from "./features/payments/env.schema"
