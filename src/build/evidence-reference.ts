@@ -42,7 +42,7 @@ export interface ContractRef {
 /** Points at a declared contract and, optionally, one of its variables -- the shape every `CompatibilityIssue`/documentation finding can be resolved to. Unlike {@link ContractRef}, both identity fields are optional here: a finding can legitimately know only the file (an unresolvable `documentEnv()` link) or neither. */
 export interface ContractEvidenceReference {
   readonly model: "contract"
-  /** Absolute path of the file declaring the contract, when known. */
+  /** Root-relative, POSIX-separated path of the file declaring the contract, when known -- see `displayPath()`. */
   readonly file: string | undefined
   /** The contract's exported binding name, when known. */
   readonly exportName: string | undefined

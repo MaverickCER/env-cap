@@ -1019,6 +1019,14 @@ readonly optional indeterminateOwnership?: readonly IndeterminateOwnershipFindin
 
 From `generateUsageReport()`'s result.
 
+##### root
+
+```ts
+readonly root: string;
+```
+
+Every `EvidenceReference.file` below is rendered relative to this, matching every other rendered path in this package's output -- see `displayPath()`.
+
 ##### unconsumedOwnedVariables?
 
 ```ts
@@ -1388,7 +1396,7 @@ The contract's exported binding name, when known.
 readonly file: string | undefined;
 ```
 
-Absolute path of the file declaring the contract, when known.
+Root-relative, POSIX-separated path of the file declaring the contract, when known -- see `displayPath()`.
 
 ##### model
 
@@ -4874,7 +4882,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 
 ###### Inherited from
 
-[`GenerateEvidenceModelOptions`](#generateevidencemodeloptions).[`root`](#root-4)
+[`GenerateEvidenceModelOptions`](#generateevidencemodeloptions).[`root`](#root-5)
 
 ##### tsconfig?
 
