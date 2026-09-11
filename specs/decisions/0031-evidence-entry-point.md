@@ -3,7 +3,7 @@
 ## Status
 
 Accepted. Implemented in `src/evidence/`, exported as
-`@maverickcer/env-cap/evidence`.
+`env-cap/evidence`.
 
 ## Context
 
@@ -13,7 +13,7 @@ specifically to be projected into whatever shape a downstream consumer
 needs (a Markdown report, a compliance export, a dashboard's JSON feed),
 rather than env-cap hand-rolling each of those shapes itself. That
 projection mechanism, `defineEvidenceProjection()`, has a different runtime
-profile than everything `@maverickcer/env-cap/build` exports: assembling an
+profile than everything `env-cap/build` exports: assembling an
 `EvidenceModel` requires `node:fs` and the TypeScript compiler API (Node-only,
 dev/CI tooling, per ADR 0002 and `specs/architecture.md`), but _running a
 projection over an already-assembled model_ does not -- a projection is a
@@ -26,16 +26,16 @@ projection against it without pulling in `typescript` or `node:fs` at all.
 ## Decision
 
 - **A 5th entry point, not a `./build` export.** `defineEvidenceProjection()`
-  ships as `@maverickcer/env-cap/evidence`, isomorphic like `runtime` and
+  ships as `env-cap/evidence`, isomorphic like `runtime` and
   `helpers` (`platform: "neutral"`, `target: "es2020"` in `tsup.config.ts`),
-  rather than living inside `@maverickcer/env-cap/build` alongside the
+  rather than living inside `env-cap/build` alongside the
   Node-only model builders. Bundling it with `build` would mean any consumer
   running a projection in a browser or edge function pulls in the TypeScript
   compiler API transitively, defeating the isomorphism this module exists to
   provide.
 - **`EvidenceModel` is imported as a type only.** `src/evidence/` needs to
   name the shape it projects over, but never constructs one -- that's
-  `generateEvidenceModel()`'s job (`@maverickcer/env-cap/build`, a later
+  `generateEvidenceModel()`'s job (`env-cap/build`, a later
   phase). `src/evidence/define-projection.ts` imports `EvidenceModel` from
   `src/build/evidence-model.ts` with `import type` only, erased entirely at
   compile time under `verbatimModuleSyntax` -- a second, deliberate instance
@@ -46,7 +46,7 @@ projection against it without pulling in `typescript` or `node:fs` at all.
   `src/evidence/index.ts` has only named exports, so it needs none of the
   CJS-interop postprocessing `scripts/fix-eslint-plugin-cjs-interop.mjs`
   exists for -- esbuild's ordinary CJS output already resolves
-  `require("@maverickcer/env-cap/evidence").defineEvidenceProjection`
+  `require("env-cap/evidence").defineEvidenceProjection`
   correctly.
 - **Experimental tier.** Like `packages` (ADR 0014) and `./build`'s
   lower-level primitives, `./evidence` ships Experimental rather than
@@ -70,7 +70,7 @@ projection against it without pulling in `typescript` or `node:fs` at all.
 
 ## Alternatives considered
 
-- **Export `defineEvidenceProjection()` from `@maverickcer/env-cap/build`
+- **Export `defineEvidenceProjection()` from `env-cap/build`
   alongside the six model builders.** Rejected -- would make every consumer
   of a projection also a transitive consumer of the TypeScript compiler API
   and `node:fs`, breaking the "run anywhere a persisted snapshot travels"

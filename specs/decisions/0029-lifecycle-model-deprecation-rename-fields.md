@@ -6,7 +6,7 @@ Accepted. `deprecated`/`deprecatedReason`/`removeBy`/`renamedFrom` added to
 `VariableDocs` (`deprecated`/`deprecatedReason` also on `ContractDocs`),
 threaded through `parse.ts` -> `link.ts` -> `manifest-snapshot.ts`.
 Implemented in `src/build/lifecycle-model.ts` (`buildLifecycleModel()`,
-`LifecycleModel`), exported from `@maverickcer/env-cap/build`.
+`LifecycleModel`), exported from `env-cap/build`.
 
 ## Context
 

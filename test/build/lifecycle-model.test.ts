@@ -21,16 +21,24 @@ function makeVariable(
     context: undefined,
     description: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     refreshInstructions: undefined,
+    setupInstructions: undefined,
     required: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
     removeBy: undefined,
     renamedFrom: undefined,
-    extra: {},
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
+    metadata: undefined,
+    evidence: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
     ...overrides,
   }
 }
@@ -48,12 +56,19 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
     metadata: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
+    documentation: undefined,
     packageOrigin: undefined,
     ...overrides,
   }
@@ -97,6 +112,37 @@ describe("buildLifecycleModel", () => {
     expect(model.contracts[0]?.variables).toEqual([])
   })
 
+  it("includes a contract when ONLY deprecatedReason is set at the contract level (deprecated itself left unset)", () => {
+    // The prior test sets `deprecated` and `deprecatedReason` together, so
+    // it can't isolate `deprecatedReason !== undefined` from `deprecated
+    // !== undefined` in the same OR-chain -- this contract has no other
+    // contract-level lifecycle field at all.
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      deprecatedReason: "Superseded by aEnv-v2.",
+      variables: [makeVariable({ key: "PLAIN" })],
+    })
+    const model = buildLifecycleModel([contract], 30, NOW, "/repo")
+    expect(model.contracts).toHaveLength(1)
+    expect(model.contracts[0]?.deprecatedReason).toBe("Superseded by aEnv-v2.")
+  })
+
+  it("includes a contract when ONLY contract-level retention is set (no expiresAt/deprecated/deprecatedReason, no qualifying variables)", () => {
+    // Isolates `contract.retention !== undefined` in the `hasContractLevelData`
+    // OR-chain -- the same reason the deprecatedReason-only test above exists.
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      retention: "Delete 90 days after the account closes.",
+      variables: [makeVariable({ key: "PLAIN" })],
+    })
+    const model = buildLifecycleModel([contract], 30, NOW, "/repo")
+    expect(model.contracts).toHaveLength(1)
+    expect(model.contracts[0]?.retention).toBe("Delete 90 days after the account closes.")
+    expect(model.contracts[0]?.variables).toEqual([])
+  })
+
   it("filters variables to only those with at least one lifecycle field set", () => {
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
@@ -106,13 +152,17 @@ describe("buildLifecycleModel", () => {
         makeVariable({ key: "EXPIRES", expiresAt: "2027-01-01" }),
         makeVariable({ key: "DEPRECATED", deprecated: true, removeBy: "2027-06-01" }),
         makeVariable({ key: "RENAMED", renamedFrom: "OLD_RENAMED" }),
+        makeVariable({ key: "REFRESH_ONLY", refreshInstructions: "Rotate in the vault." }),
+        makeVariable({ key: "RETENTION_ONLY", retention: "90 days" }),
       ],
     })
     const model = buildLifecycleModel([contract], 30, NOW, "/repo")
     expect(model.contracts[0]?.variables.map((v) => v.key)).toEqual([
       "DEPRECATED",
       "EXPIRES",
+      "REFRESH_ONLY",
       "RENAMED",
+      "RETENTION_ONLY",
     ])
   })
 

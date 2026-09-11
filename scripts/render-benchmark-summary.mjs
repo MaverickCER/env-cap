@@ -12,7 +12,7 @@
 // a PR comment) to read, it never decides pass/fail.
 
 import { readFileSync } from "node:fs"
-import { BUDGETS } from "../examples/benchmark-fixtures/budgets.mjs"
+import { BUDGETS } from "../benchmark/benchmark-fixtures/budgets.mjs"
 
 const MARKER = "<!-- env-cap-benchmark-summary -->"
 
@@ -63,7 +63,7 @@ function renderExample(label, previous, current) {
   ) {
     lines.push(
       `> ⚠️ **Suite version mismatch**: previous run used \`s${previous.metadata?.versions?.benchmarkSuiteVersion}\`, ` +
-        `current run used \`s${current.metadata?.versions?.benchmarkSuiteVersion}\`. Numbers below are not directly comparable -- see PERFORMANCE.md's "never compare" rule.`,
+        `current run used \`s${current.metadata?.versions?.benchmarkSuiteVersion}\`. Numbers below are not directly comparable -- see benchmark/README.md's "never compare" rule.`,
       "",
     )
   }
@@ -140,10 +140,10 @@ function main() {
     "",
     "# Benchmark summary",
     "",
-    "Highlight-only -- nothing here gates a merge. See [examples/PERFORMANCE.md](../examples/PERFORMANCE.md) for methodology.",
+    "Highlight-only -- nothing here gates a merge. See [benchmark/README.md](../benchmark/README.md) for methodology.",
     "",
-    renderExample("Runtime (`examples/performance-runtime`)", prevRuntime, curRuntime),
-    renderExample("Build-time (`examples/performance-buildtime`)", prevBuildtime, curBuildtime),
+    renderExample("Runtime (`benchmark/performance-runtime`)", prevRuntime, curRuntime),
+    renderExample("Build-time (`benchmark/performance-buildtime`)", prevBuildtime, curBuildtime),
   ]
 
   process.stdout.write(output.join("\n") + "\n")

@@ -1,0 +1,506 @@
+{
+  "metadata": {
+    "environment": {
+      "cpuModel": "Apple M3",
+      "cpuArchitecture": "arm64",
+      "processArch": "arm64",
+      "logicalCores": 8,
+      "physicalCores": 8,
+      "cpuFrequencyMHz": 2400,
+      "platform": "darwin",
+      "osRelease": "25.6.0",
+      "totalMemoryMb": 24576,
+      "nodeVersion": "v24.11.0",
+      "timezoneOffsetMinutes": -240,
+      "isCI": false,
+      "runner": "local"
+    },
+    "package": {
+      "runtimeBundleBytes": 5803,
+      "runtimeBundleGzipBytes": 1970,
+      "helpersBundleBytes": 7189,
+      "helpersBundleGzipBytes": 2027
+    },
+    "configuration": {
+      "warmupIterations": 3,
+      "targetDurationMs": 1500,
+      "minIterations": 5,
+      "maxIterations": 30,
+      "gcEnabled": true
+    },
+    "timing": {
+      "startedAtUtc": "2026-08-18T21:10:14.527Z",
+      "finishedAtUtc": "2026-08-18T21:10:54.685Z",
+      "totalSuiteDurationMs": 40158
+    },
+    "generation": {
+      "fixtureSeed": "deterministic-index-v1",
+      "generatorVersion": 1
+    },
+    "versions": {
+      "benchmarkSchemaVersion": 1,
+      "benchmarkSuiteVersion": 1,
+      "benchmarkToolVersion": "1.0.0",
+      "envCapVersion": "0.1.0"
+    },
+    "git": {
+      "gitCommit": "934a7412c28b9dd5a0a9bb425f35e293023da3bb",
+      "gitBranch": "main",
+      "gitDirty": true
+    },
+    "generatedBy": "npm run benchmark"
+  },
+  "benchmarkManifest": [
+    {
+      "id": "buildtime-artifacts-baseline-s1-v1",
+      "category": "buildtime",
+      "name": "artifacts",
+      "tier": "baseline",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-artifacts-stress-s1-v1",
+      "category": "buildtime",
+      "name": "artifacts",
+      "tier": "stress",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-artifacts-extreme-s1-v1",
+      "category": "buildtime",
+      "name": "artifacts",
+      "tier": "extreme",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-artifacts-enterprise-s1-v1",
+      "category": "buildtime",
+      "name": "artifacts",
+      "tier": "enterprise",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-discovery-baseline-s1-v1",
+      "category": "buildtime",
+      "name": "discovery",
+      "tier": "baseline",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-discovery-stress-s1-v1",
+      "category": "buildtime",
+      "name": "discovery",
+      "tier": "stress",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-discovery-extreme-s1-v1",
+      "category": "buildtime",
+      "name": "discovery",
+      "tier": "extreme",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-discovery-enterprise-s1-v1",
+      "category": "buildtime",
+      "name": "discovery",
+      "tier": "enterprise",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-standalone-vs-combined-stress-s1-v1",
+      "category": "buildtime",
+      "name": "standalone-vs-combined",
+      "tier": "stress",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-documentation-payload-stress-s1-v1",
+      "category": "buildtime",
+      "name": "documentation-payload",
+      "tier": "stress",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-scoped-include-extreme-s1-v1",
+      "category": "buildtime",
+      "name": "scoped-include",
+      "tier": "extreme",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "buildtime-edge-cases-fixed-s1-v1",
+      "category": "buildtime",
+      "name": "edge-cases",
+      "tier": "fixed",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    }
+  ],
+  "results": {
+    "artifacts": {
+      "tiers": {
+        "baseline": {
+          "id": "buildtime-artifacts-baseline-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 10,
+            "variables": 100
+          },
+          "fixtureHash": "sha256:9cb53450afbe52143248c7393afdf44c917b276be6a743369e3f28341f7a4add",
+          "fixtureGenerationMs": 5,
+          "totalMs": {
+            "minMs": 25.382624999999962,
+            "medianMs": 35.59962500000006,
+            "p95Ms": 48.93187499999999,
+            "maxMs": 70.31875000000014,
+            "stdDevMs": 8.223649502598938,
+            "iterations": 30,
+            "warmupIterations": 3
+          },
+          "discoveryMs": {
+            "minMs": 1.0593340000000353,
+            "medianMs": 1.1808329999998932,
+            "p95Ms": 1.3449580000001333,
+            "maxMs": 1.7605000000003201,
+            "stdDevMs": 0.12050544857643843,
+            "iterations": 30,
+            "warmupIterations": 3
+          },
+          "outputBytes": {
+            "manifestBytes": 925,
+            "docsBytes": 73602,
+            "usageReportBytes": 1992
+          }
+        },
+        "stress": {
+          "id": "buildtime-artifacts-stress-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 100,
+            "variables": 1000
+          },
+          "fixtureHash": "sha256:d902c939c7859881474e44ce682a3fd4665fa6e3ee6d20d2aee2e8b2e6588e6e",
+          "fixtureGenerationMs": 38,
+          "totalMs": {
+            "minMs": 189.6545000000001,
+            "medianMs": 207.1551669999999,
+            "p95Ms": 231.54941599999984,
+            "maxMs": 231.54941599999984,
+            "stdDevMs": 13.715565171657321,
+            "iterations": 7,
+            "warmupIterations": 3
+          },
+          "discoveryMs": {
+            "minMs": 5.004667000000154,
+            "medianMs": 5.941499999999905,
+            "p95Ms": 6.389415999999983,
+            "maxMs": 7.614207999999962,
+            "stdDevMs": 0.5254178193092403,
+            "iterations": 30,
+            "warmupIterations": 3
+          },
+          "outputBytes": {
+            "manifestBytes": 8935,
+            "docsBytes": 732136,
+            "usageReportBytes": 14592
+          }
+        },
+        "extreme": {
+          "id": "buildtime-artifacts-extreme-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 800,
+            "variables": 8000
+          },
+          "fixtureHash": "sha256:b56e5f32b1e8bcd7ddcd480931f971b52ba3be45bf0e60dbbddf9e3a8332c21a",
+          "fixtureGenerationMs": 281,
+          "totalMs": {
+            "minMs": 1259.2147910000003,
+            "medianMs": 1280.252375,
+            "p95Ms": 1307.2994589999998,
+            "maxMs": 1307.2994589999998,
+            "stdDevMs": 15.467771930577559,
+            "iterations": 5,
+            "warmupIterations": 3
+          },
+          "discoveryMs": {
+            "minMs": 32.33112500000061,
+            "medianMs": 32.849583999999595,
+            "p95Ms": 33.94783400000233,
+            "maxMs": 34.993624999999156,
+            "stdDevMs": 0.5020619033984277,
+            "iterations": 30,
+            "warmupIterations": 3
+          },
+          "outputBytes": {
+            "manifestBytes": 72635,
+            "docsBytes": 5917036,
+            "usageReportBytes": 112592
+          }
+        },
+        "enterprise": {
+          "id": "buildtime-artifacts-enterprise-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 250,
+            "variables": 4025
+          },
+          "fixtureHash": "sha256:8315886e837fc52f3d407ae115469070d55534cbab18ed1616b38ffecfb2a868",
+          "fixtureGenerationMs": 187,
+          "totalMs": {
+            "minMs": 458.99595800000316,
+            "medianMs": 469.33250000000044,
+            "p95Ms": 483.9208749999998,
+            "maxMs": 483.9208749999998,
+            "stdDevMs": 8.755341520205704,
+            "iterations": 5,
+            "warmupIterations": 3
+          },
+          "discoveryMs": {
+            "minMs": 10.123999999999796,
+            "medianMs": 10.584374999998545,
+            "p95Ms": 11.004124999999476,
+            "maxMs": 11.65087499999936,
+            "stdDevMs": 0.2869992616578386,
+            "iterations": 30,
+            "warmupIterations": 3
+          },
+          "outputBytes": {
+            "manifestBytes": 22585,
+            "docsBytes": 1795805,
+            "usageReportBytes": 35482
+          }
+        }
+      }
+    },
+    "discovery": {
+      "tiers": {
+        "baseline": {
+          "id": "buildtime-discovery-baseline-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 10,
+            "variables": 100
+          },
+          "fixtureHash": "sha256:9cb53450afbe52143248c7393afdf44c917b276be6a743369e3f28341f7a4add",
+          "fixtureGenerationMs": 5,
+          "durationMs": {
+            "minMs": 0.7153340000004391,
+            "medianMs": 0.8649159999986296,
+            "p95Ms": 1.046250000003056,
+            "maxMs": 1.5688330000011774,
+            "stdDevMs": 0.1521573032233024,
+            "iterations": 30,
+            "warmupIterations": 3
+          }
+        },
+        "stress": {
+          "id": "buildtime-discovery-stress-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 100,
+            "variables": 1000
+          },
+          "fixtureHash": "sha256:d902c939c7859881474e44ce682a3fd4665fa6e3ee6d20d2aee2e8b2e6588e6e",
+          "fixtureGenerationMs": 38,
+          "durationMs": {
+            "minMs": 4.298167000000831,
+            "medianMs": 4.406917000000249,
+            "p95Ms": 4.664667000000918,
+            "maxMs": 4.773791999999958,
+            "stdDevMs": 0.09605307499731823,
+            "iterations": 30,
+            "warmupIterations": 3
+          }
+        },
+        "extreme": {
+          "id": "buildtime-discovery-extreme-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 800,
+            "variables": 8000
+          },
+          "fixtureHash": "sha256:b56e5f32b1e8bcd7ddcd480931f971b52ba3be45bf0e60dbbddf9e3a8332c21a",
+          "fixtureGenerationMs": 281,
+          "durationMs": {
+            "minMs": 32.19358300000022,
+            "medianMs": 32.849874999999884,
+            "p95Ms": 34.92095800000243,
+            "maxMs": 35.28062499999942,
+            "stdDevMs": 0.6801618577010798,
+            "iterations": 30,
+            "warmupIterations": 3
+          }
+        },
+        "enterprise": {
+          "id": "buildtime-discovery-enterprise-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 250,
+            "variables": 4025
+          },
+          "fixtureHash": "sha256:8315886e837fc52f3d407ae115469070d55534cbab18ed1616b38ffecfb2a868",
+          "fixtureGenerationMs": 187,
+          "durationMs": {
+            "minMs": 10.231999999999971,
+            "medianMs": 10.471166999999696,
+            "p95Ms": 11.212125000001834,
+            "maxMs": 33.07445899999948,
+            "stdDevMs": 4.047803842146591,
+            "iterations": 30,
+            "warmupIterations": 3
+          }
+        }
+      }
+    },
+    "standalone-vs-combined": {
+      "tiers": {
+        "stress": {
+          "id": "buildtime-standalone-vs-combined-stress-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 100,
+            "variables": 1000
+          },
+          "fixtureHash": "sha256:d902c939c7859881474e44ce682a3fd4665fa6e3ee6d20d2aee2e8b2e6588e6e",
+          "standaloneMs": {
+            "minMs": 225.1578750000008,
+            "medianMs": 227.5723340000004,
+            "p95Ms": 248.70874999999796,
+            "maxMs": 248.70874999999796,
+            "stdDevMs": 7.7204457193081195,
+            "iterations": 7,
+            "warmupIterations": 3
+          },
+          "combinedMs": {
+            "minMs": 170.09212500000285,
+            "medianMs": 172.36987500000032,
+            "p95Ms": 191.95987500000047,
+            "maxMs": 191.95987500000047,
+            "stdDevMs": 6.295315533861038,
+            "iterations": 9,
+            "warmupIterations": 3
+          },
+          "savingsPercent": 24.26
+        }
+      }
+    },
+    "documentation-payload": {
+      "tiers": {
+        "stress": {
+          "id": "buildtime-documentation-payload-stress-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 100,
+            "variables": 1000
+          },
+          "minimalDocsMs": {
+            "minMs": 78.44612500000221,
+            "medianMs": 80.38804199999868,
+            "p95Ms": 83.11237500000061,
+            "maxMs": 83.11237500000061,
+            "stdDevMs": 1.2816291491705953,
+            "iterations": 18,
+            "warmupIterations": 3
+          },
+          "minimalDocsBytes": 732136,
+          "heavyDocsMs": {
+            "minMs": 93.76483300000109,
+            "medianMs": 98.48495800000092,
+            "p95Ms": 121.51187500000015,
+            "maxMs": 121.51187500000015,
+            "stdDevMs": 6.234499616074325,
+            "iterations": 15,
+            "warmupIterations": 3
+          },
+          "heavyDocsBytes": 1611026
+        }
+      }
+    },
+    "scoped-include": {
+      "tiers": {
+        "extreme": {
+          "id": "buildtime-scoped-include-extreme-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "contracts": 800,
+            "variables": 8000
+          },
+          "fixtureHash": "sha256:b56e5f32b1e8bcd7ddcd480931f971b52ba3be45bf0e60dbbddf9e3a8332c21a",
+          "full": {
+            "totalMs": {
+              "minMs": 464.6109160000051,
+              "medianMs": 468.5115000000005,
+              "p95Ms": 490.10691699999734,
+              "maxMs": 490.10691699999734,
+              "stdDevMs": 9.148924228141377,
+              "iterations": 5,
+              "warmupIterations": 3
+            },
+            "discoveryMs": {
+              "minMs": 32.40008399999351,
+              "medianMs": 32.9139589999977,
+              "p95Ms": 34.51970799999981,
+              "maxMs": 34.55604100000346,
+              "stdDevMs": 0.4916489391511478,
+              "iterations": 30,
+              "warmupIterations": 3
+            }
+          },
+          "scoped": {
+            "totalMs": {
+              "minMs": 32.271583000001556,
+              "medianMs": 34.06495800000266,
+              "p95Ms": 37.35433400000329,
+              "maxMs": 59.117458000000624,
+              "stdDevMs": 4.601344484280805,
+              "iterations": 30,
+              "warmupIterations": 3
+            },
+            "discoveryMs": {
+              "minMs": 30.304874999994354,
+              "medianMs": 30.76337500000227,
+              "p95Ms": 31.249167000001762,
+              "maxMs": 31.580707999994047,
+              "stdDevMs": 0.29550058346682767,
+              "iterations": 30,
+              "warmupIterations": 3
+            }
+          }
+        }
+      }
+    },
+    "edge-cases": {
+      "tiers": {
+        "fixed": {
+          "id": "buildtime-edge-cases-fixed-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "filesDiscovered": 4,
+            "contractsGenerated": 3,
+            "parseWarnings": 1
+          },
+          "durationMs": 9,
+          "parseWarnings": [
+            {
+              "file": "invalid/env.schema.ts",
+              "message": "createEnv() call for \"contract\" is not exported; it can never be included in a generated manifest, so it's skipped entirely."
+            }
+          ]
+        }
+      }
+    }
+  }
+}

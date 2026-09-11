@@ -23,6 +23,10 @@ describe("isWithinDirectory", () => {
   it("returns false for a parent directory", () => {
     expect(isWithinDirectory("/root/sub", "/root/other.ts")).toBe(false)
   })
+
+  it("returns false for baseDir's own immediate parent (relative === '..' exactly, not just a '../'-prefixed path)", () => {
+    expect(isWithinDirectory("/root/sub", "/root")).toBe(false)
+  })
 })
 
 describe("resolveWithinRoot", () => {
@@ -46,6 +50,11 @@ describe("resolveWithinRoot", () => {
       expect(result.issue.severity).toBe("error")
       expect(result.issue.reason).toContain("outside")
       expect(result.issue.reason).toContain("generateEnvManifest")
+      expect(result.issue.files).toEqual(["../../etc/passwd"])
+      expect(result.issue.reason).toBe(
+        `"location" ("../../etc/passwd") resolves to "${path.resolve(root, "../../etc/passwd")}", which is outside "root" ("${root}"). ` +
+          "generateEnvManifest() refuses to write outside root -- use a path nested under root instead.",
+      )
     }
   })
 

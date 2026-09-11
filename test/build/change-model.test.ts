@@ -4,7 +4,7 @@ import type { DiscoveredContract, DiscoveredVariable } from "../../src/build/lin
 import type {
   ManifestChangeReport,
   ManifestVariableRef,
-} from "../../src/build/manifest-snapshot.js"
+} from "../../src/build/evidence-snapshot.js"
 
 const EMPTY_REPORT: ManifestChangeReport = {
   addedContracts: [],
@@ -29,16 +29,24 @@ function makeVariable(
     context: undefined,
     description: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     refreshInstructions: undefined,
+    setupInstructions: undefined,
     required: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
     removeBy: undefined,
     renamedFrom: undefined,
-    extra: {},
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
+    metadata: undefined,
+    evidence: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
     ...overrides,
   }
 }
@@ -56,27 +64,28 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
     metadata: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
+    documentation: undefined,
     packageOrigin: undefined,
     ...overrides,
   }
 }
 
 function variableRef(
-  overrides: Partial<ManifestVariableRef> & { key: string; contractIdentity: string },
+  overrides: Partial<ManifestVariableRef> & { key: string },
 ): ManifestVariableRef {
-  return {
-    identity: `${overrides.contractIdentity}#${overrides.key}`,
-    file: "a/env.schema.ts",
-    exportName: "aEnv",
-    contractName: "a",
-    ...overrides,
-  }
+  return { file: "a/env.schema.ts", exportName: "aEnv", ...overrides }
 }
 
 describe("buildChangeModel", () => {
@@ -89,10 +98,8 @@ describe("buildChangeModel", () => {
     const report: ManifestChangeReport = {
       addedContracts: [
         {
-          identity: "a/env.schema.ts#aEnv",
           file: "a/env.schema.ts",
           exportName: "aEnv",
-          contractName: "a",
         },
       ],
       removedContracts: [],
@@ -106,11 +113,10 @@ describe("buildChangeModel", () => {
   })
 
   it("correlates an added+removed variable pair into a rename when the current declaration sets renamedFrom", () => {
-    const contractIdentity = "a/env.schema.ts#aEnv"
     const report: ManifestChangeReport = {
       ...EMPTY_REPORT,
-      addedVariables: [variableRef({ contractIdentity, key: "NEW_KEY" })],
-      removedVariables: [variableRef({ contractIdentity, key: "OLD_KEY" })],
+      addedVariables: [variableRef({ key: "NEW_KEY" })],
+      removedVariables: [variableRef({ key: "OLD_KEY" })],
     }
     const contracts = [
       makeContract({
@@ -123,10 +129,12 @@ describe("buildChangeModel", () => {
     const model = buildChangeModel(report, contracts, "/repo")
     expect(model.renamedVariables).toEqual([
       {
-        contractIdentity,
+        contractIdentity: "a/env.schema.ts#aEnv",
         file: "a/env.schema.ts",
         exportName: "aEnv",
-        contractName: "a",
+        // Resolved from the declaring contract, not carried on the change
+        // report's own refs -- see `ContractRef`.
+        contractName: "aEnv",
         previousKey: "OLD_KEY",
         currentKey: "NEW_KEY",
       },
@@ -137,10 +145,9 @@ describe("buildChangeModel", () => {
   })
 
   it("does not correlate a rename when renamedFrom points to a key that isn't actually in removedVariables", () => {
-    const contractIdentity = "a/env.schema.ts#aEnv"
     const report: ManifestChangeReport = {
       ...EMPTY_REPORT,
-      addedVariables: [variableRef({ contractIdentity, key: "NEW_KEY" })],
+      addedVariables: [variableRef({ key: "NEW_KEY" })],
       removedVariables: [],
     }
     const contracts = [
@@ -155,6 +162,56 @@ describe("buildChangeModel", () => {
     expect(model.renamedVariables).toEqual([])
   })
 
+  it("does not pick an added-variable ref sharing exportName+key but declared under a different file", () => {
+    // Two DIFFERENT files can share an exportName (only `${file}#${exportName}`
+    // is truly unique) -- a decoy ref matching on exportName+key but NOT
+    // file must never win, even when it's the FIRST candidate `.find()`
+    // sees.
+    const report: ManifestChangeReport = {
+      ...EMPTY_REPORT,
+      addedVariables: [
+        variableRef({ file: "decoy/env.schema.ts", exportName: "aEnv", key: "NEW_KEY" }),
+        variableRef({ file: "a/env.schema.ts", exportName: "aEnv", key: "NEW_KEY" }),
+      ],
+      removedVariables: [variableRef({ key: "OLD_KEY" })],
+    }
+    const contracts = [
+      makeContract({
+        file: "/repo/a/env.schema.ts",
+        exportName: "aEnv",
+        variables: [makeVariable({ key: "NEW_KEY", renamedFrom: "OLD_KEY" })],
+      }),
+    ]
+
+    const model = buildChangeModel(report, contracts, "/repo")
+    expect(model.renamedVariables).toEqual([
+      expect.objectContaining({ file: "a/env.schema.ts", currentKey: "NEW_KEY" }),
+    ])
+  })
+
+  it("does not pick an added-variable ref sharing file+key but declared under a different exportName", () => {
+    const report: ManifestChangeReport = {
+      ...EMPTY_REPORT,
+      addedVariables: [
+        variableRef({ file: "a/env.schema.ts", exportName: "decoyEnv", key: "NEW_KEY" }),
+        variableRef({ file: "a/env.schema.ts", exportName: "aEnv", key: "NEW_KEY" }),
+      ],
+      removedVariables: [variableRef({ key: "OLD_KEY" })],
+    }
+    const contracts = [
+      makeContract({
+        file: "/repo/a/env.schema.ts",
+        exportName: "aEnv",
+        variables: [makeVariable({ key: "NEW_KEY", renamedFrom: "OLD_KEY" })],
+      }),
+    ]
+
+    const model = buildChangeModel(report, contracts, "/repo")
+    expect(model.renamedVariables).toEqual([
+      expect.objectContaining({ exportName: "aEnv", currentKey: "NEW_KEY" }),
+    ])
+  })
+
   it("does not correlate a rename across two different contracts", () => {
     const contracts = [
       makeContract({
@@ -165,15 +222,13 @@ describe("buildChangeModel", () => {
     ]
     const report: ManifestChangeReport = {
       ...EMPTY_REPORT,
-      addedVariables: [variableRef({ contractIdentity: "a/env.schema.ts#aEnv", key: "NEW_KEY" })],
+      addedVariables: [variableRef({ key: "NEW_KEY" })],
       // The matching key exists, but under a different contract.
       removedVariables: [
         variableRef({
-          contractIdentity: "b/env.schema.ts#bEnv",
           key: "OLD_KEY",
           file: "b/env.schema.ts",
           exportName: "bEnv",
-          contractName: "b",
         }),
       ],
     }
@@ -211,27 +266,21 @@ describe("buildChangeModel", () => {
       ...EMPTY_REPORT,
       addedVariables: [
         variableRef({
-          contractIdentity: "b/env.schema.ts#bEnv",
           key: "NEW_B",
           file: "b/env.schema.ts",
           exportName: "bEnv",
-          contractName: "b",
         }),
         variableRef({
-          contractIdentity: "a/env.schema.ts#aEnv",
           key: "NEW_A",
         }),
       ],
       removedVariables: [
         variableRef({
-          contractIdentity: "b/env.schema.ts#bEnv",
           key: "OLD_B",
           file: "b/env.schema.ts",
           exportName: "bEnv",
-          contractName: "b",
         }),
         variableRef({
-          contractIdentity: "a/env.schema.ts#aEnv",
           key: "OLD_A",
         }),
       ],
@@ -242,7 +291,6 @@ describe("buildChangeModel", () => {
   })
 
   it("sorts two renamed variables within the same contract by current key", () => {
-    const contractIdentity = "a/env.schema.ts#aEnv"
     const contracts = [
       makeContract({
         file: "/repo/a/env.schema.ts",
@@ -255,14 +303,8 @@ describe("buildChangeModel", () => {
     ]
     const report: ManifestChangeReport = {
       ...EMPTY_REPORT,
-      addedVariables: [
-        variableRef({ contractIdentity, key: "Z_NEW" }),
-        variableRef({ contractIdentity, key: "A_NEW" }),
-      ],
-      removedVariables: [
-        variableRef({ contractIdentity, key: "Z_OLD" }),
-        variableRef({ contractIdentity, key: "A_OLD" }),
-      ],
+      addedVariables: [variableRef({ key: "Z_NEW" }), variableRef({ key: "A_NEW" })],
+      removedVariables: [variableRef({ key: "Z_OLD" }), variableRef({ key: "A_OLD" })],
     }
 
     const model = buildChangeModel(report, contracts, "/repo")

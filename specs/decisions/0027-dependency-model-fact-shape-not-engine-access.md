@@ -4,7 +4,7 @@
 
 Accepted. Implemented in `src/build/dependency-model.ts`
 (`buildDependencyModel()`, `DependencyModel`), exported from
-`@maverickcer/env-cap/build`. `src/build/dependency-graph.ts`'s
+`env-cap/build`. `src/build/dependency-graph.ts`'s
 `buildDependencyGraph()`, `scan-dependencies.ts`'s
 `scanFileForDependencies()`, and every other engine internal stay
 unexported, unchanged from ADR 0010.

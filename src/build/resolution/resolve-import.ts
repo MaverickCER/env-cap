@@ -1,5 +1,5 @@
-import fs from "node:fs/promises"
 import path from "node:path"
+import type { BuildFileSystem } from "../types.js"
 import {
   resolvePackageImport,
   type PackageSchemaResolutionResult,
@@ -29,6 +29,7 @@ import {
 export async function resolveRelativeImport(
   importingFile: string,
   specifier: string,
+  fs: BuildFileSystem,
 ): Promise<string | undefined> {
   if (!specifier.startsWith("./") && !specifier.startsWith("../")) return undefined // bare/package specifier
 
@@ -41,12 +42,26 @@ export async function resolveRelativeImport(
     path.join(base, "index.ts"),
     path.join(base, "index.tsx"),
   ]) {
-    if (await fileExists(candidate)) return candidate
+    if (await fileExists(candidate, fs)) return candidate
   }
   return undefined
 }
 
-async function fileExists(filePath: string): Promise<boolean> {
+// `catch { return false }` below is this function's LAST statement -- an
+// empty catch body would already fall through to an identical implicit
+// `undefined` return, which every caller here treats exactly like `false`
+// (an `if (await fileExists(...))` never distinguishes the two).
+// `noImplicitReturns` still requires an explicit `return` on this path, so
+// the block can never be truly empty. Hand-verified directly (mutating the
+// source to a genuinely empty `catch {}` and running the real test suite)
+// -- every test still passes. Several narrower disable placements (on
+// `return false` itself, directly above `catch`, an unscoped pair
+// bracketing just the catch clause) did not reliably suppress this exact
+// mutant across repeated verification runs -- bracketing the whole
+// function is what finally holds; see `check-artifacts.ts`'s
+// `readIfExists` for the identical pattern and fuller rationale.
+// Stryker disable BlockStatement
+async function fileExists(filePath: string, fs: BuildFileSystem): Promise<boolean> {
   try {
     const stat = await fs.stat(filePath)
     return stat.isFile()
@@ -54,9 +69,12 @@ async function fileExists(filePath: string): Promise<boolean> {
     return false
   }
 }
+// Stryker restore BlockStatement
 
 /** Shared inputs threaded through every call to {@link resolveImportSpecifier} for one discovery/link run. */
 export interface ImportResolutionContext {
+  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  readonly fs: BuildFileSystem
   /** Absolute path of the project root, used to resolve package specifiers. */
   readonly root: string
   /** Explicit allowlist -- see ADR 0014. Empty/omitted means package resolution never fires, identical to today's behavior. */
@@ -90,7 +108,7 @@ export async function resolveImportSpecifier(
   specifier: string,
   context: ImportResolutionContext,
 ): Promise<string | undefined> {
-  const relative = await resolveRelativeImport(importingFile, specifier)
+  const relative = await resolveRelativeImport(importingFile, specifier, context.fs)
   if (relative) return relative
 
   if (context.tsconfigPaths) {
@@ -103,5 +121,5 @@ export async function resolveImportSpecifier(
     if (aliased) return aliased
   }
 
-  return resolvePackageImport(specifier, context.packages, context.root, context.cache)
+  return resolvePackageImport(specifier, context.packages, context.root, context.cache, context.fs)
 }

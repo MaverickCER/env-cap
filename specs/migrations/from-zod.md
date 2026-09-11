@@ -94,7 +94,7 @@ Example:
 ```ts
 // features/payments/env.schema.ts
 
-import { createEnv, documentEnv } from "@maverickcer/env-cap"
+import { createEnv, documentEnv } from "env-cap"
 import { z } from "zod"
 
 const paymentsSchema = {

@@ -2,17 +2,22 @@
 
 ## Status
 
-Accepted. Implemented starting with `examples/evidence-projections/`.
+Accepted. Implemented starting with `examples/evidence-projections/`. **Superseded in part by
+ADR 0034**: the three-tier `examples/` restructuring relocated this package to
+`test/integration/positive/enterprise/evidence-projections/` as a behavioral fixture rather than a
+human-facing example — the reasoning below (no privileged internal path, reuses the flagship
+schema, golden-fixture regression protection) is unchanged and still governs it; only its
+directory and presentation to readers changed.
 
 ## Context
 
 ADR 0024's plan calls for ten first-party reference projections (`.env.example`, Environment
 Configuration Reference, Configuration Inventory, and so on) built through
-`defineEvidenceProjection()` (`@maverickcer/env-cap/evidence`, ADR 0031) with "no privileged
+`defineEvidenceProjection()` (`env-cap/evidence`, ADR 0031) with "no privileged
 internal path" — the same public API a real consumer would use. Each one, in practice, needs
-both halves of that API: `generateEvidenceModel()` (Node-only, `@maverickcer/env-cap/build`) to
+both halves of that API: `generateEvidenceModel()` (Node-only, `env-cap/build`) to
 assemble an `EvidenceModel`, and `defineEvidenceProjection()` (isomorphic,
-`@maverickcer/env-cap/evidence`) to project it. `src/evidence/` currently has exactly one
+`env-cap/evidence`) to project it. `src/evidence/` currently has exactly one
 sanctioned cross-folder edge — a type-only import of `EvidenceModel` from `src/build/`, erased at
 compile time (ADR 0031) — and no edge at all onto any of `src/build/`'s actual renderer
 _functions_ (`renderEnvExample`, `renderDocs`, etc.), which several of these projections need to
@@ -22,8 +27,8 @@ call directly to stay "thin wrappers" rather than reimplemented rendering logic.
 
 - **The reference projections live in `examples/evidence-projections/`, a new example package
   structured like every other directory in `examples/`** — its own `package.json` depending on
-  `@maverickcer/env-cap` via `file:../..`, importing `@maverickcer/env-cap/build` and
-  `@maverickcer/env-cap/evidence` exactly as an external consumer's own project would. Nothing
+  `env-cap` via `file:../..`, importing `env-cap/build` and
+  `env-cap/evidence` exactly as an external consumer's own project would. Nothing
   inside it reaches into `src/**/*.ts` or an unexported build internal.
 - **This is the literal, strongest form of "no privileged internal path."** A file living inside
   `src/build/` importing from `src/evidence/` (or vice versa) would still be _inside the
@@ -68,7 +73,7 @@ call directly to stay "thin wrappers" rather than reimplemented rendering logic.
   repository without `src/evidence/` coming along, a real cost for a set of files whose whole
   point is demonstrating the _public_, cross-package-boundary API, not needing privileged access.
 - **A 6th public entry point exporting the ten projections as ready-made functions** (e.g.
-  `@maverickcer/env-cap/projections`). Rejected for this round — would commit env-cap to
+  `env-cap/projections`). Rejected for this round — would commit env-cap to
   versioning and supporting ten specific output shapes as Stable-track API surface before any
   real external usage has validated they're the right shapes (the same reasoning `VERSIONING.md`
   already applies to `packages` and `./evidence` itself). Revisiting this once real projection

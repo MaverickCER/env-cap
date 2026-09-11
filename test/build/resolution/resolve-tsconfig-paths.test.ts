@@ -1,3 +1,4 @@
+import { nodeBuildFs } from "../../support/build-filesystem.js"
 import fs from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
@@ -42,11 +43,30 @@ beforeAll(async () => {
     compilerOptions: { baseUrl: ".", paths: { "@/*": ["src/*"] } },
   })
 
-  // Scenario: malformed JSON.
-  await writeFile("malformed/tsconfig.json", '{ "compilerOptions": ')
+  // Scenario: malformed JSON. NOTE: a truncated-but-tolerated fixture like
+  // `{ "compilerOptions": ` is silently accepted by `ts.readConfigFile()`
+  // (parsed as if the dangling key were absent) and hits the "no paths"
+  // path instead of `readResult.error` -- the same gotcha data-cap's
+  // identical file already documented. This needs to be genuinely
+  // unparseable JSON.
+  await writeFile("malformed/tsconfig.json", "}}}} not json {{{{")
 
   // Scenario: tsconfig.json with neither `paths` nor `baseUrl`.
   await writeJson("no-paths/tsconfig.json", { compilerOptions: { target: "ES2020" } })
+
+  // Scenario: `paths` is present but declares zero entries (distinct from
+  // `paths` being entirely absent -- `paths !== undefined` alone doesn't
+  // short-circuit here, `Object.keys(paths).length > 0` genuinely has to run).
+  await writeJson("empty-paths/tsconfig.json", { compilerOptions: { paths: {} } })
+
+  // Scenario: `paths` is genuinely non-empty, with NO `baseUrl` at all --
+  // distinguishes `hasPaths` actually being computed `true` from a
+  // (wrongly) hardcoded `false`: with no `baseUrl` to fall back on, only a
+  // correctly-computed `hasPaths` makes `loadTsconfigPaths()` build a
+  // resolution at all.
+  await writeJson("paths-only-no-baseurl/tsconfig.json", {
+    compilerOptions: { paths: { "@/*": ["src/*"] } },
+  })
 
   // Scenario: `baseUrl` set with no `paths` at all.
   await writeJson("baseurl-only/tsconfig.json", { compilerOptions: { baseUrl: "." } })
@@ -76,6 +96,22 @@ beforeAll(async () => {
     compilerOptions: { baseUrl: ".", paths: { "@/*": ["src/*"] } },
   })
   await writeFile("caching/src/foo.ts", "export const f = 1;\n")
+
+  // Scenario: a cached resolution must survive the underlying file being
+  // deleted after the first (real) resolution.
+  await writeJson("cache-survives-deletion/tsconfig.json", {
+    compilerOptions: { baseUrl: ".", paths: { "@/*": ["src/*"] } },
+  })
+  await writeFile("cache-survives-deletion/src/foo.ts", "export const h = 1;\n")
+
+  // Scenario: the resolved file's normalized path contains ".tsx" as a
+  // DIRECTORY segment (`src.tsx/`), but its own real extension is ".js" --
+  // distinguishes the anchored `/\.tsx?$/` from an anchor-less `/\.tsx?/`,
+  // which would wrongly match the mid-path substring.
+  await writeJson("tsx-anchor/tsconfig.json", {
+    compilerOptions: { baseUrl: ".", paths: { "@/*": ["src.tsx/*"] }, allowJs: true },
+  })
+  await writeFile("tsx-anchor/src.tsx/foo.js", "export const i = 1;\n")
 })
 
 afterAll(async () => {
@@ -88,22 +124,26 @@ function root(name: string): string {
 
 describe("loadTsconfigPaths", () => {
   it("auto-detects root/tsconfig.json by default", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("default-autodetect"), undefined)
+    const { resolution, warning } = await loadTsconfigPaths(
+      root("default-autodetect"),
+      undefined,
+      nodeBuildFs,
+    )
     expect(warning).toBeUndefined()
     expect(resolution).toBeDefined()
     expect(resolution?.configFile).toBe(path.join(root("default-autodetect"), "tsconfig.json"))
   })
 
   it("is silent when no tsconfig.json exists and no explicit path was given", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("no-tsconfig"), undefined)
-    expect(resolution).toBeUndefined()
-    expect(warning).toBeUndefined()
+    const result = await loadTsconfigPaths(root("no-tsconfig"), undefined, nodeBuildFs)
+    expect(result).toStrictEqual({ resolution: undefined, warning: undefined })
   })
 
   it("resolves an explicit override path relative to root", async () => {
     const { resolution, warning } = await loadTsconfigPaths(
       root("explicit-override"),
       "custom.tsconfig.json",
+      nodeBuildFs,
     )
     expect(warning).toBeUndefined()
     expect(resolution).toBeDefined()
@@ -113,39 +153,70 @@ describe("loadTsconfigPaths", () => {
   })
 
   it("warns when an explicit override path doesn't exist", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("no-tsconfig"), "missing.json")
+    const { resolution, warning } = await loadTsconfigPaths(
+      root("no-tsconfig"),
+      "missing.json",
+      nodeBuildFs,
+    )
     expect(resolution).toBeUndefined()
     expect(warning).toBeDefined()
     expect(warning?.message).toContain("missing.json")
   })
 
   it("disables alias resolution entirely when tsconfig: false", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("default-autodetect"), false)
-    expect(resolution).toBeUndefined()
-    expect(warning).toBeUndefined()
+    const result = await loadTsconfigPaths(root("default-autodetect"), false, nodeBuildFs)
+    expect(result).toStrictEqual({ resolution: undefined, warning: undefined })
   })
 
-  it("warns on malformed JSON", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("malformed"), undefined)
+  it("warns on malformed JSON, with the exact configFile path and a real parse-error detail in the message", async () => {
+    const { resolution, warning } = await loadTsconfigPaths(
+      root("malformed"),
+      undefined,
+      nodeBuildFs,
+    )
     expect(resolution).toBeUndefined()
-    expect(warning).toBeDefined()
+    expect(warning?.message).toContain("Could not parse")
+    expect(warning?.message).toContain(path.join(root("malformed"), "tsconfig.json"))
   })
 
   it("is a no-op, without warning, when the tsconfig declares neither paths nor baseUrl", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("no-paths"), undefined)
-    expect(resolution).toBeUndefined()
+    const result = await loadTsconfigPaths(root("no-paths"), undefined, nodeBuildFs)
+    expect(result).toStrictEqual({ resolution: undefined, warning: undefined })
+  })
+
+  it("is a no-op when paths is present but declares no entries at all, and no baseUrl either", async () => {
+    const result = await loadTsconfigPaths(root("empty-paths"), undefined, nodeBuildFs)
+    expect(result).toStrictEqual({ resolution: undefined, warning: undefined })
+  })
+
+  it("builds a resolution for a genuinely non-empty paths, even with no baseUrl at all", async () => {
+    const { resolution, warning } = await loadTsconfigPaths(
+      root("paths-only-no-baseurl"),
+      undefined,
+      nodeBuildFs,
+    )
     expect(warning).toBeUndefined()
+    expect(resolution).toBeDefined()
+    expect(resolution?.compilerOptions.paths).toBeDefined()
   })
 
   it("builds a resolution for a baseUrl-only tsconfig with no paths at all", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("baseurl-only"), undefined)
+    const { resolution, warning } = await loadTsconfigPaths(
+      root("baseurl-only"),
+      undefined,
+      nodeBuildFs,
+    )
     expect(warning).toBeUndefined()
     expect(resolution).toBeDefined()
     expect(resolution?.compilerOptions.baseUrl).toBeDefined()
   })
 
   it("resolves paths declared only through an extends chain", async () => {
-    const { resolution, warning } = await loadTsconfigPaths(root("extends-chain"), undefined)
+    const { resolution, warning } = await loadTsconfigPaths(
+      root("extends-chain"),
+      undefined,
+      nodeBuildFs,
+    )
     expect(warning).toBeUndefined()
     expect(resolution).toBeDefined()
     expect(resolution?.compilerOptions.paths).toBeDefined()
@@ -154,7 +225,11 @@ describe("loadTsconfigPaths", () => {
 
 describe("resolveAliasImport", () => {
   it("resolves a bare specifier via `paths`", async () => {
-    const { resolution } = await loadTsconfigPaths(root("default-autodetect"), undefined)
+    const { resolution } = await loadTsconfigPaths(
+      root("default-autodetect"),
+      undefined,
+      nodeBuildFs,
+    )
     const cache = createAliasResolutionCache()
     const importingFile = path.join(root("default-autodetect"), "consumer.ts")
     const resolved = resolveAliasImport("@/env.schema.js", importingFile, resolution!, cache)
@@ -162,7 +237,7 @@ describe("resolveAliasImport", () => {
   })
 
   it("resolves a bare specifier via `baseUrl` alone, with no `paths` configured", async () => {
-    const { resolution } = await loadTsconfigPaths(root("baseurl-only"), undefined)
+    const { resolution } = await loadTsconfigPaths(root("baseurl-only"), undefined, nodeBuildFs)
     const cache = createAliasResolutionCache()
     const importingFile = path.join(root("baseurl-only"), "consumer.ts")
     const resolved = resolveAliasImport("src/env/schema.js", importingFile, resolution!, cache)
@@ -170,7 +245,7 @@ describe("resolveAliasImport", () => {
   })
 
   it("resolves the first existing target among multiple fallback paths for one alias", async () => {
-    const { resolution } = await loadTsconfigPaths(root("multi-fallback"), undefined)
+    const { resolution } = await loadTsconfigPaths(root("multi-fallback"), undefined, nodeBuildFs)
     const cache = createAliasResolutionCache()
     const importingFile = path.join(root("multi-fallback"), "consumer.ts")
     const resolved = resolveAliasImport("@env/foo.js", importingFile, resolution!, cache)
@@ -180,7 +255,11 @@ describe("resolveAliasImport", () => {
   })
 
   it("discards a resolution that lands inside node_modules -- that's ADR 0014's mechanism, not this one's", async () => {
-    const { resolution } = await loadTsconfigPaths(root("node-modules-boundary"), undefined)
+    const { resolution } = await loadTsconfigPaths(
+      root("node-modules-boundary"),
+      undefined,
+      nodeBuildFs,
+    )
     const cache = createAliasResolutionCache()
     const importingFile = path.join(root("node-modules-boundary"), "consumer.ts")
     const resolved = resolveAliasImport("@pkg/foo.js", importingFile, resolution!, cache)
@@ -188,7 +267,11 @@ describe("resolveAliasImport", () => {
   })
 
   it("returns undefined for a specifier that doesn't resolve to any real file", async () => {
-    const { resolution } = await loadTsconfigPaths(root("default-autodetect"), undefined)
+    const { resolution } = await loadTsconfigPaths(
+      root("default-autodetect"),
+      undefined,
+      nodeBuildFs,
+    )
     const cache = createAliasResolutionCache()
     const importingFile = path.join(root("default-autodetect"), "consumer.ts")
     const resolved = resolveAliasImport("@/does-not-exist.js", importingFile, resolution!, cache)
@@ -196,7 +279,7 @@ describe("resolveAliasImport", () => {
   })
 
   it("memoizes repeated resolution of the same (importingFile, specifier) pair", async () => {
-    const { resolution } = await loadTsconfigPaths(root("caching"), undefined)
+    const { resolution } = await loadTsconfigPaths(root("caching"), undefined, nodeBuildFs)
     const cache = createAliasResolutionCache()
     const importingFile = path.join(root("caching"), "consumer.ts")
 
@@ -211,5 +294,31 @@ describe("resolveAliasImport", () => {
     resolveAliasImport("@/does-not-exist.js", importingFile, resolution!, cache)
     // A distinct specifier is a distinct cache key, including the `undefined` miss.
     expect(cache.resolutions.size).toBe(2)
+  })
+
+  it("a cached resolution survives the underlying file being deleted afterward", async () => {
+    const { resolution } = await loadTsconfigPaths(
+      root("cache-survives-deletion"),
+      undefined,
+      nodeBuildFs,
+    )
+    const cache = createAliasResolutionCache()
+    const importingFile = path.join(root("cache-survives-deletion"), "consumer.ts")
+
+    const first = resolveAliasImport("@/foo.js", importingFile, resolution!, cache)
+    expect(first).toBe(path.join(root("cache-survives-deletion"), "src/foo.ts"))
+
+    await fs.rm(path.join(root("cache-survives-deletion"), "src/foo.ts"))
+
+    const second = resolveAliasImport("@/foo.js", importingFile, resolution!, cache)
+    expect(second).toBe(first)
+  })
+
+  it("rejects a resolved file whose real extension is .js, even though its directory is literally named 'src.tsx'", async () => {
+    const { resolution } = await loadTsconfigPaths(root("tsx-anchor"), undefined, nodeBuildFs)
+    const cache = createAliasResolutionCache()
+    const importingFile = path.join(root("tsx-anchor"), "consumer.ts")
+    const resolved = resolveAliasImport("@/foo.js", importingFile, resolution!, cache)
+    expect(resolved).toBeUndefined()
   })
 })

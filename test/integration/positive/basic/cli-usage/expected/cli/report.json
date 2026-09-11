@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "kind": "env-cap-report",
+  "toolVersion": "0.2.0",
+  "ok": true,
+  "requested": {
+    "manifest": true,
+    "docs": true,
+    "usage": true,
+    "evidence": true
+  },
+  "manifest": {
+    "outputPath": "<EXAMPLE_ROOT>/src/generated/env.manifest.ts",
+    "contracts": [
+      {
+        "file": "src/env.ts",
+        "exportName": "env",
+        "contractName": "app",
+        "variableCount": 5,
+        "active": true,
+        "documented": true
+      }
+    ],
+    "warnings": [],
+    "parseWarnings": []
+  },
+  "docs": {
+    "docsPath": "<EXAMPLE_ROOT>/docs/ENVIRONMENT.md",
+    "envExample": {
+      "writtenPath": "<EXAMPLE_ROOT>/.env.example",
+      "staleVariables": [],
+      "variablesToComment": [],
+      "variablesToAdd": []
+    },
+    "contracts": [
+      {
+        "file": "src/env.ts",
+        "exportName": "env",
+        "contractName": "app",
+        "variableCount": 5,
+        "active": true,
+        "documented": true
+      }
+    ],
+    "catalog": [
+      {
+        "file": "<EXAMPLE_ROOT>/src/env.ts",
+        "exportName": "env",
+        "contractName": "app",
+        "active": true,
+        "documented": true,
+        "owner": "platform-team",
+        "variables": {
+          "DATABASE_URL": {
+            "description": "Postgres connection string.",
+            "owner": "platform-team",
+            "setupInstructions": "Provision a Postgres instance and paste its connection string, e.g. postgres://user:pass@host:5432/dbname.",
+            "required": true,
+            "hasDefault": false,
+            "hasProcessor": true,
+            "hasValidator": false,
+            "documented": true
+          },
+          "PORT": {
+            "description": "Database port.",
+            "owner": "platform-team",
+            "hasDefault": true,
+            "hasProcessor": true,
+            "hasValidator": true,
+            "documented": true
+          },
+          "LOG_LEVEL": {
+            "description": "Minimum log level for this application's logger.",
+            "owner": "platform-team",
+            "hasDefault": true,
+            "hasProcessor": true,
+            "processorReturnType": "string",
+            "hasValidator": true,
+            "documented": true
+          },
+          "PAYMENT_PROVIDER": {
+            "description": "Which payment provider this deployment uses.",
+            "owner": "platform-team",
+            "setupInstructions": "Set to \"stripe\" or \"paypal\" to match the gateway this deployment integrates.",
+            "hasDefault": true,
+            "hasProcessor": true,
+            "processorReturnType": "string",
+            "hasValidator": true,
+            "documented": true
+          },
+          "STRIPE_KEY": {
+            "description": "Stripe secret key used to authenticate server-side API calls.",
+            "owner": "platform-team",
+            "setupInstructions": "Create a restricted API key in the Stripe dashboard.",
+            "required": true,
+            "hasDefault": false,
+            "hasProcessor": true,
+            "processorReturnType": "string",
+            "hasValidator": true,
+            "documented": true,
+            "metadata": {
+              "documentation": "https://dashboard.stripe.com/apikeys"
+            }
+          }
+        }
+      }
+    ],
+    "parseWarnings": [],
+    "documentation": {
+      "undocumentedContracts": [],
+      "undocumentedVariables": [],
+      "staleDocEntries": [],
+      "expiringSoon": [],
+      "nonstandardSensitivityLevels": [],
+      "unresolvedLinks": []
+    }
+  },
+  "usage": {
+    "reportPath": "<EXAMPLE_ROOT>/docs/OWNERSHIP.md",
+    "dependencyOwnership": [
+      {
+        "contractName": "app",
+        "file": "src/env.ts",
+        "owner": "platform-team",
+        "variableCount": 5,
+        "consumers": [
+          "src/server.ts"
+        ]
+      }
+    ],
+    "abandonedContracts": [],
+    "unresolvedConsumers": [],
+    "unconsumedOwnedVariables": [
+      {
+        "contractName": "app",
+        "owner": "platform-team",
+        "key": "DATABASE_URL",
+        "staleOrMissingCitations": []
+      },
+      {
+        "contractName": "app",
+        "owner": "platform-team",
+        "key": "STRIPE_KEY",
+        "staleOrMissingCitations": []
+      }
+    ],
+    "indeterminate": [],
+    "asserted": [],
+    "parseWarnings": [],
+    "scannedSurfaces": [
+      {
+        "label": "application",
+        "root": "."
+      }
+    ]
+  },
+  "evidence": {
+    "schemaVersion": 1,
+    "provenance": {
+      "generatedAt": "2026-09-11T05:54:04.689Z",
+      "toolVersion": "0.2.0"
+    },
+    "contract": {
+      "schemaVersion": 3,
+      "contracts": [
+        {
+          "file": "src/env.ts",
+          "exportName": "env",
+          "contractName": "app",
+          "active": true,
+          "owner": "platform-team",
+          "documented": true,
+          "declaration": {
+            "file": "src/env.ts",
+            "line": 50,
+            "column": 20
+          },
+          "documentation": {
+            "file": "src/env.ts",
+            "line": 52,
+            "column": 1
+          },
+          "variables": [
+            {
+              "key": "DATABASE_URL",
+              "hasDefault": false,
+              "hasProcessor": true,
+              "processorSource": "processors.toURL()",
+              "hasValidator": false,
+              "description": "Postgres connection string.",
+              "setupInstructions": "Provision a Postgres instance and paste its connection string, e.g. postgres://user:pass@host:5432/dbname.",
+              "required": true,
+              "documented": true,
+              "declaration": {
+                "file": "src/env.ts",
+                "line": 20,
+                "column": 3
+              }
+            },
+            {
+              "key": "LOG_LEVEL",
+              "hasDefault": true,
+              "defaultValue": {
+                "ok": true,
+                "value": "info"
+              },
+              "hasProcessor": true,
+              "processorSource": "(value: unknown): string => String(value ?? \"info\")",
+              "processorReturnType": "string",
+              "hasValidator": true,
+              "validatorSource": "(value: string) => [\"debug\", \"info\", \"warn\", \"error\"].includes(value) || `Expected one of: debug, info, warn, error.`",
+              "description": "Minimum log level for this application's logger.",
+              "documented": true,
+              "declaration": {
+                "file": "src/env.ts",
+                "line": 28,
+                "column": 3
+              }
+            },
+            {
+              "key": "PAYMENT_PROVIDER",
+              "hasDefault": true,
+              "defaultValue": {
+                "ok": true,
+                "value": "stripe"
+              },
+              "hasProcessor": true,
+              "processorSource": "(value: unknown): string => String(value)",
+              "processorReturnType": "string",
+              "hasValidator": true,
+              "validatorSource": "(value: string) => [\"stripe\", \"paypal\"].includes(value) || `Unsupported payment provider \"${value}\".`",
+              "description": "Which payment provider this deployment uses.",
+              "setupInstructions": "Set to \"stripe\" or \"paypal\" to match the gateway this deployment integrates.",
+              "documented": true,
+              "declaration": {
+                "file": "src/env.ts",
+                "line": 34,
+                "column": 3
+              }
+            },
+            {
+              "key": "PORT",
+              "hasDefault": true,
+              "defaultValue": {
+                "ok": true,
+                "value": 5432
+              },
+              "hasProcessor": true,
+              "processorSource": "processors.toNumber()",
+              "hasValidator": true,
+              "validatorSource": "validators.range(1, 65535)",
+              "description": "Database port.",
+              "documented": true,
+              "declaration": {
+                "file": "src/env.ts",
+                "line": 23,
+                "column": 3
+              }
+            },
+            {
+              "key": "STRIPE_KEY",
+              "hasDefault": false,
+              "hasProcessor": true,
+              "processorSource": "(value: unknown): string => String(value ?? \"\")",
+              "processorReturnType": "string",
+              "hasValidator": true,
+              "validatorSource": "(value: string, rawEnv: RawEnv) => { if (rawEnv[\"PAYMENT_PROVIDER\"] !== \"stripe\") return true; return value.length > 0 || \"Stripe key is required when PAYMENT_PROVIDER=stripe.\"; }",
+              "description": "Stripe secret key used to authenticate server-side API calls.",
+              "setupInstructions": "Create a restricted API key in the Stripe dashboard.",
+              "required": true,
+              "metadata": {
+                "documentation": "https://dashboard.stripe.com/apikeys"
+              },
+              "documented": true,
+              "declaration": {
+                "file": "src/env.ts",
+                "line": 40,
+                "column": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dependency": {
+      "schemaVersion": 2,
+      "contracts": [
+        {
+          "file": "src/env.ts",
+          "exportName": "env",
+          "contractName": "app",
+          "imported": true,
+          "hasDynamicAccess": false,
+          "variables": [
+            {
+              "key": "DATABASE_URL",
+              "status": "unconsumed",
+              "positions": [],
+              "dynamicAccessAssertions": []
+            },
+            {
+              "key": "LOG_LEVEL",
+              "status": "used",
+              "positions": [
+                {
+                  "file": "src/server.ts",
+                  "line": 7,
+                  "column": 27
+                }
+              ],
+              "dynamicAccessAssertions": []
+            },
+            {
+              "key": "PAYMENT_PROVIDER",
+              "status": "used",
+              "positions": [
+                {
+                  "file": "src/server.ts",
+                  "line": 6,
+                  "column": 34
+                }
+              ],
+              "dynamicAccessAssertions": []
+            },
+            {
+              "key": "PORT",
+              "status": "used",
+              "positions": [
+                {
+                  "file": "src/server.ts",
+                  "line": 5,
+                  "column": 47
+                }
+              ],
+              "dynamicAccessAssertions": []
+            },
+            {
+              "key": "STRIPE_KEY",
+              "status": "unconsumed",
+              "positions": [],
+              "dynamicAccessAssertions": []
+            }
+          ],
+          "consumingFiles": [
+            "src/server.ts"
+          ],
+          "ambiguousBarrelFiles": [],
+          "dynamicAccessSites": []
+        }
+      ],
+      "consumers": [
+        {
+          "file": "src/server.ts",
+          "contracts": [
+            {
+              "file": "src/env.ts",
+              "exportName": "env"
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "scannedSurfaces": [
+        {
+          "label": "application",
+          "root": "."
+        }
+      ]
+    },
+    "ownership": {
+      "schemaVersion": 1,
+      "contracts": [
+        {
+          "file": "src/env.ts",
+          "exportName": "env",
+          "contractName": "app",
+          "owner": "platform-team",
+          "variables": [
+            {
+              "key": "DATABASE_URL",
+              "owner": "platform-team"
+            },
+            {
+              "key": "LOG_LEVEL",
+              "owner": "platform-team"
+            },
+            {
+              "key": "PAYMENT_PROVIDER",
+              "owner": "platform-team"
+            },
+            {
+              "key": "PORT",
+              "owner": "platform-team"
+            },
+            {
+              "key": "STRIPE_KEY",
+              "owner": "platform-team"
+            }
+          ]
+        }
+      ],
+      "unownedContracts": [],
+      "unownedVariables": []
+    },
+    "lifecycle": {
+      "schemaVersion": 2,
+      "contracts": [],
+      "expiring": []
+    },
+    "finding": {
+      "schemaVersion": 3,
+      "findings": [
+        {
+          "severity": "warning",
+          "code": "UNCONSUMED_OWNED_VARIABLE",
+          "family": "ownership",
+          "message": "\"DATABASE_URL\" (declared by \"app\") has no consumer found in the scanned repository.",
+          "location": {
+            "model": "ownership",
+            "contractName": "app",
+            "variable": "DATABASE_URL"
+          }
+        },
+        {
+          "severity": "warning",
+          "code": "UNCONSUMED_OWNED_VARIABLE",
+          "family": "ownership",
+          "message": "\"STRIPE_KEY\" (declared by \"app\") has no consumer found in the scanned repository.",
+          "location": {
+            "model": "ownership",
+            "contractName": "app",
+            "variable": "STRIPE_KEY"
+          }
+        }
+      ]
+    },
+    "change": {
+      "schemaVersion": 1,
+      "manifest": {
+        "addedContracts": [],
+        "removedContracts": [],
+        "addedVariables": [],
+        "removedVariables": [],
+        "updatedContracts": [],
+        "updatedVariables": []
+      },
+      "renamedVariables": []
+    }
+  }
+}

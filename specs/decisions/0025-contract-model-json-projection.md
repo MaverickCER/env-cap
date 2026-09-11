@@ -3,9 +3,9 @@
 ## Status
 
 Accepted. Implemented in `src/build/contract-model.ts`, exported as
-`buildContractModel()`/`ContractModel` from `@maverickcer/env-cap/build`. Its
+`buildContractModel()`/`ContractModel` from `env-cap/build`. Its
 JSON Schema is generated into `schemas/contract-model.schema.json` and
-published at `@maverickcer/env-cap/schema/contract-model` (`scripts/generate-json-schema.mjs`,
+published at `env-cap/schema/contract-model` (`scripts/generate-json-schema.mjs`,
 generalized from ADR 0019's single-target script).
 
 ## Context
@@ -63,7 +63,7 @@ boolean` carried through -- a report answering "what's declared, and is it
   produce fresh -- this generalization changes nothing about that guarantee,
   it just lets a second (and future third, fourth, ...) type opt into it
   without a second hand-copied script.
-- **Published at `@maverickcer/env-cap/schema/contract-model`, via a new
+- **Published at `env-cap/schema/contract-model`, via a new
   wildcard `./schema/*` export**, alongside the existing bare `./schema`
   (kept, unchanged, for the original `--json` envelope schema). A new fact
   model's schema needs zero further `package.json` edits going forward --

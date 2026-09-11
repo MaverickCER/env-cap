@@ -1,4 +1,6 @@
-import path from "node:path"
+import { displayPath } from "./display-path.js"
+import { byContractIdentity } from "./sort-by-identity.js"
+import type { ContractRef } from "./evidence-reference.js"
 import { effectiveOwner } from "./link.js"
 import type { DiscoveredContract } from "./link.js"
 
@@ -19,6 +21,11 @@ import type { DiscoveredContract } from "./link.js"
 /** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
 export const OWNERSHIP_MODEL_SCHEMA_VERSION = 1
 
+/**
+ * One variable's effective owner (its own, falling back to the contract's).
+ *
+ * @see {@link ContractModelVariable} -- this same declared variable's canonical starting point.
+ */
 export interface OwnershipModelVariable {
   readonly key: string
   /** The variable's own `owner`, falling back to the contract's -- see `effectiveOwner()`. */
@@ -35,16 +42,11 @@ export interface OwnershipModelContract {
   readonly variables: readonly OwnershipModelVariable[]
 }
 
-export interface OwnershipModelContractRef {
-  readonly file: string
-  readonly exportName: string
-  readonly contractName: string
-}
+/** One contract, referenced by identity only -- see {@link ContractRef} for why no `contractName` is carried here. Resolve one from `ContractModel` when a renderer needs display text. */
+export type OwnershipModelContractRef = ContractRef
 
-export interface OwnershipModelVariableRef {
-  readonly file: string
-  readonly exportName: string
-  readonly contractName: string
+/** One variable, referenced by its owning contract's identity plus its own key -- see {@link ContractRef}. */
+export interface OwnershipModelVariableRef extends ContractRef {
   readonly key: string
 }
 
@@ -57,18 +59,6 @@ export interface OwnershipModel {
   readonly unownedVariables: readonly OwnershipModelVariableRef[]
 }
 
-function relativize(root: string, absolutePath: string): string {
-  return path.relative(root, absolutePath).split(path.sep).join("/")
-}
-
-function byIdentity(
-  a: { file: string; exportName: string },
-  b: { file: string; exportName: string },
-): number {
-  if (a.file !== b.file) return a.file < b.file ? -1 : 1
-  return a.exportName < b.exportName ? -1 : a.exportName > b.exportName ? 1 : 0
-}
-
 /**
  * Projects every discovered contract (active or not, same scope as
  * `renderSecurityReview()`'s `noOwnerCount` this model itemizes) into the
@@ -79,19 +69,19 @@ export function buildOwnershipModel(
   root: string,
 ): OwnershipModel {
   const modelContracts: OwnershipModelContract[] = contracts.map((contract) => ({
-    file: relativize(root, contract.file),
+    file: displayPath(root, contract.file),
     exportName: contract.exportName,
     contractName: contract.contractName,
     owner: contract.owner,
     variables: [...contract.variables]
-      .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+      .sort((a, b) => a.key.localeCompare(b.key))
       .map((variable) => ({ key: variable.key, owner: effectiveOwner(contract, variable) })),
   }))
-  modelContracts.sort(byIdentity)
+  modelContracts.sort(byContractIdentity)
 
   const unownedContracts: OwnershipModelContractRef[] = modelContracts
     .filter((c) => c.owner === undefined)
-    .map(({ file, exportName, contractName }) => ({ file, exportName, contractName }))
+    .map(({ file, exportName }) => ({ file, exportName }))
 
   const unownedVariables: OwnershipModelVariableRef[] = []
   for (const contract of modelContracts) {
@@ -100,7 +90,6 @@ export function buildOwnershipModel(
         unownedVariables.push({
           file: contract.file,
           exportName: contract.exportName,
-          contractName: contract.contractName,
           key: variable.key,
         })
       }

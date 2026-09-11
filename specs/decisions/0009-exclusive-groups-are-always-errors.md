@@ -16,7 +16,7 @@ should ever be wired into a given deployment. It works together with
 `active` (also on `documentEnv()`, defaulting to `true`): a contract can ship
 in the repository while `active: false` keeps it out of the contract,
 `.env.example`, and (per this decision) exclusive-group checking entirely.
-`examples/composable-boilerplates` is built around exactly this pair --
+`examples/team-service` is built around exactly this pair --
 `postgres` and `mongodb` both declare `exclusiveGroup: "database"`, only
 `postgres` is active by default, and mongodb ships fully documented but
 dormant.
@@ -88,7 +88,7 @@ group is.
   `active: true` without flipping `postgres` to `false`, and generation would
   succeed -- the violation would sit in `result.warnings` and in generated
   docs, which 0005 itself already flags as easy for a team to never review.
-  `examples/composable-boilerplates`'s README demonstrates the actual
+  `examples/team-service`'s README demonstrates the actual
   behavior: attempting that flip fails `generate:env` immediately, with both
   contract names and files named in the error.
 

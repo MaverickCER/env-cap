@@ -30,7 +30,7 @@ features/db-b/env.schema.ts",
   "kind": "env-cap-report",
   "ok": false,
   "schemaVersion": 1,
-  "toolVersion": "0.1.0",
+  "toolVersion": "0.2.0",
 }
 `;
 
@@ -46,8 +46,14 @@ exports[`serializeSuccess > includes an additive checkResult field when --check 
   "kind": "env-cap-report",
   "manifest": undefined,
   "ok": true,
+  "requested": {
+    "docs": false,
+    "evidence": false,
+    "manifest": false,
+    "usage": false,
+  },
   "schemaVersion": 1,
-  "toolVersion": "0.1.0",
+  "toolVersion": "0.2.0",
   "usage": undefined,
 }
 `;
@@ -58,36 +64,50 @@ exports[`serializeSuccess > matches the documented success shape (snapshot) 1`] 
     "catalog": [
       {
         "active": true,
+        "auditRequired": undefined,
         "category": "Payments",
         "contractName": "payments",
+        "dataResidency": undefined,
         "documented": true,
         "exclusiveGroup": undefined,
         "expiresAt": undefined,
         "exportName": "paymentsEnv",
         "file": "/repo/features/payments/env.schema.ts",
+        "legalBasis": undefined,
         "metadata": {
           "criticality": "Production-critical",
           "service": "Payment Processing API",
         },
         "owner": "payments-team",
+        "purpose": undefined,
+        "retention": undefined,
+        "sensitivity": undefined,
         "variables": {
           "STRIPE_KEY": {
+            "auditRequired": undefined,
             "context": undefined,
+            "dataResidency": undefined,
             "description": "Stripe secret API key.",
             "documented": true,
+            "evidence": undefined,
             "expiresAt": "2027-01-01",
-            "extra": {
+            "hasDefault": false,
+            "hasProcessor": false,
+            "hasValidator": true,
+            "legalBasis": undefined,
+            "metadata": {
               "compliance": "PCI DSS",
               "rotationCadence": "90 days",
               "storageProvider": "AWS Secrets Manager",
             },
-            "hasDefault": false,
-            "hasProcessor": false,
-            "hasValidator": true,
             "owner": "sysadmin@example.com",
             "processorReturnType": undefined,
+            "purpose": undefined,
             "refreshInstructions": "Rotate the key in the Stripe Dashboard.",
             "required": true,
+            "retention": undefined,
+            "sensitivity": "secret",
+            "setupInstructions": undefined,
           },
         },
       },
@@ -105,6 +125,7 @@ exports[`serializeSuccess > matches the documented success shape (snapshot) 1`] 
     "docsPath": "/repo/docs/ENVIRONMENT.md",
     "documentation": {
       "expiringSoon": [],
+      "nonstandardSensitivityLevels": [],
       "staleDocEntries": [],
       "undocumentedContracts": [],
       "undocumentedVariables": [],
@@ -115,14 +136,6 @@ exports[`serializeSuccess > matches the documented success shape (snapshot) 1`] 
   },
   "kind": "env-cap-report",
   "manifest": {
-    "changes": {
-      "addedContracts": [],
-      "addedVariables": [],
-      "removedContracts": [],
-      "removedVariables": [],
-      "updatedContracts": [],
-      "updatedVariables": [],
-    },
     "contracts": [
       {
         "active": true,
@@ -138,10 +151,17 @@ exports[`serializeSuccess > matches the documented success shape (snapshot) 1`] 
     "warnings": [],
   },
   "ok": true,
+  "requested": {
+    "docs": true,
+    "evidence": false,
+    "manifest": true,
+    "usage": true,
+  },
   "schemaVersion": 1,
-  "toolVersion": "0.1.0",
+  "toolVersion": "0.2.0",
   "usage": {
     "abandonedContracts": [],
+    "asserted": [],
     "dependencyOwnership": [
       {
         "consumers": [
@@ -156,6 +176,12 @@ exports[`serializeSuccess > matches the documented success shape (snapshot) 1`] 
     "indeterminate": [],
     "parseWarnings": [],
     "reportPath": "/repo/docs/OWNERSHIP.md",
+    "scannedSurfaces": [
+      {
+        "label": "application",
+        "root": ".",
+      },
+    ],
     "unconsumedOwnedVariables": [],
     "unresolvedConsumers": [],
   },

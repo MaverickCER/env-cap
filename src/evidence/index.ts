@@ -4,7 +4,7 @@
  * `defineEvidenceProjection()` is the extensibility mechanism the seven
  * canonical fact models (ADR 0024) exist to serve. A projection is a named,
  * pure transform from the immutable `EvidenceModel` -- assembled at build
- * time by `generateEvidenceModel()`, `@maverickcer/env-cap/build` -- to any
+ * time by `generateEvidenceModel()`, `env-cap/build` -- to any
  * consumer-defined output shape, with automatic read-only enforcement and
  * field-level provenance. See ADR 0031 (why a 5th entry point) and ADR 0032
  * (the Proxy-based mechanism itself).
@@ -17,6 +17,7 @@
  * step can run a projection over a previously-generated,
  * JSON-deserialized `EvidenceModel` with zero Node dependency.
  */
+export type { EvidenceModel, EvidenceProvenance } from "../build/evidence-model.js"
 export { defineEvidenceProjection } from "./define-projection.js"
 export type {
   EvidenceProjection,
@@ -24,4 +25,3 @@ export type {
   EvidenceProjectionSchema,
   EvidenceProjector,
 } from "./define-projection.js"
-export type { EvidenceModel, EvidenceProvenance } from "../build/evidence-model.js"

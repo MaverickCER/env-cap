@@ -18,5 +18,19 @@
     "verbatimModuleSyntax": true
   },
   "include": ["src", "test"],
-  "exclude": ["test/cross-runtime"]
+  "exclude": [
+    "test/cross-runtime",
+    "test/integration/positive/basic/cli-usage",
+    "test/integration/positive/basic/split-generators",
+    "test/integration/positive/team/validation-contexts",
+    "test/integration/positive/team/duplicate-variable-metadata",
+    "test/integration/positive/enterprise/aws-secrets-manager",
+    "test/integration/positive/enterprise/paypal-addon",
+    "test/integration/positive/enterprise/paypal-consumer",
+    "test/integration/positive/enterprise/tsconfig-aliases",
+    "test/integration/positive/enterprise/tsconfig-aliases-consumer",
+    "test/integration/positive/enterprise/evidence-projections",
+    "test/integration/negative/invalid-config/missing-env-var",
+    "test/integration/negative/exclusive-violation/multiple-active-exclusive-capabilities"
+  ]
 }

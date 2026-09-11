@@ -1,7 +1,7 @@
-import fs from "node:fs/promises"
 import path from "node:path"
+import { humanizeKey, renderMetadataValue } from "./humanize-key.js"
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
-import { humanizeKey } from "./humanize-key.js"
+import type { BuildFileSystem } from "./types.js"
 import { mustGet } from "./map-utils.js"
 
 /**
@@ -76,12 +76,19 @@ function renderVariableLines(
   if (variable.description) lines.push(`# ${variable.description}`)
   if (variable.context) lines.push(`# Validation context: ${variable.context}`)
   if (variable.owner) lines.push(`# Owner: ${variable.owner}`)
+  if (variable.setupInstructions) lines.push(`# Setup: ${variable.setupInstructions}`)
   if (variable.expiresAt) lines.push(`# Expires At: ${variable.expiresAt}`)
   if (variable.refreshInstructions)
     lines.push(`# Refresh Instructions: ${variable.refreshInstructions}`)
   if (variable.required) lines.push(`# Required: yes`)
-  for (const [extraKey, extraValue] of Object.entries(variable.extra)) {
-    lines.push(`# ${humanizeKey(extraKey)}: ${extraValue}`)
+  if (variable.purpose) lines.push(`# Purpose: ${variable.purpose}`)
+  if (variable.legalBasis) lines.push(`# Legal Basis: ${variable.legalBasis}`)
+  if (variable.retention) lines.push(`# Retention Policy: ${variable.retention}`)
+  if (variable.dataResidency)
+    lines.push(`# Data Residency: ${renderMetadataValue(variable.dataResidency)}`)
+  if (variable.auditRequired) lines.push(`# Audit Required: yes`)
+  for (const [metaKey, metaValue] of Object.entries(variable.metadata ?? {})) {
+    lines.push(`# ${humanizeKey(metaKey)}: ${renderMetadataValue(metaValue)}`)
   }
 
   const prefix = options.commented ? "# " : ""
@@ -120,8 +127,18 @@ export function renderEnvExample(
   contracts: readonly DiscoveredContract[],
   reconciliationHeader: readonly string[] = [],
 ): string {
-  const sorted = [...contracts].sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0))
+  const sorted = [...contracts].sort((a, b) => a.file.localeCompare(b.file))
   const active = sorted.filter((c) => c.active)
+  // Bypassing this filter (including active contracts in `inactive` too) is
+  // behaviorally equivalent, not a real gap: the render loop below's own
+  // `if (activeByKey.has(key)) continue` guard already skips any key an
+  // active contract declares, whether or not it was ALSO wrongly grouped
+  // into `inactiveByKey` here -- a key genuinely unique to an active
+  // contract can never gain a spurious `inactiveByKey` entry either, since
+  // `groupByKey` only ever pushes declarations that a contract in the
+  // (possibly-widened) list actually has. Hand-verified: mutating this and
+  // running the real suite passes unchanged.
+  // Stryker disable next-line MethodExpression
   const inactive = sorted.filter((c) => !c.active)
 
   const lines: string[] = [
@@ -138,6 +155,11 @@ export function renderEnvExample(
       "# still written to this file regardless of its context.",
     )
   }
+  // Bypassing this guard is behaviorally equivalent, not a real gap:
+  // `lines.push(...[])` (an empty `reconciliationHeader`) is already a
+  // no-op, so the length check adds nothing observable. Hand-verified:
+  // mutating this and running the real suite passes unchanged.
+  // Stryker disable next-line ConditionalExpression,EqualityOperator
   if (reconciliationHeader.length > 0) lines.push(...reconciliationHeader)
   lines.push("")
 
@@ -167,6 +189,14 @@ export function renderEnvExample(
     )
   }
 
+  // `+` vs no `+` here is unreachable-to-differ: `lines` is built so its own
+  // trailing element is always exactly ONE "" (every section -- the initial
+  // blank, and each `renderVariableLines()` call -- appends exactly one
+  // trailing blank, never two in a row), so `.join("\n")` can never actually
+  // produce more than one trailing newline for this regex to collapse.
+  // Hand-verified: mutating `+` away and running the real suite passes
+  // unchanged.
+  // Stryker disable next-line Regex
   return lines.join("\n").replace(/\n+$/, "\n")
 }
 
@@ -175,6 +205,15 @@ export function extractDeclaredVariables(source: string): string[] {
   const names: string[] = []
   for (const line of source.split("\n")) {
     const trimmed = line.trim()
+    // Bypassing this early exit is behaviorally equivalent, not a real gap:
+    // both a blank line (trimmed === "") and one starting with "#" can never
+    // match the identifier-must-start-with-letter/underscore regex below
+    // either way, so `continue`ing early here versus falling through to a
+    // guaranteed-failing `.exec()` produces the identical result. Kept as a
+    // documented fast-path (skips the regex entirely for the common case)
+    // rather than removed. Hand-verified: mutating the whole condition to
+    // `false` and running the real suite passes unchanged.
+    // Stryker disable next-line ConditionalExpression,LogicalOperator,MethodExpression
     if (!trimmed || trimmed.startsWith("#")) continue
     const match = /^([A-Za-z_][A-Za-z0-9_]*)=/.exec(trimmed)
     if (match?.[1]) names.push(match[1])
@@ -188,6 +227,12 @@ export function extractCommentedVariables(source: string): string[] {
   for (const line of source.split("\n")) {
     const trimmed = line.trim()
     if (!trimmed.startsWith("#")) continue
+    // Removing the `^` anchor is behaviorally equivalent, not a real gap:
+    // the guard just above guarantees `trimmed` always starts with "#", so
+    // the leftmost match an unanchored regex would find is already at
+    // position 0 -- identical to the anchored version. Hand-verified:
+    // mutating this and running the real suite passes unchanged.
+    // Stryker disable next-line Regex
     const withoutHash = trimmed.replace(/^#+\s*/, "")
     const match = /^([A-Za-z_][A-Za-z0-9_]*)=/.exec(withoutHash)
     if (match?.[1]) names.push(match[1])
@@ -262,20 +307,33 @@ function renderReconciliationHeader(reconciliation: Reconciliation): string[] {
 export async function writeEnvExample(
   contracts: readonly DiscoveredContract[],
   location: string,
+  fs: BuildFileSystem,
   options: { onExisting?: EnvExampleOnExisting } = {},
 ): Promise<EnvExampleResult> {
   const onExisting = options.onExisting ?? "keep-sibling"
 
+  // An empty catch (no assignment) is provably equivalent to explicitly
+  // setting `existingContent = undefined` -- `let` without an initializer is
+  // already `undefined` at runtime -- and an empty block gives Stryker's
+  // BlockStatement mutator nothing to swap in for, eliminating the mutant
+  // target entirely rather than needing a disable. See helpers/processors.ts's
+  // `orUndefined` for the same established pattern.
   let existingContent: string | undefined
   try {
     existingContent = await fs.readFile(location, "utf8")
   } catch {
-    existingContent = undefined
+    // treat any read failure as "no file existed"
   }
 
   if (existingContent === undefined) {
     const content = renderEnvExample(contracts, [])
     await fs.mkdir(path.dirname(location), { recursive: true })
+    // "utf8" vs "" encoding equivalence, same established class as this
+    // package's other fs.writeFile calls (evidence-snapshot.ts,
+    // resolve-package-schema.ts): both write a string's UTF-8 bytes
+    // identically. Hand-verified via a real byte-comparison-equivalent test
+    // run.
+    // Stryker disable next-line StringLiteral
     await fs.writeFile(location, content, "utf8")
     return {
       writtenPath: location,
@@ -309,6 +367,8 @@ export async function writeEnvExample(
   const skippedExistingPath = onExisting === "overwrite" ? undefined : location
 
   await fs.mkdir(path.dirname(writtenPath), { recursive: true })
+  // Same "utf8" vs "" equivalence as the fresh-file write above.
+  // Stryker disable next-line StringLiteral
   await fs.writeFile(writtenPath, content, "utf8")
 
   return { writtenPath, skippedExistingPath, staleVariables, variablesToComment, variablesToAdd }

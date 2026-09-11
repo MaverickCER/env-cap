@@ -1,0 +1,22 @@
+{
+  "signup": {
+    "hasUserId": true,
+    "hasToken": true
+  },
+  "matters": [
+    {
+      "title": "Smith v. Jones",
+      "status": "open"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Draft complaint",
+      "done": true,
+      "hasAttachment": true
+    }
+  ],
+  "matterClosedAfterClose": true,
+  "emailFallback": true,
+  "githubLoginAvailable": true
+}

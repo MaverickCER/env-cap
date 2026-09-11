@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { nodeBuildFs } from "../support/build-filesystem.js"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
@@ -32,16 +33,24 @@ function makeVariable(
     context: undefined,
     description: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     refreshInstructions: undefined,
+    setupInstructions: undefined,
     required: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
     removeBy: undefined,
     renamedFrom: undefined,
-    extra: {},
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
+    metadata: undefined,
+    evidence: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
     ...overrides,
   }
 }
@@ -59,12 +68,19 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
     metadata: undefined,
     documented: true,
+    declaration: { file: "/repo/x/env.schema.ts", line: 1, column: 1 },
+    documentation: undefined,
     packageOrigin: undefined,
     ...overrides,
   }
@@ -81,7 +97,7 @@ function contracts(): DiscoveredContract[] {
           key: "STRIPE_KEY",
           hasProcessor: true,
           description: "Stripe secret key",
-          extra: {
+          metadata: {
             documentation: "https://dashboard.stripe.com/apikeys",
             setup: "Create a restricted API key in the Stripe dashboard.",
             rotation: "Rotate every 90 days.",
@@ -118,6 +134,22 @@ describe("renderEnvExample", () => {
     expect(output).toContain("PORT=5432")
   })
 
+  it("renders a bare KEY= line with no comments at all when nothing is documented -- every field guard must actually suppress its own comment, not just fill in 'undefined'", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [makeVariable({ key: "BARE_KEY" })],
+    })
+    const output = renderEnvExample([contract])
+
+    expect(output).toBe(
+      "# AUTO-GENERATED EXAMPLE FILE.\n" +
+        "# Copy to .env and fill in real values. Do not commit .env.\n" +
+        "\n" +
+        "BARE_KEY=\n",
+    )
+  })
+
   it("renders every documentation field, not just description, above the variable", () => {
     const output = renderEnvExample(contracts())
     const stripeBlock = output.slice(
@@ -134,7 +166,38 @@ describe("renderEnvExample", () => {
     expect(stripeBlock).not.toContain("# Description:")
   })
 
-  it("renders Owner/Expires At/Refresh Instructions/Required comments when the variable sets them", () => {
+  it("renders Purpose/Legal Basis/Retention Policy/Data Residency/Audit Required comments, and a non-string metadata value as its JSON text (ADR 0035)", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [
+        makeVariable({
+          key: "FULL_COMPLIANCE",
+          purpose: "Fraud prevention.",
+          legalBasis: "Legitimate interest.",
+          retention: "Delete after 90 days.",
+          dataResidency: ["EU", "US"],
+          auditRequired: true,
+          metadata: { controls: { encryption: true } },
+        }),
+      ],
+    })
+    const output = renderEnvExample([contract])
+    const block = output.slice(
+      output.indexOf("# Purpose: Fraud prevention."),
+      output.indexOf("FULL_COMPLIANCE="),
+    )
+
+    expect(block).toContain("# Purpose: Fraud prevention.")
+    expect(block).toContain("# Legal Basis: Legitimate interest.")
+    expect(block).toContain("# Retention Policy: Delete after 90 days.")
+    expect(block).toContain(`# Data Residency: ${JSON.stringify(["EU", "US"])}`)
+    expect(block).toContain("# Audit Required: yes")
+    expect(block).toContain(`# Controls: ${JSON.stringify({ encryption: true })}`)
+    expect(block).not.toContain("[object Object]")
+  })
+
+  it("renders Owner/Setup/Expires At/Refresh Instructions/Required comments when the variable sets them", () => {
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
       exportName: "aEnv",
@@ -142,6 +205,7 @@ describe("renderEnvExample", () => {
         makeVariable({
           key: "FULL_META",
           owner: "payments-team",
+          setupInstructions: "Create a key in the vault UI.",
           expiresAt: "2030-01-01",
           refreshInstructions: "Rotate via the vault CLI.",
           required: true,
@@ -151,6 +215,7 @@ describe("renderEnvExample", () => {
     const output = renderEnvExample([contract])
 
     expect(output).toContain("# Owner: payments-team")
+    expect(output).toContain("# Setup: Create a key in the vault UI.")
     expect(output).toContain("# Expires At: 2030-01-01")
     expect(output).toContain("# Refresh Instructions: Rotate via the vault CLI.")
     expect(output).toContain("# Required: yes")
@@ -166,8 +231,32 @@ describe("renderEnvExample", () => {
 
     expect(output).toContain("# Validation context: server")
     expect(output).toContain(
-      "# Validation context annotations describe when validation participates.",
+      "# Validation context annotations describe when validation participates.\n" +
+        "# They do not restrict access to values, and every variable below is\n" +
+        "# still written to this file regardless of its context.",
     )
+  })
+
+  it("shows the context caveat when only SOME variables on SOME contracts declare a context -- not only when every one does", () => {
+    // Contract A has 2 variables, only ONE with a context; contract B has
+    // none at all. Distinguishes the real `.some(c => c.variables.some(...))`
+    // from an `.every` at either level, which would require ALL variables on
+    // ALL contracts to declare one before showing the caveat.
+    const a = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [
+        makeVariable({ key: "WITH_CONTEXT", context: "server" }),
+        makeVariable({ key: "WITHOUT_CONTEXT" }),
+      ],
+    })
+    const b = makeContract({
+      file: "/repo/b/env.schema.ts",
+      exportName: "bEnv",
+      variables: [makeVariable({ key: "NO_CONTEXT_HERE" })],
+    })
+    const output = renderEnvExample([a, b])
+    expect(output).toContain("Validation context annotations describe")
   })
 
   it("omits the validation-context comment and caveat entirely when no variable declares a context", () => {
@@ -215,6 +304,52 @@ describe("renderEnvExample", () => {
     const a = renderEnvExample([payments, database])
     const b = renderEnvExample([database, payments])
     expect(a).toBe(b)
+  })
+
+  it("sorts active variables by key, not declaration order", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [makeVariable({ key: "Z_KEY" }), makeVariable({ key: "A_KEY" })],
+    })
+    const output = renderEnvExample([contract])
+    expect(output.indexOf("A_KEY=")).toBeLessThan(output.indexOf("Z_KEY="))
+  })
+
+  it("sorts inactive-only variables by key, not declaration order", () => {
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      active: false,
+      variables: [makeVariable({ key: "Z_KEY" }), makeVariable({ key: "A_KEY" })],
+    })
+    const output = renderEnvExample([contract])
+    expect(output.indexOf("A_KEY=")).toBeLessThan(output.indexOf("Z_KEY="))
+  })
+
+  it("sorts by file, not input order -- for a key shared across contracts, the alphabetically-FIRST file wins the live slot even when passed last", () => {
+    // Both declare the SAME key ("SHARED"), so which one renders live (vs
+    // commented, deferring to the other) depends entirely on `sorted`'s own
+    // file order -- unlike a plain "does X appear before Y" check across
+    // DIFFERENT keys, which the later `[...keys].sort()` on
+    // `activeByKey`/`inactiveByKey` would already satisfy on its own,
+    // independent of whether `sorted` itself was ever actually sorted.
+    const z = makeContract({
+      file: "/repo/z/env.schema.ts",
+      exportName: "zEnv",
+      contractName: "z",
+      variables: [makeVariable({ key: "SHARED" })],
+    })
+    const a = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      contractName: "a",
+      variables: [makeVariable({ key: "SHARED" })],
+    })
+    // Passed in reverse-of-alphabetical (by file) order.
+    const output = renderEnvExample([z, a])
+    expect(output).toMatch(/^SHARED=/m)
+    expect(output).toContain('# Also declared by "z" -- see "a" above.')
   })
 
   it("handles two contracts declared in the same schema file (sort comparator's equal-file case)", () => {
@@ -322,6 +457,23 @@ describe("extractDeclaredVariables", () => {
     expect(extractDeclaredVariables("")).toEqual([])
     expect(extractDeclaredVariables("# nothing here\n")).toEqual([])
   })
+
+  it("trims leading/trailing whitespace before matching -- an indented KEY=value line is still extracted", () => {
+    expect(extractDeclaredVariables("  PADDED_KEY=value  \n")).toEqual(["PADDED_KEY"])
+  })
+
+  it("never crashes and never records a match on a line with no '=' assignment at all", () => {
+    expect(() => extractDeclaredVariables("NOT AN ASSIGNMENT\n")).not.toThrow()
+    expect(extractDeclaredVariables("NOT AN ASSIGNMENT\n")).toEqual([])
+  })
+
+  it("extracts a declaration whose value happens to end in '#' -- the comment check is startsWith, not endsWith", () => {
+    expect(extractDeclaredVariables("HAS_HASH_AT_END=value#\n")).toEqual(["HAS_HASH_AT_END"])
+  })
+
+  it("requires the identifier to start at the very beginning of the line -- a 'KEY=' pattern appearing later, after non-identifier characters, does not count", () => {
+    expect(extractDeclaredVariables("123 NOT_AT_START=value\n")).toEqual([])
+  })
 })
 
 describe("extractCommentedVariables", () => {
@@ -338,6 +490,23 @@ describe("extractCommentedVariables", () => {
 
   it("returns an empty array for a file with nothing commented out", () => {
     expect(extractCommentedVariables("STRIPE_KEY=sk_test\n")).toEqual([])
+  })
+
+  it("strips ANY number of leading '#' characters, not just one", () => {
+    expect(extractCommentedVariables("## DOUBLE_HASH=value\n")).toEqual(["DOUBLE_HASH"])
+  })
+
+  it("trims leading/trailing whitespace before matching -- an indented '# KEY=value' comment is still extracted", () => {
+    expect(extractCommentedVariables("   # PADDED_COMMENT=value\n")).toEqual(["PADDED_COMMENT"])
+  })
+
+  it("never crashes and never records a match on a comment with no '=' assignment at all", () => {
+    expect(() => extractCommentedVariables("# not an assignment\n")).not.toThrow()
+    expect(extractCommentedVariables("# not an assignment\n")).toEqual([])
+  })
+
+  it("requires the identifier to start at the very beginning of the (hash-stripped) content -- a 'KEY=' pattern appearing later does not count", () => {
+    expect(extractCommentedVariables("# 123 NOT_AT_START=value\n")).toEqual([])
   })
 })
 
@@ -409,6 +578,66 @@ describe("computeReconciliation", () => {
     expect(reconciliation.variablesToAdd).toEqual(["NEW_VAR", "WAS_COMMENTED"])
   })
 
+  it("only comments a variable whose own feature went inactive, never one still required by an active feature, even when both are live in the file", () => {
+    const mixed = [
+      makeContract({
+        file: "/repo/a/env.schema.ts",
+        exportName: "aEnv",
+        contractName: "a",
+        variables: [makeVariable({ key: "STILL_ACTIVE" })],
+      }),
+      makeContract({
+        file: "/repo/b/env.schema.ts",
+        exportName: "bEnv",
+        contractName: "b",
+        active: false,
+        variables: [makeVariable({ key: "NOW_INACTIVE" })],
+      }),
+    ]
+    const reconciliation = computeReconciliation(mixed, "STILL_ACTIVE=x\nNOW_INACTIVE=y\n")
+    expect(reconciliation.variablesToComment).toEqual(["NOW_INACTIVE"])
+  })
+
+  it("sorts variablesToComment alphabetically, not discovery/file order", () => {
+    const inactiveOnly = [
+      makeContract({
+        file: "/repo/a/env.schema.ts",
+        exportName: "aEnv",
+        contractName: "a",
+        active: false,
+        variables: [makeVariable({ key: "Z_INACTIVE" }), makeVariable({ key: "A_INACTIVE" })],
+      }),
+    ]
+    const reconciliation = computeReconciliation(inactiveOnly, "Z_INACTIVE=x\nA_INACTIVE=y\n")
+    expect(reconciliation.variablesToComment).toEqual(["A_INACTIVE", "Z_INACTIVE"])
+  })
+
+  it("only adds a variable genuinely missing from the file, never one that's already live", () => {
+    const active = [
+      makeContract({
+        file: "/repo/a/env.schema.ts",
+        exportName: "aEnv",
+        contractName: "a",
+        variables: [makeVariable({ key: "ALREADY_LIVE" }), makeVariable({ key: "MISSING_VAR" })],
+      }),
+    ]
+    const reconciliation = computeReconciliation(active, "ALREADY_LIVE=x\n")
+    expect(reconciliation.variablesToAdd).toEqual(["MISSING_VAR"])
+  })
+
+  it("sorts variablesToAdd alphabetically, not discovery/file order", () => {
+    const active = [
+      makeContract({
+        file: "/repo/a/env.schema.ts",
+        exportName: "aEnv",
+        contractName: "a",
+        variables: [makeVariable({ key: "Z_MISSING" }), makeVariable({ key: "A_MISSING" })],
+      }),
+    ]
+    const reconciliation = computeReconciliation(active, "")
+    expect(reconciliation.variablesToAdd).toEqual(["A_MISSING", "Z_MISSING"])
+  })
+
   it("reports nothing to change when the existing file already matches the current configuration", () => {
     const active = [
       makeContract({
@@ -440,7 +669,7 @@ describe("writeEnvExample", () => {
 
   it("writes directly to the requested location when nothing exists there yet", async () => {
     const location = path.join(root, ".env.example")
-    const result = await writeEnvExample(contracts(), location)
+    const result = await writeEnvExample(contracts(), location, nodeBuildFs)
 
     expect(result.writtenPath).toBe(location)
     expect(result.skippedExistingPath).toBeUndefined()
@@ -452,11 +681,23 @@ describe("writeEnvExample", () => {
     expect(written).toContain("STRIPE_KEY=")
   })
 
+  it("writes byte-for-byte what renderEnvExample(contracts) alone produces when nothing existed before -- no stray reconciliation header content", async () => {
+    const location = path.join(root, ".env.example")
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [makeVariable({ key: "BARE_KEY" })],
+    })
+    await writeEnvExample([contract], location, nodeBuildFs)
+    const written = await fs.readFile(location, "utf8")
+    expect(written).toBe(renderEnvExample([contract]))
+  })
+
   it("never overwrites an existing file -- writes a timestamped sibling instead", async () => {
     const location = path.join(root, ".env.example")
     await fs.writeFile(location, "STRIPE_KEY=sk_hand_written\n", "utf8")
 
-    const result = await writeEnvExample(contracts(), location)
+    const result = await writeEnvExample(contracts(), location, nodeBuildFs)
 
     expect(result.skippedExistingPath).toBe(location)
     const writtenPath = assertWritten(result)
@@ -471,7 +712,7 @@ describe("writeEnvExample", () => {
     const location = path.join(root, ".env.example")
     await fs.writeFile(location, "STRIPE_KEY=x\nPORT=1\nLEGACY_FEATURE_FLAG=true\n", "utf8")
 
-    const result = await writeEnvExample(contracts(), location)
+    const result = await writeEnvExample(contracts(), location, nodeBuildFs)
 
     expect(result.staleVariables).toEqual(["LEGACY_FEATURE_FLAG"])
   })
@@ -480,7 +721,7 @@ describe("writeEnvExample", () => {
     const location = path.join(root, ".env.example")
     await fs.writeFile(location, "STRIPE_KEY=x\nPORT=1\n", "utf8")
 
-    const result = await writeEnvExample(contracts(), location)
+    const result = await writeEnvExample(contracts(), location, nodeBuildFs)
 
     expect(result.staleVariables).toEqual([])
   })
@@ -501,18 +742,20 @@ describe("writeEnvExample", () => {
         variables: [makeVariable({ key: "STRIPE_KEY" })],
       }),
     ]
-    const result = await writeEnvExample(contractsWithInactive, location)
+    const result = await writeEnvExample(contractsWithInactive, location, nodeBuildFs)
 
     expect(result.staleVariables).toEqual(["LEGACY_FEATURE_FLAG"])
     expect(result.variablesToAdd).toEqual(["PORT"])
 
     const written = await fs.readFile(assertWritten(result), "utf8")
+    // A bare "#" separator line precedes each section header -- checked
+    // exactly, not just that the descriptive text appears anywhere.
     expect(written).toContain(
-      "# Remove the following variables (no longer declared by any feature):",
+      "#\n# Remove the following variables (no longer declared by any feature):",
     )
     expect(written).toContain("#   - LEGACY_FEATURE_FLAG")
     expect(written).toContain(
-      "# Add the following variables (required by the current configuration):",
+      "#\n# Add the following variables (required by the current configuration):",
     )
     expect(written).toContain("#   - PORT")
     // STRIPE_KEY is still required by the (active) payments contract, so even
@@ -535,13 +778,13 @@ describe("writeEnvExample", () => {
         variables: [makeVariable({ key: "LEGACY_ONLY" })],
       }),
     ]
-    const result = await writeEnvExample(inactiveOnly, location)
+    const result = await writeEnvExample(inactiveOnly, location, nodeBuildFs)
 
     expect(result.variablesToComment).toEqual(["LEGACY_ONLY"])
 
     const written = await fs.readFile(assertWritten(result), "utf8")
     expect(written).toContain(
-      "# Comment the following variables (their feature is no longer active):",
+      "#\n# Comment the following variables (their feature is no longer active):",
     )
     expect(written).toContain("#   - LEGACY_ONLY")
   })
@@ -550,7 +793,7 @@ describe("writeEnvExample", () => {
     const location = path.join(root, ".env.example")
     await fs.writeFile(location, "STRIPE_KEY=x\nPORT=1\n", "utf8")
 
-    const result = await writeEnvExample(contracts(), location)
+    const result = await writeEnvExample(contracts(), location, nodeBuildFs)
 
     expect(result.staleVariables).toEqual([])
     expect(result.variablesToComment).toEqual([])
@@ -560,6 +803,10 @@ describe("writeEnvExample", () => {
     expect(written).not.toContain("Remove the following")
     expect(written).not.toContain("Comment the following")
     expect(written).not.toContain("Add the following")
+    // An empty reconciliation must render a genuinely EMPTY header -- byte-
+    // identical to rendering with no header at all, not just free of the
+    // three known section strings.
+    expect(written).toBe(renderEnvExample(contracts()))
   })
 
   describe("onExisting", () => {
@@ -567,7 +814,7 @@ describe("writeEnvExample", () => {
       "writes directly to the location when nothing exists there yet, regardless of onExisting (%s)",
       async (onExisting) => {
         const location = path.join(root, ".env.example")
-        const result = await writeEnvExample(contracts(), location, { onExisting })
+        const result = await writeEnvExample(contracts(), location, nodeBuildFs, { onExisting })
 
         expect(result.writtenPath).toBe(location)
         expect(result.skippedExistingPath).toBeUndefined()
@@ -580,7 +827,9 @@ describe("writeEnvExample", () => {
       const location = path.join(root, ".env.example")
       await fs.writeFile(location, "STRIPE_KEY=sk_hand_written\nLEGACY_FEATURE_FLAG=true\n", "utf8")
 
-      const result = await writeEnvExample(contracts(), location, { onExisting: "overwrite" })
+      const result = await writeEnvExample(contracts(), location, nodeBuildFs, {
+        onExisting: "overwrite",
+      })
 
       expect(result.writtenPath).toBe(location)
       expect(result.skippedExistingPath).toBeUndefined()
@@ -595,13 +844,18 @@ describe("writeEnvExample", () => {
       expect(written).not.toContain("LEGACY_FEATURE_FLAG")
       expect(written).not.toContain("Remove the following")
       expect(written).not.toContain("Add the following")
+      // Byte-identical to rendering with no header at all -- not just free
+      // of the known section strings.
+      expect(written).toBe(renderEnvExample(contracts()))
     })
 
     it('"skip" writes nothing at all when a file already exists, but still reports reconciliation diagnostics', async () => {
       const location = path.join(root, ".env.example")
       await fs.writeFile(location, "STRIPE_KEY=sk_hand_written\nLEGACY_FEATURE_FLAG=true\n", "utf8")
 
-      const result = await writeEnvExample(contracts(), location, { onExisting: "skip" })
+      const result = await writeEnvExample(contracts(), location, nodeBuildFs, {
+        onExisting: "skip",
+      })
 
       expect(result.writtenPath).toBeUndefined()
       expect(result.skippedExistingPath).toBe(location)

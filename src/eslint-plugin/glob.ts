@@ -14,6 +14,7 @@
  * source-level cross-folder dependency. Not re-exported from `./index.js` --
  * Private tier per VERSIONING.md.
  */
+/* jscpd:ignore-start -- deliberately duplicated across the build/ and eslint-plugin/ bundle boundaries; see this file's module doc */
 export function globToRegExp(pattern: string): RegExp {
   let out = ""
   for (let i = 0; i < pattern.length; i++) {
@@ -40,3 +41,4 @@ export function globToRegExp(pattern: string): RegExp {
   }
   return new RegExp(`^${out}$`)
 }
+/* jscpd:ignore-end */

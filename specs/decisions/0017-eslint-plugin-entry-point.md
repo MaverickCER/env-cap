@@ -3,7 +3,7 @@
 ## Status
 
 Accepted. Implemented in `src/eslint-plugin/`, exported as
-`@maverickcer/env-cap/eslint-plugin`.
+`env-cap/eslint-plugin`.
 
 ## Context
 
@@ -17,7 +17,7 @@ legitimate pattern: a build-time resolver that needs a raw bootstrap
 credential (e.g. `VAULT_TOKEN`) to authenticate to a secrets vault, before
 any `env-cap` contract exists to go through -- there is no capability to
 "own" a variable whose entire purpose is bootstrapping the system that will
-eventually manage every other variable. `examples/aws-secrets-manager`'s
+eventually manage every other variable. `test/integration/positive/enterprise/aws-secrets-manager`'s
 `live-expirations.ts` demonstrates the general shape of this pattern
 already (Node-only, build-time orchestration code with a materially
 different trust boundary than application runtime code, per ADR 0012),
@@ -26,7 +26,7 @@ credential chain rather than reading `process.env` directly itself.
 
 ## Decision
 
-Ship the rule as `@maverickcer/env-cap/eslint-plugin`, a new subpath export
+Ship the rule as `env-cap/eslint-plugin`, a new subpath export
 on the existing package, rather than a standalone
 `@maverickcer/eslint-plugin-env-cap` package. Concretely:
 
@@ -56,7 +56,7 @@ on the existing package, rather than a standalone
 ## Consequences
 
 - A consuming project adopts the rule via
-  `import envCapPlugin from "@maverickcer/env-cap/eslint-plugin"` in its own
+  `import envCapPlugin from "env-cap/eslint-plugin"` in its own
   flat config, with no second package to install or version-match.
 - `eslint`/`typescript` are optional peer dependencies (`peerDependenciesMeta`)
   so a consumer who never touches `./eslint-plugin` is never nagged about

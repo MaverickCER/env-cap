@@ -7,8 +7,9 @@
     "src/evidence/index.ts",
     "src/eslint-plugin/index.ts"
   ],
-  "out": "api-docs",
+  "out": "docs/api",
   "readme": "none",
+  "plugin": ["./scripts/typedoc-a11y-search-label.mjs"],
   "validation": {
     "notExported": true,
     "notDocumented": true,

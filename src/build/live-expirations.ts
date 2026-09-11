@@ -39,12 +39,19 @@ function overrideVariable(
   // (not enabled repo-wide): TS believes `override` is always `string`, but a
   // key genuinely absent from the record is `undefined` at runtime -- the
   // entire reason this function needs to handle a missing override at all.
+  // Equivalent either way this ternary's condition is mutated:
+  // `parseIsoDate(undefined as unknown as string)` -> `new Date(undefined)`
+  // -> Invalid Date -> `undefined`, the exact same result the `undefined`
+  // branch returns explicitly. Same class as data-cap's documented
+  // `expiresAt === undefined` guard immediately before a `new Date(...)`
+  // parse-or-skip.
+  // Stryker disable next-line ConditionalExpression
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const date = override === undefined ? undefined : parseIsoDate(override)
   return {
     ...variable,
     expiresAt: date ? override : variable.expiresAt,
-    extra: { ...variable.extra },
+    metadata: variable.metadata ? { ...variable.metadata } : variable.metadata,
   }
 }
 

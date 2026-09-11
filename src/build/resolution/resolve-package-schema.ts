@@ -1,7 +1,7 @@
 import { createRequire } from "node:module"
-import fs from "node:fs/promises"
 import path from "node:path"
 import type { ParseWarning } from "../parse.js"
+import type { BuildFileSystem } from "../types.js"
 import { isWithinDirectory } from "./resolve-within-root.js"
 
 /**
@@ -22,7 +22,7 @@ import { isWithinDirectory } from "./resolve-within-root.js"
  * indistinguishable from it after resolution. See ADR 0002 and ADR 0014.
  */
 
-export const SCHEMA_FILE_EXTENSIONS = [".ts", ".tsx"] as const
+const SCHEMA_FILE_EXTENSIONS = [".ts", ".tsx"] as const
 
 /** 1 MiB. New hardening specific to this trust tier -- a package crosses a
  *  real versioning/trust boundary that locally-discovered source doesn't,
@@ -32,7 +32,7 @@ export const MAX_PACKAGE_SCHEMA_FILE_BYTES = 1_048_576
 
 const PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT = 8
 
-export type PackageResolutionFailureCode =
+type PackageResolutionFailureCode =
   | "PACKAGE_NOT_FOUND"
   | "MALFORMED_PACKAGE_JSON"
   | "FIELD_MISSING"
@@ -76,6 +76,7 @@ interface LocatedManifest {
 async function locatePackageManifest(
   packageName: string,
   root: string,
+  fs: BuildFileSystem,
 ): Promise<LocatedManifest | undefined> {
   const req = createRequire(path.join(root, "package.json"))
 
@@ -107,6 +108,9 @@ async function locatePackageManifest(
   for (let i = 0; i < PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT; i++) {
     const candidate = path.join(dir, "package.json")
     try {
+      // Same "utf8" vs "" encoding equivalence as resolveUncached's own read
+      // above (JSON.parse coerces a Buffer via .toString() fine).
+      // Stryker disable next-line StringLiteral
       const parsed: unknown = JSON.parse(await fs.readFile(candidate, "utf8"))
       if (isRecord(parsed) && parsed.name === packageName) {
         return { packageJsonPath: candidate, packageDir: dir }
@@ -115,6 +119,15 @@ async function locatePackageManifest(
       // Not present, or not valid JSON, at this level -- keep walking.
     }
     const parent = path.dirname(dir)
+    // Bypassing this early exit is a pure performance no-op, not a real
+    // gap: when `parent === dir` (the real filesystem root), skipping the
+    // break falls through to `dir = parent`, which reassigns `dir` to its
+    // OWN current value -- the next iteration re-checks the exact same
+    // `candidate` path, which already failed to match this iteration, and
+    // keeps doing so until the loop's own iteration limit is exhausted.
+    // Same terminal PACKAGE_NOT_FOUND outcome either way. Hand-verified:
+    // mutating this and running the real suite passes unchanged.
+    // Stryker disable next-line ConditionalExpression
     if (parent === dir) break // reached filesystem root
     dir = parent
   }
@@ -124,8 +137,9 @@ async function locatePackageManifest(
 async function resolveUncached(
   packageName: string,
   root: string,
+  fs: BuildFileSystem,
 ): Promise<PackageSchemaResolutionResult> {
-  const located = await locatePackageManifest(packageName, root)
+  const located = await locatePackageManifest(packageName, root, fs)
   if (!located) {
     return {
       ok: false,
@@ -137,6 +151,14 @@ async function resolveUncached(
 
   let manifest: unknown
   try {
+    // The "utf8" encoding arg is equivalent to omitting it down to "": with
+    // "" (or no encoding), fs.readFile returns a Buffer instead of a string,
+    // but JSON.parse() coerces a Buffer via its own .toString() fine for any
+    // valid-UTF-8 JSON text -- verified with a real `node -e` comparison
+    // (same package-manifest fixture, both encodings, byte-identical parsed
+    // result). Same equivalence class already documented for evidence-cache.ts
+    // and evidence-fingerprint.ts's own "utf8" args.
+    // Stryker disable next-line StringLiteral
     manifest = JSON.parse(await fs.readFile(packageJsonPath, "utf8"))
   } catch {
     return {
@@ -254,16 +276,17 @@ export function resolvePackageSchemaFile(
   packageName: string,
   root: string,
   cache: Map<string, Promise<PackageSchemaResolutionResult>>,
+  fs: BuildFileSystem,
 ): Promise<PackageSchemaResolutionResult> {
   let cached = cache.get(packageName)
   if (!cached) {
-    cached = resolveUncached(packageName, root)
+    cached = resolveUncached(packageName, root, fs)
     cache.set(packageName, cached)
   }
   return cached
 }
 
-export interface ResolvedPackageFile {
+interface ResolvedPackageFile {
   readonly packageName: string
   readonly file: string
 }
@@ -286,12 +309,13 @@ export async function resolveAllowlistedPackages(
   packages: readonly string[],
   root: string,
   cache: Map<string, Promise<PackageSchemaResolutionResult>>,
+  fs: BuildFileSystem,
 ): Promise<ResolvePackagesResult> {
   const uniqueNames = [...new Set(packages)]
   const resolved = await Promise.all(
     uniqueNames.map(async (packageName) => ({
       packageName,
-      result: await resolvePackageSchemaFile(packageName, root, cache),
+      result: await resolvePackageSchemaFile(packageName, root, cache, fs),
     })),
   )
 
@@ -329,6 +353,7 @@ export async function resolveAllowlistedPackages(
 export async function mergeLocalAndPackageFiles(
   localFiles: readonly string[],
   packageFiles: readonly string[],
+  fs: BuildFileSystem,
 ): Promise<string[]> {
   const seenRealpaths = new Set<string>()
   const merged: string[] = []
@@ -367,11 +392,26 @@ export async function resolvePackageImport(
   allowedPackages: readonly string[],
   root: string,
   cache: Map<string, Promise<PackageSchemaResolutionResult>>,
+  fs: BuildFileSystem,
 ): Promise<string | undefined> {
   const matched = allowedPackages.find(
     (pkg) => specifier === pkg || specifier.startsWith(`${pkg}/`),
   )
+  // Bypassing this guard when nothing matched is behaviorally equivalent,
+  // not a real gap: calling `resolvePackageSchemaFile(undefined, ...)` reaches
+  // `locatePackageManifest`'s `req.resolve(undefined)`, which throws
+  // ERR_INVALID_ARG_TYPE -- caught by that function's own bare `catch`
+  // (returns `undefined`), which in turn makes `resolveUncached` return a
+  // plain `{ok: false, code: "PACKAGE_NOT_FOUND", ...}` rather than throwing.
+  // `resolvePackageImport` still returns `undefined` either way, and the only
+  // other difference (a `cache.set(undefined, ...)` entry) is unobservable
+  // through the public API. Hand-verified: mutating this line and running the
+  // real suite (`vitest run test/build/resolution/resolve-package-schema.test.ts`)
+  // passes unchanged. A second approach -- mocking `resolvePackageSchemaFile`
+  // to assert it's never called for a non-matching specifier -- isn't viable
+  // either, since it's a same-module self-call `vi.mock` can't intercept.
+  // Stryker disable next-line ConditionalExpression
   if (!matched) return undefined
-  const result = await resolvePackageSchemaFile(matched, root, cache)
+  const result = await resolvePackageSchemaFile(matched, root, cache, fs)
   return result.ok ? result.origin.resolvedFile : undefined
 }

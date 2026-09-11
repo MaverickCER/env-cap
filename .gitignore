@@ -1,7 +1,13 @@
 node_modules
 dist
 coverage
+.stryker-tmp
+reports
 api-docs
+# The rendered HTML API reference is generated fresh in CI's Pages deploy
+# job (never committed). The Markdown API report (docs/api-report/) IS
+# committed and drift-checked -- see scripts/check-api-report.mjs.
+docs/api
 docs/coverage-badge.json
 docs/size-badge.json
 *.log
@@ -10,9 +16,9 @@ docs/size-badge.json
 .env.*
 !.env.example
 test/integration/fixtures-generated
-examples/performance-runtime/fixtures
-examples/performance-buildtime/fixtures
-examples/performance-buildtime/edge-cases/_benchmark-output
+benchmark/performance-runtime/fixtures
+benchmark/performance-buildtime/fixtures
+benchmark/performance-buildtime/edge-cases/_benchmark-output
 .claude
 .continue
 .github/copilot-instructions.md

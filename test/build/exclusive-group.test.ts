@@ -11,13 +11,20 @@ function makeContract(
     category: undefined,
     exclusiveGroup: undefined,
     owner: undefined,
-    classification: undefined,
+    sensitivity: undefined,
     expiresAt: undefined,
     deprecated: undefined,
     deprecatedReason: undefined,
+    purpose: undefined,
+    legalBasis: undefined,
+    retention: undefined,
+    dataResidency: undefined,
+    auditRequired: undefined,
     metadata: undefined,
     variables: [],
     documented: false,
+    declaration: { file: overrides.file, line: 1, column: 1 },
+    documentation: undefined,
     packageOrigin: undefined,
     ...overrides,
   }
@@ -93,5 +100,58 @@ describe("detectExclusiveGroupIssues", () => {
     const issues = detectExclusiveGroupIssues([make("a"), make("b"), make("c")])
     expect(issues).toHaveLength(3) // (a,b) (a,c) (b,c)
     expect(issues.every((issue) => issue.severity === "error")).toBe(true)
+  })
+
+  it("orders issues by group name, alphabetically -- not by declaration/discovery order", () => {
+    const make = (group: string) =>
+      makeContract({
+        file: `/repo/${group}-a/env.schema.ts`,
+        exportName: `${group}AEnv`,
+        contractName: `${group}A`,
+        exclusiveGroup: group,
+      })
+    const makeB = (group: string) =>
+      makeContract({
+        file: `/repo/${group}-b/env.schema.ts`,
+        exportName: `${group}BEnv`,
+        contractName: `${group}B`,
+        exclusiveGroup: group,
+      })
+
+    // Declared "zebra" group first, "database" group second -- the reverse
+    // of alphabetical order.
+    const issues = detectExclusiveGroupIssues([
+      make("zebra"),
+      makeB("zebra"),
+      make("database"),
+      makeB("database"),
+    ])
+    expect(issues.map((issue) => issue.variable)).toEqual([
+      'Exclusive group "database"',
+      'Exclusive group "zebra"',
+    ])
+  })
+
+  it("reports the exact, full reason text for a violation", () => {
+    const postgres = makeContract({
+      file: "/repo/postgres/env.schema.ts",
+      exportName: "postgresEnv",
+      contractName: "postgres",
+      exclusiveGroup: "database",
+    })
+    const mongo = makeContract({
+      file: "/repo/mongo/env.schema.ts",
+      exportName: "mongoEnv",
+      contractName: "mongo",
+      exclusiveGroup: "database",
+    })
+
+    const [issue] = detectExclusiveGroupIssues([postgres, mongo])
+    expect(issue.variable).toBe('Exclusive group "database"')
+    expect(issue.reason).toBe(
+      '"postgres" and "mongo" are both active and both declare exclusiveGroup ' +
+        '"database" -- only one active contract per exclusive group is allowed. Set active: false on ' +
+        "whichever one isn't in use.",
+    )
   })
 })

@@ -33,7 +33,10 @@ export function evaluateLiteral(node: ts.Expression): LiteralEvalResult {
   if (ts.isArrayLiteralExpression(node)) {
     const values: unknown[] = []
     for (const element of node.elements) {
-      if (ts.isSpreadElement(element)) return { ok: false }
+      // No explicit `ts.isSpreadElement(element)` check -- a spread element
+      // doesn't match any of this function's other `if` branches either
+      // (none of them recognize `SyntaxKind.SpreadElement`), so it already
+      // falls through to the same `{ ok: false }` this line special-cased.
       const result = evaluateLiteral(element)
       if (!result.ok) return { ok: false }
       values.push(result.value)

@@ -5,10 +5,33 @@ coverage
 docs/coverage-badge.json
 docs/size-badge.json
 
-# examples/ are separate, self-contained npm projects with their own
-# tooling -- not part of this package's own format scope, same rationale
-# eslint.config.js already uses to exclude them from lint.
+# Generated verbatim by `typedoc --options typedoc.markdown.json` and
+# drift-checked against that exact output -- reformatting it would make the
+# check flap. See scripts/check-api-report.mjs.
+docs/api-report
+docs/api
+
+# examples/ and benchmark/ are separate, self-contained npm projects with
+# their own tooling -- not part of this package's own format scope, same
+# rationale eslint.config.js already uses to exclude them from lint. Every
+# relocated behavioral fixture under test/integration/{positive,negative}/
+# (Part 0 of the examples restructuring, ADR 0034) is the same kind of
+# self-contained project, just nested under test/ instead of being a
+# top-level sibling.
 examples
+benchmark
+test/integration/positive/basic/cli-usage
+test/integration/positive/basic/split-generators
+test/integration/positive/team/validation-contexts
+test/integration/positive/team/duplicate-variable-metadata
+test/integration/positive/enterprise/aws-secrets-manager
+test/integration/positive/enterprise/paypal-addon
+test/integration/positive/enterprise/paypal-consumer
+test/integration/positive/enterprise/tsconfig-aliases
+test/integration/positive/enterprise/tsconfig-aliases-consumer
+test/integration/positive/enterprise/evidence-projections
+test/integration/negative/invalid-config/missing-env-var
+test/integration/negative/exclusive-violation/multiple-active-exclusive-capabilities
 
 # Generated, never hand-authored -- reformatting drifts it from its
 # generator instead of the other way around. One glob covers every published

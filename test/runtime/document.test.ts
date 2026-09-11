@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { createEnv } from "../../src/runtime/create.js"
 import { documentEnv } from "../../src/runtime/document.js"
+import type { EnvSchema } from "../../src/runtime/types.js"
 
 describe("documentEnv", () => {
   it("returns undefined and never throws for a well-formed call", () => {
@@ -18,6 +19,43 @@ describe("documentEnv", () => {
           expiresAt: "2026-06-01",
         },
       },
+    })
+    expect(result).toBeUndefined()
+  })
+
+  it("accepts name as a contract-level field", () => {
+    const schema = { STRIPE_KEY: {} }
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    const result = documentEnv(schema, { name: "Payments" })
+    expect(result).toBeUndefined()
+  })
+
+  it("rejects, at compile time, a variables key that doesn't exist on the passed schema", () => {
+    const schema = { STRIPE_KEY: {} }
+    expect(() => {
+      documentEnv(schema, {
+        variables: {
+          // @ts-expect-error -- "STRIPE_KEY_TYPO" isn't a key of `schema` -- catches a rename/typo statically, before the generator ever has to report it as "stale".
+          STRIPE_KEY_TYPO: { description: "typo'd key" },
+        },
+      })
+    }).not.toThrow()
+  })
+
+  it("still accepts a documented-but-not-required subset of a schema's keys -- documenting every variable is never mandatory", () => {
+    const schema = { A: {}, B: {}, C: {} }
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    const result = documentEnv(schema, {
+      variables: { B: { description: "only B is documented" } },
+    })
+    expect(result).toBeUndefined()
+  })
+
+  it("falls back to accepting any string key when schema is explicitly widened to the bare EnvSchema type", () => {
+    const schema: EnvSchema = { A: {} }
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    const result = documentEnv(schema, {
+      variables: { ANYTHING_AT_ALL: { description: "widened" } },
     })
     expect(result).toBeUndefined()
   })

@@ -25,6 +25,43 @@ describe("createEnv", () => {
     expect(() => contract.X).toThrow(EnvNotReadyError)
   })
 
+  it("gives each anonymous contract its own distinct, incrementing label", () => {
+    const first = createEnv({ X: {} })
+    const second = createEnv({ X: {} })
+    let firstMessage = ""
+    let secondMessage = ""
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- triggering the getter's throw is the point; a bare `first.X` statement trips no-unused-expressions instead.
+      void first.X
+    } catch (error) {
+      firstMessage = error instanceof Error ? error.message : ""
+    }
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- see above.
+      void second.X
+    } catch (error) {
+      secondMessage = error instanceof Error ? error.message : ""
+    }
+    expect(firstMessage).toMatch(/"anonymous-contract-\d+"/)
+    expect(secondMessage).toMatch(/"anonymous-contract-\d+"/)
+    expect(firstMessage).not.toBe(secondMessage)
+  })
+
+  it("defines the custom-inspect symbol as non-enumerable -- it doesn't leak into a shallow copy of the contract", () => {
+    // An empty schema -- spreading the contract below reads every enumerable
+    // own property (including any schema-key getter), and this test isn't
+    // about those; a real key would throw EnvNotReadyError before
+    // validateEnv() runs.
+    const contract = createEnv({}, { name: "non-enumerable-test" })
+    const inspectSymbol = Symbol.for("nodejs.util.inspect.custom")
+    expect(Object.getOwnPropertySymbols(contract)).toContain(inspectSymbol)
+    // Object spread copies enumerable own properties, symbol keys included --
+    // a non-enumerable symbol property is the one thing that distinguishes
+    // it from a plain copy.
+    const spread = { ...contract }
+    expect(Object.getOwnPropertySymbols(spread)).not.toContain(inspectSymbol)
+  })
+
   it("accepts an optional source (e.g. import.meta.url) alongside name", async () => {
     const contract = createEnv(
       { X: { processor: (v) => String(v) } },
