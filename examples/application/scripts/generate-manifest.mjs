@@ -45,8 +45,10 @@ if (result.manifest?.warnings.length) {
 }
 
 // Manifest change-tracking since the committed snapshot (env.manifest.snapshot.json)
-// was last written -- see ADR 0021.
-const changes = result.manifest?.changes;
+// was last written -- see ADR 0021. Lives on the Change Model
+// (result.evidence.change.manifest), not on result.manifest itself --
+// GenerateEnvManifestResult has no changes field of its own.
+const changes = result.evidence?.change?.manifest;
 if (changes) {
   const total =
     changes.addedContracts.length + changes.addedVariables.length +

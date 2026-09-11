@@ -6875,7 +6875,7 @@ function buildChangeModel(
 ```
 
 Wraps an already-computed `ManifestChangeReport` (e.g.
-`GenerateEnvManifestResult.changes`) in the Change Model's versioned
+`generateEnvArtifacts()`'s internal `evidenceChanges.report`) in the Change Model's versioned
 shape, and correlates renames using the current run's `renamedFrom`
 declarations. `currentContracts` should be the same contracts the
 manifest was generated from (active contracts only, matching

@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { generateEnvArtifacts, generateEnvManifest, generateDocumentation, generateUsageReport, discoverSchemaFiles } from "env-cap/build";
+import { nodeBuildFileSystem } from "env-cap/node";
 
 import { generateBuildtimeFixtures } from "../../benchmark-fixtures/generator.mjs";
 import { hashFixtureTree } from "../../benchmark-fixtures/fixture-hash.mjs";
@@ -59,6 +60,7 @@ async function runArtifactsTier(tierName, definitionVersion, fixture) {
   const run = () =>
     generateEnvArtifacts({
       root: fixture.outputDir,
+      fs: nodeBuildFileSystem,
       manifest: { location: manifestPath },
       docs: { location: docsPath },
       usage: { report: { location: usagePath } },
@@ -71,7 +73,7 @@ async function runArtifactsTier(tierName, definitionVersion, fixture) {
   // ../../README.md), so this is close to, but not exactly, an internal phase
   // split of the same run.
   const { samples: discoverySamples } = await adaptiveSample(
-    () => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, include: ["**/env.schema.ts"], exclude: DEFAULT_EXCLUDE })),
+    () => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, fs: nodeBuildFileSystem, include: ["**/env.schema.ts"], exclude: DEFAULT_EXCLUDE })),
     IN_PROCESS_OPTS,
   );
 
@@ -92,7 +94,7 @@ async function runArtifactsTier(tierName, definitionVersion, fixture) {
 
 async function runDiscoveryTier(tierName, definitionVersion, fixture) {
   const { samples } = await adaptiveSample(
-    () => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, include: ["**/env.schema.ts"], exclude: DEFAULT_EXCLUDE })),
+    () => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, fs: nodeBuildFileSystem, include: ["**/env.schema.ts"], exclude: DEFAULT_EXCLUDE })),
     IN_PROCESS_OPTS,
   );
   return {
@@ -107,13 +109,14 @@ async function runDiscoveryTier(tierName, definitionVersion, fixture) {
 
 async function runStandaloneVsCombined(definitionVersion, fixture) {
   const standaloneIteration = async () => {
-    await generateEnvManifest({ root: fixture.outputDir, location: outputPath(fixture.outputDir, "standalone", "env.manifest.ts") });
-    await generateDocumentation({ root: fixture.outputDir, location: outputPath(fixture.outputDir, "standalone", "ENVIRONMENT.md") });
-    await generateUsageReport({ root: fixture.outputDir, report: { location: outputPath(fixture.outputDir, "standalone", "OWNERSHIP.md") } });
+    await generateEnvManifest({ root: fixture.outputDir, fs: nodeBuildFileSystem, location: outputPath(fixture.outputDir, "standalone", "env.manifest.ts") });
+    await generateDocumentation({ root: fixture.outputDir, fs: nodeBuildFileSystem, location: outputPath(fixture.outputDir, "standalone", "ENVIRONMENT.md") });
+    await generateUsageReport({ root: fixture.outputDir, fs: nodeBuildFileSystem, report: { location: outputPath(fixture.outputDir, "standalone", "OWNERSHIP.md") } });
   };
   const combinedIteration = () =>
     generateEnvArtifacts({
       root: fixture.outputDir,
+      fs: nodeBuildFileSystem,
       manifest: { location: outputPath(fixture.outputDir, "combined", "env.manifest.ts") },
       docs: { location: outputPath(fixture.outputDir, "combined", "ENVIRONMENT.md") },
       usage: { report: { location: outputPath(fixture.outputDir, "combined", "OWNERSHIP.md") } },
@@ -146,8 +149,8 @@ async function runDocumentationPayload(definitionVersion) {
   const minimalDocsPath = outputPath(minimalDir, "ENVIRONMENT.md");
   const heavyDocsPath = outputPath(heavyDir, "ENVIRONMENT.md");
 
-  const { samples: minimalSamples } = await adaptiveSample(() => timeIt(() => generateDocumentation({ root: minimalDir, location: minimalDocsPath })), IN_PROCESS_OPTS);
-  const { samples: heavySamples } = await adaptiveSample(() => timeIt(() => generateDocumentation({ root: heavyDir, location: heavyDocsPath })), IN_PROCESS_OPTS);
+  const { samples: minimalSamples } = await adaptiveSample(() => timeIt(() => generateDocumentation({ root: minimalDir, fs: nodeBuildFileSystem, location: minimalDocsPath })), IN_PROCESS_OPTS);
+  const { samples: heavySamples } = await adaptiveSample(() => timeIt(() => generateDocumentation({ root: heavyDir, fs: nodeBuildFileSystem, location: heavyDocsPath })), IN_PROCESS_OPTS);
 
   const [minimalDocsBytes, heavyDocsBytes] = await Promise.all([fileSizeOrNull(minimalDocsPath), fileSizeOrNull(heavyDocsPath)]);
 
@@ -167,16 +170,16 @@ async function runScopedInclude(definitionVersion, fixture) {
   const scopedManifestPath = outputPath(fixture.outputDir, "scoped-include", "scoped.manifest.ts");
   const scopedInclude = ["contract-0000/env.schema.ts"];
 
-  const { samples: fullTotal } = await adaptiveSample(() => timeIt(() => generateEnvManifest({ root: fixture.outputDir, location: fullManifestPath })), IN_PROCESS_OPTS);
+  const { samples: fullTotal } = await adaptiveSample(() => timeIt(() => generateEnvManifest({ root: fixture.outputDir, fs: nodeBuildFileSystem, location: fullManifestPath })), IN_PROCESS_OPTS);
   const { samples: fullDiscovery } = await adaptiveSample(
-    () => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, include: ["**/env.schema.ts"], exclude: DEFAULT_EXCLUDE })),
+    () => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, fs: nodeBuildFileSystem, include: ["**/env.schema.ts"], exclude: DEFAULT_EXCLUDE })),
     IN_PROCESS_OPTS,
   );
   const { samples: scopedTotal } = await adaptiveSample(
-    () => timeIt(() => generateEnvManifest({ root: fixture.outputDir, location: scopedManifestPath, include: scopedInclude })),
+    () => timeIt(() => generateEnvManifest({ root: fixture.outputDir, fs: nodeBuildFileSystem, location: scopedManifestPath, include: scopedInclude })),
     IN_PROCESS_OPTS,
   );
-  const { samples: scopedDiscovery } = await adaptiveSample(() => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, include: scopedInclude, exclude: DEFAULT_EXCLUDE })), IN_PROCESS_OPTS);
+  const { samples: scopedDiscovery } = await adaptiveSample(() => timeIt(() => discoverSchemaFiles({ root: fixture.outputDir, fs: nodeBuildFileSystem, include: scopedInclude, exclude: DEFAULT_EXCLUDE })), IN_PROCESS_OPTS);
 
   return {
     id: benchmarkId("buildtime", "scoped-include", "extreme", definitionVersion),
@@ -194,9 +197,9 @@ async function runEdgeCases(definitionVersion) {
   const exclude = [...DEFAULT_EXCLUDE, "**/ignored/**", "**/_benchmark-output/**"];
 
   const t0 = performance.now();
-  const result = await generateEnvManifest({ root: edgeCasesDir, location: manifestPath, exclude, onIncompatibility: "warn" });
+  const result = await generateEnvManifest({ root: edgeCasesDir, fs: nodeBuildFileSystem, location: manifestPath, exclude, onIncompatibility: "warn" });
   const durationMs = Math.round(performance.now() - t0);
-  const files = await discoverSchemaFiles({ root: edgeCasesDir, include: ["**/env.schema.ts"], exclude });
+  const files = await discoverSchemaFiles({ root: edgeCasesDir, fs: nodeBuildFileSystem, include: ["**/env.schema.ts"], exclude });
 
   return {
     id: benchmarkId("buildtime", "edge-cases", "fixed", definitionVersion),
