@@ -17,11 +17,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/maverickcer/env-cap.git"
+    "url": "git+https://github.com/MaverickCER/env-cap.git"
   },
-  "homepage": "https://github.com/maverickcer/env-cap#readme",
+  "homepage": "https://github.com/MaverickCER/env-cap#readme",
   "bugs": {
-    "url": "https://github.com/maverickcer/env-cap/issues"
+    "url": "https://github.com/MaverickCER/env-cap/issues"
   },
   "author": "MaverickCER",
   "type": "module",
