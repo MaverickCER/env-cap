@@ -10,6 +10,19 @@ function relativizePosition(root: string, position: SourcePosition): SourcePosit
   return { ...position, file: displayPath(root, position.file) }
 }
 
+/** `PackageOrigin.resolvedFile`/`.packageDir` are absolute, realpath-canonicalized paths (the internal resolution machinery needs that) -- rendered relative here, matching every other path in this model. */
+function relativizePackageOrigin(
+  root: string,
+  origin: PackageOrigin | undefined,
+): PackageOrigin | undefined {
+  if (!origin) return origin
+  return {
+    ...origin,
+    resolvedFile: displayPath(root, origin.resolvedFile),
+    packageDir: displayPath(root, origin.packageDir),
+  }
+}
+
 /**
  * The first of env-cap's seven canonical fact models (ADR 0024) -- a
  * versioned, JSON-serializable projection of every declared environment
@@ -109,7 +122,7 @@ export function buildContractModel(
     exclusiveGroup: contract.exclusiveGroup,
     ...governanceFieldsOf(contract),
     documented: contract.documented,
-    packageOrigin: contract.packageOrigin,
+    packageOrigin: relativizePackageOrigin(root, contract.packageOrigin),
     declaration: relativizePosition(root, contract.declaration),
     documentation: contract.documentation && relativizePosition(root, contract.documentation),
     variables: [...contract.variables]
