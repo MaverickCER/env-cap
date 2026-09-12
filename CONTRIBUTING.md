@@ -23,7 +23,7 @@ test:watch`, `npm run test:coverage`, `npm run lint`, `npm run size`,
 
 Each example under [`examples/`](examples/) is its own npm project (`npm install` inside it
 separately) and carries a committed `expected/` directory of golden regression fixtures --
-see [`examples/README.md`](examples/README.md#expected--golden-regression-fixtures). If your
+see [`examples/README.md`](examples/README.md#golden-regression-testing). If your
 change intentionally alters generated output (manifest/docs/`.env.example`/ownership-report
 formatting, ordering, or serialization), regenerate every example's goldens and review the
 diff before committing:

@@ -3,7 +3,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/maverickcer/env-cap/ci.yml?branch=main&label=CI)](https://github.com/maverickcer/env-cap/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/env-cap)](https://www.npmjs.com/package/env-cap)
 [![Bundle size](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/size-badge.json)](specs/decisions/0008-gzip-size-budget.md)
-[![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178c6)](README.md#installation)
+[![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178c6)](#quick-start)
 
 **Define who owns your environment variables, why they exist, and where they are used.**
 
