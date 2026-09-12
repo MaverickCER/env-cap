@@ -171,14 +171,17 @@
   "overrides": {
     "esbuild": "^0.28.1",
     "fast-uri": "^3.1.6",
-    "nanoid": "^3.3.18"
+    "nanoid": "^3.3.18",
+    "tar": "^7.5.22",
+    "pa11y": {
+      "puppeteer": "npm:puppeteer-core@^25.9.0"
+    }
   },
   "publishConfig": {
     "access": "public"
   },
   "allowScripts": {
-    "esbuild@0.28.1": true,
     "fsevents@2.3.3": true,
-    "puppeteer@25.10.0": true
+    "esbuild@0.28.2": true
   }
 }
