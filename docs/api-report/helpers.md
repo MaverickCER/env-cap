@@ -6,7 +6,7 @@
 
 ```ts
 const processors: {
-  base64: () => Processor<Buffer>;
+  base64: () => Processor<Buffer<ArrayBufferLike>>;
   parseJSON: <T>() => Processor<T>;
   split: (separator) => Processor<string[]>;
   toArray: <T>(separator, processors) => Processor<T[]>;
@@ -32,7 +32,7 @@ patterns (e.g. `processors.toNumber()`).
 ##### base64
 
 ```ts
-base64: () => Processor<Buffer>;
+base64: () => Processor<Buffer<ArrayBufferLike>>;
 ```
 
 Decodes a base64 string into a `Buffer`.
@@ -41,7 +41,7 @@ Decodes a base64 string into a `Buffer`.
 
 ###### Returns
 
-[`Processor`](runtime.md#processor-1)\<`Buffer`\>
+[`Processor`](runtime.md#processor-1)\<`Buffer`\<`ArrayBufferLike`\>\>
 
 ##### parseJSON
 
