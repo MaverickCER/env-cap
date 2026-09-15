@@ -12,6 +12,16 @@ const packageJsonPath = path.resolve(here, "../../package.json")
 const realVersion = (JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as { version: string })
   .version
 
+/**
+ * A `toMatchSnapshot` property-matcher argument: `toolVersion` legitimately varies with the
+ * package's own version, so every snapshot test below matches it against `expect.any(String)`
+ * instead of hardcoding today's literal version -- immune to every future version bump.
+ * `expect.any()` (vitest's asymmetric matcher) is inherently `any`-typed; sharing one constant
+ * keeps that single, justified suppression in one place instead of at each call site.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- see this constant's own doc comment above.
+const IGNORE_TOOL_VERSION = { toolVersion: expect.any(String) }
+
 /** Minimal, structurally-valid `EvidenceModel` -- every sub-model empty. Real content isn't the point of these envelope-shape tests. */
 const EMPTY_EVIDENCE: EvidenceModel = {
   schemaVersion: 1,
@@ -182,7 +192,7 @@ describe("serializeSuccess", () => {
   })
 
   it("matches the documented success shape (snapshot)", () => {
-    expect(serializeSuccess(FULL_RESULT)).toMatchSnapshot()
+    expect(serializeSuccess(FULL_RESULT)).toMatchSnapshot(IGNORE_TOOL_VERSION)
   })
 
   it("omits checkResult when not passed (existing call sites are unaffected)", () => {
@@ -192,7 +202,9 @@ describe("serializeSuccess", () => {
   })
 
   it("includes an additive checkResult field when --check finds stale artifacts (snapshot)", () => {
-    expect(serializeSuccess(MINIMAL_RESULT, { ok: false, stale: ["docs"] })).toMatchSnapshot()
+    expect(serializeSuccess(MINIMAL_RESULT, { ok: false, stale: ["docs"] })).toMatchSnapshot(
+      IGNORE_TOOL_VERSION,
+    )
   })
 })
 
@@ -267,7 +279,7 @@ describe("serializeFailure", () => {
         reason: "Two active contracts share this exclusive group.",
       },
     ])
-    expect(serializeFailure(error)).toMatchSnapshot()
+    expect(serializeFailure(error)).toMatchSnapshot(IGNORE_TOOL_VERSION)
   })
 })
 
