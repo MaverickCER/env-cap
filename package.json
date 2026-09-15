@@ -1,6 +1,6 @@
 {
   "name": "@maverickcer/env-cap",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Secure, type-safe, framework-agnostic environment contracts. Contracts own the environment variables they consume; the package provides runtime validation and build-time contract discovery.",
   "keywords": [
     "environment",
