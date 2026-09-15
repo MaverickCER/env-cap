@@ -1,0 +1,50 @@
+{
+  "historySchemaVersion": 1,
+  "entries": [
+    {
+      "timestamp": "2026-09-15T17:17:56.123Z",
+      "gitCommit": "32634f5f0ff44c6d9f8d3b7dee8f4612a14a29d4",
+      "envCapVersion": "0.3.1",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "artifacts": {
+          "baseline": {
+            "medianMs": 73.62984699999993,
+            "variablesPerSecond": 1358.14
+          },
+          "stress": {
+            "medianMs": 386.71164299999964,
+            "variablesPerSecond": 2585.91
+          },
+          "extreme": {
+            "medianMs": 3536.749154000001,
+            "variablesPerSecond": 2261.96
+          },
+          "enterprise": {
+            "medianMs": 1133.617846999994,
+            "variablesPerSecond": 3550.58
+          }
+        },
+        "discovery": {
+          "baseline": {
+            "medianMs": 1.7472090000010212,
+            "variablesPerSecond": 57234.14
+          },
+          "stress": {
+            "medianMs": 7.77438699999766,
+            "variablesPerSecond": 128627.5
+          },
+          "extreme": {
+            "medianMs": 49.267550999997184,
+            "variablesPerSecond": 162378.68
+          },
+          "enterprise": {
+            "medianMs": 17.636796999999206,
+            "variablesPerSecond": 228216.04
+          }
+        }
+      }
+    }
+  ]
+}
