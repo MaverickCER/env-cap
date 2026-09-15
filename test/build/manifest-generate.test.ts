@@ -421,7 +421,7 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
       expect(thirdChanges.updatedContracts).toHaveLength(0)
       expect(thirdChanges.updatedVariables).toHaveLength(1)
 
-      const variableUpdate = thirdChanges.updatedVariables[0]
+      const variableUpdate = thirdChanges.updatedVariables[0]! // asserted toHaveLength(1) just above
       expect(variableUpdate.key).toBe("WEBHOOK_URL")
       expect(variableUpdate.exportName).toBe("changesDemoEnv")
       expect(variableUpdate.changes).toEqual(

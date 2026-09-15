@@ -72,7 +72,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.imported).toBe(true)
     expect(contract.consumingFiles).toEqual([consumerFile])
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
@@ -100,7 +100,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
     expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("used")
     expect(contract.hasDynamicAccess).toBe(false)
@@ -130,7 +130,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.variables.get("STRIPE_KEY")?.positions.map((p) => p.line)).toEqual([2, 3])
   })
 
@@ -157,7 +157,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.variables.get("STRIPE_KEY")?.positions.map((p) => p.file)).toEqual([
       aConsumer,
       zConsumer,
@@ -186,7 +186,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.consumingFiles).toEqual([aConsumer, zConsumer])
     expect(contract.dynamicAccessSites.map((s) => s.file)).toEqual([aConsumer, zConsumer])
   })
@@ -214,7 +214,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.ambiguousBarrelFiles).toEqual([aConsumer, zConsumer])
   })
 
@@ -236,7 +236,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
     expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("dynamic-access")
     expect(contract.variables.get("STRIPE_KEY")?.positions).toEqual([])
@@ -262,7 +262,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.hasDynamicAccess).toBe(true)
     // STRIPE_KEY was also directly member-accessed, so it stays proven "used".
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
@@ -453,8 +453,8 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    expect(graph.contracts[0].variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
-    expect(graph.contracts[0].variables.get("STRIPE_KEY")?.evidence).toBe("no-access")
+    expect(graph.contracts[0]!.variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
+    expect(graph.contracts[0]!.variables.get("STRIPE_KEY")?.evidence).toBe("no-access")
   })
 
   it("contract-level consumer vs. variable-level access are independent: a bare reference (passed as an argument) proves coupling but escapes per-variable analysis -- indeterminate, never a false unconsumed (ADR 0039)", async () => {
@@ -475,7 +475,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     // Contract-level: this file is a proven consumer (coupling exists).
     expect(contract.imported).toBe(true)
     expect(contract.consumingFiles).toEqual([consumerFile])
@@ -604,8 +604,8 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    expect(graph.contracts[0].imported).toBe(true)
-    expect(graph.contracts[0].ambiguousBarrelFiles).toEqual([])
+    expect(graph.contracts[0]!.imported).toBe(true)
+    expect(graph.contracts[0]!.ambiguousBarrelFiles).toEqual([])
     expect(deriveOwnershipFindings(graph).unresolvedConsumers).toEqual([])
   })
 
@@ -749,7 +749,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
 
   it("regression: a first-line-only banner check would have wrongly included the shebang fixture above", async () => {
     const source = `#!/usr/bin/env node\n${generatedBanner("ts")}\n`
-    const firstLine = source.split("\n")[0]
+    const firstLine = source.split("\n")[0]! // .split() always returns at least one element
     // Demonstrates why B1 checks the first 20 non-empty lines, not just line one.
     expect(firstLine.includes("GENERATED FILE")).toBe(false)
     expect(source.includes("GENERATED FILE")).toBe(true)
@@ -778,7 +778,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     )
 
     // `other.STRIPE_KEY` must never register as access to `paymentsEnv`.
-    expect(graph.contracts[0].variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
+    expect(graph.contracts[0]!.variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
   })
 
   it("never throws when a member access names a property that isn't a declared variable key", async () => {
@@ -801,8 +801,8 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
 
     // The contract is still coupled (imported+referenced), but the one
     // declared variable was never actually accessed.
-    expect(graph.contracts[0].imported).toBe(true)
-    expect(graph.contracts[0].variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
+    expect(graph.contracts[0]!.imported).toBe(true)
+    expect(graph.contracts[0]!.variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
   })
 
   it("never fuzzy-matches a similarly-named file", async () => {
@@ -831,7 +831,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     // The consumer imports the *backup* file, an exact-path match against a
     // different (undiscovered) contract -- the real contract must not be
     // credited with this usage.
-    expect(graph.contracts[0].imported).toBe(false)
+    expect(graph.contracts[0]!.imported).toBe(false)
   })
 
   it("never registers access from a comment", async () => {
@@ -852,7 +852,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]
+    const contract = graph.contracts[0]! // this test's own fixture -- always present
     expect(contract.imported).toBe(true) // the import itself still counts as coupling
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
   })
@@ -879,7 +879,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    expect(graph.contracts[0].variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
+    expect(graph.contracts[0]!.variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
   })
 
   it("multi-file, multi-contract graphs aggregate correctly", async () => {
@@ -983,7 +983,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       )
       const findings = deriveOwnershipFindings(graph)
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.imported).toBe(true)
       expect(contract.consumingFiles).toEqual([consumerFile])
       expect(contract.variables.get("API_KEY")?.status).toBe("used")
@@ -1035,7 +1035,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       )
       const findings = deriveOwnershipFindings(graph)
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.imported).toBe(true)
       expect(contract.consumingFiles).toEqual([consumerFile])
       expect(contract.variables.get("ALIAS_KEY")?.status).toBe("used")
@@ -1069,7 +1069,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
       expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
       expect(contract.variables.get("WEBHOOK_SECRET")?.evidence).toBe("escape")
@@ -1110,7 +1110,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
       expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
       // The escape site's `via` is threaded through from the scanner verbatim
@@ -1143,11 +1143,11 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      expect(graph.contracts[0].escapeSites).toEqual([
+      expect(graph.contracts[0]!.escapeSites).toEqual([
         { file: computedConsumer, line: 3, column: 9, via: "computed-key" },
         { file: nestedConsumer, line: 2, column: 9, via: "nested-pattern" },
       ])
-      expect(graph.contracts[0].variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
+      expect(graph.contracts[0]!.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
     })
 
     it("a one-level const alias's member access is attributed back to the original contract, exactly like the alias resolution (import rename) case above", async () => {
@@ -1168,7 +1168,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.imported).toBe(true)
       expect(contract.consumingFiles).toEqual([consumerFile])
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
@@ -1193,7 +1193,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
       expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
       expect(contract.escapeSites).toEqual([
@@ -1226,7 +1226,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.escapeSites).toEqual([
         { file: aConsumer, line: 2, column: 5, via: "reference" },
         { file: aConsumer, line: 3, column: 7, via: "reference" },
@@ -1262,7 +1262,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]
+      const contract = graph.contracts[0]! // this test's own fixture -- always present
       expect(contract.imported).toBe(true)
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
       expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("escape")

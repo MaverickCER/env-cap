@@ -207,7 +207,14 @@ export function uuid(versions: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8]): Va
       return "Expected a valid UUID ."
     }
 
-    const version = Number.parseInt(match[3], 16)
+    // Capture group 3 is mandatory in the pattern (no `?`), so a successful
+    // match always captures it -- noUncheckedIndexedAccess can't see that
+    // invariant through RegExpExecArray's numeric index signature.
+    const versionDigit = match[3]
+    if (versionDigit === undefined) {
+      return "Expected a valid UUID ."
+    }
+    const version = Number.parseInt(versionDigit, 16)
 
     if (!versions.includes(version)) {
       return `Expected UUID version ${versions.join(", ")}.`

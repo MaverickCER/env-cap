@@ -19,6 +19,12 @@ export function globToRegExp(pattern: string): RegExp {
   let out = ""
   for (let i = 0; i < pattern.length; i++) {
     const char = pattern[i]
+    // The loop bound (`i < pattern.length`) already guarantees this branch
+    // is never taken -- noUncheckedIndexedAccess can't express that
+    // invariant from a bounds-checked loop, only that string indexing is
+    // *generally* unsafe. A real guard (not a non-null assertion, forbidden
+    // in src/) satisfies the type checker without hiding the possibility.
+    if (char === undefined) continue
     if (char === "*" && pattern[i + 1] === "*") {
       const precededBySlashOrStart = i === 0 || pattern[i - 1] === "/"
       const followedBySlash = pattern[i + 2] === "/"

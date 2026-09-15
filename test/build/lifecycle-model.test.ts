@@ -229,6 +229,6 @@ describe("buildLifecycleModel", () => {
     // own `expiring` field is root-relative -- matching every other
     // canonical model's file convention, not the absolute path
     // computeExpiringEntries() itself returns.
-    expect(model.expiring[0].file).toBe("a/env.schema.ts")
+    expect(model.expiring[0]!.file).toBe("a/env.schema.ts")
   })
 })

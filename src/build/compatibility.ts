@@ -21,7 +21,14 @@ export interface CompatibilityIssue {
   readonly severity: "error" | "warning" | "info"
   /** The environment variable name, or `"(contract) <name>"` for a contract-level (e.g. exclusive-group) issue. */
   readonly variable: string
-  /** Every file declaring a conflicting definition. */
+  /**
+   * Every file declaring a conflicting definition. A pairwise comparison
+   * (compatibility.ts, exclusive-group.ts) always produces exactly two; a
+   * finding escalated from another family (generate-env-artifacts.ts's
+   * `escalatedFindings()`, via `findingFiles()`) can produce zero, one, or
+   * two, depending on what location information that finding actually
+   * carries -- genuinely variable arity, not a tuple.
+   */
   readonly files: readonly string[]
   /** Human-readable explanation of the conflict. */
   readonly reason: string
@@ -106,6 +113,12 @@ export function detectCompatibilityIssues(
       for (let j = i + 1; j < declarations.length; j++) {
         const a = declarations[i]
         const b = declarations[j]
+        // Both loop bounds (`i < declarations.length`, `j < declarations.length`)
+        // already guarantee this branch is never taken -- same class as the
+        // guard immediately above for the outer loop's own off-by-one
+        // equivalence. A real guard (not a non-null assertion, forbidden in
+        // src/) satisfies the type checker without hiding the possibility.
+        if (a === undefined || b === undefined) continue
 
         if (
           a.variable.processorReturnType &&
@@ -306,6 +319,9 @@ export function detectDuplicateVariableShapes(
     for (let j = i + 1; j < declarations.length; j++) {
       const a = declarations[i]
       const b = declarations[j]
+      // Both loop bounds already guarantee this branch is never taken --
+      // same reasoning as detectCompatibilityIssues()'s identical guard.
+      if (a === undefined || b === undefined) continue
       if (a.key === b.key) continue
       if (a.file === b.file && a.contractName === b.contractName) continue
       if (!shapesMatch(a.shape, b.shape)) continue

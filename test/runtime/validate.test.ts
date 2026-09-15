@@ -62,7 +62,7 @@ describe("validateEnv pipeline", () => {
           // eslint-disable-next-line @typescript-eslint/no-base-to-string
           processor: (v) => String(v ?? ""),
           validator: (value: string, rawEnv) => {
-            if (rawEnv.PAYMENT_PROVIDER !== "stripe") return true
+            if (rawEnv["PAYMENT_PROVIDER"] !== "stripe") return true
             return value.length > 0 || "Stripe key is required."
           },
         },

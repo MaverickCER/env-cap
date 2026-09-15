@@ -772,7 +772,7 @@ function extractVariableDocsMap(
       else if (fieldName === "evidence" && isRecord(evaluated.value)) {
         evidence = {
           dynamicAccess: extractDynamicAccessCitations(
-            evaluated.value.dynamicAccess,
+            evaluated.value["dynamicAccess"],
             filePath,
             key,
             contextLabel,

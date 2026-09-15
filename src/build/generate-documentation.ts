@@ -302,7 +302,11 @@ export async function writeDocumentation(
   await fs.writeFile(docsPath, docsSource, "utf8")
 
   const envExample = envExamplePath
-    ? await writeEnvExample(contracts, envExamplePath, fs, { onExisting: envExampleOnExisting })
+    ? // exactOptionalPropertyTypes: omit the key rather than set it to
+      // `undefined` when the caller didn't supply one.
+      await writeEnvExample(contracts, envExamplePath, fs, {
+        ...(envExampleOnExisting === undefined ? {} : { onExisting: envExampleOnExisting }),
+      })
     : undefined
   return { envExample }
 }

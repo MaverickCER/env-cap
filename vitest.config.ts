@@ -40,7 +40,12 @@ export default defineConfig({
       // test could ever "cover." `src/build/types.ts` is the `BuildFileSystem`
       // capability contract (ADR 0040).
       exclude: ["src/runtime/types.ts", "src/build/types.ts"],
-      reporter: ["text", "html", "lcov", "json-summary"],
+      // "json" (not just "json-summary") is load-bearing: it's what actually
+      // writes coverage/coverage-final.json, the per-file raw coverage data
+      // internal-package-contract's Crap check hands to `crap4ts --coverage`.
+      // Without it, Crap can't tell "genuinely no coverage produced" apart
+      // from "Tests failed" and warns with a misleading message either way.
+      reporter: ["text", "html", "lcov", "json", "json-summary"],
       // Set a few points below the measured baseline (~99.9/99.9/100/99.9
       // lines/statements/functions/branches at the time this was raised) --
       // an enforced floor that catches a real regression without being so

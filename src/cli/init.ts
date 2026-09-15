@@ -141,7 +141,10 @@ function schemaDirectory(cwd: string): string {
  * blocked by a wrong-typed entry (a directory where a file must go, or a
  * non-directory where `scripts/` must go). A failure here means zero writes.
  */
-function planTargets(cwd: string): ScaffoldTarget[] {
+// Always exactly two: the schema file and the generator script. Typed as a
+// tuple (not ScaffoldTarget[]) so runInit()'s targets[0] doesn't need a
+// defensive check for a case the fixed literal return below can't produce.
+function planTargets(cwd: string): [ScaffoldTarget, ScaffoldTarget] {
   const schemaPath = path.join(schemaDirectory(cwd), "env.schema.ts")
   const scriptsDir = path.join(cwd, "scripts")
   const generatorPath = path.join(scriptsDir, "generate-env.mjs")

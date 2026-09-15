@@ -340,7 +340,7 @@ describe("defineEvidenceProjection", () => {
   it("throws when a projector deletes an EvidenceModel property", () => {
     const projection = defineEvidenceProjection({
       bad: (evidence) => {
-        delete (evidence as unknown as Record<string, unknown>).change
+        delete (evidence as unknown as Record<string, unknown>)["change"]
         return "unreachable"
       },
     })

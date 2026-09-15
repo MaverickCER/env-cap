@@ -112,7 +112,7 @@ async function locatePackageManifest(
       // above (JSON.parse coerces a Buffer via .toString() fine).
       // Stryker disable next-line StringLiteral
       const parsed: unknown = JSON.parse(await fs.readFile(candidate, "utf8"))
-      if (isRecord(parsed) && parsed.name === packageName) {
+      if (isRecord(parsed) && parsed["name"] === packageName) {
         return { packageJsonPath: candidate, packageDir: dir }
       }
     } catch {
@@ -175,9 +175,11 @@ async function resolveUncached(
     }
   }
 
-  const envCapField = manifest.envCap
+  const envCapField = manifest["envCap"]
   const declaredField =
-    isRecord(envCapField) && typeof envCapField.schema === "string" ? envCapField.schema : undefined
+    isRecord(envCapField) && typeof envCapField["schema"] === "string"
+      ? envCapField["schema"]
+      : undefined
   if (declaredField === undefined) {
     return {
       ok: false,

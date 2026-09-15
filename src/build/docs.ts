@@ -277,8 +277,12 @@ export function extractPreviouslyActiveKeys(previousContent: string): Set<string
       continue
     }
     const headingMatch = /^### `([A-Za-z_][A-Za-z0-9_]*)`$/.exec(line)
-    if (headingMatch && currentContractActive) {
-      keys.add(headingMatch[1])
+    // The capture group is mandatory in the pattern (no `?`), so a
+    // successful match always captures it -- noUncheckedIndexedAccess can't
+    // see that invariant through RegExpExecArray's numeric index signature.
+    const key = headingMatch?.[1]
+    if (key !== undefined && currentContractActive) {
+      keys.add(key)
     }
   }
   return keys

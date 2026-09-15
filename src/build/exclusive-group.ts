@@ -40,6 +40,9 @@ export function detectExclusiveGroupIssues(
       for (let j = i + 1; j < members.length; j++) {
         const a = members[i]
         const b = members[j]
+        // Both loop bounds already guarantee this branch is never taken --
+        // same reasoning as the outer loop's own guard above.
+        if (a === undefined || b === undefined) continue
         issues.push({
           severity: "error",
           variable: `Exclusive group "${group}"`,

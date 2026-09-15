@@ -146,7 +146,7 @@ describe("detectExclusiveGroupIssues", () => {
       exclusiveGroup: "database",
     })
 
-    const [issue] = detectExclusiveGroupIssues([postgres, mongo])
+    const issue = detectExclusiveGroupIssues([postgres, mongo])[0]! // one conflict in, one issue out
     expect(issue.variable).toBe('Exclusive group "database"')
     expect(issue.reason).toBe(
       '"postgres" and "mongo" are both active and both declare exclusiveGroup ' +

@@ -58,7 +58,11 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
   try {
     return await run
   } finally {
-    state.inFlight = undefined
+    // Not `= undefined`: `inFlight` is genuinely optional (absent between
+    // runs), and exactOptionalPropertyTypes distinguishes "key absent" from
+    // "key present holding undefined" -- delete is the operation that
+    // actually means the former.
+    delete state.inFlight
   }
 }
 
@@ -112,6 +116,11 @@ async function runValidation(
 
     for (const key of Object.keys(internals.schema)) {
       const definition = internals.schema[key]
+      // `key` was just enumerated from `Object.keys(internals.schema)`, so
+      // this is always a real entry -- noUncheckedIndexedAccess can't
+      // express that invariant from an object index signature, only that
+      // indexing is *generally* unsafe.
+      if (definition === undefined) continue
 
       // A variable whose context isn't active is skipped entirely -- no
       // default/processor/validator runs, it's never counted as validated,

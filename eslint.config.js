@@ -1,3 +1,4 @@
+import baseline from "internal-package-contract/eslint"
 import js from "@eslint/js"
 import eslintConfigPrettier from "eslint-config-prettier/flat"
 import globals from "globals"
@@ -12,8 +13,35 @@ import tseslint from "typescript-eslint"
  * projects with their own tsconfig/toolchain and are intentionally not
  * linted here; the website (docs/) is static HTML/CSS/JS reviewed
  * separately, not part of this TypeScript project.
+ *
+ * Extends internal-package-contract's org-wide baseline (`js.configs.
+ * recommended` + untyped `tseslint.configs.recommended` + Node globals,
+ * deliberately non-type-checked -- see that package's own eslint.config.mjs
+ * for why) rather than duplicating it. `baseline` is spread first; every
+ * block below layers stricter, package-specific rules on top for the files
+ * it targets -- flat config applies later same-file blocks after earlier
+ * ones, so this package's own `strictTypeChecked`/`stylisticTypeChecked`
+ * tier and `eslintConfigPrettier` (last, so Prettier still wins) both still
+ * take effect exactly as before.
  */
 export default tseslint.config(
+  ...baseline,
+  // Baseline's own `tseslint.configs.recommended` matches every `**/*.ts` file
+  // with no `tsconfigRootDir` of its own (deliberately -- it's meant to work
+  // unmodified in any consuming project). Once this package's own node_modules
+  // contains another package (internal-package-contract) that also ships a
+  // tsconfig.json, typescript-eslint's auto-detection for root-level `.ts`
+  // config files this repo's own blocks don't otherwise scope (tsup.config.ts,
+  // vitest.config.ts, vitest.stryker.config.ts) becomes genuinely ambiguous
+  // between the two candidate roots -- confirmed directly: removing this
+  // block reproduces the exact "multiple candidate TSConfigRootDirs" parsing
+  // error on exactly those files. Setting it explicitly, globally, removes
+  // the ambiguity without touching baseline's own file matching.
+  {
+    languageOptions: {
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
+    },
+  },
   {
     // test/cross-runtime/**: Bun/Deno's own native test runners execute
     // these (bun:test / the global Deno namespace) -- neither is part of

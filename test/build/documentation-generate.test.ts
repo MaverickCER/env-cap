@@ -260,7 +260,7 @@ describe("generateDocumentation", () => {
     expect(entry?.category).toBe("Payments")
     expect(entry?.owner).toBe("payments-team")
 
-    const variable = entry?.variables.STRIPE_KEY
+    const variable = entry?.variables["STRIPE_KEY"]
     expect(variable).toBeDefined()
     expect(variable?.description).toBe("Stripe secret API key.")
     expect(variable?.owner).toBe("sysadmin@example.com")

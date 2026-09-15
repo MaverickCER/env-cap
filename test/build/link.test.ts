@@ -206,7 +206,7 @@ describe("linkFiles", () => {
     expect(result.undocumentedVariables).toEqual([
       { file, exportName: "partialEnv", key: "UNDOCUMENTED" },
     ])
-    const variables = result.contracts[0]?.variables
+    const variables = result.contracts[0]!.variables
     expect(variables.find((v) => v.key === "DOCUMENTED")?.documented).toBe(true)
     expect(variables.find((v) => v.key === "UNDOCUMENTED")?.documented).toBe(false)
   })

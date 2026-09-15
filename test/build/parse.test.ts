@@ -225,7 +225,7 @@ describe("extractSchemaVariables", () => {
       true,
       ts.ScriptKind.TS,
     )
-    const decl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0]
+    const decl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0]! // single "const x = ..." declaration, always exactly one
     return decl.initializer as ts.ObjectLiteralExpression
   }
 
@@ -567,7 +567,7 @@ describe("extractContractDocs", () => {
       true,
       ts.ScriptKind.TS,
     )
-    const decl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0]
+    const decl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0]! // single "const x = ..." declaration, always exactly one
     return decl.initializer!
   }
 
@@ -1245,7 +1245,7 @@ describe("extractCreateEnvOptionsName", () => {
       true,
       ts.ScriptKind.TS,
     )
-    const decl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0]
+    const decl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0]! // single "const x = ..." declaration, always exactly one
     return decl.initializer!
   }
 

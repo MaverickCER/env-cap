@@ -57,7 +57,7 @@ describe.skipIf(distMissing)("env-cap/helpers tree-shaking (requires `npm run bu
       platform: "browser",
       write: false,
     })
-    const code = result.outputFiles[0].text
+    const code = result.outputFiles[0]!.text // write: false guarantees at least the entry bundle
     return { code, gzip: gzipSync(code).length }
   }
 

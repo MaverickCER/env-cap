@@ -142,7 +142,9 @@ export function serializeFailure(error: unknown): JsonErrorPayload {
     error: {
       name: error instanceof Error ? error.name : "Error",
       message: error instanceof Error ? error.message : String(error),
-      issues: hasIssues(error) ? error.issues : undefined,
+      // exactOptionalPropertyTypes: omit the key rather than set it to
+      // `undefined` when the thrown error carries no issues of its own.
+      ...(hasIssues(error) ? { issues: error.issues } : {}),
     },
   }
 }

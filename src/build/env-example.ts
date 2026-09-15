@@ -166,6 +166,11 @@ export function renderEnvExample(
   const activeByKey = groupByKey(active)
   for (const key of [...activeByKey.keys()].sort()) {
     const [first, ...rest] = mustGet(activeByKey, key)
+    // groupByKey() only ever creates a key alongside its first pushed entry,
+    // so every group it returns is non-empty by construction --
+    // noUncheckedIndexedAccess can't see that invariant through mustGet()'s
+    // own return type, only that array destructuring is *generally* unsafe.
+    if (first === undefined) continue
     lines.push(...renderVariableLines(first.variable))
     for (const dup of rest) {
       lines.push(
@@ -181,6 +186,8 @@ export function renderEnvExample(
   for (const key of [...inactiveByKey.keys()].sort()) {
     if (activeByKey.has(key)) continue // claimed by an active contract -- not unique to the disabled feature.
     const [first] = mustGet(inactiveByKey, key)
+    // Same groupByKey() non-empty-by-construction invariant as above.
+    if (first === undefined) continue
     lines.push(
       ...renderVariableLines(first.variable, {
         commented: true,
