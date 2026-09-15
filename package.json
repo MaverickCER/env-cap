@@ -19,7 +19,7 @@
     "type": "git",
     "url": "git+https://github.com/MaverickCER/env-cap.git"
   },
-  "homepage": "https://github.com/MaverickCER/env-cap#readme",
+  "homepage": "https://maverickcer.github.io/env-cap/",
   "bugs": {
     "url": "https://github.com/MaverickCER/env-cap/issues"
   },
@@ -121,6 +121,7 @@
     "setup": "npm install && npm run build && npm run schema",
     "size": "node scripts/check-size.mjs",
     "verify:no-ambient-fs": "node scripts/verify-no-ambient-fs.mjs",
+    "verify:no-ambient-child-process": "node scripts/verify-no-ambient-child-process.mjs",
     "schema": "node scripts/generate-json-schema.mjs",
     "examples:update-golden": "node scripts/update-example-goldens.mjs",
     "benchmark": "node scripts/run-benchmarks.mjs",
@@ -128,8 +129,8 @@
     "docs:api:report": "typedoc --options typedoc.markdown.json",
     "docs:api:report:check": "node scripts/check-api-report.mjs",
     "stage": "npm run typecheck && npm run build && npm run test && npm run size",
-    "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run docs:api:report:check",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run docs:api:report:check",
+    "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run verify:no-ambient-child-process && npm run docs:api:report:check",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run verify:no-ambient-child-process && npm run docs:api:report:check",
     "prepublishOnly": "npm run verify",
     "version": "changeset version && npm run build && npm run examples:update-golden",
     "release": "changeset publish"
@@ -152,10 +153,10 @@
     "@types/node": "^20.19.0",
     "@typescript-eslint/types": "^8.65.0",
     "@typescript-eslint/utils": "^8.65.0",
-    "@vitest/coverage-v8": "^3.2.7",
+    "@vitest/coverage-v8": "^4.1.11",
     "ajv": "^8.20.0",
     "esbuild": "^0.28.1",
-    "eslint": "^10.8.0",
+    "eslint": "^10.9.0",
     "eslint-config-prettier": "10.1.8",
     "globals": "^17.9.0",
     "internal-package-contract": "github:MaverickCER/internal-package-contract#main",
@@ -166,7 +167,7 @@
     "typedoc-plugin-markdown": "4.13.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.65.0",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   },
   "overrides": {
     "esbuild": "^0.28.1",
