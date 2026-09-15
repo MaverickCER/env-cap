@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "env-cap-report",
-  "toolVersion": "0.3.0",
+  "toolVersion": "0.3.1",
   "ok": true,
   "requested": {
     "manifest": true,
@@ -157,8 +157,8 @@
   "evidence": {
     "schemaVersion": 1,
     "provenance": {
-      "generatedAt": "2026-09-11T20:44:16.437Z",
-      "toolVersion": "0.3.0"
+      "generatedAt": "2026-09-15T14:56:03.517Z",
+      "toolVersion": "0.3.1"
     },
     "contract": {
       "schemaVersion": 3,

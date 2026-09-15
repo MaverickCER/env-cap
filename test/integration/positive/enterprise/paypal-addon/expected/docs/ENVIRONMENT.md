@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-11T20:44:24.602Z_
+_Generated 2026-09-15T14:56:07.997Z_
 
 ## Changes since last report
 

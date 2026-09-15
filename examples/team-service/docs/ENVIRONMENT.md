@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-11T20:46:52.030Z_
+_Generated 2026-09-15T14:58:54.718Z_
 
 ## Changes since last report
 
@@ -154,10 +154,10 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-10-01 (**20d remaining**) | Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours. |
+| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-10-01 (**16d remaining**) | Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours. |
 | [`DATABASE_URL`](#mongodb-database_url) | data-platform-team | -- | -- |
 | [`MONGODB_REPLICA_SET`](#mongodb-mongodb_replica_set) | data-platform-team | -- | -- |
-| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-10-15 | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
+| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-10-15 (**30d remaining**) | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
 | [`DATABASE_PROVIDER`](#prisma-database_provider) | data-platform-team | -- | -- |
 
 ## Security review
@@ -169,7 +169,7 @@ One row per unique variable name; more than one location means more than one fea
 - Unique variable names: 4
 - Variables with `expiresAt` set: 2
   - Already expired: 0
-  - Expiring within 30 days: 1
+  - Expiring within 30 days: 2
 - Variables marked `required: true`: 1
 - Variables with refresh instructions: 2
 - Variables with no assigned owner: 0
