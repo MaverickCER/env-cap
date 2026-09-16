@@ -282,7 +282,7 @@ describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
     expect(files).toEqual([])
   })
 
-  it("throws a fast, actionable error instead of proceeding when \"include\" matches far more files than any legitimate single project -- the common real cause is a misconfigured/fallen-back \"root\", not a real 1000+-contract project", async () => {
+  it('throws a fast, actionable error instead of proceeding when "include" matches far more files than any legitimate single project -- the common real cause is a misconfigured/fallen-back "root", not a real 1000+-contract project', async () => {
     const seeded: Record<string, string> = {}
     for (let i = 0; i < 1001; i++) {
       seeded[`${memRoot}/features/feature-${String(i)}/env.schema.ts`] = "// contract\n"
