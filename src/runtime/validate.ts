@@ -119,7 +119,11 @@ async function runValidation(
       // `key` was just enumerated from `Object.keys(internals.schema)`, so
       // this is always a real entry -- noUncheckedIndexedAccess can't
       // express that invariant from an object index signature, only that
-      // indexing is *generally* unsafe.
+      // indexing is *generally* unsafe. A real guard (not a non-null
+      // assertion, forbidden in src/) satisfies the type checker without
+      // hiding the possibility. Hand-verified: mutating this condition away
+      // and running the real suite passes unchanged.
+      // Stryker disable next-line ConditionalExpression
       if (definition === undefined) continue
 
       // A variable whose context isn't active is skipped entirely -- no

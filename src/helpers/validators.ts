@@ -209,9 +209,15 @@ export function uuid(versions: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8]): Va
 
     // Capture group 3 is mandatory in the pattern (no `?`), so a successful
     // match always captures it -- noUncheckedIndexedAccess can't see that
-    // invariant through RegExpExecArray's numeric index signature.
+    // invariant through RegExpExecArray's numeric index signature. A real
+    // guard (not a non-null assertion, forbidden in src/) satisfies the type
+    // checker without hiding the possibility. Hand-verified: mutating this
+    // whole guard (its condition, its block, and its message) and running
+    // the real suite passes unchanged.
     const versionDigit = match[3]
+    // Stryker disable next-line ConditionalExpression, BlockStatement
     if (versionDigit === undefined) {
+      // Stryker disable next-line StringLiteral
       return "Expected a valid UUID ."
     }
     const version = Number.parseInt(versionDigit, 16)

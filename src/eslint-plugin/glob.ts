@@ -17,6 +17,11 @@
 /* jscpd:ignore-start -- deliberately duplicated across the build/ and eslint-plugin/ bundle boundaries; see this file's module doc */
 export function globToRegExp(pattern: string): RegExp {
   let out = ""
+  // Widening this bound to `<=` is a genuine no-op: on the one extra pass at
+  // `i === pattern.length`, `pattern[i]` is `undefined`, and the guard below
+  // already `continue`s past it before anything else in the loop body runs.
+  // Hand-verified: mutating this and running the real suite passes unchanged.
+  // Stryker disable next-line EqualityOperator
   for (let i = 0; i < pattern.length; i++) {
     const char = pattern[i]
     // The loop bound (`i < pattern.length`) already guarantees this branch
@@ -24,6 +29,9 @@ export function globToRegExp(pattern: string): RegExp {
     // invariant from a bounds-checked loop, only that string indexing is
     // *generally* unsafe. A real guard (not a non-null assertion, forbidden
     // in src/) satisfies the type checker without hiding the possibility.
+    // Hand-verified: mutating this condition away and running the real
+    // suite passes unchanged.
+    // Stryker disable next-line ConditionalExpression
     if (char === undefined) continue
     if (char === "*" && pattern[i + 1] === "*") {
       const precededBySlashOrStart = i === 0 || pattern[i - 1] === "/"

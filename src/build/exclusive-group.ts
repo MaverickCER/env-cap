@@ -31,18 +31,18 @@ export function detectExclusiveGroupIssues(
   const issues: CompatibilityIssue[] = []
 
   for (const [group, members] of [...byGroup.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    // Equivalent to `i <= members.length`: whenever `i >= members.length`,
-    // the inner loop's own `j = i + 1` starts already past `members.length`
-    // too, so its body never runs -- an extra outer iteration at the bound
-    // is a genuine no-op for any `members.length`, not just this test's.
-    // Stryker disable next-line EqualityOperator
-    for (let i = 0; i < members.length; i++) {
-      for (let j = i + 1; j < members.length; j++) {
-        const a = members[i]
-        const b = members[j]
-        // Both loop bounds already guarantee this branch is never taken --
-        // same reasoning as the outer loop's own guard above.
-        if (a === undefined || b === undefined) continue
+    // `.entries()`/`.slice()` pairwise iteration, not a manually-indexed
+    // `for (let i ...) for (let j = i + 1 ...)` double loop: besides needing
+    // no `a === undefined || b === undefined` bounds guard at all (`.entries()`
+    // yields real elements, never an out-of-bounds gap `noUncheckedIndexedAccess`
+    // would otherwise force a guard for), a hand-indexed loop here is a genuine
+    // liveness risk under mutation testing -- a mutant flipping `i++`/`j++` to
+    // `i--`/`j--`, or `<` to `>=`, makes the index walk away from the bound
+    // instead of toward it, looping until Stryker's own timeout rather than
+    // producing an observably wrong result a normal test could catch. Iterator
+    // protocol has no exposed counter for that class of mutation to target.
+    for (const [i, a] of members.entries()) {
+      for (const b of members.slice(i + 1)) {
         issues.push({
           severity: "error",
           variable: `Exclusive group "${group}"`,
