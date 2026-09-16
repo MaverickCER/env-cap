@@ -5,17 +5,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { runInitCommand } from "../../src/cli/init.js"
 
 // `runInitCommand` reads `process.cwd()` and writes to stdout/stderr. Each
-// test runs in a throwaway directory it chdir's into, and captures output.
+// test runs in a throwaway directory. Mocking `process.cwd()` itself, not
+// a real `process.chdir()`: the latter throws `ERR_WORKER_UNSUPPORTED_OPERATION`
+// under any worker-thread-based test runner (Stryker's own vitest-runner
+// included, unlike this project's default `vitest run` pool) -- a Node.js
+// platform restriction, not a vitest quirk -- confirmed directly (`npm run
+// mutation` aborted its whole dry run on this file before this fix). Same
+// technique this codebase's own test/build/usage-generate.test.ts (and
+// siblings) already use for the identical reason.
 
 let tmp: string
-let originalCwd: string
 let out: string[]
 let err: string[]
 
 beforeEach(() => {
-  originalCwd = process.cwd()
   tmp = mkdtempSync(path.join(os.tmpdir(), "env-cap-init-"))
-  process.chdir(tmp)
+  vi.spyOn(process, "cwd").mockReturnValue(tmp)
   out = []
   err = []
   vi.spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array) => {
@@ -30,7 +35,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
-  process.chdir(originalCwd)
   rmSync(tmp, { recursive: true, force: true })
 })
 

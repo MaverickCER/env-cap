@@ -19,15 +19,6 @@
       "replacement": "{}"
     },
     {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:BlockStatement:52f05a38568c",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-10 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "BlockStatement",
-      "original": "{\n      // Same \"utf8\" vs \"\" encoding equivalence as resolveUncached's own read\n      // above (JSON.parse coerces a Buffer via .toString() fine).\n      // Stryker disable next-line StringLiteral\n      const parsed: unknown = JSON.parse(await fs.readFile(candidate, \"utf8\"))\n      if (isRecord(parsed) && parsed.name === packageName) {\n        return { packageJsonPath: candidate, packageDir: dir }\n      }\n    }",
-      "replacement": "{}"
-    },
-    {
       "id": "mutation:src/build/resolution/resolve-package-schema.ts:BlockStatement:63a6a0d800a1",
       "version": 1,
       "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-10 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
@@ -43,15 +34,6 @@
       "file": "src/build/resolution/resolve-package-schema.ts",
       "mutator": "BlockStatement",
       "original": "{\n    return {\n      ok: false,\n      code: \"OUTSIDE_PACKAGE\",\n      reason: `\"${packageName}\"'s \"envCap.schema\" (\"${declaredField}\") resolves, after following symlinks, outside its own package directory.`,\n    }\n  }",
-      "replacement": "{}"
-    },
-    {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:BlockStatement:ae02183deac0",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-06 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived/NoCoverage. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "BlockStatement",
-      "original": "{\n    const candidate = path.join(dir, \"package.json\")\n    try {\n      // Same \"utf8\" vs \"\" encoding equivalence as resolveUncached's own read\n      // above (JSON.parse coerces a Buffer via .toString() fine).\n      // Stryker disable next-line StringLiteral\n      const parsed: unknown = JSON.parse(await fs.readFile(candidate, \"utf8\"))\n      if (isRecord(parsed) && parsed.name === packageName) {\n        return { packageJsonPath: candidate, packageDir: dir }\n      }\n    } catch {\n      // Not present, or not valid JSON, at this level -- keep walking.\n    }\n    const parent = path.dirname(dir)\n    // Bypassing this early exit is a pure performance no-op, not a real\n    // gap: when `parent === dir` (the real filesystem root), skipping the\n    // break falls through to `dir = parent`, which reassigns `dir` to its\n    // OWN current value -- the next iteration re-checks the exact same\n    // `candidate` path, which already failed to match this iteration, and\n    // keeps doing so until the loop's own iteration limit is exhausted.\n    // Same terminal PACKAGE_NOT_FOUND outcome either way. Hand-verified:\n    // mutating this and running the real suite passes unchanged.\n    // Stryker disable next-line ConditionalExpression\n    if (parent === dir) break // reached filesystem root\n    dir = parent\n  }",
       "replacement": "{}"
     },
     {
@@ -82,15 +64,6 @@
       "replacement": "false"
     },
     {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:3c745ae90fab",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-06 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived/NoCoverage. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "ConditionalExpression",
-      "original": "isRecord(parsed) && parsed.name === packageName",
-      "replacement": "true"
-    },
-    {
       "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:405ec4c7bb1d",
       "version": 1,
       "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-06 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived/NoCoverage. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
@@ -98,15 +71,6 @@
       "mutator": "ConditionalExpression",
       "original": "!stats.isFile()",
       "replacement": "false"
-    },
-    {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:512161847eb5",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-10 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "ConditionalExpression",
-      "original": "parsed.name === packageName",
-      "replacement": "true"
     },
     {
       "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:5371786129a8",
@@ -136,15 +100,6 @@
       "replacement": "false"
     },
     {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:8ac255520cc7",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-10 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "ConditionalExpression",
-      "original": "isRecord(envCapField) && typeof envCapField.schema === \"string\"",
-      "replacement": "true"
-    },
-    {
       "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:9f684dac8d38",
       "version": 1,
       "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-10 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
@@ -163,15 +118,6 @@
       "replacement": "false"
     },
     {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:EqualityOperator:5e31554d3847",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-10 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "EqualityOperator",
-      "original": "parsed.name === packageName",
-      "replacement": "parsed.name !== packageName"
-    },
-    {
       "id": "mutation:src/build/resolution/resolve-package-schema.ts:EqualityOperator:faabec9418a9",
       "version": 1,
       "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-06 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived/NoCoverage. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
@@ -179,15 +125,6 @@
       "mutator": "EqualityOperator",
       "original": "parent === dir",
       "replacement": "parent !== dir"
-    },
-    {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:LogicalOperator:a2f9ce4b07f4",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-06 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived/NoCoverage. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "LogicalOperator",
-      "original": "isRecord(parsed) && parsed.name === packageName",
-      "replacement": "isRecord(parsed) || parsed.name === packageName"
     },
     {
       "id": "mutation:src/build/resolution/resolve-package-schema.ts:ObjectLiteral:01f506b1a9b9",
