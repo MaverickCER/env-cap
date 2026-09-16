@@ -288,6 +288,14 @@ The build process creates the application-wide view required for:
 - `.env.example` files
 - configuration reports
 
+Every one of these draws a hard line between **declared** facts (author
+metadata — `owner`, `sensitivity`, `expiresAt`, `retention` — presence is
+checked, correctness never is) and **proven** facts (AST-derived —
+`UNCONSUMED_OWNED_VARIABLE`, the dependency graph). See
+[`specs/generated-artifacts.md`](specs/generated-artifacts.md) for the full
+list of what's generated today, the seven canonical fact models each one
+projects from, and what's deliberately deferred.
+
 Schemas are analyzed statically.
 
 They are never imported or executed during discovery.

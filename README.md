@@ -2,6 +2,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/maverickcer/env-cap/ci.yml?branch=main&label=CI)](https://github.com/maverickcer/env-cap/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
+[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/coverage-badge.json)](vitest.config.ts)
 [![Bundle size](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/size-badge.json)](specs/decisions/0008-gzip-size-budget.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178c6)](#quick-start)
 
@@ -166,6 +167,26 @@ declare → generate → validate → consume
 See the [Guide's Core workflow](GUIDE.md#core-workflow) for the complete generate/validate cycle.
 
 Node.js `>=18`. TypeScript 5+ is only required for build-time manifest generation; the runtime works in plain JavaScript. See the [runtime support matrix](GUIDE.md#runtime-support-matrix) for Node, browser bundles, edge runtimes, Bun, and Deno.
+
+## What declared metadata can express
+
+**Ownership and lifecycle data isn't documentation bolted onto validation — it's what the build-time analysis actually queries:**
+
+```ts
+documentEnv(paymentsSchema, {
+  owner: "payments-team",
+  variables: {
+    STRIPE_KEY: {
+      description: "Stripe secret key used to create charges and process refunds.",
+      owner: "payments-team",
+      expiresAt: "2027-01-01",
+      sensitivity: "secret",
+    },
+  },
+})
+```
+
+That `expiresAt` is what powers the "expiring soon or already expired" line in [See it run](#see-it-run) above — not a separate expiration-tracking system, the same declaration the validator already needs. The same build pass cross-references every declared variable against actual usage in your source, which is what produces the "unconsumed owned variable(s)" warning: a variable can be perfectly valid and still be a problem nobody's watching. The [Guide](GUIDE.md#capability-owned-contracts) has the full model — capability-scoped ownership, rotation cadence, storage provider, access policy.
 
 ## Why not just use existing tools?
 
