@@ -169,6 +169,18 @@ jobs:
           npm run test:evidence
           npm start
 
+      # Not a fourth flagship -- see examples/README.md's "Framework
+      # integration" section. `npm run build` is the real assertion here: it
+      # chains `docs` -> `scripts/validate-env.ts` (tsx) -> `next build`, so a
+      # regression in the fail-fast contract mechanism (or the
+      # serverExternalPackages/force-dynamic/per-chunk-import fixes this
+      # example's own README documents) fails CI, not just a typecheck.
+      - name: nextjs-app
+        working-directory: examples/nextjs-app
+        run: |
+          npm install
+          npm run build
+
       # Runs each flagship's real npm scripts against its own committed,
       # fake-but-plausible `.env` file and asserts on real stdout -- the
       # actual runtime path (validateEnv -> read a validated value), not just

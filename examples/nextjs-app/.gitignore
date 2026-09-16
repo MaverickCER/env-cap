@@ -1,0 +1,9 @@
+# Only node_modules and Next.js/TypeScript build output are ignored in this
+# example -- .env is intentionally committed (see .env's own comment) so this
+# example's runtime behavior is actually exercised in CI, not just its
+# build/generation step, matching examples/application's identical convention.
+node_modules
+.next
+next-env.d.ts
+tsconfig.tsbuildinfo
+!.env
