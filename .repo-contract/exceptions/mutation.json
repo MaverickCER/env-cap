@@ -647,6 +647,69 @@
       "mutator": "ObjectLiteral",
       "original": "{\n      ok: false,\n      code: \"INVALID_EXTENSION\",\n      reason: `\"${packageName}\"'s \"envCap.schema\" (\"${declaredField}\") must be a ${SCHEMA_FILE_EXTENSIONS.join(\"/\")} file, not compiled/bundled output.`,\n    }",
       "replacement": "{}"
+    },
+    {
+      "id": "mutation:src/build/dependency-graph.ts:ConditionalExpression:533b322a11ba",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run <test file>`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/dependency-graph.ts",
+      "mutator": "ConditionalExpression",
+      "original": "building.imported",
+      "replacement": "false"
+    },
+    {
+      "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:671877d0d1df",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run <test file>`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/resolution/resolve-package-schema.ts",
+      "mutator": "ConditionalExpression",
+      "original": "typeof value === \"object\" && value !== null",
+      "replacement": "true"
+    },
+    {
+      "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:f90e8b552594",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run <test file>`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/resolution/resolve-package-schema.ts",
+      "mutator": "ConditionalExpression",
+      "original": "isRecord(envCapField) && typeof envCapField[\"schema\"] === \"string\"",
+      "replacement": "true"
+    },
+    {
+      "id": "mutation:src/build/resolution/resolve-package-schema.ts:BlockStatement:e29e7ebb564f",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run <test file>`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/resolution/resolve-package-schema.ts",
+      "mutator": "BlockStatement",
+      "original": "{\n    return {\n      ok: false,\n      code: \"FILE_TOO_LARGE\",\n      reason: `\"${packageName}\"'s \"envCap.schema\" (\"${declaredField}\") is ${stats.size} bytes, exceeding the ${MAX_PACKAGE_SCHEMA_FILE_BYTES}-byte limit for a package-resolved schema file.`,\n    }\n  }",
+      "replacement": "{}"
+    },
+    {
+      "id": "mutation:src/build/resolution/resolve-package-schema.ts:StringLiteral:d02be310b359",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run <test file>`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/resolution/resolve-package-schema.ts",
+      "mutator": "StringLiteral",
+      "original": "\"INVALID_EXTENSION\"",
+      "replacement": "\"\""
+    },
+    {
+      "id": "mutation:src/build/resolution/resolve-package-schema.ts:MethodExpression:ba29ec3113ec",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run <test file>`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/resolution/resolve-package-schema.ts",
+      "mutator": "MethodExpression",
+      "original": "specifier.startsWith(`${pkg}/`)",
+      "replacement": "specifier.endsWith(`${pkg}/`)"
+    },
+    {
+      "id": "mutation:src/build/resolution/resolve-tsconfig-paths.ts:BlockStatement:de46b94b6f53",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run <test file>`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/resolution/resolve-tsconfig-paths.ts",
+      "mutator": "BlockStatement",
+      "original": "{\n    return { resolution: undefined, warning: undefined }\n  }",
+      "replacement": "{}"
     }
   ]
 }

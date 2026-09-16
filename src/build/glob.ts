@@ -61,6 +61,10 @@ export function globToRegExp(pattern: string): RegExp {
     // invariant from a bounds-checked loop, only that string indexing is
     // *generally* unsafe. A real guard (not a non-null assertion, forbidden
     // in src/) satisfies the type checker without hiding the possibility.
+    // Hand-verified: mutating this condition to `false` and running the
+    // real suite passes unchanged -- this branch is provably unreachable
+    // within the loop bound, so no test can ever exercise it.
+    // Stryker disable next-line ConditionalExpression
     if (char === undefined) continue
     if (char === "*" && pattern[i + 1] === "*") {
       const precededBySlashOrStart = i === 0 || pattern[i - 1] === "/"
