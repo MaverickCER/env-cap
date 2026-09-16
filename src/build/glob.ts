@@ -36,6 +36,11 @@ export function globToRegExp(pattern: string): RegExp {
   // a change to any of them.
   // Stryker disable next-line ArithmeticOperator
   const maxPasses = pattern.length * 2 + 4
+  // Widening this bound to `<=` is a genuine no-op: on the one extra pass at
+  // `i === pattern.length`, `pattern[i]` is `undefined`, and the guard below
+  // already `continue`s past it before anything else in the loop body runs.
+  // Hand-verified: mutating this and running the real suite passes unchanged.
+  // Stryker disable next-line EqualityOperator
   for (let i = 0; i < pattern.length; i++) {
     // Stryker disable next-line UpdateOperator
     passes++
