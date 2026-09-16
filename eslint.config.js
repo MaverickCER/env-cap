@@ -243,6 +243,7 @@ export default tseslint.config(
       "test/build/generate-env-artifacts.test.ts",
       "test/build/tool-version.test.ts",
       "test/build/resolution/resolve-import.test.ts",
+      "test/cli/init.test.ts",
     ],
     rules: {
       "@typescript-eslint/consistent-type-imports": ["error", { disallowTypeAnnotations: false }],

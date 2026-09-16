@@ -21,7 +21,14 @@ import path from "node:path"
  * `verify-no-ambient-fs` tarball guard exactly as `src/cli/index.ts` is.
  */
 
-const USAGE = `Usage: env-cap init
+// USAGE/SCHEMA_TEMPLATE/GENERATOR_TEMPLATE are functions, not module-level
+// `const`s: a module-level const is evaluated once at import time, not per
+// test, so Stryker's perTest coverage analysis can't attribute it to any
+// single test and reports mutants on it Survived/NoCoverage even when tests
+// do exercise the rendered content. A function called at each use site is
+// evaluated during the test itself, which Stryker can attribute correctly.
+function usage(): string {
+  return `Usage: env-cap init
 
 Scaffolds a minimal env-cap starting point into the current directory:
 
@@ -32,8 +39,10 @@ Never overwrites an existing file, never runs anything, never edits
 package.json. Everything else -- generating artifacts, wiring validateEnv()
 into startup -- is printed as a next step. Run generation afterwards with
 \`node scripts/generate-env.mjs\` or \`npx env-cap --location <path>\`.`
+}
 
-const SCHEMA_TEMPLATE = `// Starter env-cap capability contract -- expand it: add your real variables,
+function schemaTemplate(): string {
+  return `// Starter env-cap capability contract -- expand it: add your real variables,
 // split into per-capability files (e.g. features/<name>/env.schema.ts), or
 // keep everything here. env-cap discovers every **/env.schema.ts by default.
 //
@@ -63,8 +72,10 @@ documentEnv(schema, {
   },
 })
 `
+}
 
-const GENERATOR_TEMPLATE = `// Build-time only. Run with \`node scripts/generate-env.mjs\`, or wire it into
+function generatorTemplate(): string {
+  return `// Build-time only. Run with \`node scripts/generate-env.mjs\`, or wire it into
 // a package.json script (e.g. "generate:env"). Never imported by app code.
 import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
 import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
@@ -88,6 +99,7 @@ console.log(\`Discovered \${result.manifest?.contracts.length ?? 0} contract(s).
 if (result.manifest?.outputPath) console.log(\`Wrote manifest: \${result.manifest.outputPath}\`)
 if (result.docs?.docsPath) console.log(\`Wrote docs: \${result.docs.docsPath}\`)
 `
+}
 
 type WriteOutcome = "created" | "skipped"
 
@@ -119,6 +131,15 @@ function assertIsProject(cwd: string): void {
   }
   let parsed: unknown
   try {
+    // Stryker disable next-line StringLiteral: hand-verified equivalent --
+    // `readFileSync(path, "")` (the mutant) falls back to returning a
+    // `Buffer` (an empty string isn't a recognized encoding), but
+    // `JSON.parse` calls `.toString()` on any non-string input, which
+    // defaults to utf8 for a `Buffer` -- so both encodings produce an
+    // identical `JSON.parse` result for any file content this function can
+    // ever see. Confirmed directly: `JSON.parse(readFileSync(p, ""))` on a
+    // real UTF-8 JSON file parses identically to `JSON.parse(readFileSync(p,
+    // "utf8"))`.
     parsed = JSON.parse(readFileSync(packageJsonPath, "utf8"))
   } catch {
     // No binding: the SyntaxError carries only a char offset, nothing the
@@ -162,12 +183,12 @@ function planTargets(cwd: string): [ScaffoldTarget, ScaffoldTarget] {
     {
       label: path.relative(cwd, schemaPath),
       absolutePath: schemaPath,
-      content: SCHEMA_TEMPLATE,
+      content: schemaTemplate(),
     },
     {
       label: path.relative(cwd, generatorPath),
       absolutePath: generatorPath,
-      content: GENERATOR_TEMPLATE,
+      content: generatorTemplate(),
     },
   ]
 }
@@ -190,7 +211,7 @@ function writeIfAbsent(filePath: string, content: string): WriteOutcome {
   }
 }
 
-function isFileExistsError(error: unknown): boolean {
+export function isFileExistsError(error: unknown): boolean {
   return (
     typeof error === "object" && error !== null && (error as { code?: unknown }).code === "EEXIST"
   )
@@ -252,11 +273,11 @@ function renderReport(report: InitReport): string {
  */
 export function runInitCommand(rest: readonly string[]): number {
   if (rest.includes("--help") || rest.includes("-h")) {
-    process.stdout.write(`${USAGE}\n`)
+    process.stdout.write(`${usage()}\n`)
     return 0
   }
   if (rest.length > 0) {
-    process.stderr.write(`env-cap init takes no arguments (got: ${rest.join(" ")})\n\n${USAGE}\n`)
+    process.stderr.write(`env-cap init takes no arguments (got: ${rest.join(" ")})\n\n${usage()}\n`)
     return 1
   }
 
