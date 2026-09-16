@@ -180,7 +180,40 @@ export function parseArgs(argv: string[]): ParsedArgs {
     help: false,
   }
 
+  // A fast-failing pass-count guard, independent of `i` itself: on any real
+  // input `i` strictly advances toward `argv.length` every pass (the loop's
+  // own `i++`, plus an extra `++i` when a value flag consumes its argument),
+  // so no correct input ever needs more passes than `argv.length`. A mutation
+  // that reverses the loop's own advance (`i++` -> `i--`) makes `i` walk
+  // *away* from `argv.length` instead -- an infinite loop that produces no
+  // observably wrong result for an assertion-based test to catch, only a hang
+  // until Stryker's own mutant timeout. This counter climbs every pass
+  // regardless of `i`'s (possibly-mutated) motion, so it still reaches its
+  // bound and throws an ordinary, fast error instead.
+  let passes = 0
+  // The guard's own arithmetic/direction/comparison below are just as
+  // unreachable/inconsequential for any correct `argv` as the guard body
+  // itself (see the disable comment on the `if` below): under correct code
+  // `passes` never approaches `maxPasses`, so no real test input can observe
+  // a change to any of them.
+  // Stryker disable next-line ArithmeticOperator
+  const maxPasses = argv.length * 2 + 4
   for (let i = 0; i < argv.length; i++) {
+    // Stryker disable next-line UpdateOperator
+    passes++
+    // Unreachable by design for any correct `argv`, the same way the
+    // `arg = argv[i] ?? ""` fallback just below is: this guard's whole
+    // purpose is to fail fast when a *mutated* build's loop-advance is
+    // broken, so no real test input (which only ever exercises correct
+    // code) can reach it. A test that reached it would itself require an
+    // already-broken build to construct.
+    // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
+    if (passes > maxPasses) {
+      throw new Error(
+        // Stryker disable next-line StringLiteral
+        `parseArgs: exceeded ${String(maxPasses)} iterations parsing ${String(argv.length)} argument(s) -- this should never happen for any real argv and indicates an internal parsing bug.`,
+      )
+    }
     // Provably unreachable for any real `string[]` input: the loop condition
     // `i < argv.length` guarantees `argv[i]` is in-bounds (hence defined)
     // every time this line runs, whether `i` just advanced by the outer

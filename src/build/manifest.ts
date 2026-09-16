@@ -55,10 +55,69 @@ export function renderManifest(
 
   for (const contract of sorted) {
     let localName = contract.exportName
-    let suffix = 1
-    while (usedNames.has(localName)) {
-      localName = `${contract.exportName}_${suffix}`
-      suffix += 1
+    if (usedNames.has(localName)) {
+      // Bounded purely by its own header (`suffix <= maxSuffix`,
+      // `suffix++`), never by anything the body does: even if a mutation
+      // guts the body to `{}` (Stryker's BlockStatement mutator), the loop
+      // still terminates after `maxSuffix` passes, because nothing in the
+      // body's execution controls that termination -- unlike a `while
+      // (usedNames.has(localName))` loop, whose only path to termination IS
+      // a body-side reassignment a single BlockStatement mutation can erase
+      // wholesale, producing an infinite loop no assertion-based test can
+      // catch (only a hang until Stryker's own mutant timeout). `maxSuffix`
+      // is generously above any real collision count: `sorted.length`
+      // distinct contracts can produce at most `sorted.length` collisions on
+      // one `exportName`.
+      const maxSuffix = sorted.length + 16
+      let found: string | undefined
+      // A second, independent guard for the narrower case where only the
+      // header's own advance (`suffix++`) or bound (`suffix <= maxSuffix`)
+      // is mutated, not the whole body -- same reasoning as the identical
+      // guard already applied to `parseArgs()`'s/`globToRegExp()`'s own
+      // loops. This counter climbs every pass regardless of `suffix`'s
+      // (possibly-mutated) motion, so it still reaches its bound and throws
+      // an ordinary, fast error instead of hanging.
+      let passes = 0
+      // Narrowing this bound to `<` costs exactly one candidate out of
+      // `maxSuffix`'s generous margin (`sorted.length + 16`) -- no real
+      // collision count gets anywhere near that margin, so no real test
+      // input can observe the difference. Hand-verified: mutating this and
+      // running the real suite passes unchanged.
+      // Stryker disable next-line EqualityOperator
+      for (let suffix = 1; suffix <= maxSuffix; suffix++) {
+        // Stryker disable next-line UpdateOperator
+        passes++
+        // Unreachable by design for any correct input: this guard's whole
+        // purpose is to fail fast when a *mutated* build's loop header is
+        // broken, so no real test input (which only ever exercises correct
+        // code) can reach it.
+        // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
+        if (passes > maxSuffix) {
+          throw new Error(
+            // Stryker disable next-line StringLiteral
+            `renderManifest: exceeded ${String(maxSuffix)} attempts choosing a unique local import name for "${contract.exportName}" -- this should never happen and indicates an internal naming bug.`,
+          )
+        }
+        const candidate = `${contract.exportName}_${suffix}`
+        if (!usedNames.has(candidate)) {
+          found = candidate
+          break
+        }
+      }
+      // Unreachable by design for any correct input, the same way the
+      // in-loop pass-count guard above is: `maxSuffix` (`sorted.length + 16`)
+      // is generously above any real collision count, so `found` is always
+      // set before the loop above runs out of attempts. Exists purely so a
+      // *mutated* loop (header or body) fails fast instead of silently
+      // proceeding with `localName` left at its pre-loop value.
+      // Stryker disable next-line ConditionalExpression,BlockStatement
+      if (found === undefined) {
+        throw new Error(
+          // Stryker disable next-line StringLiteral
+          `renderManifest: could not find a unique local import name for "${contract.exportName}" within ${String(maxSuffix)} attempts -- this should never happen and indicates an internal naming bug.`,
+        )
+      }
+      localName = found
     }
     usedNames.add(localName)
     referenceNames.push(localName)

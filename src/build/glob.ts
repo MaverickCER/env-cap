@@ -17,7 +17,39 @@
 /* jscpd:ignore-start -- deliberately duplicated across the build/ and eslint-plugin/ bundle boundaries; see this file's module doc */
 export function globToRegExp(pattern: string): RegExp {
   let out = ""
+  // A fast-failing pass-count guard, independent of `i` itself: on any real
+  // `pattern`, `i` strictly advances toward `pattern.length` every pass (the
+  // loop's own `i++`, plus an extra `i += 1`/`i += 2` when a `**` segment
+  // consumes lookahead characters), so no correct input ever needs more
+  // passes than `pattern.length`. A mutation that reverses any of those
+  // advances (`i++` -> `i--`, `i += 1` -> `i -= 1`, `i += 2` -> `i -= 2`)
+  // makes `i` walk away from `pattern.length` instead -- an infinite loop
+  // that produces no observably wrong result for an assertion-based test to
+  // catch, only a hang until Stryker's own mutant timeout. This counter
+  // climbs every pass regardless of `i`'s (possibly-mutated) motion, so it
+  // still reaches its bound and throws an ordinary, fast error instead.
+  let passes = 0
+  // The guard's own arithmetic/direction/comparison below are just as
+  // unreachable/inconsequential for any correct `pattern` as the guard body
+  // itself (see the disable comment on the `if` below): under correct code
+  // `passes` never approaches `maxPasses`, so no real test input can observe
+  // a change to any of them.
+  // Stryker disable next-line ArithmeticOperator
+  const maxPasses = pattern.length * 2 + 4
   for (let i = 0; i < pattern.length; i++) {
+    // Stryker disable next-line UpdateOperator
+    passes++
+    // Unreachable by design for any correct `pattern`, the same way the
+    // `char === undefined` guard just below is: this guard's whole purpose
+    // is to fail fast when a *mutated* build's loop-advance is broken, so no
+    // real test input (which only ever exercises correct code) can reach it.
+    // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
+    if (passes > maxPasses) {
+      throw new Error(
+        // Stryker disable next-line StringLiteral
+        `globToRegExp: exceeded ${String(maxPasses)} iterations parsing pattern ${JSON.stringify(pattern)} -- this should never happen for any real pattern and indicates an internal parsing bug.`,
+      )
+    }
     const char = pattern[i]
     // The loop bound (`i < pattern.length`) already guarantees this branch
     // is never taken -- noUncheckedIndexedAccess can't express that
