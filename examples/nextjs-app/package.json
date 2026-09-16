@@ -6,9 +6,10 @@
   "scripts": {
     "docs": "env-cap --include \"src/features/**/env.*.schema.ts\" --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --env-example-on-existing overwrite --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json",
     "check": "env-cap --include \"src/features/**/env.*.schema.ts\" --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
+    "docs:alignment": "npm run docs && tsx scripts/open-config-alignment/run.ts",
     "typecheck": "npm run docs && tsc --noEmit",
     "dev": "npm run docs && next dev",
-    "build": "npm run docs && tsx scripts/validate-env.ts && next build",
+    "build": "npm run docs:alignment && tsx scripts/validate-env.ts && next build",
     "start": "next start"
   },
   "dependencies": {

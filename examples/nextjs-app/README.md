@@ -34,8 +34,11 @@ docs/
   ENVIRONMENT.md                <- generated
   OWNERSHIP.md                  <- generated
   env.evidence.json             <- generated, the full EvidenceModel
+  ISO-10007-2017.md             <- generated (npm run docs:alignment); see below
+  ISO-IEC-27001-2022.md         <- generated (npm run docs:alignment); see below
 scripts/
   validate-env.ts                <- the real `next build`-time gate (see below)
+  open-config-alignment/         <- reads docs/env.evidence.json, writes the two reports above
 next.config.ts
 ```
 
@@ -92,6 +95,25 @@ static generation runs in a worker that never calls `instrumentation.ts`'s
 `register()` at all, so a statically prerendered page would hit
 `EnvNotReadyError` no matter what. Forcing dynamic rendering defers every
 read to real request time.
+
+## The open-standard alignment reports
+
+`npm run docs:alignment` (and `npm run build`, which chains it) regenerates
+[`docs/ISO-10007-2017.md`](docs/ISO-10007-2017.md) and
+[`docs/ISO-IEC-27001-2022.md`](docs/ISO-IEC-27001-2022.md) — **informational
+evidence reports, not certifications** — by running this app's own
+`docs/env.evidence.json` through `env-cap`'s three published reference
+evidence projections (`env-cap/build`: Configuration Reference, Ownership
+Summary, Expiring-Soon Report) and mapping the results against each
+standard's own published process/control-theme structure. Neither ISO
+10007 nor ISO/IEC 27001 is quoted or reproduced — only their short,
+table-of-contents-level structure (five configuration management
+activities; four Annex A control-theme categories), corroborated against
+independent public summaries, not the purchasable standards themselves. See
+[`scripts/open-config-alignment/README.md`](scripts/open-config-alignment/README.md)
+for why two separate open structures were used (no single open
+methodology's structure fit both target documents), and why the 12-Factor
+App methodology, though considered, wasn't used as the primary substrate.
 
 ## Run it
 
