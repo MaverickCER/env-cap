@@ -166,6 +166,19 @@ describe("buildLifecycleModel", () => {
     ])
   })
 
+  it("filters in a variable when ONLY removeBy is set (no expiresAt/deprecated/refreshInstructions/renamedFrom/retention)", () => {
+    // Isolates `variable.removeBy !== undefined` in `hasLifecycleData`'s
+    // OR-chain -- every other test combines it with `deprecated`, which
+    // alone would already satisfy the OR.
+    const contract = makeContract({
+      file: "/repo/a/env.schema.ts",
+      exportName: "aEnv",
+      variables: [makeVariable({ key: "REMOVE_ONLY", removeBy: "2027-06-01" })],
+    })
+    const model = buildLifecycleModel([contract], 30, NOW, "/repo")
+    expect(model.contracts[0]?.variables.map((v) => v.key)).toEqual(["REMOVE_ONLY"])
+  })
+
   it("carries every lifecycle field through to the variable entry", () => {
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",

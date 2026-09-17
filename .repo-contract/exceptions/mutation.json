@@ -568,24 +568,6 @@
       "replacement": "i >= PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT"
     },
     {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:BlockStatement:a0d0514dbcd3",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts test/build/resolution/resolve-package-schema.test.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of (same file, same class of misattribution as this registry's existing resolve-package-schema.ts entries).",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "BlockStatement",
-      "original": "{\n    const candidate = path.join(dir, \"package.json\")\n    try {\n      // Same \"utf8\" vs \"\" encoding equivalence as resolveUncached's own read\n      // above (JSON.parse coerces a Buffer via .toString() fine).\n      // Stryker disable next-line StringLiteral\n      const parsed: unknown = JSON.parse(await fs.readFile(candidate, \"utf8\"))\n      if (isRecord(parsed) && parsed[\"name\"] === packageName) {\n        return { packageJsonPath: candidate, packageDir: dir }\n      }\n    } catch {\n      // Not present, or not valid JSON, at this level -- keep walking.\n    }\n    const parent = path.dirname(dir)\n    // Bypassing this early exit is a pure performance no-op, not a real\n    // gap: when `parent === dir` (the real filesystem root), skipping the\n    // break falls through to `dir = parent`, which reassigns `dir` to its\n    // OWN current value -- the next iteration re-checks the exact same\n    // `candidate` path, which already failed to match this iteration, and\n    // keeps doing so until the loop's own iteration limit is exhausted.\n    // Same terminal PACKAGE_NOT_FOUND outcome either way. Hand-verified:\n    // mutating this and running the real suite passes unchanged.\n    // Stryker disable next-line ConditionalExpression\n    if (parent === dir) break // reached filesystem root\n    dir = parent\n  }",
-      "replacement": "{}"
-    },
-    {
-      "id": "mutation:src/build/resolution/resolve-package-schema.ts:BlockStatement:f14c7a39701c",
-      "version": 1,
-      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts test/build/resolution/resolve-package-schema.test.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of (same file, same class of misattribution as this registry's existing resolve-package-schema.ts entries).",
-      "file": "src/build/resolution/resolve-package-schema.ts",
-      "mutator": "BlockStatement",
-      "original": "{\n      // Same \"utf8\" vs \"\" encoding equivalence as resolveUncached's own read\n      // above (JSON.parse coerces a Buffer via .toString() fine).\n      // Stryker disable next-line StringLiteral\n      const parsed: unknown = JSON.parse(await fs.readFile(candidate, \"utf8\"))\n      if (isRecord(parsed) && parsed[\"name\"] === packageName) {\n        return { packageJsonPath: candidate, packageDir: dir }\n      }\n    }",
-      "replacement": "{}"
-    },
-    {
       "id": "mutation:src/build/resolution/resolve-package-schema.ts:ConditionalExpression:7a1dfc87bbe0",
       "version": 1,
       "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-17 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts test/build/resolution/resolve-package-schema.test.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of (same file, same class of misattribution as this registry's existing resolve-package-schema.ts entries).",
