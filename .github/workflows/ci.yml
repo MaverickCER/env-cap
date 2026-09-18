@@ -17,6 +17,35 @@ permissions:
 # this workflow is what turns that budget from a script someone could forget
 # to run into a check every change actually has to pass.
 jobs:
+  # Dev-tooling checks (lint/format/API-report) are a property of the source
+  # repo, not the published package's own runtime behavior across Node
+  # versions -- unlike `verify` below, running them once on a single modern
+  # Node version is correct, not a coverage gap. Splitting them out here
+  # (rather than repeating them on every `verify` matrix leg) also sidesteps
+  # a real incompatibility: internal-package-contract's shared ESLint
+  # baseline pulls in ESLint 10.x, whose own `engines.node` is `^20.19.0 ||
+  # ^22.13.0 || >=24` -- it does not run on Node 18.x at all, which `verify`
+  # below still (correctly) tests package.json's own `engines.node`
+  # (`>=18.0.0`) promise against.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      # The committed Markdown API report (docs/api-report/) must match a
+      # fresh `typedoc --options typedoc.markdown.json` -- a public API
+      # change can't land without the report, and the PR diff, updated too.
+      - run: npm run docs:api:report:check
+
   verify:
     runs-on: ubuntu-latest
     strategy:
@@ -32,17 +61,11 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run format:check
       - run: npm run build
       - run: npm run test:coverage
       - run: npm run size
       - run: npm run verify:no-ambient-fs
       - run: npm run verify:no-ambient-child-process
-      # The committed Markdown API report (docs/api-report/) must match a
-      # fresh `typedoc --options typedoc.markdown.json` -- a public API
-      # change can't land without the report, and the PR diff, updated too.
-      - run: npm run docs:api:report:check
 
   verify-current:
     runs-on: ubuntu-latest
@@ -67,7 +90,7 @@ jobs:
   # just declared as a devDependency. Node 24.x to match
   # internal-package-contract's own engines.node floor.
   contract:
-    needs: [verify]
+    needs: [verify, lint]
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 -- the Commits check reads origin/main..HEAD.
@@ -344,7 +367,7 @@ jobs:
   # `continue-on-error: true` and non-blocking -- gating the docs deploy on it
   # would contradict its own documented purpose.
   badges:
-    needs: [verify, cross-runtime]
+    needs: [verify, lint, cross-runtime]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
