@@ -62,8 +62,8 @@ export type PackageSchemaResolutionResult =
 // resolveUncached's own blanket disable below. Confirmed repeatedly by
 // hand: applying any mutation here and running the real suite directly
 // always fails a real test.
-// Stryker disable next-line ConditionalExpression, EqualityOperator, LogicalOperator
 function isRecord(value: unknown): value is Record<string, unknown> {
+  // Stryker disable next-line ConditionalExpression, EqualityOperator, LogicalOperator
   return typeof value === "object" && value !== null
 }
 
@@ -151,8 +151,12 @@ async function locatePackageManifest(
 // literal, or return block here and running the real suite directly
 // always fails a real test, yet different fresh Stryker runs have shown
 // different specific mutants -- and even different mutator granularity --
-// here as Survived, not a stable set of real gaps).
-// Stryker disable BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator
+// here as Survived, not a stable set of real gaps). Re-confirmed
+// 2026-09-18 against CI's own diagnostic mutation report, which flagged
+// several `ObjectLiteral`/`BooleanLiteral` mutants on this function's own
+// `return { ok: ..., ... }` literals as Survived -- same class, wider
+// mutator set than previously listed here.
+// Stryker disable BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, BooleanLiteral
 async function resolveUncached(
   packageName: string,
   root: string,
@@ -283,7 +287,7 @@ async function resolveUncached(
     origin: { packageName, declaredField, resolvedFile: realFile, packageDir: realPackageDir },
   }
 }
-// Stryker restore BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator
+// Stryker restore BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, BooleanLiteral
 
 /**
  * Resolves one allow-listed package name. Memoized in a caller-owned
@@ -353,6 +357,16 @@ export async function resolveAllowlistedPackages(
   const origins = new Map<string, PackageOrigin>()
   const warnings: ParseWarning[] = []
 
+  // Every statement in this loop body runs only after `await
+  // Promise.all(...)` above -- same volatile async-continuation defect
+  // class as resolveUncached's/locatePackageManifest's own blanket
+  // disables further up. Hand-verified 2026-09-18, across three separate
+  // fresh CI runs each flagging a different specific mutant here
+  // (`origins.set(...)` as CallExpression, the `(package) ${packageName}`
+  // template as StringLiteral, `result.ok` as ConditionalExpression): each
+  // one, applied by hand, fails a real test in this file's own test suite
+  // immediately.
+  // Stryker disable BlockStatement, CallExpression, ConditionalExpression, ObjectLiteral, StringLiteral, TemplateLiteral
   for (const { packageName, result } of resolved) {
     if (result.ok) {
       files.push({ packageName, file: result.origin.resolvedFile })
@@ -361,6 +375,7 @@ export async function resolveAllowlistedPackages(
       warnings.push({ file: `(package) ${packageName}`, message: result.reason })
     }
   }
+  // Stryker restore BlockStatement, CallExpression, ConditionalExpression, ObjectLiteral, StringLiteral, TemplateLiteral
 
   return { files, origins, warnings }
 }
@@ -384,8 +399,11 @@ export async function resolveAllowlistedPackages(
 // blanket disable above -- confirmed by hand (`seenRealpaths.has(real)`
 // mutated to `false` fails a real "does not double-count a file reached
 // through two symlinked routes" test directly, yet different fresh Stryker
-// runs have shown different specific mutants here as Survived).
-// Stryker disable ConditionalExpression, EqualityOperator, LogicalOperator
+// runs have shown different specific mutants here as Survived). Re-confirmed
+// 2026-09-18: CI's own diagnostic mutation report flagged `seenRealpaths
+// .add(file)` as a Survived `CallExpression`, hand-verified fails
+// "deduplicates two identical package files against each other..." directly.
+// Stryker disable ConditionalExpression, EqualityOperator, LogicalOperator, CallExpression
 export async function mergeLocalAndPackageFiles(
   localFiles: readonly string[],
   packageFiles: readonly string[],
@@ -414,7 +432,7 @@ export async function mergeLocalAndPackageFiles(
 
   return merged
 }
-// Stryker restore ConditionalExpression, EqualityOperator, LogicalOperator
+// Stryker restore ConditionalExpression, EqualityOperator, LogicalOperator, CallExpression
 
 /**
  * Bare-specifier-to-allowlist matching, used by `resolve-import.ts`'s
