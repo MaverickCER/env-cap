@@ -98,6 +98,32 @@ describe("buildDependencyModel", () => {
     expect(model.contracts[0]?.ambiguousBarrelFiles).toEqual(["a-consumer.ts", "z-consumer.ts"])
   })
 
+  it("sorts a single contract's consumingFiles by display path, not scan order", async () => {
+    const schemaFile = await write(
+      "payments/env.schema.ts",
+      `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
+    )
+    const zConsumer = await write(
+      "z-consumer.ts",
+      `import { paymentsEnv } from "./payments/env.schema.js";\npaymentsEnv.STRIPE_KEY;\n`,
+    )
+    const aConsumer = await write(
+      "a-consumer.ts",
+      `import { paymentsEnv } from "./payments/env.schema.js";\npaymentsEnv.STRIPE_KEY;\n`,
+    )
+
+    const contracts = await discover([schemaFile])
+    const model = await buildDependencyModel(
+      contracts,
+      [schemaFile, zConsumer, aConsumer],
+      readFile,
+      context,
+      fixtureRoot,
+    )
+
+    expect(model.contracts[0]?.consumingFiles).toEqual(["a-consumer.ts", "z-consumer.ts"])
+  })
+
   it("threads per-access-site file:line:column positions through into the variable's model entry", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",
