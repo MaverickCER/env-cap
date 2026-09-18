@@ -83,6 +83,12 @@ describe("checkEnvArtifacts", () => {
       "manifest",
       "usage",
     ])
+    // exactOptionalPropertyTypes: `detail` must be genuinely ABSENT for an
+    // "ok" finding, not present-but-undefined -- `"detail" in f` (not
+    // `f.detail === undefined`, which `toEqual`/`objectContaining` would
+    // treat as equivalent to absent anyway) is what actually distinguishes
+    // the two.
+    expect(result.findings.some((f) => "detail" in f)).toBe(false)
 
     const after = await Promise.all(
       [manifestPath, docsPath, envExamplePath, ownershipPath].map(async (p) => ({
