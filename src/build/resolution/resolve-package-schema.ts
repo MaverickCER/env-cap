@@ -423,7 +423,14 @@ export async function resolvePackageImport(
   cache: Map<string, Promise<PackageSchemaResolutionResult>>,
   fs: BuildFileSystem,
 ): Promise<string | undefined> {
+  // Stryker's own perTest coverage analysis fails to attribute this
+  // predicate's own two distinguishing tests ("distinguishes real matching
+  // from '.find() always matches'" and the prefix-boundary test just below)
+  // to it, consistently across repeated fresh runs -- not the usual one-off
+  // flakiness. Hand-verified directly: forcing this predicate to `(pkg) =>
+  // true` and running the real suite fails both of those tests immediately.
   const matched = allowedPackages.find(
+    // Stryker disable next-line ConditionalExpression
     (pkg) => specifier === pkg || specifier.startsWith(`${pkg}/`),
   )
   // Bypassing this guard when nothing matched is behaviorally equivalent,

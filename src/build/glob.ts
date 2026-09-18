@@ -50,6 +50,7 @@ export function globToRegExp(pattern: string): RegExp {
     // real test input (which only ever exercises correct code) can reach it.
     // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
     if (passes > maxPasses) {
+      // Stryker disable next-line CallExpression
       throw new Error(
         // Stryker disable next-line StringLiteral
         `globToRegExp: exceeded ${String(maxPasses)} iterations parsing pattern ${JSON.stringify(pattern)} -- this should never happen for any real pattern and indicates an internal parsing bug.`,

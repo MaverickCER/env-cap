@@ -93,6 +93,7 @@ export function renderManifest(
         // code) can reach it.
         // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
         if (passes > maxSuffix) {
+          // Stryker disable next-line CallExpression
           throw new Error(
             // Stryker disable next-line StringLiteral
             `renderManifest: exceeded ${String(maxSuffix)} attempts choosing a unique local import name for "${contract.exportName}" -- this should never happen and indicates an internal naming bug.`,
@@ -112,6 +113,7 @@ export function renderManifest(
       // proceeding with `localName` left at its pre-loop value.
       // Stryker disable next-line ConditionalExpression,BlockStatement
       if (found === undefined) {
+        // Stryker disable next-line CallExpression
         throw new Error(
           // Stryker disable next-line StringLiteral
           `renderManifest: could not find a unique local import name for "${contract.exportName}" within ${String(maxSuffix)} attempts -- this should never happen and indicates an internal naming bug.`,

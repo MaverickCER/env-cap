@@ -209,6 +209,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
     // already-broken build to construct.
     // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
     if (passes > maxPasses) {
+      // Stryker disable next-line CallExpression
       throw new Error(
         // Stryker disable next-line StringLiteral
         `parseArgs: exceeded ${String(maxPasses)} iterations parsing ${String(argv.length)} argument(s) -- this should never happen for any real argv and indicates an internal parsing bug.`,
