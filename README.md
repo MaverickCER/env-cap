@@ -166,7 +166,7 @@ declare → generate → validate → consume
 
 See the [Guide's Core workflow](GUIDE.md#core-workflow) for the complete generate/validate cycle.
 
-Node.js `>=18`. TypeScript 5+ is only required for build-time manifest generation; the runtime works in plain JavaScript. See the [runtime support matrix](GUIDE.md#runtime-support-matrix) for Node, browser bundles, edge runtimes, Bun, and Deno.
+Node.js `>=20`. TypeScript 5+ is only required for build-time manifest generation; the runtime works in plain JavaScript. See the [runtime support matrix](GUIDE.md#runtime-support-matrix) for Node, browser bundles, edge runtimes, Bun, and Deno.
 
 ## What declared metadata can express
 

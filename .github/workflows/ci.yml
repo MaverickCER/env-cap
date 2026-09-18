@@ -21,12 +21,7 @@ jobs:
   # repo, not the published package's own runtime behavior across Node
   # versions -- unlike `verify` below, running them once on a single modern
   # Node version is correct, not a coverage gap. Splitting them out here
-  # (rather than repeating them on every `verify` matrix leg) also sidesteps
-  # a real incompatibility: internal-package-contract's shared ESLint
-  # baseline pulls in ESLint 10.x, whose own `engines.node` is `^20.19.0 ||
-  # ^22.13.0 || >=24` -- it does not run on Node 18.x at all, which `verify`
-  # below still (correctly) tests package.json's own `engines.node`
-  # (`>=18.0.0`) promise against.
+  # also keeps them independent of `verify`'s own Node-version floor.
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -46,11 +41,17 @@ jobs:
       # change can't land without the report, and the PR diff, updated too.
       - run: npm run docs:api:report:check
 
+  # Matches package.json's own `engines.node` floor (`>=20.0.0`). Was
+  # `[18.x, 22.x, 24.x]` until the dev toolchain itself (Vitest 4.x, whose
+  # own `engines.node` is `^20.0.0 || ^22.0.0 || >=24.0.0`) stopped running
+  # on Node 18 at all -- `vitest run --coverage` can't even start there,
+  # so 18.x was never actually being verified, just failing to boot. The
+  # `engines.node` promise moved to match what's genuinely tested.
   verify:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 22.x, 24.x]
+        node-version: [20.x, 22.x, 24.x]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

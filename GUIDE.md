@@ -25,7 +25,7 @@ For the pitch, quick start, and adoption reasoning, see [README.md](README.md). 
 
 | Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
 | -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
-| Node.js 18+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
+| Node.js 20+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
 | Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅          | ❌ not applicable — build-only, never bundle this into an app |
 | Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅          | ❌ not applicable                                             |
 | Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
