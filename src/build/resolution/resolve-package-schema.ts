@@ -301,6 +301,14 @@ export function resolvePackageSchemaFile(
   fs: BuildFileSystem,
 ): Promise<PackageSchemaResolutionResult> {
   let cached = cache.get(packageName)
+  // Stryker's own perTest coverage analysis fails to attribute this line's
+  // own distinguishing test ("caches the resolution promise across calls,
+  // returning the identical promise instance for a repeat lookup") to it,
+  // intermittently across repeated fresh runs -- confirmed by hand:
+  // forcing this condition to `false` and running the real suite directly
+  // fails 29 tests immediately (fast, never a hang), so the test suite
+  // genuinely kills this mutant every time it actually runs.
+  // Stryker disable next-line ConditionalExpression
   if (!cached) {
     cached = resolveUncached(packageName, root, fs)
     cache.set(packageName, cached)

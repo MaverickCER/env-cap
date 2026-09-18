@@ -785,4 +785,13 @@ describe("mergeLocalAndPackageFiles", () => {
     const merged = await mergeLocalAndPackageFiles([localPath, localPath], [], nodeBuildFs)
     expect(merged).toHaveLength(1)
   })
+
+  it("deduplicates two identical package files against each other, not just against local files", async () => {
+    const packagePath = path.join(
+      fixtureRoot,
+      "node_modules/@fixtures/simple-pkg/src/env.schema.ts",
+    )
+    const merged = await mergeLocalAndPackageFiles([], [packagePath, packagePath], nodeBuildFs)
+    expect(merged).toHaveLength(1)
+  })
 })

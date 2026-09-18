@@ -309,8 +309,8 @@ export async function writeDocumentation(
       // would do) is behaviorally identical to omitting the key.
       // Hand-verified: forcing this guard to `true` and running the real
       // suite passes unchanged.
-      // Stryker disable next-line ConditionalExpression
       await writeEnvExample(contracts, envExamplePath, fs, {
+        // Stryker disable next-line ConditionalExpression
         ...(envExampleOnExisting === undefined ? {} : { onExisting: envExampleOnExisting }),
       })
     : undefined

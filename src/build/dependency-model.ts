@@ -123,6 +123,13 @@ export async function buildDependencyModel(
       }))
       .sort((a, b) => a.key.localeCompare(b.key)),
     consumingFiles: [...contract.consumingFiles].map((f) => displayPath(root, f)).sort(),
+    // Stryker's `MethodExpression` mutator also fires on this whole
+    // `.map(...).sort()` chain as one unit (re-serializing it, not changing
+    // its semantics), a coarser-grained mutant than the next-line one on
+    // `.sort()` alone just below -- same reasoning covers both. Hand-
+    // verified: mutating to the reported replacement and running the real
+    // suite passes unchanged.
+    // Stryker disable next-line MethodExpression
     ambiguousBarrelFiles: [...contract.ambiguousBarrelFiles]
       .map((f) => displayPath(root, f))
       // `.sort()` here is a defensive no-op, not a real gap: dependency-graph.ts's

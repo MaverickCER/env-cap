@@ -39,6 +39,27 @@ describe("resolveRelativeImport", () => {
     )
   })
 
+  it("falls back to a directory's index.ts when no <name>.ts/.tsx file exists", async () => {
+    // "./widget.js" -- NOT "./widget/index.js" -- so `base` resolves to the
+    // "widget" directory itself, and only the 3rd candidate
+    // (path.join(base, "index.ts")) can match; "./widget/index.js" would
+    // instead hit the 1st candidate (`${base}.ts`) and prove nothing about
+    // the index.ts/.tsx fallback at all.
+    const importingFile = await write("src/consumer.ts", "")
+    await write("src/widget/index.ts", "export const x = 1;\n")
+    expect(await resolveRelativeImport(importingFile, "./widget.js", nodeBuildFs)).toBe(
+      path.resolve(fixtureRoot, "src/widget/index.ts"),
+    )
+  })
+
+  it("falls back to a directory's index.tsx as the last candidate, when index.ts doesn't exist either", async () => {
+    const importingFile = await write("src/consumer.ts", "")
+    await write("src/widget/index.tsx", "export const x = 1;\n")
+    expect(await resolveRelativeImport(importingFile, "./widget.js", nodeBuildFs)).toBe(
+      path.resolve(fixtureRoot, "src/widget/index.tsx"),
+    )
+  })
+
   it("strips only the specifier's OWN trailing extension, not an embedded one earlier in the path", async () => {
     // "config.ts.old" -- an anchored `\.(js|jsx|ts|tsx)$` strips only the
     // real trailing ".js"; an unanchored one matches the FIRST such
@@ -58,6 +79,18 @@ describe("resolveRelativeImport", () => {
 
   it("returns undefined for a bare/package specifier (not ./ or ../)", async () => {
     const importingFile = await write("src/consumer.ts", "")
+    expect(await resolveRelativeImport(importingFile, "some-package", nodeBuildFs)).toBeUndefined()
+  })
+
+  it("never even attempts resolution for a bare specifier, proven by a file that WOULD resolve if the ./../ guard were bypassed", async () => {
+    // A weaker version of this test could pass by coincidence -- nothing
+    // existing at the would-be-resolved path -- even with the guard
+    // completely broken (the fallback candidate loop just finds nothing
+    // either way). This one creates exactly that file, so only the guard
+    // itself returning undefined FIRST (never reaching the candidate loop
+    // at all) can make the result undefined.
+    const importingFile = await write("src/consumer.ts", "")
+    await write("src/some-package.ts", "export const x = 1;\n")
     expect(await resolveRelativeImport(importingFile, "some-package", nodeBuildFs)).toBeUndefined()
   })
 

@@ -234,6 +234,44 @@ describe("buildDependencyModel", () => {
     expect(model.contracts.map((c) => c.contractName)).toEqual(["database", "payments"])
   })
 
+  it("sorts the consumers index by file name, even when the byFile map's own insertion order disagrees", async () => {
+    // `byFile` is populated by iterating `modelContracts` (sorted by
+    // CONTRACT identity: schema file, then export name) and appending each
+    // contract's own already-sorted `consumingFiles`. So the map's
+    // insertion order tracks contract identity, not consumer file name --
+    // deliberately mismatched here (the a-schema contract's consumer sorts
+    // LAST by file name, the z-schema contract's consumer sorts FIRST) so
+    // only the final `.sort((a, b) => a.file.localeCompare(b.file))` itself,
+    // not incidental insertion order, can produce the right result.
+    const aSchema = await write(
+      "a-schema/env.schema.ts",
+      `export const aEnv = createEnv({ A_KEY: {} }, { name: "a" });`,
+    )
+    const zSchema = await write(
+      "z-schema/env.schema.ts",
+      `export const zEnv = createEnv({ Z_KEY: {} }, { name: "z" });`,
+    )
+    const zConsumer = await write(
+      "z-consumer.ts",
+      `import { aEnv } from "./a-schema/env.schema.js";\naEnv.A_KEY;\n`,
+    )
+    const aConsumer = await write(
+      "a-consumer.ts",
+      `import { zEnv } from "./z-schema/env.schema.js";\nzEnv.Z_KEY;\n`,
+    )
+
+    const contracts = await discover([aSchema, zSchema])
+    const model = await buildDependencyModel(
+      contracts,
+      [aSchema, zSchema, zConsumer, aConsumer],
+      readFile,
+      context,
+      fixtureRoot,
+    )
+
+    expect(model.consumers.map((c) => c.file)).toEqual(["a-consumer.ts", "z-consumer.ts"])
+  })
+
   it("omits a file from the consumers index entirely when it consumes nothing", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",
