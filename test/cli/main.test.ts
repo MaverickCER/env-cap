@@ -1359,15 +1359,20 @@ describe("main() -- init subcommand dispatch", () => {
   })
 
   it("scaffolds into the current directory and exits 0", async () => {
+    // Mocks the `process.cwd` FUNCTION rather than calling the real
+    // `process.chdir()` -- the latter throws
+    // `ERR_WORKER_UNSUPPORTED_OPERATION` under a worker-thread-based test
+    // runner (Stryker's own vitest-runner included) -- a Node.js platform
+    // restriction, confirmed directly (`npm run mutation` aborted its whole
+    // dry run on this file before this fix). Same technique this
+    // codebase's own test/build/usage-generate.test.ts (and siblings)
+    // already use for the identical reason.
     process.argv = ["node", "env-cap", "init"]
-    const originalCwd = process.cwd()
-    process.chdir(fixtureRoot)
+    await fs.mkdir(fixtureRoot, { recursive: true })
     await fs.writeFile(path.join(fixtureRoot, "package.json"), '{"name": "demo"}')
-    try {
-      await main()
-    } finally {
-      process.chdir(originalCwd)
-    }
+    vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot)
+
+    await main()
 
     expect(process.exitCode).toBe(0)
     expect(writes.join("")).toContain("env-cap initialized")

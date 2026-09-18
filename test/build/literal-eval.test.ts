@@ -10,9 +10,13 @@ function expressionOf(sourceExpression: string): ts.Expression {
     true,
   )
   const statement = sourceFile.statements[0]
-  if (!ts.isVariableStatement(statement)) throw new Error("expected a variable statement")
+  if (statement === undefined || !ts.isVariableStatement(statement)) {
+    throw new Error("expected a variable statement")
+  }
   const declaration = statement.declarationList.declarations[0]
-  if (!declaration.initializer) throw new Error("expected an initializer")
+  if (!declaration?.initializer) {
+    throw new Error("expected an initializer")
+  }
   return declaration.initializer
 }
 
@@ -20,7 +24,9 @@ function propertyNameOf(objectLiteralExpression: string): ts.PropertyName {
   const obj = expressionOf(objectLiteralExpression)
   if (!ts.isObjectLiteralExpression(obj)) throw new Error("expected an object literal expression")
   const prop = obj.properties[0]
-  if (!ts.isPropertyAssignment(prop)) throw new Error("expected a property assignment")
+  if (prop === undefined || !ts.isPropertyAssignment(prop)) {
+    throw new Error("expected a property assignment")
+  }
   return prop.name
 }
 

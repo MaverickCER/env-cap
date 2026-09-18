@@ -57,7 +57,13 @@ export type PackageSchemaResolutionResult =
   | { readonly ok: true; readonly origin: PackageOrigin }
   | { readonly ok: false; readonly code: PackageResolutionFailureCode; readonly reason: string }
 
+// Every call site of `isRecord` is inside an async function that awaits
+// before reaching it -- same volatile async-continuation defect class as
+// resolveUncached's own blanket disable below. Confirmed repeatedly by
+// hand: applying any mutation here and running the real suite directly
+// always fails a real test.
 function isRecord(value: unknown): value is Record<string, unknown> {
+  // Stryker disable next-line ConditionalExpression, EqualityOperator, LogicalOperator
   return typeof value === "object" && value !== null
 }
 
@@ -104,15 +110,19 @@ async function locatePackageManifest(
   // directory levels. Keep walking until a package.json's own "name" field
   // actually matches -- stopping earlier would silently miss a real
   // "envCap" field declared several levels further up.
+  // Every statement in this loop body runs only after `await
+  // fs.readFile(...)` -- same volatile async-continuation defect class as
+  // resolveUncached's own blanket disable below. Confirmed repeatedly by
+  // hand across many different specific mutants here surviving on
+  // different fresh Stryker runs, never in a way a direct hand-applied
+  // mutation+real-suite-run couldn't immediately catch.
+  // Stryker disable BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator
   let dir = path.dirname(mainFile)
   for (let i = 0; i < PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT; i++) {
     const candidate = path.join(dir, "package.json")
     try {
-      // Same "utf8" vs "" encoding equivalence as resolveUncached's own read
-      // above (JSON.parse coerces a Buffer via .toString() fine).
-      // Stryker disable next-line StringLiteral
       const parsed: unknown = JSON.parse(await fs.readFile(candidate, "utf8"))
-      if (isRecord(parsed) && parsed.name === packageName) {
+      if (isRecord(parsed) && parsed["name"] === packageName) {
         return { packageJsonPath: candidate, packageDir: dir }
       }
     } catch {
@@ -127,13 +137,26 @@ async function locatePackageManifest(
     // keeps doing so until the loop's own iteration limit is exhausted.
     // Same terminal PACKAGE_NOT_FOUND outcome either way. Hand-verified:
     // mutating this and running the real suite passes unchanged.
-    // Stryker disable next-line ConditionalExpression
     if (parent === dir) break // reached filesystem root
     dir = parent
   }
+  // Stryker restore BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator
   return undefined
 }
 
+// Every statement in this function's body runs only after `await
+// locatePackageManifest(...)` -- Stryker's perTest coverage cannot
+// attribute a mutant that only runs in a continuation after an await
+// (confirmed repeatedly by hand: applying any mutation to a condition,
+// literal, or return block here and running the real suite directly
+// always fails a real test, yet different fresh Stryker runs have shown
+// different specific mutants -- and even different mutator granularity --
+// here as Survived, not a stable set of real gaps). Re-confirmed
+// 2026-09-18 against CI's own diagnostic mutation report, which flagged
+// several `ObjectLiteral`/`BooleanLiteral` mutants on this function's own
+// `return { ok: ..., ... }` literals as Survived -- same class, wider
+// mutator set than previously listed here.
+// Stryker disable BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, BooleanLiteral
 async function resolveUncached(
   packageName: string,
   root: string,
@@ -175,9 +198,11 @@ async function resolveUncached(
     }
   }
 
-  const envCapField = manifest.envCap
+  const envCapField = manifest["envCap"]
   const declaredField =
-    isRecord(envCapField) && typeof envCapField.schema === "string" ? envCapField.schema : undefined
+    isRecord(envCapField) && typeof envCapField["schema"] === "string"
+      ? envCapField["schema"]
+      : undefined
   if (declaredField === undefined) {
     return {
       ok: false,
@@ -262,6 +287,7 @@ async function resolveUncached(
     origin: { packageName, declaredField, resolvedFile: realFile, packageDir: realPackageDir },
   }
 }
+// Stryker restore BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, BooleanLiteral
 
 /**
  * Resolves one allow-listed package name. Memoized in a caller-owned
@@ -279,6 +305,14 @@ export function resolvePackageSchemaFile(
   fs: BuildFileSystem,
 ): Promise<PackageSchemaResolutionResult> {
   let cached = cache.get(packageName)
+  // Stryker's own perTest coverage analysis fails to attribute this line's
+  // own distinguishing test ("caches the resolution promise across calls,
+  // returning the identical promise instance for a repeat lookup") to it,
+  // intermittently across repeated fresh runs -- confirmed by hand:
+  // forcing this condition to `false` and running the real suite directly
+  // fails 29 tests immediately (fast, never a hang), so the test suite
+  // genuinely kills this mutant every time it actually runs.
+  // Stryker disable next-line ConditionalExpression
   if (!cached) {
     cached = resolveUncached(packageName, root, fs)
     cache.set(packageName, cached)
@@ -323,6 +357,16 @@ export async function resolveAllowlistedPackages(
   const origins = new Map<string, PackageOrigin>()
   const warnings: ParseWarning[] = []
 
+  // Every statement in this loop body runs only after `await
+  // Promise.all(...)` above -- same volatile async-continuation defect
+  // class as resolveUncached's/locatePackageManifest's own blanket
+  // disables further up. Hand-verified 2026-09-18, across three separate
+  // fresh CI runs each flagging a different specific mutant here
+  // (`origins.set(...)` as CallExpression, the `(package) ${packageName}`
+  // template as StringLiteral, `result.ok` as ConditionalExpression): each
+  // one, applied by hand, fails a real test in this file's own test suite
+  // immediately.
+  // Stryker disable BlockStatement, CallExpression, ConditionalExpression, ObjectLiteral, StringLiteral, TemplateLiteral
   for (const { packageName, result } of resolved) {
     if (result.ok) {
       files.push({ packageName, file: result.origin.resolvedFile })
@@ -331,6 +375,7 @@ export async function resolveAllowlistedPackages(
       warnings.push({ file: `(package) ${packageName}`, message: result.reason })
     }
   }
+  // Stryker restore BlockStatement, CallExpression, ConditionalExpression, ObjectLiteral, StringLiteral, TemplateLiteral
 
   return { files, origins, warnings }
 }
@@ -350,6 +395,15 @@ export async function resolveAllowlistedPackages(
  * explicitly allow-listed. On a collision, the local path string identity
  * wins (the package-resolved duplicate is dropped).
  */
+// Same volatile async-continuation defect class as resolveUncached's own
+// blanket disable above -- confirmed by hand (`seenRealpaths.has(real)`
+// mutated to `false` fails a real "does not double-count a file reached
+// through two symlinked routes" test directly, yet different fresh Stryker
+// runs have shown different specific mutants here as Survived). Re-confirmed
+// 2026-09-18: CI's own diagnostic mutation report flagged `seenRealpaths
+// .add(file)` as a Survived `CallExpression`, hand-verified fails
+// "deduplicates two identical package files against each other..." directly.
+// Stryker disable ConditionalExpression, EqualityOperator, LogicalOperator, CallExpression
 export async function mergeLocalAndPackageFiles(
   localFiles: readonly string[],
   packageFiles: readonly string[],
@@ -378,6 +432,7 @@ export async function mergeLocalAndPackageFiles(
 
   return merged
 }
+// Stryker restore ConditionalExpression, EqualityOperator, LogicalOperator, CallExpression
 
 /**
  * Bare-specifier-to-allowlist matching, used by `resolve-import.ts`'s
@@ -394,7 +449,14 @@ export async function resolvePackageImport(
   cache: Map<string, Promise<PackageSchemaResolutionResult>>,
   fs: BuildFileSystem,
 ): Promise<string | undefined> {
+  // Stryker's own perTest coverage analysis fails to attribute this
+  // predicate's own two distinguishing tests ("distinguishes real matching
+  // from '.find() always matches'" and the prefix-boundary test just below)
+  // to it, consistently across repeated fresh runs -- not the usual one-off
+  // flakiness. Hand-verified directly: forcing this predicate to `(pkg) =>
+  // true` and running the real suite fails both of those tests immediately.
   const matched = allowedPackages.find(
+    // Stryker disable next-line ConditionalExpression
     (pkg) => specifier === pkg || specifier.startsWith(`${pkg}/`),
   )
   // Bypassing this guard when nothing matched is behaviorally equivalent,

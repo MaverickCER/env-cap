@@ -639,7 +639,10 @@ describe("directRunUrl", () => {
   const originalArgv1 = process.argv[1]
 
   afterEach(() => {
-    process.argv[1] = originalArgv1
+    // process.argv[1] is always a real path in a real vitest run;
+    // the empty-string fallback only matters in principle, for whatever
+    // hypothetical environment argv[1] were genuinely absent in.
+    process.argv[1] = originalArgv1 ?? ""
   })
 
   it("returns undefined when process.argv[1] is falsy", () => {

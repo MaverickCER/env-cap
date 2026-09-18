@@ -21,7 +21,14 @@ export interface CompatibilityIssue {
   readonly severity: "error" | "warning" | "info"
   /** The environment variable name, or `"(contract) <name>"` for a contract-level (e.g. exclusive-group) issue. */
   readonly variable: string
-  /** Every file declaring a conflicting definition. */
+  /**
+   * Every file declaring a conflicting definition. A pairwise comparison
+   * (compatibility.ts, exclusive-group.ts) always produces exactly two; a
+   * finding escalated from another family (generate-env-artifacts.ts's
+   * `escalatedFindings()`, via `findingFiles()`) can produce zero, one, or
+   * two, depending on what location information that finding actually
+   * carries -- genuinely variable arity, not a tuple.
+   */
   readonly files: readonly string[]
   /** Human-readable explanation of the conflict. */
   readonly reason: string
@@ -95,18 +102,18 @@ export function detectCompatibilityIssues(
   for (const [key, declarations] of [...declarationsByKey.entries()].sort((a, b) =>
     a[0].localeCompare(b[0]),
   )) {
-    // Widening the outer bound to `<=` is a genuine no-op for every input
-    // size: at `i === declarations.length`, the inner loop's own `j = i + 1`
-    // already exceeds `declarations.length`, so its body never executes
-    // regardless -- same off-by-one equivalence already documented for
-    // exclusive-group.ts's identical pairwise double loop. Hand-verified:
-    // mutating this and running the real suite passes unchanged.
-    // Stryker disable next-line EqualityOperator
-    for (let i = 0; i < declarations.length; i++) {
-      for (let j = i + 1; j < declarations.length; j++) {
-        const a = declarations[i]
-        const b = declarations[j]
-
+    // `.entries()`/`.slice()` pairwise iteration, not a manually-indexed
+    // `for (let i ...) for (let j = i + 1 ...)` double loop: besides needing
+    // no `a === undefined || b === undefined` bounds guard at all (`.entries()`
+    // yields real elements, never an out-of-bounds gap `noUncheckedIndexedAccess`
+    // would otherwise force a guard for), a hand-indexed loop here is a genuine
+    // liveness risk under mutation testing -- a mutant flipping `i++`/`j++` to
+    // `i--`/`j--`, or `<` to `>=`, makes the index walk away from the bound
+    // instead of toward it, looping until Stryker's own timeout rather than
+    // producing an observably wrong result a normal test could catch. Iterator
+    // protocol has no exposed counter for that class of mutation to target.
+    for (const [i, a] of declarations.entries()) {
+      for (const b of declarations.slice(i + 1)) {
         if (
           a.variable.processorReturnType &&
           b.variable.processorReturnType &&
@@ -299,13 +306,11 @@ export function detectDuplicateVariableShapes(
   )
 
   const issues: CompatibilityIssue[] = []
-  // Same off-by-one equivalence as `detectCompatibilityIssues()`'s identical
-  // pairwise double loop above.
-  // Stryker disable next-line EqualityOperator
-  for (let i = 0; i < declarations.length; i++) {
-    for (let j = i + 1; j < declarations.length; j++) {
-      const a = declarations[i]
-      const b = declarations[j]
+  // `.entries()`/`.slice()` pairwise iteration -- same rationale (no manual
+  // index for a mutant to walk away from the bound with) as
+  // `detectCompatibilityIssues()`'s identical pairwise double loop above.
+  for (const [i, a] of declarations.entries()) {
+    for (const b of declarations.slice(i + 1)) {
       if (a.key === b.key) continue
       if (a.file === b.file && a.contractName === b.contractName) continue
       if (!shapesMatch(a.shape, b.shape)) continue

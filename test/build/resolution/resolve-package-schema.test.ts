@@ -284,6 +284,16 @@ describe("resolvePackageSchemaFile", () => {
     }
   })
 
+  it("caches the resolution promise across calls, returning the identical promise instance for a repeat lookup", async () => {
+    const cache = freshCache()
+    const first = resolvePackageSchemaFile("@fixtures/simple-pkg", fixtureRoot, cache, nodeBuildFs)
+    expect(first).toBeInstanceOf(Promise)
+    const second = resolvePackageSchemaFile("@fixtures/simple-pkg", fixtureRoot, cache, nodeBuildFs)
+    expect(second).toBe(first)
+    const result = await first
+    expect(result.ok).toBe(true)
+  })
+
   it("reports PACKAGE_NOT_FOUND for a package that isn't installed", async () => {
     const result = await resolvePackageSchemaFile(
       "@fixtures/does-not-exist",
@@ -632,6 +642,23 @@ describe("resolveAllowlistedPackages", () => {
     expect(result.files).toHaveLength(1)
     expect(result.warnings).toHaveLength(2)
   })
+
+  it("populates origins, keyed by each resolved file's own path, for every successfully-resolved package", async () => {
+    const result = await resolveAllowlistedPackages(
+      ["@fixtures/simple-pkg"],
+      fixtureRoot,
+      freshCache(),
+      nodeBuildFs,
+    )
+    const [file] = result.files
+    expect(file).toBeDefined()
+    const origin = result.origins.get(file!.file)
+    expect(origin).toMatchObject({
+      packageName: "@fixtures/simple-pkg",
+      declaredField: "./src/env.schema.ts",
+      resolvedFile: file!.file,
+    })
+  })
 })
 
 describe("resolvePackageImport", () => {
@@ -756,6 +783,15 @@ describe("mergeLocalAndPackageFiles", () => {
   it("deduplicates two identical local paths against each other, not just against package files", async () => {
     const localPath = path.join(fixtureRoot, "node_modules/@fixtures/simple-pkg/src/env.schema.ts")
     const merged = await mergeLocalAndPackageFiles([localPath, localPath], [], nodeBuildFs)
+    expect(merged).toHaveLength(1)
+  })
+
+  it("deduplicates two identical package files against each other, not just against local files", async () => {
+    const packagePath = path.join(
+      fixtureRoot,
+      "node_modules/@fixtures/simple-pkg/src/env.schema.ts",
+    )
+    const merged = await mergeLocalAndPackageFiles([], [packagePath, packagePath], nodeBuildFs)
     expect(merged).toHaveLength(1)
   })
 })

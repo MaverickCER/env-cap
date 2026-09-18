@@ -222,6 +222,24 @@ describe("discoverSchemaFiles", () => {
     expect(files).toHaveLength(1)
     expect(files[0]).toContain("payments")
   }, 5000)
+
+  it("does not include a file symlink as a discovered file -- entry.isFile() reflects lstat semantics (the symlink itself), not the followed target", async () => {
+    await touch("features/payments/env.schema.ts")
+    await fs.symlink(
+      path.join(root, "features/payments/env.schema.ts"),
+      path.join(root, "env.schema.ts"),
+      "file",
+    )
+
+    const files = await discoverSchemaFiles({
+      fs: nodeBuildFs,
+      root,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
+
+    expect(files).toEqual([path.join(root, "features/payments/env.schema.ts")])
+  })
 })
 
 // ADR 0040: `src/build/**` depends on the `BuildFileSystem` *contract*, not on
@@ -262,5 +280,39 @@ describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
       exclude: [],
     })
     expect(files).toEqual([])
+  })
+
+  it('throws a fast, actionable error instead of proceeding when "include" matches far more files than any legitimate single project -- the common real cause is a misconfigured/fallen-back "root", not a real 1000+-contract project', async () => {
+    const seeded: Record<string, string> = {}
+    for (let i = 0; i < 1001; i++) {
+      seeded[`${memRoot}/features/feature-${String(i)}/env.schema.ts`] = "// contract\n"
+    }
+    const inMemoryFs = createInMemoryBuildFs(seeded)
+
+    await expect(
+      discoverSchemaFiles({
+        fs: inMemoryFs,
+        root: memRoot,
+        include: ["**/env.schema.ts"],
+        exclude: [],
+      }),
+    ).rejects.toThrow(/found 1001 files matching "include".*sanity limit/)
+  })
+
+  it("does not throw at exactly the sanity limit (1000 matched files) -- the limit is a ceiling on legitimate scale, not a one-off-tighter boundary", async () => {
+    const seeded: Record<string, string> = {}
+    for (let i = 0; i < 1000; i++) {
+      seeded[`${memRoot}/features/feature-${String(i)}/env.schema.ts`] = "// contract\n"
+    }
+    const inMemoryFs = createInMemoryBuildFs(seeded)
+
+    const files = await discoverSchemaFiles({
+      fs: inMemoryFs,
+      root: memRoot,
+      include: ["**/env.schema.ts"],
+      exclude: [],
+    })
+
+    expect(files).toHaveLength(1000)
   })
 })

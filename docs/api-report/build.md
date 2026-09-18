@@ -1378,7 +1378,12 @@ full enumerated list of values a check in this file can produce.
 readonly files: readonly string[];
 ```
 
-Every file declaring a conflicting definition.
+Every file declaring a conflicting definition. A pairwise comparison
+(compatibility.ts, exclusive-group.ts) always produces exactly two; a
+finding escalated from another family (generate-env-artifacts.ts's
+`escalatedFindings()`, via `findingFiles()`) can produce zero, one, or
+two, depending on what location information that finding actually
+carries -- genuinely variable arity, not a tuple.
 
 ##### reason
 

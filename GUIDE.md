@@ -25,7 +25,7 @@ For the pitch, quick start, and adoption reasoning, see [README.md](README.md). 
 
 | Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
 | -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
-| Node.js 18+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
+| Node.js 20+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
 | Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅          | ❌ not applicable — build-only, never bundle this into an app |
 | Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅          | ❌ not applicable                                             |
 | Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
@@ -287,6 +287,14 @@ The build process creates the application-wide view required for:
 - documentation
 - `.env.example` files
 - configuration reports
+
+Every one of these draws a hard line between **declared** facts (author
+metadata — `owner`, `sensitivity`, `expiresAt`, `retention` — presence is
+checked, correctness never is) and **proven** facts (AST-derived —
+`UNCONSUMED_OWNED_VARIABLE`, the dependency graph). See
+[`specs/generated-artifacts.md`](specs/generated-artifacts.md) for the full
+list of what's generated today, the seven canonical fact models each one
+projects from, and what's deliberately deferred.
 
 Schemas are analyzed statically.
 

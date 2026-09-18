@@ -102,7 +102,7 @@ describe("applyLiveExpirationOverrides", () => {
       exportName: "xEnv",
       variables: [makeVariable({ key: "A", expiresAt: "2027-01-01" })],
     })
-    const [result] = applyLiveExpirationOverrides([contract], { A: "2026-06-01" })
+    const result = applyLiveExpirationOverrides([contract], { A: "2026-06-01" })[0]! // one contract in, one result out
     expect(result.variables[0]?.expiresAt).toBe("2026-06-01")
   })
 
@@ -112,7 +112,7 @@ describe("applyLiveExpirationOverrides", () => {
       exportName: "xEnv",
       variables: [makeVariable({ key: "A", expiresAt: "2027-01-01" })],
     })
-    const [result] = applyLiveExpirationOverrides([contract], {})
+    const result = applyLiveExpirationOverrides([contract], {})[0]! // one contract in, one result out
     expect(result.variables[0]?.expiresAt).toBe("2027-01-01")
   })
 
@@ -122,7 +122,7 @@ describe("applyLiveExpirationOverrides", () => {
       exportName: "xEnv",
       variables: [makeVariable({ key: "A", expiresAt: "2027-01-01" })],
     })
-    const [result] = applyLiveExpirationOverrides([contract], { A: "tomorrow" })
+    const result = applyLiveExpirationOverrides([contract], { A: "tomorrow" })[0]! // one contract in, one result out
     expect(result.variables[0]?.expiresAt).toBe("2027-01-01")
   })
 
@@ -147,7 +147,7 @@ describe("applyLiveExpirationOverrides", () => {
       expiresAt: "2027-01-01",
       variables: [makeVariable({ key: "xEnv" })],
     })
-    const [result] = applyLiveExpirationOverrides([contract], { xEnv: "2026-01-01" })
+    const result = applyLiveExpirationOverrides([contract], { xEnv: "2026-01-01" })[0]! // one contract in, one result out
     expect(result.expiresAt).toBe("2027-01-01")
   })
 
@@ -158,7 +158,7 @@ describe("applyLiveExpirationOverrides", () => {
       metadata: { runbook: "https://example.com" },
       variables: [makeVariable({ key: "A", metadata: { setup: "..." } })],
     })
-    const [result] = applyLiveExpirationOverrides([contract], {})
+    const result = applyLiveExpirationOverrides([contract], {})[0]! // one contract in, one result out
     expect(result).not.toBe(contract)
     expect(result.variables).not.toBe(contract.variables)
     expect(result.variables[0]).not.toBe(contract.variables[0])

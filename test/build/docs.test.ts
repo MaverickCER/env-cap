@@ -1465,8 +1465,8 @@ describe("buildCatalog", () => {
       owner: "contract-owner",
       variables: [makeVariable({ key: "A" })],
     })
-    const [entry] = buildCatalog([contract])
-    expect(entry.variables.A.owner).toBe("contract-owner")
+    const entry = buildCatalog([contract])[0]! // one contract in, one catalog entry out
+    expect(entry.variables["A"]!.owner).toBe("contract-owner")
   })
 
   it("resolves sensitivity the same way owner does -- variable override wins, contract is the fallback", () => {
@@ -1479,10 +1479,10 @@ describe("buildCatalog", () => {
         makeVariable({ key: "INHERITED" }),
       ],
     })
-    const [entry] = buildCatalog([contract])
+    const entry = buildCatalog([contract])[0]! // one contract in, one catalog entry out
     expect(entry.sensitivity).toBe("secret")
-    expect(entry.variables.OVERRIDDEN.sensitivity).toBe("config")
-    expect(entry.variables.INHERITED.sensitivity).toBe("secret")
+    expect(entry.variables["OVERRIDDEN"]!.sensitivity).toBe("config")
+    expect(entry.variables["INHERITED"]!.sensitivity).toBe("secret")
   })
 
   it("never lets extra metadata override a reserved field, even when an author names an extra key the same as a reserved one", () => {
@@ -1500,8 +1500,8 @@ describe("buildCatalog", () => {
         }),
       ],
     })
-    const [entry] = buildCatalog([contract])
-    const variable = entry.variables.A
+    const entry = buildCatalog([contract])[0]! // one contract in, one catalog entry out
+    const variable = entry.variables["A"]!
     expect(variable.documented).toBe(true)
     expect(variable.required).toBe(true)
     expect(variable.metadata).toEqual({ documented: "definitely not", required: "also not" })
@@ -1527,8 +1527,8 @@ describe("buildCatalog", () => {
     expect(catalog.every((c) => c.contractName === "shared-name")).toBe(true)
 
     expect(Array.isArray(catalog[0]?.variables)).toBe(false)
-    expect(catalog.find((c) => c.file === "a/env.schema.ts")?.variables.A).toBeDefined()
-    expect(catalog.find((c) => c.file === "b/env.schema.ts")?.variables.B).toBeDefined()
+    expect(catalog.find((c) => c.file === "a/env.schema.ts")?.variables["A"]).toBeDefined()
+    expect(catalog.find((c) => c.file === "b/env.schema.ts")?.variables["B"]).toBeDefined()
   })
 })
 

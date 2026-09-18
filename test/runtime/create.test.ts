@@ -117,7 +117,7 @@ describe("createEnv", () => {
     )
     const error = await validateEnv({ values: {}, manifest: [contract] }).catch((e: unknown) => e)
 
-    expect(() => contract.PORT).toThrow(error as Error)
+    expect(() => contract.PORT).toThrow(error)
   })
 
   it("throws EnvNotReadyError (not undefined) reading a key skipped by validation contexts, even after the rest of the contract validated successfully", async () => {

@@ -27,6 +27,16 @@ Every flagship's own README documents exactly how to run it. All three are valid
 currently-built `env-cap` package, so they stay in sync with the API rather than
 drifting silently.
 
+## Framework integration
+
+[**nextjs-app**](nextjs-app/) — a deliberately minimal Next.js todo app, not a fourth flagship in
+the above progression. Where the three flagships above grow one plain Node/TypeScript app from an
+individual developer's project to an organization's, this one proves the fail-fast contract
+mechanism inside a real framework's build/request lifecycle — a real `NEXT_PUBLIC_*` (client) vs.
+server-only environment variable boundary, and what it actually took to make `validateEnv()`'s
+module-level "ready" state survive a bundler that code-splits the app into multiple chunks. See its
+own README for what that took.
+
 ## Looking for something specific?
 
 The three flagships above are for humans exploring `env-cap` for the first time — they're not

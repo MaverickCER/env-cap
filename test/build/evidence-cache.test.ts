@@ -121,6 +121,18 @@ describe("computeSourceFingerprint", () => {
     expect(after).not.toBe(before)
   })
 
+  it("changes when a schema file is renamed to a different path, even with byte-identical content", async () => {
+    const before = await computeSourceFingerprint(fingerprintOptions)
+    const content = await fs.readFile(
+      path.join(fixtureRoot, "features/payments/env.schema.ts"),
+      "utf8",
+    )
+    await fs.rm(path.join(fixtureRoot, "features/payments/env.schema.ts"))
+    await write("features/billing/env.schema.ts", content)
+    const after = await computeSourceFingerprint(fingerprintOptions)
+    expect(after).not.toBe(before)
+  })
+
   it("changes when an unrelated .ts file inside root's scan surface is added", async () => {
     const before = await computeSourceFingerprint(fingerprintOptions)
     await write("src/unrelated.ts", "export const x = 1;\n")

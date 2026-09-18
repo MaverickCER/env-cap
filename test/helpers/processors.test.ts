@@ -150,6 +150,12 @@ describe("processors.toArray", () => {
   it("returns an empty array for a non-string, non-array value", () => {
     expect(processors.toArray()(42)).toEqual([])
   })
+
+  it("runs each item through the given per-item processors, in order", () => {
+    const upper = (value: unknown) => String(value).toUpperCase()
+    const exclaim = (value: unknown) => `${String(value)}!`
+    expect(processors.toArray(",", [upper, exclaim])("a, b")).toEqual(["A!", "B!"])
+  })
 })
 
 describe("processors.toURL", () => {

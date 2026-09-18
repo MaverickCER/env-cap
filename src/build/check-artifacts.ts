@@ -202,10 +202,14 @@ export async function checkEnvArtifacts(
           artifact: "envExample",
           path: c.envExamplePath,
           status: driftCount > 0 ? "stale" : "ok",
-          detail:
-            driftCount > 0
-              ? `${staleVariables.length} stale, ${variablesToComment.length} to comment, ${variablesToAdd.length} to add`
-              : undefined,
+          // exactOptionalPropertyTypes: omit the key entirely rather than
+          // set it to `undefined` -- `detail` is absent when there's
+          // nothing to report, not present-but-empty.
+          ...(driftCount > 0
+            ? {
+                detail: `${staleVariables.length} stale, ${variablesToComment.length} to comment, ${variablesToAdd.length} to add`,
+              }
+            : {}),
         })
       }
     }

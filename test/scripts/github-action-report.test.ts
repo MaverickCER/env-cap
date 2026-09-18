@@ -86,8 +86,8 @@ describe("collectDocumentationFindings", () => {
 describe("collectOwnershipFindings", () => {
   it("maps abandoned/unconsumed to warning and unresolved/indeterminate to notice, never escalating the 'we don't know' states", () => {
     const findings = collectOwnershipFindings({
-      abandonedContracts: [{ contractName: "orphan", file: "orphan.ts", owner: undefined }],
-      unconsumedOwnedVariables: [{ contractName: "orphan", owner: undefined, key: "X" }],
+      abandonedContracts: [{ contractName: "orphan", file: "orphan.ts" }],
+      unconsumedOwnedVariables: [{ contractName: "orphan", key: "X" }],
       unresolvedConsumers: [
         { contractName: "barrel", file: "barrel.ts", reason: "re-export chain" },
       ],
@@ -105,7 +105,7 @@ describe("collectOwnershipFindings", () => {
   it("leaves file undefined for findings whose payload shape has no file (unconsumedOwnedVariables/indeterminate)", () => {
     const findings = collectOwnershipFindings({
       abandonedContracts: [],
-      unconsumedOwnedVariables: [{ contractName: "orphan", owner: undefined, key: "X" }],
+      unconsumedOwnedVariables: [{ contractName: "orphan", key: "X" }],
       unresolvedConsumers: [],
       indeterminate: [{ contractName: "dyn", key: "Y", reason: "dynamic access" }],
     })

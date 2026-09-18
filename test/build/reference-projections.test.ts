@@ -217,9 +217,9 @@ describe("configurationReference", () => {
   it("reports which Evidence Model fields fed each output key, via .project()", () => {
     const { value, sources } = configurationReference.project(evidenceFor([PAYMENTS]))
     expect(value.entries).toHaveLength(2)
-    expect(sources.entries.some((p) => p.startsWith("contract.contracts"))).toBe(true)
+    expect(sources["entries"]!.some((p) => p.startsWith("contract.contracts"))).toBe(true)
     // The disclaimer is a constant -- it reads nothing from the model at all.
-    expect(sources.disclaimer).toEqual([])
+    expect(sources["disclaimer"]).toEqual([])
   })
 
   it("sorts variables within the same contract by key -- not insertion order", () => {

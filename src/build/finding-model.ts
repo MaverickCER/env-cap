@@ -117,6 +117,14 @@ function fromCompatibilityIssue(
   issue: CompatibilityIssue,
   code: FindingCode,
 ): Finding {
+  // Unlike every other call site in this file, `issue.files` isn't always
+  // populated: a pairwise comparison (compatibility.ts, exclusive-group.ts)
+  // always supplies two, but an escalated finding from another family
+  // (generate-env-artifacts.ts's escalatedFindings(), via findingFiles())
+  // can genuinely supply none -- honest `file: undefined` then, the same
+  // convention this file already uses below for findings with no file of
+  // their own, not a fabricated path.
+  const file = issue.files[0]
   return {
     severity: issue.severity,
     code,
@@ -124,7 +132,7 @@ function fromCompatibilityIssue(
     message: issue.reason,
     location: {
       model: "contract",
-      file: displayPath(root, issue.files[0]),
+      file: file === undefined ? undefined : displayPath(root, file),
       exportName: undefined,
       variable: issue.variable,
       position: NO_POSITION,

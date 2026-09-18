@@ -46,7 +46,6 @@ function overrideVariable(
   // `expiresAt === undefined` guard immediately before a `new Date(...)`
   // parse-or-skip.
   // Stryker disable next-line ConditionalExpression
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const date = override === undefined ? undefined : parseIsoDate(override)
   return {
     ...variable,

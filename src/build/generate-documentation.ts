@@ -302,7 +302,17 @@ export async function writeDocumentation(
   await fs.writeFile(docsPath, docsSource, "utf8")
 
   const envExample = envExamplePath
-    ? await writeEnvExample(contracts, envExamplePath, fs, { onExisting: envExampleOnExisting })
+    ? // exactOptionalPropertyTypes: omit the key rather than set it to
+      // `undefined` when the caller didn't supply one. writeEnvExample
+      // itself does `options.onExisting ?? "keep-sibling"`, so passing
+      // `onExisting: undefined` explicitly (what always-spreading here
+      // would do) is behaviorally identical to omitting the key.
+      // Hand-verified: forcing this guard to `true` and running the real
+      // suite passes unchanged.
+      await writeEnvExample(contracts, envExamplePath, fs, {
+        // Stryker disable next-line ConditionalExpression
+        ...(envExampleOnExisting === undefined ? {} : { onExisting: envExampleOnExisting }),
+      })
     : undefined
   return { envExample }
 }

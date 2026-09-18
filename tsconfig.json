@@ -1,21 +1,24 @@
 {
+  // Extends internal-package-contract's org-wide strict baseline (strict,
+  // noUncheckedIndexedAccess, exactOptionalPropertyTypes, noImplicitOverride,
+  // noFallthroughCasesInSwitch, noPropertyAccessFromIndexSignature,
+  // useUnknownInCatchVariables, allowUnusedLabels/allowUnreachableCode: false
+  // -- see that package's own tsconfig.json for the full rationale). The
+  // overrides below are real, deliberate deviations, not copies of the
+  // baseline's own values: target/lib/module/moduleResolution reflect that
+  // env-cap ships platform-neutral runtime code consumed by bundlers/browsers
+  // (tsup.config.ts's "neutral" platform entries), not just Node -- IPC's own
+  // NodeNext/ES2022 baseline is appropriate for its own Node-only tooling, not
+  // for this package's actual runtime target. "jsx" is vestigial/precautionary
+  // (env-cap ships no UI), kept as-is rather than removed in this pass.
+  "extends": "internal-package-contract/tsconfig",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
     "jsx": "react-jsx",
     "lib": ["ES2020", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "target": "ES2020",
-    "types": ["node"],
-    "verbatimModuleSyntax": true
+    "target": "ES2020"
   },
   "include": ["src", "test"],
   "exclude": [

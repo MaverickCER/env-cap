@@ -22,6 +22,14 @@ function isAlwaysSkippedDirName(name: string): boolean {
   return name === "node_modules" || name === ".git"
 }
 
+// Generously above any legitimate single project's real schema-file count
+// (every real fixture/example in this very repo uses single digits; even a
+// large enterprise monorepo built from many small feature contracts -- the
+// tool's own intended shape, see ADR 0011 -- would need to be extreme
+// outliers to approach four figures) -- see `discoverSchemaFiles`'s own use
+// of it below.
+const MAX_DISCOVERED_SCHEMA_FILES = 1000
+
 /**
  * Finds every schema file matching `include`/`exclude` under `root`, returned
  * as absolute paths in deterministic (alphabetically sorted) order.
@@ -43,6 +51,26 @@ export async function discoverSchemaFiles(options: DiscoverOptions): Promise<str
       !matchesAnyPattern(relativePath, options.exclude)
     )
   })
+
+  // Fails fast, before any caller starts parsing a single discovered file,
+  // when `include`/`root` matched far more than any legitimate single
+  // project's schema-file count -- almost always a misconfigured `root`
+  // (e.g. accidentally resolving to a much larger directory than intended)
+  // rather than a real project actually declaring this many contracts.
+  // Every caller (`generateEnvManifest`, `generateDocumentation`,
+  // `generateUsageReport`, `generateEnvArtifacts`, evidence-cache.ts) does
+  // real per-file parsing plus O(n^2) cross-file compatibility analysis
+  // afterward -- work whose cost is invisible here but scales with exactly
+  // this count, so catching a wrong `root` here (milliseconds) instead of
+  // letting it run (which stays finite, just very slow for a genuinely large
+  // accidental match) gives a caller a fast, actionable error instead of a
+  // multi-minute hang with no feedback.
+  if (included.length > MAX_DISCOVERED_SCHEMA_FILES) {
+    // Stryker disable next-line StringLiteral
+    throw new Error(
+      `discoverSchemaFiles: found ${String(included.length)} files matching "include" under ${options.root} -- more than the ${String(MAX_DISCOVERED_SCHEMA_FILES)}-file sanity limit. This almost always means "root" (or "include"/"exclude") resolved more broadly than intended -- e.g. an omitted "root" falling back to an unexpectedly large process.cwd() -- rather than a real project genuinely declaring this many contracts. Narrow "root"/"include"/"exclude" to the intended project boundary.`,
+    )
+  }
 
   // Two-way compare only -- every entry is a distinct file's absolute path,
   // so `a === b` can never happen here (unlike a comparator keyed by a

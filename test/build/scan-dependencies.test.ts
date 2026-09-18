@@ -208,6 +208,21 @@ describe("local dataflow: destructuring and one-level aliasing (ADR 0039)", () =
     ])
   })
 
+  it("recurses into a computed destructuring key that itself references another tracked import", () => {
+    const result = scanFileForDependencies(
+      "consumer.ts",
+      `import { paymentsEnv } from "./env.schema.js";
+       import { helpers } from "./helpers.js";
+       const { [helpers.KEY_NAME]: key } = paymentsEnv;`,
+    )
+    expect(result.accessesByLocalName.get("paymentsEnv")).toEqual([
+      { kind: "escape", via: "computed-key", line: 3, column: 16 },
+    ])
+    expect(result.accessesByLocalName.get("helpers")).toEqual([
+      { kind: "reference", line: 3, column: 17 },
+    ])
+  })
+
   it("emits a rest-binding escape alongside a sibling plain key's own proven member access", () => {
     const result = scanFileForDependencies(
       "consumer.ts",

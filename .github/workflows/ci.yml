@@ -17,11 +17,41 @@ permissions:
 # this workflow is what turns that budget from a script someone could forget
 # to run into a check every change actually has to pass.
 jobs:
+  # Dev-tooling checks (lint/format/API-report) are a property of the source
+  # repo, not the published package's own runtime behavior across Node
+  # versions -- unlike `verify` below, running them once on a single modern
+  # Node version is correct, not a coverage gap. Splitting them out here
+  # also keeps them independent of `verify`'s own Node-version floor.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      # The committed Markdown API report (docs/api-report/) must match a
+      # fresh `typedoc --options typedoc.markdown.json` -- a public API
+      # change can't land without the report, and the PR diff, updated too.
+      - run: npm run docs:api:report:check
+
+  # Matches package.json's own `engines.node` floor (`>=20.0.0`). Was
+  # `[18.x, 22.x, 24.x]` until the dev toolchain itself (Vitest 4.x, whose
+  # own `engines.node` is `^20.0.0 || ^22.0.0 || >=24.0.0`) stopped running
+  # on Node 18 at all -- `vitest run --coverage` can't even start there,
+  # so 18.x was never actually being verified, just failing to boot. The
+  # `engines.node` promise moved to match what's genuinely tested.
   verify:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 22.x, 24.x]
+        node-version: [20.x, 22.x, 24.x]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -32,16 +62,11 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run format:check
       - run: npm run build
       - run: npm run test:coverage
       - run: npm run size
       - run: npm run verify:no-ambient-fs
-      # The committed Markdown API report (docs/api-report/) must match a
-      # fresh `typedoc --options typedoc.markdown.json` -- a public API
-      # change can't land without the report, and the PR diff, updated too.
-      - run: npm run docs:api:report:check
+      - run: npm run verify:no-ambient-child-process
 
   verify-current:
     runs-on: ubuntu-latest
@@ -59,6 +84,66 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run size
+
+  # The org-wide governance gate: internal-package-contract's own 27 checks
+  # (mutation, coverage, security-deps/secrets/socket, accessibility,
+  # dead-code, docs, licenses, ...) run against this package for real, not
+  # just declared as a devDependency. Node 24.x to match
+  # internal-package-contract's own engines.node floor.
+  contract:
+    needs: [verify, lint]
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 -- the Commits check reads origin/main..HEAD.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+      # internal-package-contract's own runner deletes reports/ and coverage/
+      # after the run UNLESS they existed before it started -- pre-creating
+      # them here is what makes the mutation-report artifact upload below
+      # (and Coverage's own reports) survive past the run at all on a fresh
+      # CI checkout, which starts with neither directory present.
+      - run: mkdir -p reports coverage
+      - run: npm run contract
+
+      # Diagnostic aid, not part of the gate itself: `always()` so a failed
+      # Mutation run's exact per-mutant detail (file, mutator, location,
+      # status) is downloadable instead of only the summary count `npm run
+      # contract` prints to the log -- needed to hand-verify a CI-only
+      # "Survived" that never reproduces locally, per each mutant's own real
+      # source rather than guessing from the count alone.
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mutation-report
+          path: reports/mutation/mutation.json
+          retention-days: 5
+          if-no-files-found: ignore
+
+      # A contract run is not a pure read: Format/Lint auto-fix, and
+      # SecurityDeps/SecuritySocket reconcile .repo-contract/exceptions/*.json
+      # (scaffolding a blank stub for any new finding, surfacing a stale
+      # record). CI starts from a clean checkout, so any post-run working-tree
+      # change means an ungoverned finding or an un-added exception stub
+      # slipped through -- fail loudly rather than let it ride along with a
+      # green run, matching repo-contract's own identical guard.
+      - name: Working tree is clean after the contract run
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The contract run left the working tree dirty. A new finding needs its exception stub filled in and committed (.repo-contract/exceptions/), or a file needs formatting. Run 'npm run contract' locally and commit the result."
+            git status --porcelain
+            git diff
+            exit 1
+          fi
 
   cross-runtime:
     runs-on: ubuntu-latest
@@ -128,6 +213,18 @@ jobs:
           npm run typecheck
           npm run test:evidence
           npm start
+
+      # Not a fourth flagship -- see examples/README.md's "Framework
+      # integration" section. `npm run build` is the real assertion here: it
+      # chains `docs` -> `scripts/validate-env.ts` (tsx) -> `next build`, so a
+      # regression in the fail-fast contract mechanism (or the
+      # serverExternalPackages/force-dynamic/per-chunk-import fixes this
+      # example's own README documents) fails CI, not just a typecheck.
+      - name: nextjs-app
+        working-directory: examples/nextjs-app
+        run: |
+          npm install
+          npm run build
 
       # Runs each flagship's real npm scripts against its own committed,
       # fake-but-plausible `.env` file and asserts on real stdout -- the
@@ -292,7 +389,7 @@ jobs:
   # `continue-on-error: true` and non-blocking -- gating the docs deploy on it
   # would contradict its own documented purpose.
   badges:
-    needs: [verify, cross-runtime]
+    needs: [verify, lint, cross-runtime]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:

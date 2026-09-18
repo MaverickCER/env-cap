@@ -29,7 +29,7 @@ describe("deepFreeze", () => {
     expect(Object.isFrozen(value.items)).toBe(true)
     expect(Object.isFrozen(value.items[0])).toBe(true)
     expect(() => {
-      value.items[0].id = 99
+      value.items[0]!.id = 99
     }).toThrow(TypeError)
   })
 

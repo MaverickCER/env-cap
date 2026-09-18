@@ -86,7 +86,7 @@ function makeContract(
   }
 }
 
-function contracts(): DiscoveredContract[] {
+function contracts(): [DiscoveredContract, DiscoveredContract] {
   return [
     makeContract({
       file: "/repo/features/payments/env.schema.ts",
