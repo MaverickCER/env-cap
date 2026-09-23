@@ -4,7 +4,7 @@
       "severity": "warning",
       "code": "EXPIRING_SOON",
       "family": "documentation",
-      "message": "\"STRIPE_KEY\" expires in 12 day(s) (expiresAt: 2026-09-27).",
+      "message": "\"STRIPE_KEY\" expires in 4 day(s) (expiresAt: 2026-09-27).",
       "location": {
         "model": "contract",
         "file": "src/env.ts",
@@ -52,7 +52,7 @@
         "severity": "warning",
         "code": "EXPIRING_SOON",
         "family": "documentation",
-        "message": "\"STRIPE_KEY\" expires in 12 day(s) (expiresAt: 2026-09-27).",
+        "message": "\"STRIPE_KEY\" expires in 4 day(s) (expiresAt: 2026-09-27).",
         "location": {
           "model": "contract",
           "file": "src/env.ts",
@@ -101,7 +101,7 @@
         "severity": "warning",
         "code": "EXPIRING_SOON",
         "family": "documentation",
-        "message": "\"STRIPE_KEY\" expires in 12 day(s) (expiresAt: 2026-09-27).",
+        "message": "\"STRIPE_KEY\" expires in 4 day(s) (expiresAt: 2026-09-27).",
         "location": {
           "model": "contract",
           "file": "src/env.ts",
@@ -152,7 +152,7 @@
         "severity": "warning",
         "code": "EXPIRING_SOON",
         "family": "documentation",
-        "message": "\"STRIPE_KEY\" expires in 12 day(s) (expiresAt: 2026-09-27).",
+        "message": "\"STRIPE_KEY\" expires in 4 day(s) (expiresAt: 2026-09-27).",
         "location": {
           "model": "contract",
           "file": "src/env.ts",
@@ -203,7 +203,7 @@
         "severity": "warning",
         "code": "EXPIRING_SOON",
         "family": "documentation",
-        "message": "\"STRIPE_KEY\" expires in 12 day(s) (expiresAt: 2026-09-27).",
+        "message": "\"STRIPE_KEY\" expires in 4 day(s) (expiresAt: 2026-09-27).",
         "location": {
           "model": "contract",
           "file": "src/env.ts",

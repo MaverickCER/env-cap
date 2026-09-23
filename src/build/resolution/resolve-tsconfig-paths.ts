@@ -108,7 +108,12 @@ export async function loadTsconfigPaths(
   // different fresh Stryker runs have shown different specific mutants here
   // as Survived -- not a stable set of gaps, the same false-positive class
   // manifesting with different mutator granularity each time.
-  // Stryker disable ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, StringLiteral
+  // Re-confirmed 2026-09-20: CI's diagnostic mutation report flagged a `BooleanLiteral`
+  // (`!hasPaths` -> `hasPaths`) mutant below as Survived; the same file's `readResult.error`
+  // `BlockStatement` was flagged in data-cap's copy. Applied by hand, each fails real tests
+  // in this file's suite immediately (three tests for the first, "warns on malformed JSON"
+  // for the second) -- same class, wider mutator set than previously listed here.
+  // Stryker disable ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, StringLiteral, BooleanLiteral, BlockStatement
   const isExplicit = tsconfigOption !== undefined
   const configFile = path.resolve(root, tsconfigOption ?? "tsconfig.json")
 
@@ -150,7 +155,7 @@ export async function loadTsconfigPaths(
   }
 
   return { resolution: { compilerOptions: parsed.options, configFile }, warning: undefined }
-  // Stryker restore ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, StringLiteral
+  // Stryker restore ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, StringLiteral, BooleanLiteral, BlockStatement
 }
 
 /**
