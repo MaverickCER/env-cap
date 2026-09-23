@@ -5,7 +5,7 @@
       "exportName": "env",
       "key": "STRIPE_KEY",
       "expiresAt": "2026-09-27",
-      "daysRemaining": 12
+      "daysRemaining": 4
     }
   ],
   "deprecatedContracts": [],
