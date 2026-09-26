@@ -137,14 +137,20 @@ function normalizeExpiryCountdowns(text: string): string {
 /**
  * Byte-for-byte comparison of each of `relativePaths` against its
  * `expected/<same path>` golden copy -- see `examples/README.md`'s
- * "expected/" section. Two artifact types carry a wall-clock-relative value
- * that would otherwise false-positive: Markdown (`normalizeDocsForComparison`)
- * and the persisted evidence artifact, `docs/env.evidence.json`
- * (`normalizeEvidenceJsonForComparison`, ADR 0038) -- everything else
- * (including that artifact's own `.fingerprint` sidecar, a deterministic
- * content hash with nothing wall-clock-relative in it) compares as-is.
- * Asserts per-file, not as one bulk diff, so a failure names exactly which
- * artifact drifted.
+ * "expected/" section. Three artifact types carry a value that would
+ * otherwise false-positive across a real package version bump between when
+ * the golden was captured and when this test runs: Markdown
+ * (`normalizeDocsForComparison`), the persisted evidence artifact,
+ * `docs/env.evidence.json` (`normalizeEvidenceJsonForComparison`, ADR 0038),
+ * and that artifact's own `.fingerprint` sidecar -- `computeSourceFingerprint()`
+ * deliberately hashes in `readToolVersion()` alongside real file content
+ * (see its own doc comment), so unlike a `--check` run's own live
+ * self-consistency (where the version can't change mid-run), a golden
+ * fingerprint is expected to change on every release even with zero content
+ * drift; the evidence JSON comparison above already exhaustively covers real
+ * content, so the fingerprint contributes nothing this test needs to assert
+ * on. Everything else compares as-is. Asserts per-file, not as one bulk
+ * diff, so a failure names exactly which artifact drifted.
  */
 export async function compareGoldenArtifacts(
   exampleDir: string,
@@ -155,13 +161,15 @@ export async function compareGoldenArtifacts(
       fs.readFile(path.join(exampleDir, relativePath), "utf8"),
       fs.readFile(path.join(exampleDir, "expected", relativePath), "utf8"),
     ])
-    const normalize = relativePath.endsWith(".md")
-      ? normalizeDocsForComparison
-      : relativePath.endsWith("env.evidence.json")
-        ? normalizeEvidenceJsonForComparison
-        : relativePath.endsWith(".json")
-          ? normalizeExpiryCountdowns
-          : (s: string): string => s
+    const normalize = relativePath.endsWith(".fingerprint")
+      ? (): string => "<FINGERPRINT>"
+      : relativePath.endsWith(".md")
+        ? normalizeDocsForComparison
+        : relativePath.endsWith("env.evidence.json")
+          ? normalizeEvidenceJsonForComparison
+          : relativePath.endsWith(".json")
+            ? normalizeExpiryCountdowns
+            : (s: string): string => s
     expect(
       normalize(actual),
       `${exampleDir}/${relativePath} does not match expected/${relativePath}`,
