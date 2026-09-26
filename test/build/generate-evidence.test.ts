@@ -3,7 +3,7 @@ import { existsSync } from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { buildContractModel } from "../../src/build/contract-model.js"
 import { discoverSchemaFiles } from "../../src/build/discover.js"
 import { EVIDENCE_MODEL_SCHEMA_VERSION } from "../../src/build/evidence-model.js"
@@ -25,6 +25,17 @@ import {
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtureRoot = path.resolve(here, "fixtures-generate-evidence")
+// A separate, deliberately empty directory `process.cwd()` is mocked to for
+// every test below, none of which relies on the real ambient cwd (each
+// passes `root: fixtureRoot` explicitly). Without this, a mutation to
+// generate-evidence.ts's `options.root ?? process.cwd()` default (line 101)
+// makes every call in this file scan the real, large repository checkout
+// instead of the 3-file fixture -- generateEvidenceModel's own doc comment
+// notes it already does two independent, redundant discovery passes per
+// call, so that cost multiplies across this file's many test cases into a
+// Stryker per-mutant timeout instead of the fast, assertion-based failure a
+// small, distinctly-empty decoy directory produces instead.
+const cwdDecoy = path.resolve(here, "fixtures-generate-evidence-cwd-decoy")
 
 async function write(relativePath: string, content: string): Promise<string> {
   const filePath = path.join(fixtureRoot, relativePath)
@@ -39,6 +50,8 @@ const nearFutureIsoDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOSt
 
 beforeEach(async () => {
   await fs.rm(fixtureRoot, { recursive: true, force: true })
+  await fs.mkdir(cwdDecoy, { recursive: true })
+  vi.spyOn(process, "cwd").mockReturnValue(cwdDecoy)
   await write(
     "features/payments/env.schema.ts",
     `const paymentsSchema = { STRIPE_KEY: {}, STRIPE_WEBHOOK_SECRET: {} };
@@ -61,7 +74,9 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  vi.restoreAllMocks()
   await fs.rm(fixtureRoot, { recursive: true, force: true })
+  await fs.rm(cwdDecoy, { recursive: true, force: true })
 })
 
 describe("generateEvidenceModel", () => {
@@ -318,6 +333,12 @@ describe("generateEvidenceModel", () => {
     await expect(
       generateEvidenceModel({ fs: nodeBuildFs, root: fixtureRoot }),
     ).resolves.toBeDefined()
+  })
+
+  it("defaults root to process.cwd() when omitted", async () => {
+    vi.spyOn(process, "cwd").mockReturnValue(fixtureRoot)
+    const evidence = await generateEvidenceModel({ fs: nodeBuildFs })
+    expect(evidence.contract.contracts.some((c) => c.exportName === "paymentsEnv")).toBe(true)
   })
 })
 
