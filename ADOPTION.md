@@ -44,14 +44,14 @@ needs:
   ([ADR 0002](specs/decisions/0002-static-analysis-never-execution.md)).
   This guarantee is enforced by a regression test proving a schema file with
   a throwing top-level statement never actually runs during discovery.
-- **Cross-package discovery (ADR 0014, Experimental) does not weaken the
+- **Cross-package discovery (ADR 0014) does not weaken the
   above.** It is opt-in (an explicit `packages` allowlist, never an implicit
   scan of installed dependencies), never walks `node_modules` via `readdir`,
   and validates a resolved file's path, extension, symlink target, and size
   before ever parsing it — see
   [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md) and the
   updated `SECURITY.md` section for the exact bounds.
-- **TypeScript path-alias resolution (ADR 0023, Experimental) never crosses
+- **TypeScript path-alias resolution (ADR 0023) never crosses
   into `node_modules`.** Unlike cross-package discovery, this mechanism is on
   by default (a project's own `tsconfig.json` never crosses a
   trust/versioning boundary the way an installed package does), but the
@@ -70,9 +70,10 @@ needs:
 
 Full detail: [`VERSIONING.md`](VERSIONING.md). The three-tier model —
 **Stable** (semver-covered public runtime/build APIs, CLI flags, the `--json`
-schema, the generated manifest format), **Experimental** (explicitly labeled
-new surfaces, currently cross-package discovery and tsconfig path-alias
-resolution, that may still change shape before being promoted), and
+schema, the generated manifest format, and every surface listed in
+[ADR 0045](specs/decisions/0045-promote-experimental-surfaces-to-stable.md)),
+**Experimental** (explicitly labeled new surfaces that may still change
+shape before being promoted -- nothing currently ships under this tier), and
 **Private** (internal implementation, never covered) — is what the eventual
 1.0 stability promise will cover.
 

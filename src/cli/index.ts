@@ -281,8 +281,8 @@ Options:
   --location <path>                Output path for the generated manifest
   --include <glob>                 Schema-discovery glob (repeatable, default: **/env.schema.ts)
   --exclude <glob>                  Glob pattern to exclude (repeatable)
-  --package <name>                  [Experimental, see ADR 0014] Installed package name to also discover a schema from, via its "envCap.schema" package.json field (repeatable)
-  --tsconfig <path>                 [Experimental, see ADR 0023] Path to a tsconfig.json (relative to root) whose "paths"/"baseUrl" resolve aliased imports encountered during static analysis (default: auto-detected "tsconfig.json" at root)
+  --package <name>                  Installed package name to also discover a schema from, via its "envCap.schema" package.json field (repeatable)
+  --tsconfig <path>                 Path to a tsconfig.json (relative to root) whose "paths"/"baseUrl" resolve aliased imports encountered during static analysis (default: auto-detected "tsconfig.json" at root)
   --no-tsconfig                     Disable tsconfig path-alias resolution entirely
   --docs <path>                     Also emit the rich Markdown docs artifact at this path
   --env-example <path>              Also emit a .env.example file at this path (only meaningful alongside --docs)

@@ -87,9 +87,9 @@ export interface GenerateUsageReportOptions {
   include?: string[] | undefined
   /** Glob patterns to exclude, for both schema discovery and the usage scan. Defaults to node_modules/dist/.git. */
   exclude?: string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; see ADR 0014. */
+  /** See `GenerateEnvManifestOptions.packages`; see ADR 0014. */
   packages?: readonly string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; see ADR 0023. */
+  /** See `GenerateEnvManifestOptions.tsconfig`; see ADR 0023. */
   tsconfig?: string | false | undefined
   /** Also write the rendered Markdown report to this path, relative to `root`. Omitted: the report is only returned, not written. */
   report?:

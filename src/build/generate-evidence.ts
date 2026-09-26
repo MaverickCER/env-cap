@@ -32,9 +32,9 @@ export interface GenerateEvidenceModelOptions {
   include?: string[] | undefined
   /** Glob patterns to exclude, shared across every pass. Defaults to node_modules/dist/.git. */
   exclude?: string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`. See ADR 0014. */
+  /** See `GenerateEnvManifestOptions.packages`. See ADR 0014. */
   packages?: readonly string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`. See ADR 0023. */
+  /** See `GenerateEnvManifestOptions.tsconfig`. See ADR 0023. */
   tsconfig?: string | false | undefined
   /**
    * Where a previously-persisted evidence artifact lives, relative to

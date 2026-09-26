@@ -28,7 +28,7 @@ export interface GenerateEnvManifestOptions {
   /** Glob patterns to exclude. Defaults to node_modules/dist/.git. */
   exclude?: string[] | undefined
   /**
-   * **Experimental** (see VERSIONING.md) -- explicit allowlist of installed
+   * Explicit allowlist of installed
    * package names whose declared `"envCap": { "schema": "<path>" }` entry
    * point should also be discovered, so a contract that ships as its own
    * separately-published package (no monorepo required) can be included in
@@ -37,7 +37,7 @@ export interface GenerateEnvManifestOptions {
    */
   packages?: readonly string[] | undefined
   /**
-   * **Experimental** (see VERSIONING.md) -- path to a tsconfig.json (relative to `root`)
+   * Path to a tsconfig.json (relative to `root`)
    * whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.
    * `"@/lib/env.schema.js"`) encountered during static analysis, so a contract or consumer
    * reached only through an alias isn't misreported as abandoned/unresolved. Defaults to

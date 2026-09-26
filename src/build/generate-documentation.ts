@@ -34,9 +34,9 @@ export interface GenerateDocumentationOptions {
   include?: string[] | undefined
   /** Glob patterns for files/directories to prune. Defaults to `defaultExclude()`. */
   exclude?: string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; see ADR 0014. */
+  /** See `GenerateEnvManifestOptions.packages`; see ADR 0014. */
   packages?: readonly string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; see ADR 0023. */
+  /** See `GenerateEnvManifestOptions.tsconfig`; see ADR 0023. */
   tsconfig?: string | false | undefined
   /** How many days out counts as "expiring soon". Defaults to 30. */
   expiringWithinDays?: number | undefined

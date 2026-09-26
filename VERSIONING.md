@@ -29,11 +29,31 @@ major version bump (once the package reaches 1.0 -- see
 - **The generated manifest schema**: the shape of the file
   `generateEnvManifest()`/`generateEnvArtifacts()` writes.
 - **Documented configuration conventions**: for example, the `envCap.schema`
-  package.json field (see [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md))
-  -- once it is promoted out of Experimental status (see below).
+  package.json field (see [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)).
 - **The ESLint plugin**: `env-cap/eslint-plugin`'s exported rule
   name(s), each rule's `RuleOptions` shape, and the default `env.schema.ts`/
   `.tsx` allowlist -- see [ADR 0017](specs/decisions/0017-eslint-plugin-entry-point.md).
+- **The `packages` option** (cross-package schema discovery, ADR 0014) and
+  **`tsconfig` option** (TypeScript path-alias resolution, ADR 0023) on every
+  generator.
+- **`env-cap/build`'s lower-level discovery/linking primitives** --
+  everything `./build` exports beyond the four generator orchestrators,
+  e.g. `discoverSchemaFiles`, `linkFiles`, `parseSchemaFile`, `renderManifest`,
+  `renderDocs`, `detectCompatibilityIssues`, `detectExclusiveGroupIssues`,
+  `generateEvidenceModel`, `getEvidenceModel`/`computeSourceFingerprint`,
+  `renderUsageReport`, and their accompanying types.
+- **`env-cap/evidence`** (`defineEvidenceProjection`, and the `EvidenceModel`
+  shape it projects over) -- see [ADR 0031](specs/decisions/0031-evidence-entry-point.md)
+  and [ADR 0032](specs/decisions/0032-evidence-projection-provenance-mechanism.md).
+- **The persisted evidence artifact** (`docs/env.evidence.json` or wherever a
+  project's `evidence.location`/`--evidence <path>` points) -- a direct,
+  literal serialization of `EvidenceModel`.
+- **The `init` CLI subcommand**'s scaffolded file set and template contents
+  -- see [ADR 0042](specs/decisions/0042-init-cli-subcommand-scaffolds-only.md).
+
+All promoted from Experimental per [ADR 0045](specs/decisions/0045-promote-experimental-surfaces-to-stable.md)
+-- see that ADR for why each one had already cleared this tier's own
+graduation criterion (below).
 
 ## Experimental
 
@@ -47,56 +67,9 @@ commit to _something_. Once a feature has been through at least one real
 feedback cycle without a need to break it, its ADR's Status moves from
 Proposed/Experimental to Accepted, and it becomes Stable.
 
-The `packages` option (cross-package schema discovery, ADR 0014) is the
-first surface to ship this way.
-
-`env-cap/build`'s lower-level discovery/linking primitives -- everything
-`./build` exports beyond the four documented generator orchestrators above,
-e.g. `discoverSchemaFiles`, `linkFiles`, `parseSchemaFile`, `renderManifest`,
-`renderDocs`, `detectCompatibilityIssues`, `detectExclusiveGroupIssues`, and
-their accompanying types -- are Experimental under this same policy. They are
-real, public, re-exported surface (not Private -- see below), justified for
-custom tooling (CI scripts, bundler plugins) per `src/build/index.ts`'s own
-doc comment, but have not yet been through a real feedback cycle as a
-committed, individually-stable contract the way the four orchestrators have.
-A breaking change to any of them is not a semver violation today; each is
-promoted to Stable independently once real usage shows its current shape is
-right, the same promotion path `packages` itself is following.
-
-**`env-cap/evidence`** (`defineEvidenceProjection`, and the
-`EvidenceModel` shape it projects over) ships Experimental for the same
-reason -- see [ADR 0031](specs/decisions/0031-evidence-entry-point.md) and
-[ADR 0032](specs/decisions/0032-evidence-projection-provenance-mechanism.md).
-The mechanism (automatic read-only enforcement, field-level provenance
-tracking) is new enough that real projection authorship -- both env-cap's own
-reference projections and a consumer's custom ones -- is likely to surface a
-better shape for `EvidenceProjectionResult.sources` in particular (currently
-flat `EvidenceModel` field-path strings, not yet resolved into structured
-`EvidenceReference`s -- see ADR 0032's Consequences).
-
-**`generateEvidenceModel`** (`env-cap/build`) is Experimental
-for the same reason, and unlike `generateEnvManifest`/`generateDocumentation`/
-`generateUsageReport`/`generateEnvArtifacts` it is deliberately never
-promoted to the same "throws on a blocking finding" behavior those four
-share -- it never throws for a data-quality finding by design (every one
-becomes a `Finding` instead, see ADR 0031), which isn't a temporary
-Experimental-tier gap to close but the intended, permanent shape.
-
-**`getEvidenceModel`/`computeSourceFingerprint`** (`env-cap/build`,
-ADR 0038) are Experimental for the same reason as `generateEvidenceModel` --
-the fingerprint-cache mechanism itself (what counts as the "scan surface" a
-content hash covers, what a cache miss's fallback behavior should be) has not
-yet been through a real feedback cycle. `renderUsageReport` is Experimental
-too, mirroring `renderDocs`'s existing tier -- both are pure formatters over
-already-public finding types, not the AST-scanning engine ADR 0010 restricts.
-
-**The persisted evidence artifact** (`docs/env.evidence.json` or wherever a
-project's `evidence.location`/`--evidence <path>` points) is Experimental as
-a _file format_, even though `generateEnvArtifacts()`'s `evidence` option and
-the `--evidence` CLI flag that request it are Stable -- the artifact is a
-direct, literal serialization of `EvidenceModel`, itself Experimental (see
-above), so its on-disk shape inherits that tier and can change without a
-semver-major bump until `EvidenceModel` itself is promoted.
+Nothing currently ships Experimental -- see [ADR 0045](specs/decisions/0045-promote-experimental-surfaces-to-stable.md)
+for the most recent round of promotions. A future feature genuinely new
+enough to warrant it will be added here, explicitly, with its own ADR.
 
 ## Private
 

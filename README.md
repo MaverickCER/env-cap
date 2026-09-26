@@ -116,9 +116,7 @@ npm install @maverickcer/env-cap
 npx env-cap init
 ```
 
-`init` scaffolds the same setup shown below: an `env.schema.ts` contract and a `scripts/generate-env.mjs` generator. It never overwrites existing files and never modifies `package.json`.
-
-`init` is Experimental. See [VERSIONING.md](VERSIONING.md).
+`init` scaffolds the same setup shown below: an `env.schema.ts` contract and a `scripts/generate-env.mjs` generator. It never overwrites existing files and never modifies `package.json`. See [VERSIONING.md](VERSIONING.md).
 
 If you prefer to create the contract yourself, the minimum setup is:
 

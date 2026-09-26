@@ -17,26 +17,24 @@
  *
  * The public API is deliberately curated: four generator functions
  * (`generateEnvManifest`, `generateDocumentation`, `generateUsageReport`,
- * `generateEnvArtifacts`) -- Stable, per VERSIONING.md -- plus the
- * lower-level discovery/linking primitives already justified by real
- * external use (custom CI scripts, bundler plugins). Those primitives are
- * Experimental, not Stable, until each has been through a real feedback
- * cycle on its own (see VERSIONING.md's Experimental tier). The
- * dependency-ownership engine's internals (scanning, graph-building,
- * derivation) are intentionally NOT exported here -- see ADR 0010 and ADR
- * 0011. `env-cap` answers ownership/visibility questions; it doesn't ship a
- * general-purpose static-analysis toolkit. The scanner follows
- * object-destructuring and one level of file-unique `const` aliasing, and
- * records every other shape as an explicit `escape` (ADR 0039); a variable
- * on an escaped contract is `indeterminate`, never a false `unconsumed`, and
- * the finding's `reason` cites every escape site.
+ * `generateEnvArtifacts`) plus the lower-level discovery/linking primitives,
+ * justified by real external use (custom CI scripts, bundler plugins) and
+ * promoted to Stable alongside the orchestrators per ADR 0045 -- see
+ * VERSIONING.md. The dependency-ownership engine's internals (scanning,
+ * graph-building, derivation) are intentionally NOT exported here -- see ADR
+ * 0010 and ADR 0011. `env-cap` answers ownership/visibility questions; it
+ * doesn't ship a general-purpose static-analysis toolkit. The scanner
+ * follows object-destructuring and one level of file-unique `const`
+ * aliasing, and records every other shape as an explicit `escape` (ADR
+ * 0039); a variable on an escaped contract is `indeterminate`, never a false
+ * `unconsumed`, and the finding's `reason` cites every escape site.
  *
- * Each generator also accepts an Experimental `packages` option (an explicit
+ * Each generator also accepts a `packages` option (an explicit
  * allowlist of installed package names) for discovering a schema that ships
  * inside a separately-published dependency rather than the project's own
  * source tree -- see ADR 0014 and VERSIONING.md.
  *
- * Each generator also accepts an Experimental `tsconfig` option for resolving
+ * Each generator also accepts a `tsconfig` option for resolving
  * import specifiers written as TypeScript path aliases (e.g. `"@/lib/env"`)
  * against a project's own `tsconfig.json` `paths`/`baseUrl` during static
  * analysis. Unlike `packages`, this is on by default (auto-detecting
@@ -77,9 +75,8 @@ export type {
   ManifestVariableRef,
   ManifestVariableUpdate,
 } from "./evidence-snapshot.js"
-// A fast, cache-aware read path for the persisted evidence artifact --
-// Experimental (see VERSIONING.md), like `generateEvidenceModel()` itself.
-// See ADR 0038.
+// A fast, cache-aware read path for the persisted evidence artifact,
+// like `generateEvidenceModel()` itself. See ADR 0038.
 export { computeSourceFingerprint, getEvidenceModel } from "./evidence-cache.js"
 export type {
   ComputeSourceFingerprintOptions,
@@ -91,8 +88,8 @@ export type { GenerateUsageReportOptions, GenerateUsageReportResult } from "./ge
 // Finding/entry shapes are defined in usage-report.ts (the renderer), not
 // generate-usage.ts (the orchestrator) -- see RenderUsageReportOptions's own
 // doc comment for why, mirroring docs.ts's CatalogContract/ExpiringEntry
-// below. `renderUsageReport()` itself is exported (Experimental, mirroring
-// `renderDocs()`'s existing tier) -- a pure formatter over these
+// below. `renderUsageReport()` itself is exported, mirroring
+// `renderDocs()` -- a pure formatter over these
 // already-public finding types, not the AST-scanning engine ADR 0010
 // restricts; a consumer (a custom evidence projection, e.g.) can render the
 // exact same Markdown env-cap's own `--ownership` output produces. See ADR
@@ -218,9 +215,11 @@ export type { DynamicAccessAssertion, SourcePosition } from "./source-position.j
 // by `env-cap/evidence`.
 export { EVIDENCE_MODEL_SCHEMA_VERSION } from "./evidence-model.js"
 export type { EvidenceModel, EvidenceProvenance } from "./evidence-model.js"
-// generateEvidenceModel() -- Experimental (see VERSIONING.md), unlike the
-// four Stable orchestrators above: runs discovery once and assembles all
+// generateEvidenceModel() runs discovery once and assembles all
 // seven canonical fact models by calling each one's own builder directly.
+// Unlike the four orchestrators above, it never throws for a data-quality
+// finding by design -- every one becomes a `Finding` instead (see ADR 0031);
+// that is this function's permanent, intended shape, not a gap to close.
 export { generateEvidenceModel } from "./generate-evidence.js"
 export type { GenerateEvidenceModelOptions } from "./generate-evidence.js"
 // The Finding Model (ADR 0024, ADR 0026) -- unifies CompatibilityIssue,
@@ -284,7 +283,7 @@ export type {
   SchemaRef,
 } from "./parse.js"
 export { resolveRelativeImport } from "./resolution/resolve-import.js"
-// Cross-package schema discovery (Experimental -- see ADR 0014 and VERSIONING.md).
+// Cross-package schema discovery (see ADR 0014 and VERSIONING.md).
 // Only the `packages` option (above, on each generator's options type) and
 // the `PackageOrigin` shape it attaches to `DiscoveredContract` are public --
 // resolution internals (`resolvePackageSchemaFile`, `resolveAllowlistedPackages`,

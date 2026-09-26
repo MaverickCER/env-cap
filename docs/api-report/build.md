@@ -4272,7 +4272,7 @@ Output path for the Markdown docs artifact, relative to `root`.
 optional packages?: readonly string[];
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; see ADR 0014.
+See `GenerateEnvManifestOptions.packages`; see ADR 0014.
 
 ##### root?
 
@@ -4288,7 +4288,7 @@ Project root schema discovery is relative to. Defaults to `process.cwd()`.
 optional tsconfig?: string | false;
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; see ADR 0023.
+See `GenerateEnvManifestOptions.tsconfig`; see ADR 0023.
 
 ***
 
@@ -4474,7 +4474,7 @@ escalated by either -- see `Finding.severity`.
 optional packages?: readonly string[];
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; shared across every requested pass. See ADR 0014.
+See `GenerateEnvManifestOptions.packages`; shared across every requested pass. See ADR 0014.
 
 ##### root?
 
@@ -4490,7 +4490,7 @@ Directory glob patterns are resolved against, shared across every requested pass
 optional tsconfig?: string | false;
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; shared across every requested pass. See ADR 0023.
+See `GenerateEnvManifestOptions.tsconfig`; shared across every requested pass. See ADR 0023.
 
 ##### usage?
 
@@ -4600,7 +4600,7 @@ return type annotations) block generation; everything else is reported as a warn
 optional packages?: readonly string[];
 ```
 
-**Experimental** (see VERSIONING.md) -- explicit allowlist of installed
+Explicit allowlist of installed
 package names whose declared `"envCap": { "schema": "<path>" }` entry
 point should also be discovered, so a contract that ships as its own
 separately-published package (no monorepo required) can be included in
@@ -4621,7 +4621,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 optional tsconfig?: string | false;
 ```
 
-**Experimental** (see VERSIONING.md) -- path to a tsconfig.json (relative to `root`)
+Path to a tsconfig.json (relative to `root`)
 whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.
 `"@/lib/env.schema.js"`) encountered during static analysis, so a contract or consumer
 reached only through an alias isn't misreported as abandoned/unresolved. Defaults to
@@ -4746,7 +4746,7 @@ schema's own static `expiresAt`. See `live-expirations.ts` and ADR 0012.
 optional packages?: readonly string[];
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`. See ADR 0014.
+See `GenerateEnvManifestOptions.packages`. See ADR 0014.
 
 ##### previousSnapshotLocation?
 
@@ -4777,7 +4777,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 optional tsconfig?: string | false;
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`. See ADR 0023.
+See `GenerateEnvManifestOptions.tsconfig`. See ADR 0023.
 
 ***
 
@@ -4817,7 +4817,7 @@ Schema-discovery glob, for the contract graph -- self-sufficient like the other 
 optional packages?: readonly string[];
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; see ADR 0014.
+See `GenerateEnvManifestOptions.packages`; see ADR 0014.
 
 ##### report?
 
@@ -4851,7 +4851,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 optional tsconfig?: string | false;
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; see ADR 0023.
+See `GenerateEnvManifestOptions.tsconfig`; see ADR 0023.
 
 ***
 
@@ -5090,7 +5090,7 @@ Where the cached evidence artifact (and its `.fingerprint` sidecar) live, e.g. `
 optional packages?: readonly string[];
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`. See ADR 0014.
+See `GenerateEnvManifestOptions.packages`. See ADR 0014.
 
 ###### Inherited from
 
@@ -5133,7 +5133,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 optional tsconfig?: string | false;
 ```
 
-**Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`. See ADR 0023.
+See `GenerateEnvManifestOptions.tsconfig`. See ADR 0023.
 
 ###### Inherited from
 

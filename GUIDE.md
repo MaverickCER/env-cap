@@ -751,15 +751,13 @@ Check `result.parseWarnings` or the CLI's non-JSON output for the specific reaso
 
 Confirm `tsconfig.json` is actually at `root` (auto-detection doesn't search upward) and declares `paths`/`baseUrl`, or that an explicit `tsconfig` option points at the right file. Confirm `tsconfig` wasn't set to `false`.
 
-This mechanism is Experimental (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)) -- see [TypeScript path aliases](#typescript-path-aliases-pathsbaseurl) above.
+See [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md) and [TypeScript path aliases](#typescript-path-aliases-pathsbaseurl) above.
 
 **"A package's contract isn't discoverable even though I listed it in `packages`."**
 
 Check `result.parseWarnings` for a `"(package) <name>"`-prefixed entry.
 
 The allow-listed package must declare a valid `envCap.schema` field pointing to real `.ts`/`.tsx` source inside its own directory (see [Reusable packages](#reusable-packages)).
-
-This mechanism is Experimental (see [`VERSIONING.md`](VERSIONING.md)).
 
 **"I called `validateEnv()` again with different `values` and got the same result as last time."**
 
