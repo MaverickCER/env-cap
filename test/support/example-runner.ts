@@ -93,11 +93,28 @@ export function runExpectingFailure(exampleDir: string, script: string): string 
   return `${stdout}${stderr}`
 }
 
-/** Parses `text` as an `EvidenceModel` and normalizes out `provenance.generatedAt` (see `normalizeEvidenceSnapshotForComparison()`) before re-serializing -- so the persisted evidence artifact's one live timestamp never false-positives a golden comparison. A parse failure returns `text` unchanged, matching `check-artifacts.ts`'s own identically-purposed helper. */
+/**
+ * Parses `text` as an `EvidenceModel` and normalizes out `provenance.generatedAt` (see
+ * `normalizeEvidenceSnapshotForComparison()`) before re-serializing -- so the persisted evidence
+ * artifact's one live timestamp never false-positives a golden comparison. A parse failure returns
+ * `text` unchanged, matching `check-artifacts.ts`'s own identically-purposed helper.
+ *
+ * Also blanks `provenance.toolVersion`: `normalizeEvidenceSnapshotForComparison()` deliberately
+ * compares it as-is for its own purpose (verifying a `--check` run against the `generate` run it's
+ * checking, within the same process, where the version genuinely never changes mid-run -- see that
+ * function's own doc comment). A golden fixture spans real time instead, and a package version bump
+ * between when the fixture was committed and when this test runs is routine, expected, and not what
+ * this comparison exists to catch.
+ */
 function normalizeEvidenceJsonForComparison(text: string): string {
   try {
     const parsed = JSON.parse(text) as EvidenceModel
-    return JSON.stringify(normalizeEvidenceSnapshotForComparison(parsed), null, 2)
+    const normalized = normalizeEvidenceSnapshotForComparison(parsed)
+    return JSON.stringify(
+      { ...normalized, provenance: { ...normalized.provenance, toolVersion: "" } },
+      null,
+      2,
+    )
   } catch {
     return text
   }
@@ -178,13 +195,18 @@ export function normalizeExampleCliOutput(output: string, exampleDir: string): s
  * `compareGoldenArtifacts()` already normalizes out of the standalone
  * `docs/env.evidence.json` file (ADR 0038) -- apply the identical
  * normalization here so the embedded copy doesn't false-positive on every
- * run the same way the standalone file would have without it.
+ * run the same way the standalone file would have without it. Also blanks the embedded evidence's
+ * `provenance.toolVersion` -- see `normalizeEvidenceJsonForComparison()`'s doc comment for why a
+ * golden fixture must tolerate a real package version bump that a same-process `--check` never sees.
  */
 export function normalizeExampleJsonOutput(output: string, exampleDir: string): unknown {
   const parsed = JSON.parse(output.split(exampleDir).join("<EXAMPLE_ROOT>")) as {
     evidence?: EvidenceModel
   }
-  return parsed.evidence
-    ? { ...parsed, evidence: normalizeEvidenceSnapshotForComparison(parsed.evidence) }
-    : parsed
+  if (!parsed.evidence) return parsed
+  const normalized = normalizeEvidenceSnapshotForComparison(parsed.evidence)
+  return {
+    ...parsed,
+    evidence: { ...normalized, provenance: { ...normalized.provenance, toolVersion: "" } },
+  }
 }
