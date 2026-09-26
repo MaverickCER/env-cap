@@ -204,17 +204,22 @@ export function normalizeExampleCliOutput(output: string, exampleDir: string): s
  * `docs/env.evidence.json` file (ADR 0038) -- apply the identical
  * normalization here so the embedded copy doesn't false-positive on every
  * run the same way the standalone file would have without it. Also blanks the embedded evidence's
- * `provenance.toolVersion` -- see `normalizeEvidenceJsonForComparison()`'s doc comment for why a
- * golden fixture must tolerate a real package version bump that a same-process `--check` never sees.
+ * `provenance.toolVersion`, and the envelope's own top-level `toolVersion`
+ * (`JsonSuccessPayload`/`JsonErrorPayload`, `src/cli/json.ts`) -- see
+ * `normalizeEvidenceJsonForComparison()`'s doc comment for why a golden fixture must tolerate a
+ * real package version bump that a same-process `--check` never sees.
  */
 export function normalizeExampleJsonOutput(output: string, exampleDir: string): unknown {
   const parsed = JSON.parse(output.split(exampleDir).join("<EXAMPLE_ROOT>")) as {
     evidence?: EvidenceModel
+    toolVersion?: string
   }
-  if (!parsed.evidence) return parsed
-  const normalized = normalizeEvidenceSnapshotForComparison(parsed.evidence)
+  const withToolVersionBlanked =
+    parsed.toolVersion !== undefined ? { ...parsed, toolVersion: "" } : parsed
+  if (!withToolVersionBlanked.evidence) return withToolVersionBlanked
+  const normalized = normalizeEvidenceSnapshotForComparison(withToolVersionBlanked.evidence)
   return {
-    ...parsed,
+    ...withToolVersionBlanked,
     evidence: { ...normalized, provenance: { ...normalized.provenance, toolVersion: "" } },
   }
 }
