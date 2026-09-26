@@ -1,5 +1,58 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- 69ff088: Exports `VariableEvidenceDocs` (previously an unexported internal
+  interface) from the package root, alongside the existing `ContractDocs`/
+  `VariableDocs` type exports.
+- ab1f435: Wires `internal-package-contract`'s governance in for real (CI now runs the
+  full contract as a blocking gate, mutation testing ratcheted to zero
+  survived/no-coverage/timeout), adds ISO 10007 and ISO/IEC 27001
+  open-standard alignment reports, and adds a Next.js example demonstrating
+  the client/server environment boundary.
+- 69ff088: Promotes every remaining Experimental-tier surface to Stable (ADR 0045):
+  the `packages`/`tsconfig` generator options, `env-cap/build`'s lower-level
+  discovery/linking primitives, `generateEvidenceModel`/`getEvidenceModel`/
+  `computeSourceFingerprint`/`renderUsageReport`, the `init` CLI subcommand,
+  `env-cap/evidence`, and the persisted evidence artifact format. No behavior
+  change -- this is a compatibility commitment change only. The Experimental
+  tier remains defined in `VERSIONING.md` for future genuinely-new surfaces;
+  nothing currently ships under it.
+
+  **Named caveat** (see ADR 0045): `env-cap/evidence`'s `EvidenceProjectionResult.sources`
+  had a specific, previously-documented open design question about its shape
+  (flat field-path strings vs. structured `EvidenceReference`s) that is not
+  yet resolved. It is promoted along with everything else for one consistent
+  fleet-wide policy, but a future shape change there is now a real Stable-tier
+  breaking change, not a minor-may-break Experimental adjustment.
+
+- 69ff088: **Breaking, pre-1.0 (any Stable API may change in a minor per VERSIONING.md):**
+  bare `--strict` now escalates every warning family (compatibility, documentation,
+  ownership) to a hard error, not just manifest compatibility (ADR 0044). This
+  matches `@maverickcer/data-cap`'s own `--strict`, which already escalates
+  every pass. `--strict-docs`/`--strict-ownership` are unchanged and still work
+  independently. A CI script relying on bare `--strict` _not_ escalating
+  documentation/ownership warnings needs to switch to the scoped flags (or fix
+  the newly-escalated findings).
+
+### Patch Changes
+
+- 69ff088: Fixes the bundled GitHub Action (`action.yml`) referencing the unscoped
+  package name `env-cap`, which does not exist on the public npm registry --
+  only the published `@maverickcer/env-cap` does. Any workflow using this
+  Action via `npx --yes` (its documented fetch path) 404'd. Also clarifies
+  the `args` input's description to mention `--evidence`.
+- 69ff088: Fixes `env-cap init` and `env-cap --help` throwing
+  `ERR_MODULE_NOT_FOUND: Cannot find package 'typescript'` on a fresh install
+  with no `typescript` present. `typescript` is an optional peer dependency
+  (only required for build-time manifest generation), but a static top-level
+  import of `../build/index.js` was evaluated eagerly for every CLI
+  invocation, including the two commands that never touch it. `../build/index.js`
+  is now loaded with a dynamic `import()` inside `runCheckMode`/`runGenerateMode`
+  only.
+
 ## 0.3.1
 
 ### Patch Changes
