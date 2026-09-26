@@ -9,7 +9,7 @@ import type { EnvSchema } from "./types.js"
  * `owner`/..., specifically so that different epistemic status is visible in
  * the shape itself and not only in a doc comment. See ADR 0037.
  */
-interface VariableEvidenceDocs {
+export interface VariableEvidenceDocs {
   /**
    * Citation(s) of where this variable is actually read dynamically --
    * somewhere env-cap's own static AST scan can't see (a shell script, a

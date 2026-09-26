@@ -49,7 +49,7 @@ documentEnv(paymentsSchema, {
 Run the build-time analysis against a real project:
 
 ```text
-$ npx env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --ownership docs/OWNERSHIP.md
+$ npx env-cap --include src/env.ts --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --ownership docs/OWNERSHIP.md
 
 Wrote manifest: src/generated/env.manifest.ts
 
@@ -59,7 +59,7 @@ Wrote docs: docs/ENVIRONMENT.md
 
 1 variable(s)/contract(s) expiring soon or already expired:
 
-  - STRIPE_KEY in env: 2026-09-01 (expired 9d ago)
+  - STRIPE_KEY in env: 2026-09-01 (expired 25d ago)
 
 Wrote dependency ownership report: docs/OWNERSHIP.md
 

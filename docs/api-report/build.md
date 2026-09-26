@@ -990,6 +990,8 @@ One directory entry from [BuildFileSystem.readdir](#readdir) -- the subset of No
 readonly isDirectory: () => boolean;
 ```
 
+Same contract as Node's `Dirent.isDirectory()`.
+
 ###### Returns
 
 `boolean`
@@ -999,6 +1001,8 @@ readonly isDirectory: () => boolean;
 ```ts
 readonly isFile: () => boolean;
 ```
+
+Same contract as Node's `Dirent.isFile()`.
 
 ###### Returns
 
@@ -1257,6 +1261,8 @@ A path's stat info from [BuildFileSystem.stat](#stat) -- the subset of Node's `S
 readonly isFile: () => boolean;
 ```
 
+Same contract as Node's `Stats.isFile()`.
+
 ###### Returns
 
 `boolean`
@@ -1294,6 +1300,8 @@ Absolute path of the generated artifact.
 ***
 
 ### ChangeModel
+
+The versioned, JSON-serializable root of the Change Model -- what changed since the last persisted evidence snapshot. See this module's own doc comment for the full picture.
 
 #### Properties
 
@@ -1629,6 +1637,8 @@ The environment variable name, when the finding is variable-level rather than co
 
 ### ContractModel
 
+The versioned, JSON-serializable root of the Contract Model -- every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See [ContractModelContract](#contractmodelcontract).
+
 #### Properties
 
 ##### contracts
@@ -1923,10 +1933,12 @@ readonly documented: boolean;
 ##### evidence
 
 ```ts
-readonly evidence: DiscoveredVariableEvidence | undefined;
+readonly evidence: 
+  | DiscoveredVariableEvidence
+  | undefined;
 ```
 
-The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See runtime.VariableEvidenceDocs and ADR 0037.
+The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See [runtime.VariableEvidenceDocs](runtime.md#variableevidencedocs) and ADR 0037.
 
 ##### expiresAt
 
@@ -2119,6 +2131,8 @@ Root-relative, POSIX-separated path of the file declaring the contract -- see `d
 
 ### DependencyModel
 
+The versioned, JSON-serializable root of the Dependency Model -- see this module's own doc comment for the full picture.
+
 #### Properties
 
 ##### consumers
@@ -2180,6 +2194,8 @@ Root-relative, POSIX-separated.
 ***
 
 ### DependencyModelContract
+
+One contract's dependency-ownership facts: which variables were accessed, which files consume it, and every dynamic/ambiguous access site found. See [DependencyModelVariable](#dependencymodelvariable) for the per-variable breakdown.
 
 #### Properties
 
@@ -2290,7 +2306,7 @@ readonly status: VariableAccessStatus;
 
 ### DiscoveredContract
 
-One `createEnv()` contract, merged with its linked `documentEnv()` documentation (if any). Its governance fields (`owner` .. `metadata`) are EnvGovernanceFields -- contract-level defaults that individual variables may override.
+One `createEnv()` contract, merged with its linked `documentEnv()` documentation (if any). Its governance fields (`owner` .. `metadata`) are `EnvGovernanceFields` -- contract-level defaults that individual variables may override.
 
 #### Extends
 
@@ -2517,7 +2533,7 @@ Every variable declared in the schema, merged with its linked documentation.
 
 ### DiscoveredContractDocs
 
-The `documentEnv()` contract-level documentation, resolved from static literals at the parse stage. Its governance fields (`owner` .. `metadata`) are EnvGovernanceFields.
+The `documentEnv()` contract-level documentation, resolved from static literals at the parse stage. Its governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`.
 
 #### Extends
 
@@ -2899,7 +2915,7 @@ The validator function's source text, normalized to single-line, if `hasValidato
 ### DiscoveredVariable
 
 One schema variable merged with its linked `documentEnv()` documentation. Its
-governance fields (`owner` .. `metadata`) are EnvGovernanceFields --
+governance fields (`owner` .. `metadata`) are `EnvGovernanceFields` --
 each an individual-variable override of the contract's own value, from the
 linked `documentEnv()` call's matching `variables` entry, or `undefined`.
 
@@ -3061,10 +3077,12 @@ Whether this specific key had a matching entry in the linked `documentEnv()` cal
 ##### evidence
 
 ```ts
-readonly evidence: DiscoveredVariableEvidence | undefined;
+readonly evidence: 
+  | DiscoveredVariableEvidence
+  | undefined;
 ```
 
-The linked `documentEnv()` entry's `evidence` sub-object -- the re-verified-every-run half of this variable's documentation, deliberately not flattened in alongside the declared-only fields above. See runtime.VariableEvidenceDocs and ADR 0037.
+The linked `documentEnv()` entry's `evidence` sub-object -- the re-verified-every-run half of this variable's documentation, deliberately not flattened in alongside the declared-only fields above. See [runtime.VariableEvidenceDocs](runtime.md#variableevidencedocs) and ADR 0037.
 
 ##### expiresAt
 
@@ -3278,7 +3296,7 @@ The validator function's source text, normalized to single-line, if `hasValidato
 
 ### DiscoveredVariableDocs
 
-One variable's statically-extracted `documentEnv()` documentation, as declared in that call's `variables` entry for this key -- governance fields (`owner` .. `metadata`) are EnvGovernanceFields, resolved from static literals.
+One variable's statically-extracted `documentEnv()` documentation, as declared in that call's `variables` entry for this key -- governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`, resolved from static literals.
 
 #### Extends
 
@@ -3337,10 +3355,12 @@ Statically-resolved `description`, if set to a string literal.
 ##### evidence
 
 ```ts
-readonly evidence: DiscoveredVariableEvidence | undefined;
+readonly evidence: 
+  | DiscoveredVariableEvidence
+  | undefined;
 ```
 
-Statically-extracted `evidence` sub-object -- the re-verified-every-run half of a variable's documentation, kept structurally apart from the declared-only fields above. `undefined` when the declaration has no `evidence` key at all. See runtime.VariableEvidenceDocs and ADR 0037.
+Statically-extracted `evidence` sub-object -- the re-verified-every-run half of a variable's documentation, kept structurally apart from the declared-only fields above. `undefined` when the declaration has no `evidence` key at all. See [runtime.VariableEvidenceDocs](runtime.md#variableevidencedocs) and ADR 0037.
 
 ##### expiresAt
 
@@ -3476,6 +3496,22 @@ Statically-resolved `setupInstructions`, if set to a string literal.
 
 ***
 
+### DiscoveredVariableEvidence
+
+The statically-extracted contents of one variable's `evidence` sub-object. See [runtime.VariableEvidenceDocs](runtime.md#variableevidencedocs).
+
+#### Properties
+
+##### dynamicAccess
+
+```ts
+readonly dynamicAccess: readonly string[] | undefined;
+```
+
+Well-formed `"path:line:column"` entries from `evidence.dynamicAccess`, if set to an array of string literals -- a malformed entry warns and is dropped, never included here. See ADR 0037.
+
+***
+
 ### DocumentationFindings
 
 Everything [generateDocumentation](#generatedocumentation) found that isn't fully documented or up to date -- never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the "documentation" family) from the persisted evidence artifact and decides for itself. See ADR 0038.
@@ -3496,7 +3532,7 @@ Variables whose `expiresAt` falls within the configured window.
 readonly nonstandardSensitivityLevels: readonly NonstandardSensitivityEntry[];
 ```
 
-Contract- or variable-level `sensitivity` values outside STANDARD\_SENSITIVITY\_LEVELS. Advisory only -- the declared level is always honored verbatim; this exists purely so vocabulary drift across a repo stays visible.
+Contract- or variable-level `sensitivity` values outside [STANDARD\_SENSITIVITY\_LEVELS](#standard_sensitivity_levels). Advisory only -- the declared level is always honored verbatim; this exists purely so vocabulary drift across a repo stays visible.
 
 ##### staleDocEntries
 
@@ -3548,7 +3584,7 @@ readonly unresolvedLinks: readonly {
 
 ### DynamicAccessAssertion
 
-One developer-declared runtime.VariableDocs.dynamicAccess citation's
+One developer-declared [runtime.VariableEvidenceDocs.dynamicAccess](runtime.md#dynamicaccess) citation's
 current acknowledgment state -- a claim, never an observation. Kept fully
 separate from `VariableAccessStatus` (which stays exactly 3-valued and
 purely AST-derived) so a developer's assertion can never make env-cap
@@ -3612,7 +3648,7 @@ Root-relative, POSIX-separated.
 
 ###### Inherited from
 
-[`SourcePosition`](#sourceposition).[`file`](#file-24)
+[`SourcePosition`](#sourceposition).[`file`](#file-25)
 
 ##### line
 
@@ -4124,6 +4160,8 @@ block anything, even under `--strict` -- see `INFO_ONLY_CODES` in
 ***
 
 ### FindingModel
+
+The versioned, JSON-serializable root of the Finding Model -- every rule violation and derived risk signal from this run, unified behind [Finding](#finding-1)'s one shape. See this module's own doc comment for the full picture.
 
 #### Properties
 
@@ -5207,6 +5245,8 @@ See [UnconsumedOwnedVariableFinding.staleOrMissingCitations](#staleormissingcita
 
 ### LifecycleModel
 
+The versioned, JSON-serializable root of the Lifecycle Model -- see this module's own doc comment for the full picture.
+
 #### Properties
 
 ##### contracts
@@ -5240,6 +5280,8 @@ readonly schemaVersion: 2;
 ***
 
 ### LifecycleModelContract
+
+One contract's own lifecycle data plus every variable of its that has at least one lifecycle field set. See [LifecycleModelVariable](#lifecyclemodelvariable) for the per-variable shape.
 
 #### Properties
 
@@ -5678,6 +5720,46 @@ The environment variable name.
 
 ***
 
+### NonstandardSensitivityEntry
+
+One contract- or variable-level `sensitivity` declaring a level outside [STANDARD\_SENSITIVITY\_LEVELS](#standard_sensitivity_levels).
+
+#### Properties
+
+##### exportName
+
+```ts
+readonly exportName: string;
+```
+
+The contract's exported binding name.
+
+##### file
+
+```ts
+readonly file: string;
+```
+
+Absolute path of the file declaring the contract.
+
+##### key
+
+```ts
+readonly key: string | undefined;
+```
+
+`undefined` for a contract-level `sensitivity`, set for a per-variable one.
+
+##### sensitivity
+
+```ts
+readonly sensitivity: string;
+```
+
+The declared level, exactly as written.
+
+***
+
 ### OwnerBearingContract
 
 The minimal shape [groupVariablesByOwner](#groupvariablesbyowner) needs -- structural, not pinned to one model, so the exact same grouping serves `OwnershipModel`'s already-resolved owners and `ContractModel`'s raw ones alike.
@@ -5796,6 +5878,8 @@ The environment variable name, when the finding is variable-level rather than co
 
 ### OwnershipModel
 
+The versioned, JSON-serializable root of the Ownership Model -- see this module's own doc comment for the full picture.
+
 #### Properties
 
 ##### contracts
@@ -5829,6 +5913,8 @@ Every variable whose effective owner (its own, falling back to the contract's) i
 ***
 
 ### OwnershipModelContract
+
+One contract's own default owner plus every variable's effective owner. See [OwnershipModelVariable](#ownershipmodelvariable) for the per-variable shape.
 
 #### Properties
 
@@ -7042,6 +7128,23 @@ const ownershipSummary: EvidenceProjection<OwnershipSummary>;
 
 Ownership summary: the inverse of Ownership Model's per-contract view --
 who owns what, rolled up per owner, plus an explicit unowned list.
+
+***
+
+### STANDARD\_SENSITIVITY\_LEVELS
+
+```ts
+const STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string>;
+```
+
+The sensitivity vocabulary env-cap's own docs, examples, and `.env.example`
+comments are written around. Purely advisory: `sensitivity` is an open
+`string` (see [runtime.VariableDocs.sensitivity](runtime.md#sensitivity-1)), any value is
+honored verbatim, and nothing here ever drops or rewrites a declared level.
+A level outside this set only produces a non-blocking
+`NONSTANDARD_SENSITIVITY_LEVEL` finding, so a team that deliberately runs
+its own vocabulary sees one advisory line rather than silent data loss --
+and a team that meant to write `"secret"` and typo'd `"secrets"` finds out.
 
 ## Functions
 

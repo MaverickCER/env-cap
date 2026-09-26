@@ -15,6 +15,19 @@
     "notDocumented": true,
     "invalidLink": true
   },
+  "treatValidationWarningsAsErrors": true,
+  "requiredToBeDocumented": [
+    "Enum",
+    "EnumMember",
+    "Variable",
+    "Function",
+    "Class",
+    "Interface",
+    "Method",
+    "Accessor",
+    "TypeAlias",
+    "CallSignature"
+  ],
   "intentionallyNotExported": [
     "UnwrapDefault",
     "RawCreateEnvCall",
@@ -22,6 +35,9 @@
     "ImportResolutionContext",
     "DiscoverOptions",
     "CatalogContract",
-    "RuleOptions"
+    "RuleOptions",
+    "ExpiryBearingContract",
+    "SarifResult",
+    "VariableOf"
   ]
 }

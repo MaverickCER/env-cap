@@ -1302,7 +1302,7 @@ describe("main() -- --strict-docs / --strict-ownership", () => {
     await expect(fs.stat(path.join(fixtureRoot, "docs/STRICT_OWNERSHIP.md"))).rejects.toThrow()
   })
 
-  it("--strict-docs leaves ownership findings alone, and vice versa -- the two families are independent", async () => {
+  it("--strict-docs leaves ownership findings alone, and vice versa -- the two scoped flags are independent", async () => {
     // Only an --ownership pass is requested, so no docs artifact is involved
     // at all; --strict-docs must still not fire on ownership warnings.
     process.argv = [
@@ -1315,8 +1315,9 @@ describe("main() -- --strict-docs / --strict-ownership", () => {
       "--strict-ownership",
     ]
     await expect(main()).rejects.toThrow(/ABANDONED_CONTRACT/)
+  })
 
-    writes = []
+  it("bare --strict also escalates documentation/ownership findings, even without --docs/--ownership requested (ADR 0044)", async () => {
     process.argv = [
       "node",
       "env-cap",
@@ -1326,9 +1327,11 @@ describe("main() -- --strict-docs / --strict-ownership", () => {
       "src/generated/env.manifest.ts",
       "--strict",
     ]
-    // The blanket --strict gates the compatibility family only -- the same
-    // fixture's documentation/ownership warnings must not block it.
-    await expect(main()).resolves.toBeUndefined()
+    // Before ADR 0044, bare --strict gated the compatibility family only, so
+    // this same fixture's documentation/ownership warnings did not block it.
+    // Now it does -- "strict" means every provable-error family, matching
+    // @maverickcer/data-cap's own bare --strict.
+    await expect(main()).rejects.toThrow(/UNDOCUMENTED_VARIABLE|ABANDONED_CONTRACT/)
   })
 
   it("lists --strict-docs and --strict-ownership in --help", async () => {

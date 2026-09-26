@@ -36,6 +36,7 @@ export interface RenamedVariable {
   readonly currentKey: string
 }
 
+/** The versioned, JSON-serializable root of the Change Model -- what changed since the last persisted evidence snapshot. See this module's own doc comment for the full picture. */
 export interface ChangeModel {
   readonly schemaVersion: typeof CHANGE_MODEL_SCHEMA_VERSION
   /** The existing manifest change report, unmodified -- see ADR 0021. `addedVariables`/`removedVariables` still list a correlated rename's two halves separately; `renamedVariables` below is an additive, separately-computed view, not a filter over this field. */

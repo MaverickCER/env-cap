@@ -34,6 +34,7 @@ export interface LifecycleModelVariable {
   readonly retention: string | undefined
 }
 
+/** One contract's own lifecycle data plus every variable of its that has at least one lifecycle field set. See {@link LifecycleModelVariable} for the per-variable shape. */
 export interface LifecycleModelContract {
   /** Root-relative, POSIX-separated -- matches `ContractModelContract.file`. */
   readonly file: string
@@ -48,6 +49,7 @@ export interface LifecycleModelContract {
   readonly variables: readonly LifecycleModelVariable[]
 }
 
+/** The versioned, JSON-serializable root of the Lifecycle Model -- see this module's own doc comment for the full picture. */
 export interface LifecycleModel {
   readonly schemaVersion: typeof LIFECYCLE_MODEL_SCHEMA_VERSION
   /** Only contracts with at least one lifecycle-relevant field set, at the contract level or on at least one variable. */

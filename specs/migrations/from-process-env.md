@@ -100,7 +100,7 @@ import { createEnv, documentEnv } from "env-cap"
 const paymentsSchema = {
   STRIPE_SECRET_KEY: {
     validator(value: string) {
-      return value.startsWith("sk_")
+      return value.startsWith("sk_") || 'Expected a key starting with "sk_".'
     },
   },
 }

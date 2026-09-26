@@ -4,11 +4,11 @@ The reference manual: capability-owned contracts in depth, the full generate/val
 
 For the pitch, quick start, and adoption reasoning, see [README.md](README.md). For why the package is built the way it is, see [specs/architecture.md](specs/architecture.md) and the [ADRs](specs/decisions/).
 
-- [Runtime support matrix](#runtime-support-matrix)
 - [Documented example](#documented-example)
 - [Capability-owned contracts](#capability-owned-contracts)
 - [Helpers](#helpers)
 - [Core workflow](#core-workflow)
+- [Runtime support matrix](#runtime-support-matrix)
 - [Validation contexts](#validation-contexts)
 - [Reusable packages](#reusable-packages)
 - [TypeScript path aliases (paths/baseUrl)](#typescript-path-aliases-pathsbaseurl)
@@ -20,18 +20,6 @@ For the pitch, quick start, and adoption reasoning, see [README.md](README.md). 
 - [GitHub Action](#github-action)
 - [ESLint plugin](#eslint-plugin)
 - [Performance characteristics](#performance-characteristics)
-
-## Runtime support matrix
-
-| Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
-| -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
-| Node.js 20+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
-| Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅          | ❌ not applicable — build-only, never bundle this into an app |
-| Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅          | ❌ not applicable                                             |
-| Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
-| Deno                                                           | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
-
-The runtime (`.` and `./helpers`) has zero dependencies, never touches the filesystem, and never imports Node-specific APIs — see [`specs/architecture.md`](specs/architecture.md). `./build` is Node-only developer tooling (uses `node:path` and the TypeScript compiler API — never `node:fs`, see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)) meant for CI/npm-script use, never for shipping to a browser. Both ESM and CommonJS builds are published for every entry point (`package.json#exports`).
 
 ## Documented example
 
@@ -111,12 +99,14 @@ documentEnv(paymentsSchema, {
         "Stripe secret API key used by the payment service to create charges and process refunds.",
       owner: "payments-team",
       expiresAt: "2027-01-01",
-      rotationCadence: "90 days",
+      refreshInstructions: "Rotate in AWS Secrets Manager, then redeploy. Rotate every 90 days.",
       sensitivity: "secret",
-      storageProvider: "AWS Secrets Manager",
-      accessPolicy: "Restricted to payment service runtime credentials.",
-      validationReason:
-        "Ensures the payment service cannot start with missing or malformed Stripe credentials.",
+      metadata: {
+        storageProvider: "AWS Secrets Manager",
+        accessPolicy: "Restricted to payment service runtime credentials.",
+        validationReason:
+          "Ensures the payment service cannot start with missing or malformed Stripe credentials.",
+      },
     },
   },
 })
@@ -402,6 +392,30 @@ EnvValidationError
 so applications receive the complete startup failure state instead of discovering missing or invalid variables one at a time.
 
 Runtime access can remain centralized for simpler applications or become capability-scoped as ownership boundaries grow. Validation remains application-wide.
+
+`validateEnv()` is idempotent for the life of the process: the first call's outcome (success or `EnvValidationError`) is cached and returned by every later call, without re-running any processor or validator — by design, since a real application validates once at startup and every later read should see that same, stable outcome. A test suite or a script that intentionally validates different `values` in the same process (as opposed to a real app's single startup call) needs `resetEnvCache()` between runs:
+
+```ts
+import { resetEnvCache, validateEnv } from "@maverickcer/env-cap"
+
+await validateEnv({ manifest, values: scenarioA })
+resetEnvCache()
+await validateEnv({ manifest, values: scenarioB }) // re-runs validation from scratch
+```
+
+Without it, a second `validateEnv()` call with different `values` silently returns the first run's cached result instead of re-validating.
+
+## Runtime support matrix
+
+| Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
+| -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
+| Node.js 20+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
+| Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅          | ❌ not applicable — build-only, never bundle this into an app |
+| Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅          | ❌ not applicable                                             |
+| Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
+| Deno                                                           | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
+
+The runtime (`.` and `./helpers`) has zero dependencies, never touches the filesystem, and never imports Node-specific APIs — see [`specs/architecture.md`](specs/architecture.md). `./build` is Node-only developer tooling (uses `node:path` and the TypeScript compiler API — never `node:fs`, see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)) meant for CI/npm-script use, never for shipping to a browser. Both ESM and CommonJS builds are published for every entry point (`package.json#exports`).
 
 ## Validation contexts
 
@@ -747,6 +761,10 @@ The allow-listed package must declare a valid `envCap.schema` field pointing to 
 
 This mechanism is Experimental (see [`VERSIONING.md`](VERSIONING.md)).
 
+**"I called `validateEnv()` again with different `values` and got the same result as last time."**
+
+`validateEnv()` caches its first outcome for the life of the process (see [Validate once during startup](#3-validate-once-during-startup)). Call `resetEnvCache()` before re-validating — normal for a test suite or a script exercising multiple scenarios, not something a running application should need.
+
 ## CLI
 
 Generate artifacts directly from the command line:
@@ -900,8 +918,9 @@ jobs:
 | `annotations`       | `true`                | Emits GitHub workflow annotations for detected issues                                              |
 | `rotation-alert`    | `true`                | Enables scheduled expiration reporting outside pull requests                                       |
 | `report-key`        | _(working-directory)_ | Identifies this report when multiple workflows run against the same pull request                   |
+| `github-token`      | `${{ github.token }}` | Token used for the `gh` CLI calls that post/update PR comments and rotation-alert issues           |
 
-The Action does not create its own policy layer. Pass/fail behavior always follows the CLI exit code and `--strict` (the one provable, manifest-pass error category — see [Troubleshooting](#troubleshooting)). Documentation/ownership findings never fail the run on their own; read them from `--evidence`'s output and gate on them in your own workflow step if you want that enforced.
+The Action does not create its own policy layer. Pass/fail behavior always follows the CLI exit code and whatever `--strict`/`--strict-docs`/`--strict-ownership` combination this invocation's own `args` input passes (ADR 0044 — see [Troubleshooting](#troubleshooting)). A finding family with no matching `--strict*` flag never fails the run on its own; read it from `--evidence`'s output and gate on it in your own workflow step if you want that enforced.
 
 ### Monorepos
 

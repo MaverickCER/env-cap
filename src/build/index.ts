@@ -48,10 +48,12 @@
 export { checkEnvArtifacts } from "./check-artifacts.js"
 export type { ArtifactCheckFinding, CheckEnvArtifactsResult } from "./check-artifacts.js"
 export { generateDocumentation } from "./generate-documentation.js"
-export type {
-  DocumentationFindings,
-  GenerateDocumentationOptions,
-  GenerateDocumentationResult,
+export {
+  STANDARD_SENSITIVITY_LEVELS,
+  type DocumentationFindings,
+  type GenerateDocumentationOptions,
+  type GenerateDocumentationResult,
+  type NonstandardSensitivityEntry,
 } from "./generate-documentation.js"
 export { generateEnvArtifacts } from "./generate-env-artifacts.js"
 export type {
@@ -275,6 +277,7 @@ export type {
   DiscoveredContractDocs,
   DiscoveredSchemaVariable,
   DiscoveredVariableDocs,
+  DiscoveredVariableEvidence,
   FileParseResult,
   ImportBinding,
   ParseWarning,

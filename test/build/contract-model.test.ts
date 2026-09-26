@@ -204,4 +204,25 @@ describe("buildContractModel", () => {
       ],
     })
   })
+
+  it("relativizes a defined packageOrigin's resolvedFile/packageDir the same way every other path is rendered", () => {
+    const contract = makeContract({
+      file: "/repo/features/x/env.schema.ts",
+      exportName: "xEnv",
+      variables: [],
+      packageOrigin: {
+        packageName: "@acme/env-schema",
+        declaredField: "envCap.schema",
+        resolvedFile: "/repo/node_modules/@acme/env-schema/src/index.ts",
+        packageDir: "/repo/node_modules/@acme/env-schema",
+      },
+    })
+    const model = buildContractModel([contract], "/repo")
+    expect(model.contracts[0]?.packageOrigin).toEqual({
+      packageName: "@acme/env-schema",
+      declaredField: "envCap.schema",
+      resolvedFile: "node_modules/@acme/env-schema/src/index.ts",
+      packageDir: "node_modules/@acme/env-schema",
+    })
+  })
 })

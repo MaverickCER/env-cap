@@ -1,12 +1,11 @@
 import { realpathSync } from "node:fs"
 import { pathToFileURL } from "node:url"
-import {
-  checkEnvArtifacts,
+import type {
   generateEnvArtifacts,
-  type CheckEnvArtifactsResult,
-  type ContractModelContract,
-  type EnvExampleOnExisting,
-  type ManifestChangeReport,
+  CheckEnvArtifactsResult,
+  ContractModelContract,
+  EnvExampleOnExisting,
+  ManifestChangeReport,
 } from "../build/index.js"
 import { nodeBuildFileSystem } from "./filesystem.js"
 import { runInitCommand } from "./init.js"
@@ -18,6 +17,18 @@ import { serializeFailure, serializeSuccess, writeJson } from "./json.js"
  * required for library usage -- `generateEnvManifest`/`generateDocumentation`/
  * `generateUsageReport`/`generateEnvArtifacts` are fully usable as plain imports
  * from npm scripts, bundler plugins, or CI steps without this file.
+ *
+ * `../build/index.js` (and, transitively, `typescript`) is imported here as
+ * TYPES ONLY at module scope, and loaded with a dynamic `import()` inside
+ * `runCheckMode`/`runGenerateMode` instead of a static top-level import.
+ * `typescript` is an optional peer dependency (README: "TypeScript 5+ is
+ * only required for build-time manifest generation"), but a static import
+ * is evaluated eagerly for every invocation of this file, including
+ * `env-cap init` and `env-cap --help` -- neither of which touches
+ * `../build/index.js` at all. Without this split, a fresh install with no
+ * `typescript` present threw `ERR_MODULE_NOT_FOUND: Cannot find package
+ * 'typescript'` on `env-cap init`, before `runInitCommand` (pure `node:fs`,
+ * no TypeScript dependency -- see ADR 0042) ever ran.
  */
 
 /** Parsed CLI flags -- see `helpText()` below for what each one means. */
@@ -278,9 +289,9 @@ Options:
   --env-example-on-existing <mode>  What to do when --env-example's target already exists: keep-sibling (default, never overwrites -- writes a timestamped sibling instead), overwrite, or skip (write nothing). No effect with --check, which never writes anything regardless.
   --ownership <path>                Also emit the Dependency & Ownership Report at this path
   --evidence <path>                 Also emit the persisted evidence artifact (the full EvidenceModel, plus a paired .fingerprint sidecar) at this path, e.g. docs/env.evidence.json (see ADR 0038). Independent of --location -- needs no other pass.
-  --strict                          Escalate compatibility warnings to hard errors (manifest pass only -- ADR 0009's provable exclusive-group/compatibility errors). Does not affect docs/ownership findings; use the two scoped flags below for those.
-  --strict-docs                     Escalate every documentation-family warning (undocumented contract/variable, stale doc entry, expiring/expired entry, unresolvable documentEnv() link) to a hard error. Nothing is written when it fires. Info-severity findings are never escalated.
-  --strict-ownership                Escalate every ownership-family warning (abandoned contract, unresolved consumer, unconsumed owned variable, indeterminate ownership, stale/missing dynamicAccess citation) to a hard error. Nothing is written when it fires. Info-severity findings are never escalated.
+  --strict                          Escalate every pass's warning findings to hard errors -- compatibility (manifest pass -- ADR 0009's provable exclusive-group/compatibility errors), documentation, and ownership alike (ADR 0044). Nothing is written when it fires. Info-severity findings are never escalated. Equivalent to passing all three scoped flags below at once.
+  --strict-docs                     Escalate every documentation-family warning (undocumented contract/variable, stale doc entry, expiring/expired entry, unresolvable documentEnv() link) to a hard error, independent of --strict. Nothing is written when it fires. Info-severity findings are never escalated.
+  --strict-ownership                Escalate every ownership-family warning (abandoned contract, unresolved consumer, unconsumed owned variable, indeterminate ownership, stale/missing dynamicAccess citation) to a hard error, independent of --strict. Nothing is written when it fires. Info-severity findings are never escalated.
   --expiring-within-days <n>        Window (in days) for the "expiring soon" report (default: 30)
   --json                             Emit a machine-readable JSON report instead of formatted text (see ADR 0013)
   --check                           Verify generated artifacts are up to date without writing anything; exits 1 if any is stale or missing (see ADR 0016)
@@ -387,6 +398,17 @@ export function requestedPasses(args: ParsedArgs): JsonRequestedPasses {
  * verifies the persisted evidence artifact for drift too, exactly as `--check`
  * already does for the manifest/docs/env-example/ownership artifacts.
  */
+/**
+ * Whether a findings group escalates to a hard error: when bare `--strict`
+ * is on (ADR 0044 -- `--strict` alone means every group), or when the
+ * group-specific `--strict-*` flag is. One place so every group's
+ * escalation reads identically, matching `@maverickcer/data-cap`'s own
+ * `groupEscalates` (`src/build/generate-data-artifacts.ts`).
+ */
+function groupEscalates(strict: boolean, specificFlag: boolean): boolean {
+  return strict || specificFlag
+}
+
 /** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
 export function artifactOptions(args: ParsedArgs) {
   const listOrUndefined = (list: string[]): string[] | undefined =>
@@ -418,8 +440,12 @@ export function artifactOptions(args: ParsedArgs) {
       : (false as const),
     usage: args.ownership ? { report: { location: args.ownership } } : (false as const),
     evidence: args.evidence ? { location: args.evidence } : (false as const),
-    onUndocumented: args.strictDocs ? ("throw" as const) : ("warn" as const),
-    onOwnershipIssue: args.strictOwnership ? ("throw" as const) : ("warn" as const),
+    onUndocumented: groupEscalates(args.strict, args.strictDocs)
+      ? ("throw" as const)
+      : ("warn" as const),
+    onOwnershipIssue: groupEscalates(args.strict, args.strictOwnership)
+      ? ("throw" as const)
+      : ("warn" as const),
   }
 }
 
@@ -439,6 +465,7 @@ export function printList<T>(
 async function runCheckMode(args: ParsedArgs): Promise<void> {
   let checkResult: CheckEnvArtifactsResult
   try {
+    const { checkEnvArtifacts } = await import("../build/index.js")
     checkResult = await checkEnvArtifacts(artifactOptions(args))
   } catch (error) {
     if (!args.json) throw error
@@ -612,6 +639,7 @@ export function printUsageSummary(usage: NonNullable<GenerateResult["usage"]>): 
 async function runGenerateMode(args: ParsedArgs): Promise<void> {
   let result: GenerateResult
   try {
+    const { generateEnvArtifacts } = await import("../build/index.js")
     result = await generateEnvArtifacts(artifactOptions(args))
   } catch (error) {
     if (!args.json) throw error // propagates to main().catch() exactly as before

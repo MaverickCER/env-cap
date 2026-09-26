@@ -187,8 +187,10 @@ describe("parseArgs", () => {
     const both = parseArgs(["--docs", "out.md", "--strict-docs", "--strict-ownership"])
     expect([both.strictDocs, both.strictOwnership]).toEqual([true, true])
 
-    // The blanket --strict gates the manifest's compatibility family only; it
-    // must never imply either of the scoped flags.
+    // parseArgs keeps the three flags independent booleans -- --strict never
+    // sets strictDocs/strictOwnership itself. (Its broader escalation effect
+    // -- ADR 0044, --strict alone now escalates all three families -- lives
+    // in artifactOptions' derived onUndocumented/onOwnershipIssue, not here.)
     const blanket = parseArgs(["--location", "out.ts", "--strict"])
     expect([blanket.strictDocs, blanket.strictOwnership]).toEqual([false, false])
   })
@@ -533,6 +535,16 @@ describe("artifactOptions", () => {
     expect(artifactOptions({ ...base, strictDocs: true }).onOwnershipIssue).toBe("warn")
     expect(artifactOptions({ ...base, strictOwnership: true }).onOwnershipIssue).toBe("throw")
     expect(artifactOptions({ ...base, strictOwnership: true }).onUndocumented).toBe("warn")
+  })
+
+  it("bare --strict also escalates onUndocumented/onOwnershipIssue, not just onIncompatibility (ADR 0044)", () => {
+    const strictOnly = artifactOptions({ ...base, strict: true })
+    expect(strictOnly.onUndocumented).toBe("throw")
+    expect(strictOnly.onOwnershipIssue).toBe("throw")
+    // Neither scoped flag itself flips true -- groupEscalates ORs `strict` in
+    // at read time; parseArgs' own independence (tested above) is untouched.
+    expect(base.strictDocs).toBe(false)
+    expect(base.strictOwnership).toBe(false)
   })
 })
 

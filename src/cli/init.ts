@@ -252,6 +252,9 @@ function renderReport(report: InitReport): string {
   lines.push(
     "Next:",
     "  1. Generate the manifest + docs:  node scripts/generate-env.mjs",
+    '     Requires "typescript" (>=5) in your project -- it\'s how env-cap parses',
+    "     env.schema.ts by static analysis. Add it if you don't already have it:",
+    "     npm install --save-dev typescript",
     "  2. Validate once at app startup:",
     "",
     '       import { validateEnv } from "@maverickcer/env-cap"',

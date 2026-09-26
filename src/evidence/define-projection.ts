@@ -27,6 +27,7 @@ export interface EvidenceProjectionResult<T extends Record<string, unknown>> {
  */
 export interface EvidenceProjection<T extends Record<string, unknown>> {
   (evidence: EvidenceModel): T
+  /** Same computation as calling the projection directly, plus which `EvidenceModel` field paths fed each output key -- see {@link EvidenceProjectionResult}. */
   project(evidence: EvidenceModel): EvidenceProjectionResult<T>
 }
 

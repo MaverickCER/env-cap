@@ -41,12 +41,15 @@ export interface BuildFileSystem {
 /** One directory entry from {@link BuildFileSystem.readdir} -- the subset of Node's `Dirent` `src/build/**` reads. */
 export interface BuildDirent {
   readonly name: string
+  /** Same contract as Node's `Dirent.isDirectory()`. */
   readonly isDirectory: () => boolean
+  /** Same contract as Node's `Dirent.isFile()`. */
   readonly isFile: () => boolean
 }
 
 /** A path's stat info from {@link BuildFileSystem.stat} -- the subset of Node's `Stats` `src/build/**` reads. */
 export interface BuildStats {
+  /** Same contract as Node's `Stats.isFile()`. */
   readonly isFile: () => boolean
   /** Size in bytes -- read by the package-schema resolver to enforce a size ceiling. */
   readonly size: number

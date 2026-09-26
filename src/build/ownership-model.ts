@@ -32,6 +32,7 @@ export interface OwnershipModelVariable {
   readonly owner: string | undefined
 }
 
+/** One contract's own default owner plus every variable's effective owner. See {@link OwnershipModelVariable} for the per-variable shape. */
 export interface OwnershipModelContract {
   /** Root-relative, POSIX-separated -- matches `ContractModelContract.file`. */
   readonly file: string
@@ -50,6 +51,7 @@ export interface OwnershipModelVariableRef extends ContractRef {
   readonly key: string
 }
 
+/** The versioned, JSON-serializable root of the Ownership Model -- see this module's own doc comment for the full picture. */
 export interface OwnershipModel {
   readonly schemaVersion: typeof OWNERSHIP_MODEL_SCHEMA_VERSION
   readonly contracts: readonly OwnershipModelContract[]

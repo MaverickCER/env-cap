@@ -40,6 +40,8 @@ same value alongside automatic provenance -- see ADR 0032.
 project(evidence): EvidenceProjectionResult<T>;
 ```
 
+Same computation as calling the projection directly, plus which `EvidenceModel` field paths fed each output key -- see [EvidenceProjectionResult](#evidenceprojectionresult).
+
 ###### Parameters
 
 | Parameter | Type |

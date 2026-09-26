@@ -115,6 +115,11 @@ describe("buildSarifLog", () => {
       ]),
     )
     expect(log.runs[0]?.results[0]?.locations).toBeUndefined()
+    // A read through optional chaining can't tell "the key is absent" apart
+    // from "the key is present and set to `undefined`" -- this asserts the
+    // stronger, `exactOptionalPropertyTypes`-motivated guarantee the source
+    // comment describes: the key itself is never emitted, never set `undefined`.
+    expect(log.runs[0]?.results[0]).not.toHaveProperty("locations")
   })
 
   it("uses a change-model finding's artifact path as its location uri", () => {

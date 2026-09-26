@@ -39,6 +39,7 @@ export interface DependencyModelVariable {
   readonly dynamicAccessAssertions: readonly DynamicAccessAssertion[]
 }
 
+/** One contract's dependency-ownership facts: which variables were accessed, which files consume it, and every dynamic/ambiguous access site found. See {@link DependencyModelVariable} for the per-variable breakdown. */
 export interface DependencyModelContract {
   /** Root-relative, POSIX-separated -- matches `ContractModelContract.file`. */
   readonly file: string
@@ -65,6 +66,7 @@ export interface DependencyModelConsumer {
   readonly contracts: readonly DependencyModelContractRef[]
 }
 
+/** The versioned, JSON-serializable root of the Dependency Model -- see this module's own doc comment for the full picture. */
 export interface DependencyModel {
   readonly schemaVersion: typeof DEPENDENCY_MODEL_SCHEMA_VERSION
   readonly contracts: readonly DependencyModelContract[]
