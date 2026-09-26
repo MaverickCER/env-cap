@@ -23,7 +23,8 @@
         "schemaVersion",
         "contracts"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The versioned, JSON-serializable root of the Contract Model -- every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See ContractModelContract."
     },
     "ContractModelContract": {
       "type": "object",

@@ -26,7 +26,7 @@ export interface EnvGovernanceFields {
 }
 
 /**
- * Copies exactly the {@link EnvGovernanceFields} out of a value that carries
+ * Copies exactly the `EnvGovernanceFields` out of a value that carries
  * them -- for projecting one pipeline stage's contract/variable into the next
  * (`link` -> `contract-model` -> `docs` catalog, ...) without re-listing all
  * nine fields at every hop.

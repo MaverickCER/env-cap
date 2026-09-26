@@ -24,7 +24,7 @@ import type { SourcePosition } from "./source-position.js"
 /** One schema variable, merged with its linked `documentEnv()` documentation (if any). */
 /**
  * One schema variable merged with its linked `documentEnv()` documentation. Its
- * governance fields (`owner` .. `metadata`) are {@link EnvGovernanceFields} --
+ * governance fields (`owner` .. `metadata`) are `EnvGovernanceFields` --
  * each an individual-variable override of the contract's own value, from the
  * linked `documentEnv()` call's matching `variables` entry, or `undefined`.
  */
@@ -53,7 +53,7 @@ export interface DiscoveredVariable extends DiscoveredSchemaVariable, EnvGoverna
   // where this variable's own schema property is declared. See ADR 0036.
 }
 
-/** One `createEnv()` contract, merged with its linked `documentEnv()` documentation (if any). Its governance fields (`owner` .. `metadata`) are {@link EnvGovernanceFields} -- contract-level defaults that individual variables may override. */
+/** One `createEnv()` contract, merged with its linked `documentEnv()` documentation (if any). Its governance fields (`owner` .. `metadata`) are `EnvGovernanceFields` -- contract-level defaults that individual variables may override. */
 export interface DiscoveredContract extends EnvGovernanceFields {
   /** Absolute path of the file declaring the `createEnv()` call. */
   readonly file: string

@@ -1,8 +1,12 @@
-import {
-  readToolVersion,
-  type CompatibilityIssue,
-  type GenerateEnvArtifactsResult,
-} from "../build/index.js"
+import type { CompatibilityIssue, GenerateEnvArtifactsResult } from "../build/index.js"
+// Imported from the leaf module, not the `../build/index.js` barrel: pulling
+// in the barrel here would eagerly load its full build-time surface --
+// (indirectly) `typescript`, an optional peer dependency -- just to read a
+// version string, for EVERY CLI invocation this module is part of
+// (including `env-cap init` and `env-cap --help`, neither of which touches
+// build-time analysis at all). See the identical fix, and its regression
+// test, on src/cli/index.ts's own former static `../build/index.js` import.
+import { readToolVersion } from "../build/tool-version.js"
 
 /**
  * `--json`'s machine-readable contract lives here, in one place, so it's

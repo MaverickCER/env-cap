@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-23T19:32:00.472Z_
+_Generated 2026-09-26T17:47:35.190Z_
 
 ## Changes since last report
 
@@ -123,7 +123,7 @@ One row per unique variable name; more than one location means more than one fea
 | [`LOG_LEVEL`](#app-log_level) | platform-team | -- | -- |
 | [`PAYMENT_PROVIDER`](#app-payment_provider) | platform-team | -- | -- |
 | [`PORT`](#app-port) | platform-team | -- | -- |
-| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-27 (**4d remaining**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
+| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-27 (**1d remaining**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
 
 ## Security review
 

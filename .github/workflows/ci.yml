@@ -200,6 +200,15 @@ jobs:
           npm install
           npm run typecheck
 
+      # README.md's "See it run" section claims to be real output from this
+      # same example -- verify:readme-example (scripts/check-readme-example-fresh.mjs)
+      # re-runs its doc-generation command and fails on drift (e.g. a stale
+      # day count). Runs from the repo root, after `application`'s own
+      # `npm install` above -- it skips gracefully everywhere examples/
+      # application/node_modules isn't installed (see the script's own
+      # header), so this is the one place it actually asserts anything.
+      - run: npm run verify:readme-example
+
       - name: team-service
         working-directory: examples/team-service
         run: |

@@ -825,7 +825,7 @@ optional evidence?: VariableEvidenceDocs;
 Developer-supplied evidence assertions for this variable -- verified over
 time, unlike every other field above, which is declared and never
 verified. Kept structurally separate for exactly that reason; see
-VariableEvidenceDocs.
+[VariableEvidenceDocs](#variableevidencedocs).
 
 ##### expiresAt?
 
@@ -938,6 +938,40 @@ get one at all" (e.g. "Create a restricted API key in the Stripe dashboard under
 API keys, scoped to read/write Charges."). A named field specifically so this can render as
 its own labeled line in generated docs, rather than requiring a `metadata.setup`-style
 convention with no dedicated rendering or type checking.
+
+***
+
+### VariableEvidenceDocs
+
+Developer-supplied evidence assertions for one variable -- categorically
+different from every field on [VariableDocs](#variabledocs): those are
+declared-and-never-verified, while `dynamicAccess` is re-checked against
+reality on every run (fresh / stale / missing). Kept structurally separate,
+in `VariableDocs.evidence` rather than folded in alongside `description`/
+`owner`/..., specifically so that different epistemic status is visible in
+the shape itself and not only in a doc comment. See ADR 0037.
+
+#### Properties
+
+##### dynamicAccess?
+
+```ts
+optional dynamicAccess?: readonly string[];
+```
+
+Citation(s) of where this variable is actually read dynamically --
+somewhere env-cap's own static AST scan can't see (a shell script, a
+Docker entrypoint, a sibling service). Each entry is a
+`"<relative-path>:<line>:<column>"` citation.
+
+###### Remarks
+
+A developer's re-acknowledgment that access happens, never a claim
+env-cap itself observed anything -- tracked as its own independent fact
+and never folded into the AST-derived `VariableAccessStatus`. Re-verified
+every run: a citation whose file no longer exists, or whose content has
+visibly changed since it was last acknowledged, is flagged rather than
+trusted forever.
 
 ***
 

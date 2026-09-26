@@ -2,7 +2,7 @@ name: "env-cap report"
 description: "Runs env-cap and turns the result into PR annotations and a summary comment."
 inputs:
   args:
-    description: "Arguments passed to `env-cap --json`, e.g. '--docs docs/ENVIRONMENT.md --ownership docs/OWNERSHIP.md --strict-docs'"
+    description: "Arguments passed to `env-cap --json`, e.g. '--docs docs/ENVIRONMENT.md --ownership docs/OWNERSHIP.md --strict-docs --evidence docs/env.evidence.json'. Include --evidence to persist the full audit-evidence artifact; without it, this run produces pass/fail output only."
     required: true
   working-directory:
     description: "Directory to run env-cap from."
@@ -40,8 +40,17 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         set +e
-        PKG="env-cap"
-        if [ -n "${{ inputs.version }}" ]; then PKG="env-cap@${{ inputs.version }}"; fi
+        # "env-cap" alone (no npm scope) does not exist on the public npm
+        # registry -- only the published "@maverickcer/env-cap" does (the
+        # unscoped name is only the *binary* name, from package.json's
+        # `bin` field, resolvable via `npx` without a scope ONLY when
+        # something already installed it locally, e.g. a consumer's own
+        # devDependency). Confirmed by hand: `npx --yes env-cap@<version>`
+        # 404s directly against the real registry. `--yes` here means "fetch
+        # it via npx if not already local" (this input's own description),
+        # so it must reference the real, scoped package name.
+        PKG="@maverickcer/env-cap"
+        if [ -n "${{ inputs.version }}" ]; then PKG="@maverickcer/env-cap@${{ inputs.version }}"; fi
         npx --yes "$PKG" --json ${{ inputs.args }} > "$RUNNER_TEMP/env-cap-result.json"
         echo "exit-code=$?" >> "$GITHUB_OUTPUT"
         set -e

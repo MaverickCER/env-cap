@@ -95,6 +95,7 @@ export interface ContractModelContract extends EnvGovernanceFields {
   readonly documentation: SourcePosition | undefined
 }
 
+/** The versioned, JSON-serializable root of the Contract Model -- every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See {@link ContractModelContract}. */
 export interface ContractModel {
   readonly schemaVersion: typeof CONTRACT_MODEL_SCHEMA_VERSION
   readonly contracts: readonly ContractModelContract[]

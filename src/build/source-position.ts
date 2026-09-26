@@ -32,7 +32,7 @@ export function positionOf(
 
 /**
  * Parses a developer-supplied `"<relative-path>:<line>:<column>"` citation
- * (a {@link runtime.VariableDocs.dynamicAccess} entry) into a
+ * (a {@link runtime.VariableEvidenceDocs.dynamicAccess} entry) into a
  * {@link SourcePosition}. Splits on the *last* two colons so a path
  * containing colons of its own (rare, but not impossible) still parses --
  * only the trailing `:<line>:<column>` is treated as position syntax.
@@ -51,7 +51,7 @@ export function parsePositionCitation(citation: string): SourcePosition | undefi
 }
 
 /**
- * One developer-declared {@link runtime.VariableDocs.dynamicAccess} citation's
+ * One developer-declared {@link runtime.VariableEvidenceDocs.dynamicAccess} citation's
  * current acknowledgment state -- a claim, never an observation. Kept fully
  * separate from `VariableAccessStatus` (which stays exactly 3-valued and
  * purely AST-derived) so a developer's assertion can never make env-cap

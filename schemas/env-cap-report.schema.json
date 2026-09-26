@@ -1053,7 +1053,7 @@
         "line"
       ],
       "additionalProperties": false,
-      "description": "One developer-declared runtime.VariableDocs.dynamicAccess citation's current acknowledgment state -- a claim, never an observation. Kept fully separate from `VariableAccessStatus` (which stays exactly 3-valued and purely AST-derived) so a developer's assertion can never make env-cap claim it observed something it didn't. See `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where this is computed) and ADR 0037."
+      "description": "One developer-declared runtime.VariableEvidenceDocs.dynamicAccess citation's current acknowledgment state -- a claim, never an observation. Kept fully separate from `VariableAccessStatus` (which stays exactly 3-valued and purely AST-derived) so a developer's assertion can never make env-cap claim it observed something it didn't. See `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where this is computed) and ADR 0037."
     },
     "ScannedSurface": {
       "type": "object",
@@ -1183,7 +1183,8 @@
         "schemaVersion",
         "contracts"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The versioned, JSON-serializable root of the Contract Model -- every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See ContractModelContract."
     },
     "ContractModelContract": {
       "type": "object",
@@ -1480,7 +1481,8 @@
         "warnings",
         "scannedSurfaces"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The versioned, JSON-serializable root of the Dependency Model -- see this module's own doc comment for the full picture."
     },
     "DependencyModelContract": {
       "type": "object",
@@ -1540,7 +1542,8 @@
         "ambiguousBarrelFiles",
         "dynamicAccessSites"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "One contract's dependency-ownership facts: which variables were accessed, which files consume it, and every dynamic/ambiguous access site found. See DependencyModelVariable for the per-variable breakdown."
     },
     "DependencyModelVariable": {
       "type": "object",
@@ -1662,7 +1665,8 @@
         "unownedContracts",
         "unownedVariables"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The versioned, JSON-serializable root of the Ownership Model -- see this module's own doc comment for the full picture."
     },
     "OwnershipModelContract": {
       "type": "object",
@@ -1694,7 +1698,8 @@
         "contractName",
         "variables"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "One contract's own default owner plus every variable's effective owner. See OwnershipModelVariable for the per-variable shape."
     },
     "OwnershipModelVariable": {
       "type": "object",
@@ -1767,7 +1772,8 @@
         "contracts",
         "expiring"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The versioned, JSON-serializable root of the Lifecycle Model -- see this module's own doc comment for the full picture."
     },
     "LifecycleModelContract": {
       "type": "object",
@@ -1809,7 +1815,8 @@
         "contractName",
         "variables"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "One contract's own lifecycle data plus every variable of its that has at least one lifecycle field set. See LifecycleModelVariable for the per-variable shape."
     },
     "LifecycleModelVariable": {
       "type": "object",
@@ -1865,7 +1872,8 @@
         "schemaVersion",
         "findings"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The versioned, JSON-serializable root of the Finding Model -- every rule violation and derived risk signal from this run, unified behind Finding 's one shape. See this module's own doc comment for the full picture."
     },
     "Finding": {
       "type": "object",
@@ -2105,7 +2113,8 @@
         "manifest",
         "renamedVariables"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The versioned, JSON-serializable root of the Change Model -- what changed since the last persisted evidence snapshot. See this module's own doc comment for the full picture."
     },
     "ManifestChangeReport": {
       "type": "object",

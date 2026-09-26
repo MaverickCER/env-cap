@@ -43,9 +43,18 @@ describe("module auto-run guard (isDirectRun)", () => {
     vi.resetModules()
     await import("../../src/cli/index.js")
 
+    // `vi.waitFor`'s own default poll timeout (1000ms) is an independent
+    // clock from this file's `testTimeout` (vitest.config.ts, 20_000ms) --
+    // raised globally specifically because spawned/dynamically-imported work
+    // routinely clears Vitest's short defaults in isolation but blows past
+    // them under full-suite parallel resource contention. Left at its
+    // default, this inner poll silently reintroduces exactly the short
+    // ceiling that global setting exists to avoid, and fails under the same
+    // contention testTimeout was raised to tolerate. Match it to that
+    // already-justified budget instead of guessing a new number.
     await vi.waitFor(() => {
       expect(stderrWrites.join("")).toContain("Unknown argument")
-    })
+    }, 15_000)
 
     expect(process.exitCode).toBe(1)
   })
@@ -91,9 +100,15 @@ describe("module auto-run guard (isDirectRun)", () => {
       vi.resetModules()
       await import("../../src/cli/index.js")
 
+      // Same reasoning as the sibling `vi.waitFor` above: this path also
+      // dynamically re-imports the real (unmocked) `../build/index.js`
+      // barrel fresh on every run (`vi.resetModules()` defeats the module
+      // cache), which is real, variable-cost work -- match the poll window
+      // to this file's already-justified `testTimeout` budget instead of
+      // the unrelated 1000ms default.
       await vi.waitFor(() => {
         expect(stderrWrites.join("")).toContain("boom -- not an Error instance")
-      })
+      }, 15_000)
 
       expect(process.exitCode).toBe(1)
     } finally {

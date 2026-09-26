@@ -29,7 +29,7 @@ export type {
 
 export { createEnv } from "./create.js"
 export { documentEnv } from "./document.js"
-export type { ContractDocs, VariableDocs } from "./document.js"
+export type { ContractDocs, VariableDocs, VariableEvidenceDocs } from "./document.js"
 export { EnvNotReadyError, EnvValidationError } from "./errors.js"
 export type { VariableFailure } from "./errors.js"
 export { isEnvContract } from "./registry.js"

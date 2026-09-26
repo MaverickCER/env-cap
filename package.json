@@ -128,9 +128,10 @@
     "docs:api": "typedoc",
     "docs:api:report": "typedoc --options typedoc.markdown.json",
     "docs:api:report:check": "node scripts/check-api-report.mjs",
+    "verify:readme-example": "node scripts/check-readme-example-fresh.mjs",
     "stage": "npm run typecheck && npm run build && npm run test && npm run size",
-    "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run verify:no-ambient-child-process && npm run docs:api:report:check",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run verify:no-ambient-child-process && npm run docs:api:report:check",
+    "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run verify:no-ambient-child-process && npm run docs:api:report:check && npm run verify:readme-example",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:no-ambient-fs && npm run verify:no-ambient-child-process && npm run docs:api:report:check && npm run verify:readme-example",
     "prepublishOnly": "npm run verify",
     "version": "changeset version && npm run build && npm run examples:update-golden",
     "release": "changeset publish"

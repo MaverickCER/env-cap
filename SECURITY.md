@@ -150,7 +150,7 @@ The build system:
   traversal rather than scanning and filtering afterward -- this walk never
   descends into `node_modules` at all, regardless of `include`/`exclude`.
 
-  A separate, narrow, **Experimental** mechanism exists for reading a schema
+  A separate, narrow mechanism exists for reading a schema
   that lives only inside an installed dependency: the `packages` option
   (see [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)).
   It is opt-in -- no package is ever considered unless its exact name
@@ -162,7 +162,7 @@ The build system:
   is parsed. It never calls `readdir` on any directory, named package or
   not, and a package's own transitive dependencies are never considered.
 
-  A second, separate **Experimental** mechanism resolves TypeScript path
+  A second, separate mechanism resolves TypeScript path
   aliases (`compilerOptions.paths`/`baseUrl` in `tsconfig.json`) during
   static analysis, on by default (see
   [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)).

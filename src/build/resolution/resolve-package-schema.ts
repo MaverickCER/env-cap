@@ -5,7 +5,7 @@ import type { BuildFileSystem } from "../types.js"
 import { isWithinDirectory } from "./resolve-within-root.js"
 
 /**
- * Cross-package schema discovery (ADR 0014, Experimental -- see VERSIONING.md).
+ * Cross-package schema discovery (ADR 0014).
  *
  * Resolves an explicitly allow-listed installed package name to the one
  * schema file it declares via its own `"envCap": { "schema": "<path>" }`

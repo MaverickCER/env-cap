@@ -62,9 +62,9 @@ export interface GenerateEnvArtifactsOptions {
   include?: string[] | undefined
   /** Glob patterns to exclude, shared across every requested pass. Defaults to node_modules/dist/.git. */
   exclude?: string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.packages`; shared across every requested pass. See ADR 0014. */
+  /** See `GenerateEnvManifestOptions.packages`; shared across every requested pass. See ADR 0014. */
   packages?: readonly string[] | undefined
-  /** **Experimental** (see VERSIONING.md) -- see `GenerateEnvManifestOptions.tsconfig`; shared across every requested pass. See ADR 0023. */
+  /** See `GenerateEnvManifestOptions.tsconfig`; shared across every requested pass. See ADR 0023. */
   tsconfig?: string | false | undefined
   /** Manifest pass options, or `false` to skip it entirely. */
   manifest?:

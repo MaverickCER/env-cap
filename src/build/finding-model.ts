@@ -65,6 +65,7 @@ export interface Finding {
 /** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
 export const FINDING_MODEL_SCHEMA_VERSION = 3
 
+/** The versioned, JSON-serializable root of the Finding Model -- every rule violation and derived risk signal from this run, unified behind {@link Finding}'s one shape. See this module's own doc comment for the full picture. */
 export interface FindingModel {
   readonly schemaVersion: typeof FINDING_MODEL_SCHEMA_VERSION
   readonly findings: readonly Finding[]

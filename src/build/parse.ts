@@ -428,7 +428,7 @@ function normalizeSource(text: string): string {
   return text.replace(/\s+/g, " ").trim()
 }
 
-/** One variable's statically-extracted `documentEnv()` documentation, as declared in that call's `variables` entry for this key -- governance fields (`owner` .. `metadata`) are {@link EnvGovernanceFields}, resolved from static literals. */
+/** One variable's statically-extracted `documentEnv()` documentation, as declared in that call's `variables` entry for this key -- governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`, resolved from static literals. */
 export interface DiscoveredVariableDocs extends EnvGovernanceFields {
   /** The environment variable name this documentation applies to. */
   readonly key: string
@@ -459,7 +459,7 @@ export interface DiscoveredVariableEvidence {
 }
 
 /** A contract's statically-extracted `documentEnv()` documentation. */
-/** The `documentEnv()` contract-level documentation, resolved from static literals at the parse stage. Its governance fields (`owner` .. `metadata`) are {@link EnvGovernanceFields}. */
+/** The `documentEnv()` contract-level documentation, resolved from static literals at the parse stage. Its governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`. */
 export interface DiscoveredContractDocs extends EnvGovernanceFields {
   /** Statically-resolved `name`, if set to a string literal. */
   readonly name: string | undefined
