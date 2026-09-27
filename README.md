@@ -60,7 +60,7 @@ Wrote docs: docs/ENVIRONMENT.md
 
 1 variable(s)/contract(s) expiring soon or already expired:
 
-  - STRIPE_KEY in env: 2026-09-01 (expired 25d ago)
+  - STRIPE_KEY in env: 2026-09-01 (expired 26d ago)
 
 Wrote dependency ownership report: docs/OWNERSHIP.md
 
