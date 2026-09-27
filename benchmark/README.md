@@ -200,8 +200,9 @@ Five independent version numbers, each answering a different question:
 `docs/benchmark-history/runtime.json` and `.../buildtime.json` are append-only arrays of compact
 entries (`medianMs` + a derived throughput figure per completed named-benchmark×tier, plus
 versions/commit/timestamp) — not the full per-run detail already in each commit's own
-`results.json`. Written to exactly once per merged `main` push, by CI only (never by a local `npm
-run benchmark`), in the same bot PR that refreshes `results.json`. This is a data layer for a
+`results.json`. Written to by CI only (never by a local `npm run benchmark`), on a PR whose own diff
+touches benchmarked code, in the same commit that refreshes `results.json` directly onto that PR's
+branch. This is a data layer for a
 future dashboard — structured, accumulating history only, no chart UI built yet. Living under
 `docs/` means it's already reachable as a stable URL once GitHub Pages deploys, ready for this
 project's own future dashboard or any external tool to consume.

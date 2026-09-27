@@ -45,6 +45,141 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-09-27T04:12:00.734Z",
+      "gitCommit": "e3d7c084ca6fcee959f217dce7b507efd5e09714",
+      "envCapVersion": "0.4.0",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "artifacts": {
+          "baseline": {
+            "medianMs": 74.40961000000016,
+            "variablesPerSecond": 1343.91
+          },
+          "stress": {
+            "medianMs": 388.0776139999998,
+            "variablesPerSecond": 2576.8
+          },
+          "extreme": {
+            "medianMs": 3786.3413389999987,
+            "variablesPerSecond": 2112.86
+          },
+          "enterprise": {
+            "medianMs": 1156.5717740000036,
+            "variablesPerSecond": 3480.11
+          }
+        },
+        "discovery": {
+          "baseline": {
+            "medianMs": 1.7914960000052815,
+            "variablesPerSecond": 55819.27
+          },
+          "stress": {
+            "medianMs": 9.21247299999959,
+            "variablesPerSecond": 108548.49
+          },
+          "extreme": {
+            "medianMs": 56.26459199999954,
+            "variablesPerSecond": 142185.34
+          },
+          "enterprise": {
+            "medianMs": 20.15631399999984,
+            "variablesPerSecond": 199689.29
+          }
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-27T04:16:18.946Z",
+      "gitCommit": "d27b15ce65f8fc9688a4324048ed74b5a9940141",
+      "envCapVersion": "0.4.0",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "artifacts": {
+          "baseline": {
+            "medianMs": 78.30658300000005,
+            "variablesPerSecond": 1277.03
+          },
+          "stress": {
+            "medianMs": 395.85747200000014,
+            "variablesPerSecond": 2526.16
+          },
+          "extreme": {
+            "medianMs": 3879.3102800000015,
+            "variablesPerSecond": 2062.22
+          },
+          "enterprise": {
+            "medianMs": 1172.1658160000006,
+            "variablesPerSecond": 3433.81
+          }
+        },
+        "discovery": {
+          "baseline": {
+            "medianMs": 1.7997809999942547,
+            "variablesPerSecond": 55562.32
+          },
+          "stress": {
+            "medianMs": 9.032744999996794,
+            "variablesPerSecond": 110708.32
+          },
+          "extreme": {
+            "medianMs": 63.33424599999853,
+            "variablesPerSecond": 126313.97
+          },
+          "enterprise": {
+            "medianMs": 21.464553000005253,
+            "variablesPerSecond": 187518.46
+          }
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-27T04:19:20.118Z",
+      "gitCommit": "694fca5b7f4e9992feb665473b4bd7451753851a",
+      "envCapVersion": "0.4.0",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "artifacts": {
+          "baseline": {
+            "medianMs": 58.495438999999806,
+            "variablesPerSecond": 1709.53
+          },
+          "stress": {
+            "medianMs": 292.8580489999995,
+            "variablesPerSecond": 3414.62
+          },
+          "extreme": {
+            "medianMs": 2871.2033279999996,
+            "variablesPerSecond": 2786.29
+          },
+          "enterprise": {
+            "medianMs": 852.3353980000029,
+            "variablesPerSecond": 4722.32
+          }
+        },
+        "discovery": {
+          "baseline": {
+            "medianMs": 1.3133680000028107,
+            "variablesPerSecond": 76140.12
+          },
+          "stress": {
+            "medianMs": 5.557883000001311,
+            "variablesPerSecond": 179924.62
+          },
+          "extreme": {
+            "medianMs": 40.60431899999821,
+            "variablesPerSecond": 197023.38
+          },
+          "enterprise": {
+            "medianMs": 13.321262999997998,
+            "variablesPerSecond": 302148.53
+          }
+        }
+      }
     }
   ]
 }
