@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-26T23:31:06.646Z_
+_Generated 2026-09-28T04:10:37.669Z_
 
 ## Changes since last report
 
@@ -48,7 +48,7 @@ Signs and verifies user session cookies.
 - Validator: no
 - Owner: security-team
 - Sensitivity: secret
-- Expires: 2026-10-01
+- Expires: 2026-06-01
 - Setup instructions: Generate with `openssl rand -base64 32`; security-team keeps the canonical copy in the shared vault.
 - Refresh instructions: Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours.
 - Required: yes
@@ -103,7 +103,7 @@ Postgres connection string.
 - Validator: no
 - Owner: security-team
 - Sensitivity: secret
-- Expires: 2026-10-15
+- Expires: 2026-07-01
 - Setup instructions: Request a scoped database credential from security-team's vault (see the runbook); do not reuse another service's connection string.
 - Refresh instructions: security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands.
 
@@ -154,10 +154,10 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-10-01 (**5d remaining**) | Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours. |
+| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-06-01 (**expired 119d ago**) | Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours. |
 | [`DATABASE_URL`](#mongodb-database_url) | data-platform-team | -- | -- |
 | [`MONGODB_REPLICA_SET`](#mongodb-mongodb_replica_set) | data-platform-team | -- | -- |
-| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-10-15 (**19d remaining**) | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
+| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-07-01 (**expired 89d ago**) | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
 | [`DATABASE_PROVIDER`](#prisma-database_provider) | data-platform-team | -- | -- |
 
 ## Security review
@@ -168,8 +168,8 @@ One row per unique variable name; more than one location means more than one fea
 - Total variable declarations: 5 (3 from active contracts)
 - Unique variable names: 4
 - Variables with `expiresAt` set: 2
-  - Already expired: 0
-  - Expiring within 30 days: 2
+  - Already expired: 2
+  - Expiring within 30 days: 0
 - Variables marked `required: true`: 1
 - Variables with refresh instructions: 2
 - Variables with no assigned owner: 0

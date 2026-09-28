@@ -36,13 +36,13 @@ documentEnv(secretsSchema, {
     STRIPE_SECRET_KEY: {
       description: "Stripe secret API key, sourced from AWS Secrets Manager.",
       required: true,
-      expiresAt: "2026-12-31",
+      expiresAt: "2026-01-01",
       refreshInstructions: "Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled.",
     },
     DATABASE_PASSWORD: {
       description: "Primary database password, sourced from AWS Secrets Manager.",
       required: true,
-      expiresAt: "2026-12-31",
+      expiresAt: "2026-02-01",
       refreshInstructions: "Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled.",
     },
   },

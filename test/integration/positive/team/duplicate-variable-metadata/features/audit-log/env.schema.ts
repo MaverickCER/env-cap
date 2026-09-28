@@ -12,7 +12,7 @@ documentEnv(schema, {
     WEBHOOK_URL: {
       description: "Webhook endpoint audit events are POSTed to.",
       owner: "team-security",
-      expiresAt: "2027-01-01",
+      expiresAt: "2026-04-01",
     },
   },
 });

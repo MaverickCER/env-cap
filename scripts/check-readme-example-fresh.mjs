@@ -113,6 +113,22 @@ function renderSections(sections) {
     .join("\n\n")
 }
 
+// The "expiring soon or already expired" section's day count moves by
+// itself every real day even with zero source changes (`STRIPE_KEY`'s
+// `expiresAt` in examples/application/src/env.ts is a fixed past date,
+// deliberately -- see that file -- so its classification never flips, but
+// "expired Nd ago" still grows daily). Masking the digits here is the same
+// fix already applied to golden JSON/Markdown comparisons elsewhere
+// (src/build/evidence-snapshot.ts's `EXPIRY_DAY_COUNT`,
+// test/support/example-runner.ts's `normalizeExpiryCountdowns`) -- verify
+// substance (which variable, expired vs. remaining, the `expiresAt` date
+// itself), not the calendar. Without this, this check can only ever pass on
+// the exact day the README was last regenerated -- which is the literal
+// staleness this doc comment's "happened once already" incident describes.
+function normalizeExpiryDayCount(text) {
+  return text.replace(/\d+d (ago|remaining)/g, "Nd $1")
+}
+
 function fail(message) {
   process.stderr.write(`\nREADME example drift: ${message}\n`)
   process.stderr.write(
@@ -163,8 +179,8 @@ try {
   } else {
     const freshSections = extractSections(stdout)
     const readmeSections = extractSections(fenceMatch[0])
-    const freshRendered = renderSections(freshSections)
-    const readmeRendered = renderSections(readmeSections)
+    const freshRendered = normalizeExpiryDayCount(renderSections(freshSections))
+    const readmeRendered = normalizeExpiryDayCount(renderSections(readmeSections))
 
     if (freshRendered !== readmeRendered) {
       fail(

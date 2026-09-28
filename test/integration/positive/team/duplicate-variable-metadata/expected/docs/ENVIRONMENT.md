@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-26T23:31:08.821Z_
+_Generated 2026-09-28T04:03:36.707Z_
 
 ## Changes since last report
 
@@ -43,7 +43,7 @@ Webhook endpoint audit events are POSTed to.
 - Processor: no
 - Validator: no
 - Owner: team-security
-- Expires: 2027-01-01
+- Expires: 2026-04-01
 
 <a id="contract-notifications"></a>
 ## notifications
@@ -87,7 +87,7 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`WEBHOOK_URL`](#audit-log-webhook_url) | team-security | 2027-01-01 | -- |
+| [`WEBHOOK_URL`](#audit-log-webhook_url) | team-security | 2026-04-01 (**expired 180d ago**) | -- |
 | [`WEBHOOK_URL`](#notifications-webhook_url) | team-notifications | -- | -- |
 
 ## Security review
@@ -98,7 +98,7 @@ One row per unique variable name; more than one location means more than one fea
 - Total variable declarations: 2 (2 from active contracts)
 - Unique variable names: 1
 - Variables with `expiresAt` set: 1
-  - Already expired: 0
+  - Already expired: 1
   - Expiring within 30 days: 0
 - Variables marked `required: true`: 1
 - Variables with refresh instructions: 0
