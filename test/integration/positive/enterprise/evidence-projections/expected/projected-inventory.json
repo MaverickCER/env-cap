@@ -47,7 +47,7 @@
       "STRIPE_KEY": {
         "description": "Stripe secret key used to authenticate server-side API calls.",
         "owner": "platform-team",
-        "expiresAt": "2026-09-27",
+        "expiresAt": "2026-09-01",
         "refreshInstructions": "Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days.",
         "setupInstructions": "Create a restricted API key in the Stripe dashboard.",
         "required": true,

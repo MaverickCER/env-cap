@@ -67,7 +67,7 @@ documentEnv(schema, {
       },
       setupInstructions: "Create a restricted API key in the Stripe dashboard.",
       required: true,
-      expiresAt: "2026-09-27",
+      expiresAt: "2026-09-01",
       refreshInstructions:
         "Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days.",
     },

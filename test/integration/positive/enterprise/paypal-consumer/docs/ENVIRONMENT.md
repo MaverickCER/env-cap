@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-26T23:31:11.178Z_
+_Generated 2026-09-28T04:39:07.101Z_
 
 ## Changes since last report
 
@@ -55,7 +55,7 @@ PayPal REST API client secret.
 - Processor: yes
 - Validator: yes
 - Owner: paypal-addon-maintainers
-- Expires: 2027-01-01
+- Expires: 2026-03-01
 - Refresh instructions: Rotate in the PayPal Developer Dashboard, then redeploy.
 - Required: yes
 
@@ -128,7 +128,7 @@ One row per unique variable name; more than one location means more than one fea
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
 | [`PAYPAL_CLIENT_ID`](#paypal-addon-paypal_client_id) | paypal-addon-maintainers | -- | -- |
-| [`PAYPAL_CLIENT_SECRET`](#paypal-addon-paypal_client_secret) | paypal-addon-maintainers | 2027-01-01 | Rotate in the PayPal Developer Dashboard, then redeploy. |
+| [`PAYPAL_CLIENT_SECRET`](#paypal-addon-paypal_client_secret) | paypal-addon-maintainers | 2026-03-01 (**expired 211d ago**) | Rotate in the PayPal Developer Dashboard, then redeploy. |
 | [`PAYPAL_WEBHOOK_ID`](#paypal-addon-paypal_webhook_id) | paypal-addon-maintainers | -- | -- |
 | [`APP_NAME`](#paypal-consumer-app-app_name) | platform-team | -- | -- |
 | [`PORT`](#paypal-consumer-app-port) | platform-team | -- | -- |
@@ -141,7 +141,7 @@ One row per unique variable name; more than one location means more than one fea
 - Total variable declarations: 5 (5 from active contracts)
 - Unique variable names: 5
 - Variables with `expiresAt` set: 1
-  - Already expired: 0
+  - Already expired: 1
   - Expiring within 30 days: 0
 - Variables marked `required: true`: 1
 - Variables with refresh instructions: 1

@@ -42,7 +42,7 @@ documentEnv(paypalSchema, {
     PAYPAL_CLIENT_SECRET: {
       description: "PayPal REST API client secret.",
       required: true,
-      expiresAt: "2027-01-01",
+      expiresAt: "2026-03-01",
       refreshInstructions: "Rotate in the PayPal Developer Dashboard, then redeploy.",
     },
     PAYPAL_WEBHOOK_ID: {
