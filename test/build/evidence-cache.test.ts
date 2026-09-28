@@ -151,20 +151,40 @@ describe("computeSourceFingerprint", () => {
     // one that hashes "" instead, would both be indistinguishable from a
     // no-op given hashing an empty string adds zero bytes -- so this also
     // proves the marker isn't silently dropped.
+    //
+    // A `readFile` override (rather than `fs.chmod(path, 0o000)` on a real
+    // file) is what actually simulates "found by the glob walk but can't be
+    // read by hash time" here: permission bits are enforced by the OS, and
+    // a CI runner isn't guaranteed to enforce them the same way a real
+    // developer machine does (confirmed: this exact mutation -- the
+    // `"(unreadable)"` -> `""` literal below -- genuinely failed this test
+    // locally under `chmod 0o000`, yet still reported Survived in CI,
+    // because the real GitHub Actions runner's `readFile` didn't throw for
+    // a 0-permission file the way it does locally). Throwing from the
+    // capability itself is deterministic everywhere.
     const unreadablePath = await write("solo/unreadable.ts", "export const x = 1;\n")
-    const options = { ...fingerprintOptions, include: ["**/env.schema.ts", "solo/unreadable.ts"] }
-
-    await fs.chmod(unreadablePath, 0o000)
-    let unreadableFingerprint: string
-    try {
-      unreadableFingerprint = await computeSourceFingerprint(options)
-    } finally {
-      // Best-effort cleanup in case computeSourceFingerprint itself threw.
-      await fs.chmod(unreadablePath, 0o644).catch(() => undefined)
+    const throwingFs = {
+      ...fingerprintOptions.fs,
+      readFile: (async (p: string, encoding: "utf8") =>
+        p === unreadablePath
+          ? Promise.reject(new Error("EACCES: permission denied, open '" + p + "'"))
+          : fingerprintOptions.fs.readFile(p, encoding)) as typeof fingerprintOptions.fs.readFile,
     }
+    const include = ["**/env.schema.ts", "solo/unreadable.ts"]
+    const unreadableFingerprint = await computeSourceFingerprint({
+      ...fingerprintOptions,
+      fs: throwingFs,
+      include,
+    })
 
+    // Real read this time -- no `throwingFs` override -- so this is the
+    // genuine hash of a file whose real, on-disk content is the literal
+    // marker text, the ground truth `unreadableFingerprint` above must match.
     await write("solo/unreadable.ts", "(unreadable)")
-    const markerContentFingerprint = await computeSourceFingerprint(options)
+    const markerContentFingerprint = await computeSourceFingerprint({
+      ...fingerprintOptions,
+      include,
+    })
 
     expect(unreadableFingerprint).toBe(markerContentFingerprint)
   })
