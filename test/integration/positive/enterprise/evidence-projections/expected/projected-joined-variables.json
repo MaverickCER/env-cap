@@ -73,7 +73,7 @@
     "hasDefault": false,
     "hasProcessor": true,
     "hasValidator": true,
-    "expiresAt": "2026-09-27",
+    "expiresAt": "2026-09-01",
     "dependencyStatus": "unconsumed",
     "dependencyPositions": []
   }

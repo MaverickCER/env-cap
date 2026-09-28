@@ -45,7 +45,7 @@ documentEnv(postgresSchema, {
       sensitivity: "secret",
       setupInstructions:
         "Request a scoped database credential from security-team's vault (see the runbook); do not reuse another service's connection string.",
-      expiresAt: "2026-10-15",
+      expiresAt: "2026-07-01",
       refreshInstructions:
         "security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands.",
     },

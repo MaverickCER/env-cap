@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-26T23:31:08.231Z_
+_Generated 2026-09-28T04:03:36.154Z_
 
 ## Changes since last report
 
@@ -85,7 +85,7 @@ Stripe secret key used to authenticate server-side API calls.
 - Processor: yes
 - Validator: yes
 - Owner: platform-team
-- Expires: 2026-09-27
+- Expires: 2026-09-01
 - Setup instructions: Create a restricted API key in the Stripe dashboard.
 - Refresh instructions: Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days.
 - Required: yes
@@ -123,7 +123,7 @@ One row per unique variable name; more than one location means more than one fea
 | [`LOG_LEVEL`](#app-log_level) | platform-team | -- | -- |
 | [`PAYMENT_PROVIDER`](#app-payment_provider) | platform-team | -- | -- |
 | [`PORT`](#app-port) | platform-team | -- | -- |
-| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-27 (**1d remaining**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
+| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-01 (**expired 27d ago**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
 
 ## Security review
 
@@ -133,8 +133,8 @@ One row per unique variable name; more than one location means more than one fea
 - Total variable declarations: 5 (5 from active contracts)
 - Unique variable names: 5
 - Variables with `expiresAt` set: 1
-  - Already expired: 0
-  - Expiring within 30 days: 1
+  - Already expired: 1
+  - Expiring within 30 days: 0
 - Variables marked `required: true`: 2
 - Variables with refresh instructions: 1
 - Variables with no assigned owner: 0

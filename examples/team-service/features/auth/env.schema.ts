@@ -23,7 +23,7 @@ documentEnv(authSchema, {
       sensitivity: "secret",
       required: true,
       setupInstructions: "Generate with `openssl rand -base64 32`; security-team keeps the canonical copy in the shared vault.",
-      expiresAt: "2026-10-01",
+      expiresAt: "2026-06-01",
       refreshInstructions: "Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours.",
     },
   },

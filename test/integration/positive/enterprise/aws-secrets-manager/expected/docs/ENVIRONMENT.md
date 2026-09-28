@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-26T23:31:09.564Z_
+_Generated 2026-09-28T04:03:37.305Z_
 
 ## Changes since last report
 
@@ -43,7 +43,7 @@ Primary database password, sourced from AWS Secrets Manager.
 - Processor: yes
 - Validator: yes
 - Owner: platform-team
-- Expires: 2026-12-31
+- Expires: 2026-02-01
 - Refresh instructions: Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled.
 - Required: yes
 
@@ -56,7 +56,7 @@ Stripe secret API key, sourced from AWS Secrets Manager.
 - Processor: yes
 - Validator: yes
 - Owner: platform-team
-- Expires: 2026-12-31
+- Expires: 2026-01-01
 - Refresh instructions: Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled.
 - Required: yes
 
@@ -85,8 +85,8 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-12-31 | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
-| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-12-31 | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
+| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-02-01 (**expired 239d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
+| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-01-01 (**expired 270d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
 
 ## Security review
 
@@ -96,7 +96,7 @@ One row per unique variable name; more than one location means more than one fea
 - Total variable declarations: 2 (2 from active contracts)
 - Unique variable names: 2
 - Variables with `expiresAt` set: 2
-  - Already expired: 0
+  - Already expired: 2
   - Expiring within 30 days: 0
 - Variables marked `required: true`: 2
 - Variables with refresh instructions: 2
