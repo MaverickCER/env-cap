@@ -4,11 +4,12 @@
   "type": "module",
   "description": "A minimal Next.js todo app demonstrating a real NEXT_PUBLIC_* (client) vs. server-only environment variable boundary, enforced by env-cap's contract mechanism at next.config.ts load time -- before any client bundle compiles.",
   "scripts": {
-    "docs": "env-cap --include \"src/features/**/env.*.schema.ts\" --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --env-example-on-existing overwrite --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json",
-    "check": "env-cap --include \"src/features/**/env.*.schema.ts\" --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
-    "typecheck": "npm run docs && tsc --noEmit",
-    "dev": "npm run docs && next dev",
-    "build": "npm run docs && tsx scripts/validate-env.ts && next build",
+    "docs": "env-cap --include \"src/features/**/env.*.schema.ts\" --location src/generated/env.manifest.ts --evidence docs/env.evidence.json",
+    "docs:reports": "npm run docs && tsx scripts/generate-docs/run.ts",
+    "check": "env-cap --include \"src/features/**/env.*.schema.ts\" --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --check && tsx scripts/generate-docs/check.ts",
+    "typecheck": "npm run docs:reports && tsc --noEmit",
+    "dev": "npm run docs:reports && next dev",
+    "build": "npm run docs:reports && tsx scripts/validate-env.ts && next build",
     "start": "next start"
   },
   "dependencies": {

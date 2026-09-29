@@ -77,12 +77,15 @@ Node module resolution. Discovery and runtime consumption remain two
 different mechanisms, as they always have in this architecture; they just
 now agree on the same import for a package-resolved contract too.
 
-The dependency-ownership report (`--ownership`, see the root README) is
-correct across this boundary as well -- try it:
-
-```bash
-node ../../dist/cli/index.js --root . --ownership docs/OWNERSHIP.md --package @examples/paypal-addon
-```
+The dependency-ownership report is correct across this boundary as well --
+`--ownership` is no longer a CLI flag (see [ADR
+0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)),
+so generating it is a `generateUsageReport()` call from `env-cap/build`
+instead, with the same `packages: ["@examples/paypal-addon"]` option a
+`--package @examples/paypal-addon` CLI flag used to set -- see
+`examples/team-service/scripts/generate-docs/run.ts` for the pattern (this
+fixture has no such script of its own, since it's a behavioral fixture, not
+a reader-facing example).
 
 `paypal-addon`'s contract shows up with `src/app.ts` as a real consumer, not
 in the "Abandoned ownership" section -- resolving `@examples/paypal-addon` as

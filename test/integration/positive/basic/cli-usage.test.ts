@@ -28,13 +28,17 @@ import {
  */
 const EXAMPLE = "cli-usage"
 const EXAMPLE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), EXAMPLE)
+// docs/ENVIRONMENT.md, docs/OWNERSHIP.md, and .env.example are no longer
+// producible through the CLI at all (--docs/--ownership/--env-example were
+// removed -- see specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md),
+// so this fixture -- whose entire point is "every package.json script here
+// invokes the packaged env-cap binary directly, no wrapper script" (see
+// README.md) -- now only demonstrates what the CLI itself can still
+// produce: the manifest and the persisted evidence artifact.
 const ARTIFACTS = [
   "src/generated/env.manifest.ts",
   "docs/env.evidence.json",
   "docs/env.evidence.json.fingerprint",
-  "docs/ENVIRONMENT.md",
-  "docs/OWNERSHIP.md",
-  ".env.example",
 ]
 const installed = isInstalled(EXAMPLE_DIR)
 

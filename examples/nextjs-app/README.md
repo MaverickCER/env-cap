@@ -36,6 +36,8 @@ docs/
   env.evidence.json             <- generated, the full EvidenceModel
 scripts/
   validate-env.ts                <- the real `next build`-time gate (see below)
+  generate-docs/
+    run.ts                        <- writes ENVIRONMENT.md/OWNERSHIP.md/.env.example (see its own README)
 next.config.ts
 ```
 
@@ -106,11 +108,19 @@ npm run build
 npm start
 ```
 
-`npm run build` runs `docs` (regenerating `src/generated/env.manifest.ts` and
-`docs/`), then `scripts/validate-env.ts`, then `next build` — in that order,
-so a broken contract never reaches Next's own build step. `npm run dev` skips
-the explicit pre-build gate (`instrumentation.ts` covers the dev server
-startup path instead) but still regenerates `docs/` first.
+`npm run build` runs `docs:reports` (which chains `docs` -- regenerating
+`src/generated/env.manifest.ts` and `docs/env.evidence.json` via the
+`env-cap` CLI -- then `scripts/generate-docs/run.ts`, which writes
+`docs/ENVIRONMENT.md`, `docs/OWNERSHIP.md`, and `.env.example` directly from
+`env-cap/build`'s still-exported `generateDocumentation()`/
+`generateUsageReport()` -- see [that script's own
+README](scripts/generate-docs/README.md) and [ADR
+0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)
+for why this moved out of the CLI), then `scripts/validate-env.ts`, then
+`next build` — in that order, so a broken contract never reaches Next's own
+build step. `npm run dev` skips the explicit pre-build gate
+(`instrumentation.ts` covers the dev server startup path instead) but still
+regenerates `docs/` first.
 
 ## What's out of scope
 

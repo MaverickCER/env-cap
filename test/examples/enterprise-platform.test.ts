@@ -13,12 +13,16 @@ import {
  * `defineEvidenceProjection()` to produce a configuration-governance evidence
  * report built on exact source-position evidence (ADR 0036/0037).
  *
- * The one flagship that keeps a hand-written `scripts/generate-manifest.mjs`
- * rather than calling the CLI directly, because it does genuine custom
- * reporting (per-contract blast radius, stale-`.env.example` warnings) the
- * CLI doesn't produce -- see that script's own "ADVANCED TIER" header. Its
- * `check` script is still the plain CLI drift guard, so the freshness
- * assertion below is identical to the other two examples'.
+ * The one flagship that keeps hand-written `scripts/generate-manifest.mjs`/
+ * `scripts/check-artifacts.mjs` rather than calling the CLI directly for
+ * every artifact, because it does genuine custom reporting (per-contract
+ * blast radius, stale-`.env.example` warnings) the CLI doesn't produce --
+ * see `generate-manifest.mjs`'s own "ADVANCED TIER" header. `check-artifacts.mjs`
+ * calls `env-cap/build`'s own exported `checkEnvArtifacts()` directly (ADR
+ * 0046 -- `--docs`/`--ownership`/`--env-example` no longer exist as CLI
+ * flags for it to shell out to), printing the same "All generated artifacts
+ * are up to date." text the CLI's own `--check` used to, so the freshness
+ * assertion below still reads identically to the other two examples'.
  *
  * This file verifies:
  *  - the committed generated output matches a fresh generation

@@ -2,13 +2,17 @@
 //
 // ADVANCED TIER -- deliberately NOT the pattern to copy by default.
 //
-// The `application` and `team-service` examples both call the `env-cap` CLI
-// straight from a `docs`/`check` npm script, with no script file at all;
-// that is the pattern to start from, and what almost every project wants.
-// This example keeps a hand-written script only because it does genuine
-// custom reporting the CLI does not and should not do: per-contract
-// blast-radius lines and stale-`.env.example`-variable warnings, shaped for
-// this organization's own review process.
+// The `application` and `team-service` examples call the `env-cap` CLI
+// straight from a `docs`/`check` npm script for the manifest + persisted
+// evidence artifact (the two outputs with a real runtime/evidence contract,
+// per ADR 0046), plus a small `scripts/generate-docs/{run,check}.ts` pair
+// calling `env-cap/build` directly for docs/ownership/.env.example (no real
+// runtime consumer); that split is the pattern to start from, and what
+// almost every project wants. This example keeps a hand-written script for
+// ALL FIVE artifacts, in one call, only because it does genuine custom
+// reporting the CLI does not and should not do: per-contract blast-radius
+// lines and stale-`.env.example`-variable warnings, shaped for this
+// organization's own review process.
 //
 // Reach for `generateEnvArtifacts()` when you need output the CLI doesn't
 // produce. If all you need is "generate the artifacts" or "fail CI when they

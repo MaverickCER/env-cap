@@ -15,6 +15,9 @@ features/
   auth/env.schema.ts       <- SESSION_SECRET (classification: secret)  (security-team)
 scripts/
   generate-manifest.mjs    <- build-time only, never imported by the app
+  generate-docs/
+    run.ts                  <- writes ENVIRONMENT.md/OWNERSHIP.md/.env.example (see its own README)
+    check.ts                 <- their --check counterpart
 src/
   startup.ts               <- validateEnv() runs here, once
   app.ts                   <- capability code imports its own contract directly
@@ -87,7 +90,7 @@ one name.
 `expiresAt`/`refreshInstructions`/`setupInstructions` now, so
 `docs/ENVIRONMENT.md`'s lifecycle report and security review sections have
 two real rows instead of reading "Variables with `expiresAt` set: 0." Run
-`npm run docs` as either date approaches and watch the docs mark it
+`npm run docs:reports` as either date approaches and watch the docs mark it
 "expiring soon" -- this is the same mechanism `examples/application`
 demonstrates for a single owner; here it's two different teams each
 tracking their own secret's rotation on their own schedule, surfaced in one
@@ -106,7 +109,7 @@ contract entirely:
   `authEnv` -- importing `mongoEnv` there would be a latent bug, not a
   convenience.
 - `docs/ENVIRONMENT.md` (generated, but committed rather than gitignored --
-  run `npm run docs` to regenerate it and review the diff) still
+  run `npm run docs:reports` to regenerate it and review the diff) still
   documents `mongodb` in full, marked disabled, in the catalog -- plus it
   shows up in the ownership matrix and, since it's inactive, doesn't count
   toward the security review's "active" variable total.
@@ -119,12 +122,16 @@ cp .env.example .env
 npm start
 ```
 
-`npm start` runs `docs` (writing `src/generated/env.manifest.ts`,
-`docs/ENVIRONMENT.md`, `docs/OWNERSHIP.md`, `docs/env.evidence.json` (+ its
-`.fingerprint` sidecar, ADR 0038), and `.env.example` -- all committed, not
-gitignored, so you can see them change in a diff) and then boots
-`src/app.ts`, which validates the environment and prints the active
-configuration.
+`npm start` runs `docs:reports` (which chains `docs` -- writing
+`src/generated/env.manifest.ts` and `docs/env.evidence.json` via the
+packaged `env-cap` CLI, the only two outputs with a real runtime/evidence
+contract, per [ADR 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)
+-- and then `scripts/generate-docs/run.ts`, which writes
+`docs/ENVIRONMENT.md`, `docs/OWNERSHIP.md`, and `.env.example` directly from
+`env-cap/build`'s still-exported `generateDocumentation()`/
+`generateUsageReport()` -- see [that script's own
+README](scripts/generate-docs/README.md)) and then boots `src/app.ts`, which
+validates the environment and prints the active configuration.
 
 ## The CI gate: `check`
 
@@ -132,22 +139,26 @@ configuration.
 npm run check
 ```
 
-runs the packaged `env-cap` CLI binary with `--check` (ADR 0016) instead of
-`docs` -- it recomputes every artifact in memory and
-compares it against what's committed, without writing anything, exiting `1`
-if anything is stale or missing. This is the actual shape of the check a
-real team wires into CI: a schema change lands, someone forgets to re-run
-`docs`, and the PR fails loudly instead of shipping documentation
-that's already wrong. Try it: edit `SESSION_SECRET`'s `description` in
-`features/auth/env.schema.ts` and run `npm run check` again without
-first running `docs` -- it reports `docs/ENVIRONMENT.md` as stale
-and exits non-zero.
+runs the packaged `env-cap` CLI binary with `--check` (ADR 0016) against the
+manifest and the persisted evidence artifact, then
+`scripts/generate-docs/check.ts` (via `env-cap/build`'s exported
+`checkEnvArtifacts()`) against `docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md`/
+`.env.example` -- together, every artifact this example generates is
+recomputed in memory and compared against what's committed, without writing
+anything, exiting `1` if anything is stale or missing. This is the actual
+shape of the check a real team wires into CI: a schema change lands, someone
+forgets to re-run `docs:reports`, and the PR fails loudly instead of
+shipping documentation that's already wrong. Try it: edit
+`SESSION_SECRET`'s `description` in `features/auth/env.schema.ts` and run
+`npm run check` again without first running `docs:reports` -- it reports at
+least `docs/env.evidence.json` (and, once the CLI's own manifest+evidence
+check passes, `docs/ENVIRONMENT.md` too) as stale and exits non-zero.
 
 ## Try swapping the database backend
 
 Flip `active` on both files -- `mongodb/env.schema.ts` to `true`, `postgres/env.schema.ts`
 to `false` -- and swap `src/app.ts`'s import from `postgresEnv` to `mongoEnv`.
-Re-run `npm run docs`: the contract now requires `DATABASE_URL` and
+Re-run `npm run docs:reports`: the contract now requires `DATABASE_URL` and
 `MONGODB_REPLICA_SET`, and `.env.example` shows postgres's line commented out
 instead.
 

@@ -4,10 +4,11 @@
   "type": "module",
   "description": "Multiple capability-owned env.schema.ts files (postgres, mongodb, prisma, auth), spanning two real teams, with a --check CI gate -- no central schema to edit when a capability is added, removed, or swapped.",
   "scripts": {
-    "docs": "env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --env-example-on-existing overwrite --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json",
-    "check": "env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
-    "typecheck": "npm run docs && tsc --noEmit",
-    "start": "npm run docs && tsx --env-file=.env src/app.ts"
+    "docs": "env-cap --location src/generated/env.manifest.ts --evidence docs/env.evidence.json",
+    "docs:reports": "npm run docs && tsx scripts/generate-docs/run.ts",
+    "check": "env-cap --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --check && tsx scripts/generate-docs/check.ts",
+    "typecheck": "npm run docs:reports && tsc --noEmit",
+    "start": "npm run docs:reports && tsx --env-file=.env src/app.ts"
   },
   "dependencies": {
     "env-cap": "file:../.."

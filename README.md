@@ -47,31 +47,31 @@ documentEnv(paymentsSchema, {
 })
 ```
 
-Run the build-time analysis against a real project:
+Run the build-time analysis against a real project. The manifest and the
+persisted evidence artifact -- the two outputs a real project actually reads
+at runtime/in CI (see [ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md))
+-- come from the CLI itself; the human-facing docs/ownership report come
+from a small script calling `env-cap/build` directly (see
+`examples/application/scripts/generate-docs`):
 
 ```text
-$ npx env-cap --include src/env.ts --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --ownership docs/OWNERSHIP.md
-
+$ npx env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json
 Wrote manifest: src/generated/env.manifest.ts
-
 Discovered 1 contract(s).
+Wrote evidence: docs/env.evidence.json
 
-Wrote docs: docs/ENVIRONMENT.md
+$ npx tsx scripts/generate-docs/run.ts
+[generate-docs] wrote docs/ENVIRONMENT.md (1 contract(s)), .env.example, and docs/OWNERSHIP.md (0 abandoned, 2 unconsumed owned variable(s)).
 
 1 variable(s)/contract(s) expiring soon or already expired:
-
-  - STRIPE_KEY in env: 2026-09-01 (expired 26d ago)
-
-Wrote dependency ownership report: docs/OWNERSHIP.md
+  - STRIPE_KEY in env: 2026-09-01 (expired 27d ago)
 
 2 unconsumed owned variable(s):
-
   - DATABASE_URL in app
-
   - STRIPE_KEY in app
 ```
 
-This is real CLI output from [`examples/application`](examples/application), not a mockup.
+This is real output from [`examples/application`](examples/application)'s own `npm run docs` and `npm run docs:reports` scripts, not a mockup.
 
 The important part is what the analysis can establish:
 
