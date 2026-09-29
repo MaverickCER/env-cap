@@ -2,7 +2,7 @@
 // Root benchmark orchestrator -- runs both performance examples' own
 // `benchmark` script. Mirrors scripts/update-example-goldens.mjs's shape.
 // Deliberately NOT part of `npm run verify`/CI's `verify` matrix -- see
-// .github/workflows/benchmarks.yml for how CI runs these instead.
+// .github/workflows/ci.yml (benchmark-pr job) for how CI runs these instead.
 
 import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
