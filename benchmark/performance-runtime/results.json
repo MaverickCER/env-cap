@@ -29,9 +29,9 @@
       "gcEnabled": false
     },
     "timing": {
-      "startedAtUtc": "2026-09-27T04:18:05.161Z",
-      "finishedAtUtc": "2026-09-27T04:18:13.571Z",
-      "totalSuiteDurationMs": 8410
+      "startedAtUtc": "2026-09-29T13:30:14.916Z",
+      "finishedAtUtc": "2026-09-29T13:30:23.316Z",
+      "totalSuiteDurationMs": 8400
     },
     "generation": {
       "fixtureSeed": "deterministic-index-v1",
@@ -44,8 +44,8 @@
       "envCapVersion": "0.4.0"
     },
     "git": {
-      "gitCommit": "694fca5b7f4e9992feb665473b4bd7451753851a",
-      "gitBranch": "fix/bot-pr-ci-and-benchmark-in-pr",
+      "gitCommit": "b40bbde241cf67ddb1b0e257a3d1a8d1c49c61e8",
+      "gitBranch": "feat/narrow-cli-to-runtime-consumed-flags",
       "gitDirty": true
     },
     "generatedBy": "ci"
@@ -97,41 +97,41 @@
           "fixtureHash": "sha256:07bf9a98565dad1a8bd3bfccfc05a0504a8b02954b5ba3fbfbc6b6826cc1d53d",
           "fixtureGenerationMs": 4,
           "totalMs": {
-            "minMs": 39.988884999999996,
-            "medianMs": 41.76434499999999,
-            "p95Ms": 45.627522,
-            "maxMs": 45.627522,
-            "stdDevMs": 1.3093672889033616,
+            "minMs": 42.00506299999995,
+            "medianMs": 43.89104200000001,
+            "p95Ms": 47.902399,
+            "maxMs": 47.902399,
+            "stdDevMs": 1.4767481041959303,
             "iterations": 20,
             "warmupIterations": 0
           },
           "createEnvMs": {
-            "minMs": 5.572308,
-            "medianMs": 6.465457999999998,
-            "p95Ms": 7.375682000000001,
-            "maxMs": 7.375682000000001,
-            "stdDevMs": 0.5061099459427371,
+            "minMs": 5.654388999999998,
+            "medianMs": 6.586535000000001,
+            "p95Ms": 7.599242,
+            "maxMs": 7.599242,
+            "stdDevMs": 0.4878579098266094,
             "iterations": 20,
             "warmupIterations": 0
           },
           "validateEnvMs": {
-            "minMs": 0.6788300000000014,
-            "medianMs": 0.7135509999999989,
-            "p95Ms": 0.7427250000000001,
-            "maxMs": 0.7427250000000001,
-            "stdDevMs": 0.018452190862536817,
+            "minMs": 0.7059700000000007,
+            "medianMs": 0.7460699999999996,
+            "p95Ms": 1.153886,
+            "maxMs": 1.153886,
+            "stdDevMs": 0.0915644866682902,
             "iterations": 20,
             "warmupIterations": 0
           },
           "memoryBeforeBytes": {
-            "rssBytes": 54792192,
+            "rssBytes": 54796288,
             "heapUsedBytes": 5170520,
             "heapTotalBytes": 5611520,
             "externalBytes": 1463266,
             "arrayBuffersBytes": 24568
           },
           "memoryAfterBytes": {
-            "rssBytes": 54923264,
+            "rssBytes": 54927360,
             "heapUsedBytes": 5220944,
             "heapTotalBytes": 5611520,
             "externalBytes": 1463306,
@@ -146,44 +146,44 @@
             "variables": 1000
           },
           "fixtureHash": "sha256:475afe9946119e69df20b0eab07be8e7983a2cdbe7584aec3f1091ec723f2a5b",
-          "fixtureGenerationMs": 15,
+          "fixtureGenerationMs": 16,
           "totalMs": {
-            "minMs": 67.33129299999973,
-            "medianMs": 68.50696899999957,
-            "p95Ms": 71.35161299999982,
-            "maxMs": 71.35161299999982,
-            "stdDevMs": 1.0269584289587854,
+            "minMs": 69.33902700000021,
+            "medianMs": 72.58212999999978,
+            "p95Ms": 79.9078199999999,
+            "maxMs": 79.9078199999999,
+            "stdDevMs": 2.8721961060076135,
             "iterations": 20,
             "warmupIterations": 0
           },
           "createEnvMs": {
-            "minMs": 28.59221,
-            "medianMs": 29.758660999999996,
-            "p95Ms": 30.587169000000003,
-            "maxMs": 30.587169000000003,
-            "stdDevMs": 0.5652375830521978,
+            "minMs": 29.307123999999998,
+            "medianMs": 30.91148,
+            "p95Ms": 33.881566,
+            "maxMs": 33.881566,
+            "stdDevMs": 0.9980932554937197,
             "iterations": 20,
             "warmupIterations": 0
           },
           "validateEnvMs": {
-            "minMs": 3.8662650000000056,
-            "medianMs": 3.9404989999999955,
-            "p95Ms": 4.09666,
-            "maxMs": 4.09666,
-            "stdDevMs": 0.05794098643844408,
+            "minMs": 3.9536100000000047,
+            "medianMs": 4.096152000000004,
+            "p95Ms": 4.497118,
+            "maxMs": 4.497118,
+            "stdDevMs": 0.15030261638516929,
             "iterations": 20,
             "warmupIterations": 0
           },
           "memoryBeforeBytes": {
-            "rssBytes": 59346944,
-            "heapUsedBytes": 7196256,
+            "rssBytes": 59252736,
+            "heapUsedBytes": 7199080,
             "heapTotalBytes": 10592256,
             "externalBytes": 1457401,
             "arrayBuffersBytes": 18703
           },
           "memoryAfterBytes": {
-            "rssBytes": 59871232,
-            "heapUsedBytes": 7814248,
+            "rssBytes": 59908096,
+            "heapUsedBytes": 7817136,
             "heapTotalBytes": 11116544,
             "externalBytes": 1457441,
             "arrayBuffersBytes": 18703
@@ -197,45 +197,45 @@
             "variables": 8000
           },
           "fixtureHash": "sha256:9e87bddb2c88ac1cb9ea409d280d7252ced1376bcb39e1f1f913e5eb4031ccca",
-          "fixtureGenerationMs": 142,
+          "fixtureGenerationMs": 125,
           "totalMs": {
-            "minMs": 260.299305,
-            "medianMs": 266.18299599999955,
-            "p95Ms": 268.93234200000006,
-            "maxMs": 268.93234200000006,
-            "stdDevMs": 2.74929539958186,
-            "iterations": 12,
+            "minMs": 266.53035199999977,
+            "medianMs": 273.00257699999975,
+            "p95Ms": 280.8579890000001,
+            "maxMs": 280.8579890000001,
+            "stdDevMs": 4.464012358702415,
+            "iterations": 11,
             "warmupIterations": 0
           },
           "createEnvMs": {
-            "minMs": 192.24670200000003,
-            "medianMs": 196.981629,
-            "p95Ms": 200.787926,
-            "maxMs": 200.787926,
-            "stdDevMs": 2.5895067195910215,
-            "iterations": 12,
+            "minMs": 196.131097,
+            "medianMs": 201.334328,
+            "p95Ms": 210.048381,
+            "maxMs": 210.048381,
+            "stdDevMs": 4.293850888634131,
+            "iterations": 11,
             "warmupIterations": 0
           },
           "validateEnvMs": {
-            "minMs": 29.761392999999998,
-            "medianMs": 30.053573,
-            "p95Ms": 30.380815000000013,
-            "maxMs": 30.380815000000013,
-            "stdDevMs": 0.21286247203188366,
-            "iterations": 12,
+            "minMs": 30.647819999999996,
+            "medianMs": 31.225459,
+            "p95Ms": 32.07835800000001,
+            "maxMs": 32.07835800000001,
+            "stdDevMs": 0.4391757096783932,
+            "iterations": 11,
             "warmupIterations": 0
           },
           "memoryBeforeBytes": {
-            "rssBytes": 87465984,
-            "heapUsedBytes": 22734752,
-            "heapTotalBytes": 36282368,
+            "rssBytes": 87842816,
+            "heapUsedBytes": 22562968,
+            "heapTotalBytes": 37330944,
             "externalBytes": 1457365,
             "arrayBuffersBytes": 18667
           },
           "memoryAfterBytes": {
-            "rssBytes": 90218496,
-            "heapUsedBytes": 27531528,
-            "heapTotalBytes": 38903808,
+            "rssBytes": 90464256,
+            "heapUsedBytes": 27359624,
+            "heapTotalBytes": 39428096,
             "externalBytes": 1457405,
             "arrayBuffersBytes": 18667
           }
@@ -250,42 +250,42 @@
           "fixtureHash": "sha256:908dd210afef0791416be07b1617c670ee025549f680f775938c154ed34bc2ca",
           "fixtureGenerationMs": 37,
           "totalMs": {
-            "minMs": 127.99979299999995,
-            "medianMs": 131.0689110000003,
-            "p95Ms": 134.35166900000058,
-            "maxMs": 134.35166900000058,
-            "stdDevMs": 1.5433851325751742,
+            "minMs": 131.28112799999963,
+            "medianMs": 134.2192900000009,
+            "p95Ms": 140.05938799999967,
+            "maxMs": 140.05938799999967,
+            "stdDevMs": 2.3326316243755953,
             "iterations": 20,
             "warmupIterations": 0
           },
           "createEnvMs": {
-            "minMs": 73.494506,
-            "medianMs": 75.453753,
-            "p95Ms": 77.38670099999999,
-            "maxMs": 77.38670099999999,
-            "stdDevMs": 0.8469008088676057,
+            "minMs": 75.05872400000001,
+            "medianMs": 77.02557,
+            "p95Ms": 80.313478,
+            "maxMs": 80.313478,
+            "stdDevMs": 1.320285619901729,
             "iterations": 20,
             "warmupIterations": 0
           },
           "validateEnvMs": {
-            "minMs": 13.290374,
-            "medianMs": 13.576214000000007,
-            "p95Ms": 13.756094000000004,
-            "maxMs": 13.756094000000004,
-            "stdDevMs": 0.12275700853947082,
+            "minMs": 13.871905999999996,
+            "medianMs": 14.077752999999987,
+            "p95Ms": 14.577084,
+            "maxMs": 14.577084,
+            "stdDevMs": 0.20374064285072654,
             "iterations": 20,
             "warmupIterations": 0
           },
           "memoryBeforeBytes": {
-            "rssBytes": 69840896,
-            "heapUsedBytes": 12020440,
+            "rssBytes": 69885952,
+            "heapUsedBytes": 12079096,
             "heapTotalBytes": 19505152,
             "externalBytes": 1457401,
             "arrayBuffersBytes": 18703
           },
           "memoryAfterBytes": {
-            "rssBytes": 71020544,
-            "heapUsedBytes": 14184560,
+            "rssBytes": 71065600,
+            "heapUsedBytes": 14244448,
             "heapTotalBytes": 20553728,
             "externalBytes": 1457441,
             "arrayBuffersBytes": 18703
