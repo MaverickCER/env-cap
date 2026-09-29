@@ -100,6 +100,47 @@ describe("main() -- real --location run", () => {
   })
 })
 
+describe("main() -- real --evidence-only run (no --location)", () => {
+  it("skips the warning banner and manifest summary, and still prints the evidence line, when result.manifest is undefined", async () => {
+    // `--location` is the only thing that ever populates `result.manifest` --
+    // an `--evidence`-only invocation (the CLI's other valid non-`--json`
+    // entry point per the "at least one of --location or --evidence"
+    // guard) leaves it `undefined`, exercising the `result.manifest?.` and
+    // `if (result.manifest)` branches this text-output path takes for real,
+    // not just via a hand-built result object.
+    process.argv = [
+      "node",
+      "env-cap",
+      "--root",
+      fixtureRoot,
+      "--evidence",
+      "docs/env.evidence.json",
+    ]
+
+    await main()
+
+    const output = writes.join("")
+
+    // No "Wrote manifest: "/"Discovered N contract(s)." -- printManifestSummary()
+    // never runs when result.manifest is undefined.
+    expect(output).not.toContain("Wrote manifest: ")
+    expect(output).not.toContain("Discovered")
+
+    // The warning banner is gated on result.manifest?.parseWarnings.length --
+    // with no manifest, this must stay silent rather than throwing on the
+    // optional chain or misreading a mutated `?? 0` as some other count.
+    expect(output).not.toContain("⚠")
+
+    // --evidence was passed -- this line is independent of --location.
+    // (Printed as the arg's own relative path, not joined against fixtureRoot.)
+    expect(output).toContain("Wrote evidence: docs/env.evidence.json")
+
+    await expect(
+      fs.access(path.join(fixtureRoot, "docs/env.evidence.json")),
+    ).resolves.toBeUndefined()
+  })
+})
+
 describe("main() -- unresolved/dropped-schema warning banner", () => {
   it("prints a leading ⚠ banner, before the manifest summary, when a createEnv() call can't be statically resolved", async () => {
     // A dynamically-constructed schema (createEnv(buildSchema())) can't be
