@@ -1,7 +1,7 @@
 {
   "metadata": {
     "environment": {
-      "cpuModel": "AMD EPYC 7763 64-Core Processor",
+      "cpuModel": "AMD EPYC 9V74 80-Core Processor",
       "cpuArchitecture": "x64",
       "processArch": "x64",
       "logicalCores": 4,
@@ -29,9 +29,9 @@
       "gcEnabled": true
     },
     "timing": {
-      "startedAtUtc": "2026-09-29T14:31:27.145Z",
-      "finishedAtUtc": "2026-09-29T14:32:53.205Z",
-      "totalSuiteDurationMs": 86060
+      "startedAtUtc": "2026-09-29T14:36:41.169Z",
+      "finishedAtUtc": "2026-09-29T14:38:02.101Z",
+      "totalSuiteDurationMs": 80932
     },
     "generation": {
       "fixtureSeed": "deterministic-index-v1",
@@ -44,7 +44,7 @@
       "envCapVersion": "0.4.0"
     },
     "git": {
-      "gitCommit": "5fea206a2e8ef6ac74fc2ee00646987d8e8faa45",
+      "gitCommit": "d951ab58a61405e58946df1d6ef984bd4c28291a",
       "gitBranch": "feat/narrow-cli-to-runtime-consumed-flags",
       "gitDirty": true
     },
@@ -159,22 +159,22 @@
             "variables": 100
           },
           "fixtureHash": "sha256:8f226868e5d25bd083576c35d1ab416f21c15eef8b5ea4b9ca51be6c671fe607",
-          "fixtureGenerationMs": 5,
+          "fixtureGenerationMs": 4,
           "totalMs": {
-            "minMs": 51.47046,
-            "medianMs": 78.13853800000015,
-            "p95Ms": 85.5581830000001,
-            "maxMs": 85.5581830000001,
-            "stdDevMs": 9.211808410729299,
-            "iterations": 19,
+            "minMs": 44.79563899999994,
+            "medianMs": 79.72924200000011,
+            "p95Ms": 98.8762979999999,
+            "maxMs": 98.8762979999999,
+            "stdDevMs": 12.042044669025085,
+            "iterations": 18,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 1.2054739999998674,
-            "medianMs": 1.8723770000001423,
-            "p95Ms": 2.3048720000001595,
-            "maxMs": 3.0848439999999755,
-            "stdDevMs": 0.3605515417526666,
+            "minMs": 0.9761860000003253,
+            "medianMs": 1.7455280000003768,
+            "p95Ms": 2.1559619999998176,
+            "maxMs": 3.2749329999996917,
+            "stdDevMs": 0.4260443448387049,
             "iterations": 30,
             "warmupIterations": 3
           },
@@ -192,22 +192,22 @@
             "variables": 1000
           },
           "fixtureHash": "sha256:49e74d1dfc80d977b126fb9cdd2889820b908a69b661117758421fe8bdce9661",
-          "fixtureGenerationMs": 38,
+          "fixtureGenerationMs": 30,
           "totalMs": {
-            "minMs": 389.46810600000026,
-            "medianMs": 391.77775699999984,
-            "p95Ms": 405.9341050000003,
-            "maxMs": 405.9341050000003,
-            "stdDevMs": 5.954456654101848,
+            "minMs": 366.4795459999996,
+            "medianMs": 375.7534489999998,
+            "p95Ms": 397.2164039999998,
+            "maxMs": 397.2164039999998,
+            "stdDevMs": 11.66072319039784,
             "iterations": 5,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 7.704670999999507,
-            "medianMs": 9.442345000000387,
-            "p95Ms": 10.421024999999645,
-            "maxMs": 10.487226000000192,
-            "stdDevMs": 0.7927527040735589,
+            "minMs": 5.730298999999832,
+            "medianMs": 6.8486259999999675,
+            "p95Ms": 8.079719000000296,
+            "maxMs": 9.030103999999483,
+            "stdDevMs": 0.7189358572923428,
             "iterations": 30,
             "warmupIterations": 3
           },
@@ -225,23 +225,23 @@
             "variables": 8000
           },
           "fixtureHash": "sha256:2908c366d38dbd9169cf5d35e5ef957abc7d1068df891c1429101513123d2735",
-          "fixtureGenerationMs": 262,
+          "fixtureGenerationMs": 228,
           "totalMs": {
-            "minMs": 3676.3179109999983,
-            "medianMs": 3850.126852999998,
-            "p95Ms": 3893.315902000002,
-            "maxMs": 3893.315902000002,
-            "stdDevMs": 79.08754324489969,
+            "minMs": 3413.5833600000005,
+            "medianMs": 3631.259418999998,
+            "p95Ms": 3829.4668960000017,
+            "maxMs": 3829.4668960000017,
+            "stdDevMs": 138.83302437355218,
             "iterations": 5,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 55.94451499999559,
-            "medianMs": 64.90359200000239,
-            "p95Ms": 74.81714199999988,
-            "maxMs": 74.97243400000298,
-            "stdDevMs": 5.428069627744533,
-            "iterations": 21,
+            "minMs": 41.58845899999869,
+            "medianMs": 46.85700000000361,
+            "p95Ms": 53.05874500000209,
+            "maxMs": 55.07170700000279,
+            "stdDevMs": 3.5704083778958657,
+            "iterations": 28,
             "warmupIterations": 3
           },
           "outputBytes": {
@@ -258,22 +258,22 @@
             "variables": 4025
           },
           "fixtureHash": "sha256:d86db50b6d24f13b1b48628e9921132bf1d2d7e870b84c308083644e2ac5e168",
-          "fixtureGenerationMs": 84,
+          "fixtureGenerationMs": 54,
           "totalMs": {
-            "minMs": 1144.7825819999998,
-            "medianMs": 1155.9404189999987,
-            "p95Ms": 1177.7746679999982,
-            "maxMs": 1177.7746679999982,
-            "stdDevMs": 10.9470277503647,
+            "minMs": 1043.335103999998,
+            "medianMs": 1071.207091999997,
+            "p95Ms": 1086.7629429999943,
+            "maxMs": 1086.7629429999943,
+            "stdDevMs": 14.966005041029971,
             "iterations": 5,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 17.846434999999474,
-            "medianMs": 20.75931899999705,
-            "p95Ms": 25.0602429999999,
-            "maxMs": 25.34383600000001,
-            "stdDevMs": 1.9908701974553429,
+            "minMs": 13.617933000001358,
+            "medianMs": 16.684285000003,
+            "p95Ms": 20.48182100000122,
+            "maxMs": 20.596144000002823,
+            "stdDevMs": 1.7720645039925371,
             "iterations": 30,
             "warmupIterations": 3
           },
@@ -295,13 +295,13 @@
             "variables": 100
           },
           "fixtureHash": "sha256:8f226868e5d25bd083576c35d1ab416f21c15eef8b5ea4b9ca51be6c671fe607",
-          "fixtureGenerationMs": 5,
+          "fixtureGenerationMs": 4,
           "durationMs": {
-            "minMs": 1.049100999996881,
-            "medianMs": 1.8487440000026254,
-            "p95Ms": 2.2633530000020983,
-            "maxMs": 2.2975470000019413,
-            "stdDevMs": 0.3689386943800081,
+            "minMs": 1.4472989999994752,
+            "medianMs": 1.7181479999999283,
+            "p95Ms": 2.0787490000002435,
+            "maxMs": 2.1154219999953057,
+            "stdDevMs": 0.17763173855788347,
             "iterations": 30,
             "warmupIterations": 3
           }
@@ -314,13 +314,13 @@
             "variables": 1000
           },
           "fixtureHash": "sha256:49e74d1dfc80d977b126fb9cdd2889820b908a69b661117758421fe8bdce9661",
-          "fixtureGenerationMs": 38,
+          "fixtureGenerationMs": 30,
           "durationMs": {
-            "minMs": 8.001075000000128,
-            "medianMs": 9.675481999998738,
-            "p95Ms": 11.383310999997775,
-            "maxMs": 11.82185500000196,
-            "stdDevMs": 1.1183110395140883,
+            "minMs": 5.56241399999999,
+            "medianMs": 6.9536020000014105,
+            "p95Ms": 9.15012299999944,
+            "maxMs": 9.363953000000038,
+            "stdDevMs": 0.9568275825295026,
             "iterations": 30,
             "warmupIterations": 3
           }
@@ -333,14 +333,14 @@
             "variables": 8000
           },
           "fixtureHash": "sha256:2908c366d38dbd9169cf5d35e5ef957abc7d1068df891c1429101513123d2735",
-          "fixtureGenerationMs": 262,
+          "fixtureGenerationMs": 228,
           "durationMs": {
-            "minMs": 55.075692999998864,
-            "medianMs": 61.988571000001684,
-            "p95Ms": 76.19587100000354,
-            "maxMs": 77.40195600000152,
-            "stdDevMs": 6.700463809909373,
-            "iterations": 21,
+            "minMs": 42.44974899999943,
+            "medianMs": 46.59969999999885,
+            "p95Ms": 53.10911199999828,
+            "maxMs": 53.440340000001015,
+            "stdDevMs": 3.1720462804357035,
+            "iterations": 27,
             "warmupIterations": 3
           }
         },
@@ -352,13 +352,13 @@
             "variables": 4025
           },
           "fixtureHash": "sha256:d86db50b6d24f13b1b48628e9921132bf1d2d7e870b84c308083644e2ac5e168",
-          "fixtureGenerationMs": 84,
+          "fixtureGenerationMs": 54,
           "durationMs": {
-            "minMs": 17.93600399999559,
-            "medianMs": 20.919378999999026,
-            "p95Ms": 25.148284000002604,
-            "maxMs": 25.95704300000216,
-            "stdDevMs": 2.043944771858564,
+            "minMs": 13.635241999996651,
+            "medianMs": 16.396665000000212,
+            "p95Ms": 18.85186799999792,
+            "maxMs": 18.946062000002712,
+            "stdDevMs": 1.3591332239194542,
             "iterations": 30,
             "warmupIterations": 3
           }
@@ -376,24 +376,24 @@
           },
           "fixtureHash": "sha256:49e74d1dfc80d977b126fb9cdd2889820b908a69b661117758421fe8bdce9661",
           "standaloneMs": {
-            "minMs": 410.66384699999617,
-            "medianMs": 477.220693999996,
-            "p95Ms": 492.90862399999605,
-            "maxMs": 492.90862399999605,
-            "stdDevMs": 28.778539142599413,
+            "minMs": 454.19888300000457,
+            "medianMs": 458.1319599999988,
+            "p95Ms": 466.1478220000063,
+            "maxMs": 466.1478220000063,
+            "stdDevMs": 4.630076429646482,
             "iterations": 5,
             "warmupIterations": 3
           },
           "combinedMs": {
-            "minMs": 370.3717849999957,
-            "medianMs": 379.25589899999613,
-            "p95Ms": 392.9924020000035,
-            "maxMs": 392.9924020000035,
-            "stdDevMs": 8.504801982916657,
+            "minMs": 335.28446899999835,
+            "medianMs": 352.32929400000285,
+            "p95Ms": 360.087698000003,
+            "maxMs": 360.087698000003,
+            "stdDevMs": 8.772815192677136,
             "iterations": 5,
             "warmupIterations": 3
           },
-          "savingsPercent": 20.53
+          "savingsPercent": 23.09
         }
       }
     },
@@ -407,21 +407,21 @@
             "variables": 1000
           },
           "minimalDocsMs": {
-            "minMs": 170.25894800000242,
-            "medianMs": 180.07269000000088,
-            "p95Ms": 193.0931700000001,
-            "maxMs": 193.0931700000001,
-            "stdDevMs": 8.169166855270719,
-            "iterations": 8,
+            "minMs": 159.41761699999915,
+            "medianMs": 165.86375599999883,
+            "p95Ms": 177.91402600000583,
+            "maxMs": 177.91402600000583,
+            "stdDevMs": 6.592754335867921,
+            "iterations": 9,
             "warmupIterations": 3
           },
           "minimalDocsBytes": 732533,
           "heavyDocsMs": {
-            "minMs": 192.70961800000805,
-            "medianMs": 209.39336600000388,
-            "p95Ms": 220.55741500000295,
-            "maxMs": 220.55741500000295,
-            "stdDevMs": 8.767894178314071,
+            "minMs": 185.8046519999989,
+            "medianMs": 200.0769250000012,
+            "p95Ms": 222.62506899999426,
+            "maxMs": 222.62506899999426,
+            "stdDevMs": 10.2643729224426,
             "iterations": 8,
             "warmupIterations": 3
           },
@@ -441,41 +441,41 @@
           "fixtureHash": "sha256:2908c366d38dbd9169cf5d35e5ef957abc7d1068df891c1429101513123d2735",
           "full": {
             "totalMs": {
-              "minMs": 1657.6196679999994,
-              "medianMs": 1769.4189199999964,
-              "p95Ms": 1787.0391669999954,
-              "maxMs": 1787.0391669999954,
-              "stdDevMs": 49.47531847661383,
+              "minMs": 1538.6489290000027,
+              "medianMs": 1635.9236829999863,
+              "p95Ms": 1661.485765999998,
+              "maxMs": 1661.485765999998,
+              "stdDevMs": 44.878699714961925,
               "iterations": 5,
               "warmupIterations": 3
             },
             "discoveryMs": {
-              "minMs": 56.9832929999975,
-              "medianMs": 67.62344100000337,
-              "p95Ms": 76.97068299999228,
-              "maxMs": 78.95394900000247,
-              "stdDevMs": 6.832246594011006,
-              "iterations": 21,
+              "minMs": 44.63803899999766,
+              "medianMs": 49.600273999996716,
+              "p95Ms": 57.42460700000811,
+              "maxMs": 58.75635000001057,
+              "stdDevMs": 4.076540718835986,
+              "iterations": 26,
               "warmupIterations": 3
             }
           },
           "scoped": {
             "totalMs": {
-              "minMs": 65.41785899999377,
-              "medianMs": 71.41674899999634,
-              "p95Ms": 79.14133399999992,
-              "maxMs": 79.14133399999992,
-              "stdDevMs": 4.501992927144158,
-              "iterations": 19,
+              "minMs": 49.6649780000007,
+              "medianMs": 54.193843000000925,
+              "p95Ms": 59.692012999992585,
+              "maxMs": 66.88775700000406,
+              "stdDevMs": 3.4528841319612593,
+              "iterations": 24,
               "warmupIterations": 3
             },
             "discoveryMs": {
-              "minMs": 52.71377200000279,
-              "medianMs": 59.94909500000358,
-              "p95Ms": 72.06180099998892,
-              "maxMs": 74.31948299999931,
-              "stdDevMs": 5.926864886240876,
-              "iterations": 23,
+              "minMs": 39.99967699999979,
+              "medianMs": 47.32504599999811,
+              "p95Ms": 52.56606800000009,
+              "maxMs": 55.48320999999123,
+              "stdDevMs": 3.9457721607472167,
+              "iterations": 28,
               "warmupIterations": 3
             }
           }
