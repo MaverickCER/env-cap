@@ -65,7 +65,7 @@ describe.skipIf(distMissing)("CLI bin execution (requires `npm run build`)", () 
   })
 
   it("emits stdout that round-trips through JSON.parse() when run with --json and no target flags", () => {
-    // No --location/--docs/--ownership -- exercises the JSON-aware usage-error
+    // No --location/--evidence -- exercises the JSON-aware usage-error
     // path (src/cli/index.ts's "at least one of ... is required" branch),
     // not a real generation run, but proves the built binary's --json output
     // is well-formed JSON end-to-end through the real symlinked entry point.

@@ -20,7 +20,7 @@
     "generate:env": "node scripts/generate-manifest.mjs",
     "typecheck": "npm run generate:env && tsc --noEmit",
     "start": "npm run generate:env && tsx --env-file=.env src/server.ts",
-    "verify:env": "env-cap --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
+    "verify:env": "node scripts/check-artifacts.mjs",
     "build": "tsc -p tsconfig.build.json",
     "pack:local": "npm run build && npm pack --pack-destination . && mv examples-tsconfig-aliases-*.tgz tsconfig-aliases.tgz"
   },

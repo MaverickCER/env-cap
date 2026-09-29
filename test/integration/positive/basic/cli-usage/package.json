@@ -4,9 +4,9 @@
   "type": "module",
   "description": "basic-node's exact contract, generated via the env-cap CLI binary directly instead of a custom script -- see README.md.",
   "scripts": {
-    "generate:env": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --env-example-on-existing overwrite --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json",
-    "generate:env:json": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --env-example-on-existing overwrite --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --json",
-    "verify:env": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --docs docs/ENVIRONMENT.md --env-example .env.example --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json --check",
+    "generate:env": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json",
+    "generate:env:json": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --json",
+    "verify:env": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --check",
     "typecheck": "npm run generate:env && tsc --noEmit",
     "start": "npm run generate:env && tsx --env-file=.env src/server.ts"
   },

@@ -765,29 +765,57 @@ The allow-listed package must declare a valid `envCap.schema` field pointing to 
 
 ## CLI
 
-Generate artifacts directly from the command line:
+Generate the manifest and the persisted evidence artifact directly from the command line:
 
 ```bash
 npx env-cap \
   --location src/generated/env.manifest.ts \
-  --docs docs/ENVIRONMENT.md \
-  --env-example .env.example \
   --evidence docs/env.evidence.json \
   --strict
 ```
 
 The CLI is designed for development workflows, CI pipelines, and platform automation.
 
-By default, `.env.example` generation never overwrites a file that already exists there — it writes a
-timestamped sibling instead, for you to diff/merge by hand. Pass `--env-example-on-existing overwrite` to
-replace it directly, or `--env-example-on-existing skip` to write nothing at all when one is already
-present (the same three modes are available as `envExample.onExisting` when calling `generateDocumentation()`/
-`generateEnvArtifacts()` directly — see `EnvExampleOnExisting`).
+The CLI's own surface is deliberately narrow -- see [ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md):
+only outputs with a real runtime consumer (the manifest) or that are inherent
+to the tool's own evidence/reporting contract (`--evidence`/`--json`/`--check`)
+get a flag. The rich Markdown docs catalog, the dependency & ownership
+report, and a reconciled `.env.example` have no such consumer -- nothing
+imports them the way application code imports the generated manifest -- so
+generating them is a few lines of application code instead, calling
+`env-cap/build`'s exported `generateDocumentation()`/`generateUsageReport()`
+directly:
+
+```ts
+import { generateDocumentation, generateUsageReport } from "env-cap/build"
+import { nodeBuildFileSystem } from "env-cap/node"
+
+await generateDocumentation({
+  fs: nodeBuildFileSystem,
+  location: "docs/ENVIRONMENT.md",
+  // Never overwrites a file that already exists at `envExample.location` by
+  // default -- it writes a timestamped sibling instead, for you to
+  // diff/merge by hand. Pass `onExisting: "overwrite"` to replace it
+  // directly, or `"skip"` to write nothing at all when one is already
+  // present -- see `EnvExampleOnExisting`.
+  envExample: { location: ".env.example", onExisting: "overwrite" },
+})
+
+await generateUsageReport({
+  fs: nodeBuildFileSystem,
+  report: { location: "docs/OWNERSHIP.md" },
+})
+```
+
+`checkEnvArtifacts()` is the same function `--check` calls internally, and
+takes the same `docs`/`usage` options -- see any of this repo's own
+`examples/*/scripts/generate-docs/` directories for a complete, wired-up
+`run.ts`/`check.ts` pair to copy from.
 
 Common uses include:
 
 - generating environment manifests
-- generating documentation and `.env.example` files
+- generating the persisted evidence artifact for reporting/CI
 - enforcing configuration ownership rules
 - detecting undocumented or stale configuration changes
 - producing machine-readable reports for automation
@@ -800,8 +828,8 @@ The output contains the same generated artifact information returned by `generat
 
 ```bash
 npx env-cap \
-  --docs docs/ENVIRONMENT.md \
-  --ownership docs/OWNERSHIP.md \
+  --location src/generated/env.manifest.ts \
+  --evidence docs/env.evidence.json \
   --json
 ```
 
@@ -813,12 +841,13 @@ Example:
   "kind": "env-cap-report",
   "toolVersion": "0.1.0",
   "ok": true,
-  "docs": {
-    "docsPath": "...",
-    "catalog": [/* documented contracts, owners, and documentEnv() metadata */],
-    "documentation": { "undocumentedVariables": [], "expiringSoon": [] },
+  "manifest": {
+    "outputPath": "...",
+    "contracts": [/* discovered contracts */],
   },
-  // "manifest" and "usage" appear when their matching flags are passed
+  // "evidence" appears when --evidence is passed. "docs"/"usage" no longer
+  // appear from the CLI at all (ADR 0046) -- call `generateDocumentation()`/
+  // `generateUsageReport()` directly for that shape.
 }
 ```
 
@@ -856,7 +885,7 @@ This is useful as a CI drift check when a schema changes but generated artifacts
 ```bash
 npx env-cap \
   --location src/generated/env.manifest.ts \
-  --docs docs/ENVIRONMENT.md \
+  --evidence docs/env.evidence.json \
   --check
 ```
 
@@ -904,19 +933,25 @@ jobs:
 
       - uses: maverickcer/env-cap@v1
         with:
-          args: "--docs docs/ENVIRONMENT.md --ownership docs/OWNERSHIP.md --evidence docs/env.evidence.json"
+          args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
 ```
 
-| Input               | Default               | Purpose                                                                                            |
-| ------------------- | --------------------- | -------------------------------------------------------------------------------------------------- |
-| `args`              | _(required)_          | Arguments passed to `env-cap --json`, such as `--docs`, `--ownership`, and strict validation flags |
-| `working-directory` | `.`                   | Directory where `env-cap` executes                                                                 |
-| `version`           | _(latest)_            | Version to execute through `npx` when `env-cap` is not installed locally                           |
-| `comment`           | `true`                | Creates or updates a sticky pull request summary comment                                           |
-| `annotations`       | `true`                | Emits GitHub workflow annotations for detected issues                                              |
-| `rotation-alert`    | `true`                | Enables scheduled expiration reporting outside pull requests                                       |
-| `report-key`        | _(working-directory)_ | Identifies this report when multiple workflows run against the same pull request                   |
-| `github-token`      | `${{ github.token }}` | Token used for the `gh` CLI calls that post/update PR comments and rotation-alert issues           |
+`args` only reaches the CLI, so it can only drive `--location`/`--evidence`/
+`--strict`-family flags (ADR 0046) -- the persisted evidence artifact this
+produces is what the Action's own PR annotations/summary comment/rotation
+alerts read from (Finding Model, ADR 0038), regardless of whether your repo
+also generates `docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md` as a separate step.
+
+| Input               | Default               | Purpose                                                                                               |
+| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
+| `args`              | _(required)_          | Arguments passed to `env-cap --json`, such as `--location`, `--evidence`, and strict validation flags |
+| `working-directory` | `.`                   | Directory where `env-cap` executes                                                                    |
+| `version`           | _(latest)_            | Version to execute through `npx` when `env-cap` is not installed locally                              |
+| `comment`           | `true`                | Creates or updates a sticky pull request summary comment                                              |
+| `annotations`       | `true`                | Emits GitHub workflow annotations for detected issues                                                 |
+| `rotation-alert`    | `true`                | Enables scheduled expiration reporting outside pull requests                                          |
+| `report-key`        | _(working-directory)_ | Identifies this report when multiple workflows run against the same pull request                      |
+| `github-token`      | `${{ github.token }}` | Token used for the `gh` CLI calls that post/update PR comments and rotation-alert issues              |
 
 The Action does not create its own policy layer. Pass/fail behavior always follows the CLI exit code and whatever `--strict`/`--strict-docs`/`--strict-ownership` combination this invocation's own `args` input passes (ADR 0044 — see [Troubleshooting](#troubleshooting)). A finding family with no matching `--strict*` flag never fails the run on its own; read it from `--evidence`'s output and gate on it in your own workflow step if you want that enforced.
 
@@ -966,8 +1001,10 @@ jobs:
 
       - uses: maverickcer/env-cap@v1
         with:
-          args: "--docs docs/ENVIRONMENT.md --expiring-within-days 45"
+          args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
 ```
+
+The Action reads the rotation-alert list from the persisted evidence artifact's Lifecycle Model (`result.evidence.lifecycle.expiring`), so `--evidence` is required here — `--docs`/`--expiring-within-days` are not CLI flags (see ADR 0046); the expiring-soon window itself is always the library's 30-day default when driven through the CLI this way.
 
 When running without a pull request context, the Action can create or update a GitHub issue containing expiring or expired configuration entries.
 

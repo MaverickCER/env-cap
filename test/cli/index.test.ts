@@ -10,7 +10,6 @@ import {
   parseArgs,
   printList,
   printManifestSummary,
-  printUsageSummary,
   requestedPasses,
   writeEvidenceChanges,
 } from "../../src/cli/index.js"
@@ -77,54 +76,21 @@ describe("parseArgs", () => {
     expect(args.location).toBe("src/generated/env.manifest.ts")
     expect(args.help).toBe(false)
     expect(args.strict).toBe(false)
-    expect(args.expiringWithinDays).toBeUndefined()
     expect(args.include).toEqual([])
     expect(args.exclude).toEqual([])
   })
 
-  it("parses --root, --docs, and --env-example", () => {
+  it("parses --root and --evidence", () => {
     const args = parseArgs([
       "--root",
       "/repo",
       "--location",
       "out.ts",
-      "--docs",
-      "docs/ENVIRONMENT.md",
-      "--env-example",
-      ".env.example",
+      "--evidence",
+      "docs/env.evidence.json",
     ])
     expect(args.root).toBe("/repo")
-    expect(args.docs).toBe("docs/ENVIRONMENT.md")
-    expect(args.envExample).toBe(".env.example")
-  })
-
-  it("parses --ownership", () => {
-    const args = parseArgs(["--ownership", "docs/OWNERSHIP.md"])
-    expect(args.ownership).toBe("docs/OWNERSHIP.md")
-  })
-
-  it("parses --env-example-on-existing with a valid mode", () => {
-    expect(
-      parseArgs(["--location", "out.ts", "--env-example-on-existing", "keep-sibling"])
-        .envExampleOnExisting,
-    ).toBe("keep-sibling")
-    expect(
-      parseArgs(["--location", "out.ts", "--env-example-on-existing", "overwrite"])
-        .envExampleOnExisting,
-    ).toBe("overwrite")
-    expect(
-      parseArgs(["--location", "out.ts", "--env-example-on-existing", "skip"]).envExampleOnExisting,
-    ).toBe("skip")
-  })
-
-  it("leaves envExampleOnExisting undefined when the flag is omitted", () => {
-    expect(parseArgs(["--location", "out.ts"]).envExampleOnExisting).toBeUndefined()
-  })
-
-  it("throws for an unknown --env-example-on-existing value", () => {
-    expect(() => parseArgs(["--location", "out.ts", "--env-example-on-existing", "bogus"])).toThrow(
-      'Unknown value for --env-example-on-existing: "bogus". Expected one of: keep-sibling, overwrite, skip.',
-    )
+    expect(args.evidence).toBe("docs/env.evidence.json")
   })
 
   it("collects repeatable --include and --exclude flags", () => {
@@ -175,16 +141,16 @@ describe("parseArgs", () => {
   })
 
   it("parses the two scoped strict flags independently of the blanket --strict", () => {
-    const docsOnly = parseArgs(["--docs", "out.md", "--strict-docs"])
+    const docsOnly = parseArgs(["--location", "out.ts", "--strict-docs"])
     expect(docsOnly.strictDocs).toBe(true)
     expect(docsOnly.strictOwnership).toBe(false)
     expect(docsOnly.strict).toBe(false)
 
-    const ownershipOnly = parseArgs(["--ownership", "out.md", "--strict-ownership"])
+    const ownershipOnly = parseArgs(["--location", "out.ts", "--strict-ownership"])
     expect(ownershipOnly.strictOwnership).toBe(true)
     expect(ownershipOnly.strictDocs).toBe(false)
 
-    const both = parseArgs(["--docs", "out.md", "--strict-docs", "--strict-ownership"])
+    const both = parseArgs(["--location", "out.ts", "--strict-docs", "--strict-ownership"])
     expect([both.strictDocs, both.strictOwnership]).toEqual([true, true])
 
     // parseArgs keeps the three flags independent booleans -- --strict never
@@ -201,17 +167,6 @@ describe("parseArgs", () => {
     expect(args.strictOwnership).toBe(false)
   })
 
-  it("parses --expiring-within-days as a number", () => {
-    const args = parseArgs(["--location", "out.ts", "--expiring-within-days", "60"])
-    expect(args.expiringWithinDays).toBe(60)
-  })
-
-  it("throws when --expiring-within-days is not a number", () => {
-    expect(() => parseArgs(["--location", "out.ts", "--expiring-within-days", "soon"])).toThrow(
-      /expects a number/,
-    )
-  })
-
   it("throws for an unknown argument", () => {
     expect(() => parseArgs(["--bogus"])).toThrow(/Unknown argument/)
   })
@@ -219,14 +174,21 @@ describe("parseArgs", () => {
   it("throws when a value-taking flag is missing its value", () => {
     expect(() => parseArgs(["--location"])).toThrow(/requires a value/)
     expect(() => parseArgs(["--include"])).toThrow(/requires a value/)
-    expect(() => parseArgs(["--ownership"])).toThrow(/requires a value/)
+    expect(() => parseArgs(["--evidence"])).toThrow(/requires a value/)
   })
 
-  it("parses with none of --location/--docs/--ownership given -- parseArgs itself never enforces requiredness, main() does", () => {
+  it("parses with none of --location/--evidence given -- parseArgs itself never enforces requiredness, main() does", () => {
     const args = parseArgs(["--strict"])
     expect(args.location).toBeUndefined()
-    expect(args.docs).toBeUndefined()
-    expect(args.ownership).toBeUndefined()
+    expect(args.evidence).toBeUndefined()
+  })
+
+  it("throws for the removed --docs/--ownership/--env-example flags (moved to application code, see ADR 0046)", () => {
+    expect(() => parseArgs(["--docs", "out.md"])).toThrow(/Unknown argument: --docs/)
+    expect(() => parseArgs(["--ownership", "out.md"])).toThrow(/Unknown argument: --ownership/)
+    expect(() => parseArgs(["--env-example", ".env.example"])).toThrow(
+      /Unknown argument: --env-example/,
+    )
   })
 })
 
@@ -421,18 +383,6 @@ describe("requestedPasses", () => {
       usage: false,
       evidence: false,
     })
-    expect(requestedPasses({ ...base, docs: "docs.md" })).toEqual({
-      manifest: false,
-      docs: true,
-      usage: false,
-      evidence: false,
-    })
-    expect(requestedPasses({ ...base, ownership: "OWNERSHIP.md" })).toEqual({
-      manifest: false,
-      docs: false,
-      usage: true,
-      evidence: false,
-    })
     expect(requestedPasses({ ...base, evidence: "evidence.json" })).toEqual({
       manifest: false,
       docs: false,
@@ -448,6 +398,25 @@ describe("requestedPasses", () => {
       usage: false,
       evidence: false,
     })
+  })
+
+  // `--docs`/`--ownership` no longer exist as CLI flags (ADR 0046), so
+  // `docs`/`usage` can never be `true` -- pinned explicitly here (not just
+  // implied by the `toEqual()` checks above, both of which happen to use a
+  // `base` that never sets them) so a mutant flipping either hardcoded
+  // `false` to `true` in `requestedPasses()` is still caught even against a
+  // fully-populated `ParsedArgs`.
+  it("docs/usage are always false, regardless of which other flags are set", () => {
+    const passes = requestedPasses({
+      ...base,
+      location: "out.ts",
+      evidence: "evidence.json",
+      strict: true,
+      strictDocs: true,
+      strictOwnership: true,
+    })
+    expect(passes.docs).toBe(false)
+    expect(passes.usage).toBe(false)
   })
 })
 
@@ -495,30 +464,15 @@ describe("artifactOptions", () => {
     })
   })
 
-  it("docs is false when --docs was omitted, and envExample is undefined without --env-example", () => {
-    expect(artifactOptions(base).docs).toBe(false)
-    const docsOptions = artifactOptions({ ...base, docs: "docs.md", expiringWithinDays: 45 })
-      .docs as { location: string; expiringWithinDays: number | undefined; envExample: unknown }
-    expect(docsOptions.location).toBe("docs.md")
-    expect(docsOptions.expiringWithinDays).toBe(45)
-    expect(docsOptions.envExample).toBeUndefined()
-  })
-
-  it("docs.envExample is set, with onExisting, when --env-example was given", () => {
-    const docsOptions = artifactOptions({
-      ...base,
-      docs: "docs.md",
-      envExample: ".env.example",
-      envExampleOnExisting: "overwrite",
-    }).docs as { envExample: { location: string; onExisting: string | undefined } }
-    expect(docsOptions.envExample).toEqual({ location: ".env.example", onExisting: "overwrite" })
-  })
-
-  it("usage is false when --ownership was omitted, and set from it otherwise", () => {
-    expect(artifactOptions(base).usage).toBe(false)
-    expect(artifactOptions({ ...base, ownership: "OWNERSHIP.md" }).usage).toEqual({
-      report: { location: "OWNERSHIP.md" },
-    })
+  // `--docs`/`--ownership` were removed from the CLI (ADR 0046):
+  // `artifactOptions()` no longer has a `docs`/`ownership` source field on
+  // `ParsedArgs` to read, so it never sets `docs`/`usage` on the options
+  // object it returns at all -- confirmed here via `in`, since a TypeScript
+  // property-access check on the (inferred, docs/usage-less) return type
+  // would fail to compile rather than assert anything at runtime.
+  it("never sets docs/usage on the returned options object", () => {
+    expect("docs" in artifactOptions(base)).toBe(false)
+    expect("usage" in artifactOptions(base)).toBe(false)
   })
 
   it("evidence is false when --evidence was omitted, and set from it otherwise", () => {
@@ -560,7 +514,7 @@ describe("printList", () => {
   })
 })
 
-describe("printManifestSummary/printUsageSummary", () => {
+describe("printManifestSummary", () => {
   it("printManifestSummary writes the outputPath, contract count, and both warning lists", () => {
     const contractSummary: DiscoveredContractSummary = {
       file: "features/a/env.schema.ts",
@@ -593,51 +547,6 @@ describe("printManifestSummary/printUsageSummary", () => {
     expect(output).toContain("[PROCESSOR_SOURCE_CONFLICT] KEY: conflict")
     expect(output).toContain('  - Exclusive group "db": both active\n')
     expect(output).toContain("a.ts: bad")
-  })
-
-  it("printUsageSummary omits the 'Wrote dependency ownership report' line when reportPath is undefined", () => {
-    printUsageSummary({
-      reportPath: undefined,
-      abandonedContracts: [],
-      unresolvedConsumers: [],
-      unconsumedOwnedVariables: [],
-      indeterminate: [],
-      asserted: [],
-      parseWarnings: [],
-      scannedSurfaces: [],
-      dependencyOwnership: [],
-    })
-    expect(writes.join("")).toBe("")
-  })
-
-  it("printUsageSummary prints the 'Wrote dependency ownership report' line when reportPath is set", () => {
-    printUsageSummary({
-      reportPath: "docs/OWNERSHIP.md",
-      abandonedContracts: [],
-      unresolvedConsumers: [],
-      unconsumedOwnedVariables: [],
-      indeterminate: [],
-      asserted: [],
-      parseWarnings: [],
-      scannedSurfaces: [],
-      dependencyOwnership: [],
-    })
-    expect(writes.join("")).toBe("Wrote dependency ownership report: docs/OWNERSHIP.md\n")
-  })
-
-  it("printUsageSummary renders its own parseWarnings list, exact file:message text", () => {
-    printUsageSummary({
-      reportPath: undefined,
-      abandonedContracts: [],
-      unresolvedConsumers: [],
-      unconsumedOwnedVariables: [],
-      indeterminate: [],
-      asserted: [],
-      parseWarnings: [{ file: "a.ts", message: "bad" }],
-      scannedSurfaces: [],
-      dependencyOwnership: [],
-    })
-    expect(writes.join("")).toBe("\n1 parse warning(s):\n  - a.ts: bad\n")
   })
 })
 

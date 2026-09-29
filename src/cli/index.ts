@@ -4,7 +4,6 @@ import type {
   generateEnvArtifacts,
   CheckEnvArtifactsResult,
   ContractModelContract,
-  EnvExampleOnExisting,
   ManifestChangeReport,
 } from "../build/index.js"
 import { nodeBuildFileSystem } from "./filesystem.js"
@@ -39,15 +38,10 @@ export interface ParsedArgs {
   exclude: string[]
   packages: string[]
   tsconfig?: string | false
-  docs?: string
-  envExample?: string
-  envExampleOnExisting?: EnvExampleOnExisting
-  ownership?: string
   evidence?: string
   strict: boolean
   strictDocs: boolean
   strictOwnership: boolean
-  expiringWithinDays?: number
   json: boolean
   check: boolean
   help: boolean
@@ -82,33 +76,8 @@ function pushPackage(a: ParsedArgs, v: string): void {
 function setTsconfig(a: ParsedArgs, v: string): void {
   a.tsconfig = v
 }
-function setDocs(a: ParsedArgs, v: string): void {
-  a.docs = v
-}
-function setEnvExample(a: ParsedArgs, v: string): void {
-  a.envExample = v
-}
-function setOwnership(a: ParsedArgs, v: string): void {
-  a.ownership = v
-}
 function setEvidence(a: ParsedArgs, v: string): void {
   a.evidence = v
-}
-function setEnvExampleOnExisting(a: ParsedArgs, v: string): void {
-  const values: readonly EnvExampleOnExisting[] = ["keep-sibling", "overwrite", "skip"]
-  if (!values.includes(v as EnvExampleOnExisting)) {
-    throw new Error(
-      `Unknown value for --env-example-on-existing: "${v}". Expected one of: ${values.join(", ")}.`,
-    )
-  }
-  a.envExampleOnExisting = v as EnvExampleOnExisting
-}
-function setExpiringWithinDays(a: ParsedArgs, v: string): void {
-  const parsed = Number(v)
-  if (!Number.isFinite(parsed)) {
-    throw new Error(`--expiring-within-days expects a number, got "${v}".`)
-  }
-  a.expiringWithinDays = parsed
 }
 
 /** Flags that consume the following argv token. A table, not a `switch`, so `parseArgs` stays a flat dispatch loop -- one branch per *kind* of flag. */
@@ -119,12 +88,7 @@ const VALUE_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs, value: str
   "--exclude": pushExclude,
   "--package": pushPackage,
   "--tsconfig": setTsconfig,
-  "--docs": setDocs,
-  "--env-example": setEnvExample,
-  "--ownership": setOwnership,
   "--evidence": setEvidence,
-  "--env-example-on-existing": setEnvExampleOnExisting,
-  "--expiring-within-days": setExpiringWithinDays,
 }
 
 function setNoTsconfig(a: ParsedArgs): void {
@@ -176,7 +140,7 @@ const BOOL_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs) => void>>> 
 /**
  * Parses `process.argv` (already sliced past the `node`/script path) into `ParsedArgs`.
  *
- * @throws {Error} On an unrecognized flag, a flag missing its required value, or an invalid `--env-example-on-existing`/`--expiring-within-days` value.
+ * @throws {Error} On an unrecognized flag, or a flag missing its required value.
  */
 export function parseArgs(argv: string[]): ParsedArgs {
   const args: ParsedArgs = {
@@ -266,15 +230,15 @@ function nonEmpty(value: string | undefined, flag: string): string {
 // a function makes the template literal ordinary function-scope code,
 // evaluated (and attributed) fresh on each of `main()`'s two call sites.
 function helpText(): string {
-  return `env-cap - generate a manifest, docs, and/or a dependency ownership report from discovered env.schema.ts contracts
+  return `env-cap - generate a manifest and/or a persisted evidence artifact from discovered env.schema.ts contracts
 
 Usage:
   env-cap init
-  env-cap [--location <path>] [--docs <path>] [--ownership <path>] [--evidence <path>] [options]
+  env-cap [--location <path>] [--evidence <path>] [options]
 
   init                            Scaffold a minimal starting point (one env.schema.ts + a generate script); run \`env-cap init --help\` for details
 
-At least one of --location, --docs, --ownership, or --evidence is required (for a non-init invocation).
+At least one of --location or --evidence is required (for a non-init invocation).
 
 Options:
   --root <path>                   Directory to resolve globs from (default: cwd)
@@ -284,18 +248,23 @@ Options:
   --package <name>                  Installed package name to also discover a schema from, via its "envCap.schema" package.json field (repeatable)
   --tsconfig <path>                 Path to a tsconfig.json (relative to root) whose "paths"/"baseUrl" resolve aliased imports encountered during static analysis (default: auto-detected "tsconfig.json" at root)
   --no-tsconfig                     Disable tsconfig path-alias resolution entirely
-  --docs <path>                     Also emit the rich Markdown docs artifact at this path
-  --env-example <path>              Also emit a .env.example file at this path (only meaningful alongside --docs)
-  --env-example-on-existing <mode>  What to do when --env-example's target already exists: keep-sibling (default, never overwrites -- writes a timestamped sibling instead), overwrite, or skip (write nothing). No effect with --check, which never writes anything regardless.
-  --ownership <path>                Also emit the Dependency & Ownership Report at this path
   --evidence <path>                 Also emit the persisted evidence artifact (the full EvidenceModel, plus a paired .fingerprint sidecar) at this path, e.g. docs/env.evidence.json (see ADR 0038). Independent of --location -- needs no other pass.
   --strict                          Escalate every pass's warning findings to hard errors -- compatibility (manifest pass -- ADR 0009's provable exclusive-group/compatibility errors), documentation, and ownership alike (ADR 0044). Nothing is written when it fires. Info-severity findings are never escalated. Equivalent to passing all three scoped flags below at once.
   --strict-docs                     Escalate every documentation-family warning (undocumented contract/variable, stale doc entry, expiring/expired entry, unresolvable documentEnv() link) to a hard error, independent of --strict. Nothing is written when it fires. Info-severity findings are never escalated.
   --strict-ownership                Escalate every ownership-family warning (abandoned contract, unresolved consumer, unconsumed owned variable, indeterminate ownership, stale/missing dynamicAccess citation) to a hard error, independent of --strict. Nothing is written when it fires. Info-severity findings are never escalated.
-  --expiring-within-days <n>        Window (in days) for the "expiring soon" report (default: 30)
   --json                             Emit a machine-readable JSON report instead of formatted text (see ADR 0013)
   --check                           Verify generated artifacts are up to date without writing anything; exits 1 if any is stale or missing (see ADR 0016)
   --help                            Show this message
+
+Documentation (a rich Markdown catalog), a dependency & ownership report, and
+a reconciled .env.example are no longer generated by this CLI -- they have no
+runtime consumer, so generating them is application-level code now, not a CLI
+concern. Call \`computeDocumentation\`/\`writeDocumentation\`/\`computeUsage\`/
+\`writeUsageReport\` (or the higher-level \`generateDocumentation\`/
+\`generateUsageReport\` orchestrators) directly from \`env-cap/build\` in your
+own build script -- see \`examples/nextjs-app/scripts/generate-docs\` for a
+worked example, and specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md
+for why.
 `
 }
 
@@ -380,8 +349,14 @@ export function writeEvidenceChanges(
 export function requestedPasses(args: ParsedArgs): JsonRequestedPasses {
   return {
     manifest: args.location !== undefined,
-    docs: args.docs !== undefined,
-    usage: args.ownership !== undefined,
+    // The CLI can no longer request either pass -- `--docs`/`--ownership`
+    // were removed (see specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md);
+    // `JsonRequestedPasses` keeps both fields, unchanged in shape, for
+    // `--json` schema compatibility (see JSON_SCHEMA_VERSION's own doc
+    // comment -- an unused-but-still-`false` field is additive, not a
+    // meaning change), always reporting them as not requested.
+    docs: false,
+    usage: false,
     evidence: args.evidence !== undefined,
   }
 }
@@ -396,7 +371,7 @@ export function requestedPasses(args: ParsedArgs): JsonRequestedPasses {
  * `checkEnvArtifacts` and `generateEnvArtifacts` take the same type, so both
  * call sites use this directly. `evidence` is included: `--check --evidence`
  * verifies the persisted evidence artifact for drift too, exactly as `--check`
- * already does for the manifest/docs/env-example/ownership artifacts.
+ * already does for the manifest artifact.
  */
 /**
  * Whether a findings group escalates to a hard error: when bare `--strict`
@@ -429,16 +404,16 @@ export function artifactOptions(args: ParsedArgs) {
           onIncompatibility: args.strict ? ("throw" as const) : ("warn" as const),
         }
       : (false as const),
-    docs: args.docs
-      ? {
-          location: args.docs,
-          expiringWithinDays: args.expiringWithinDays,
-          envExample: args.envExample
-            ? { location: args.envExample, onExisting: args.envExampleOnExisting }
-            : undefined,
-        }
-      : (false as const),
-    usage: args.ownership ? { report: { location: args.ownership } } : (false as const),
+    // `docs`/`usage` are deliberately omitted (not set to `false`): the CLI
+    // no longer has `--docs`/`--ownership` flags to derive them from, and
+    // omitting an optional `GenerateEnvArtifactsOptions` field is already
+    // equivalent to passing `false` (`computeArtifacts()`'s `options.docs
+    // === false ? undefined : options.docs` treats a missing key and an
+    // explicit `false` identically). `computeDocumentation`/`computeUsage`
+    // themselves still run unconditionally inside `generateEnvArtifacts()`
+    // -- Finding Model needs both regardless (ADR 0038) -- only the CLI's
+    // ability to ALSO write a docs/ownership artifact is gone. See
+    // specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md.
     evidence: args.evidence ? { location: args.evidence } : (false as const),
     onUndocumented: groupEscalates(args.strict, args.strictDocs)
       ? ("throw" as const)
@@ -540,100 +515,19 @@ export function printManifestSummary(manifest: NonNullable<GenerateResult["manif
   )
 }
 
-/** The human-readable docs (+ env-example) section of a generate run's summary. */
-function printDocsSummary(docs: NonNullable<GenerateResult["docs"]>): void {
-  process.stdout.write(`Wrote docs: ${docs.docsPath}\n`)
-  const ex = docs.envExample
-  if (ex) {
-    process.stdout.write(
-      ex.skippedExistingPath
-        ? `Left existing example untouched: ${ex.skippedExistingPath}\nWrote a fresh copy to compare/merge: ${ex.writtenPath}\n`
-        : `Wrote example: ${ex.writtenPath}\n`,
-    )
-    printList(
-      ex.staleVariables,
-      `${String(ex.staleVariables.length)} variable(s) in the existing example are no longer used by any contract:`,
-      (name) => name,
-    )
-    printList(
-      ex.variablesToComment,
-      `${String(ex.variablesToComment.length)} variable(s) in the existing example should be commented out (feature no longer active):`,
-      (name) => name,
-    )
-    printList(
-      ex.variablesToAdd,
-      `${String(ex.variablesToAdd.length)} variable(s) required by the current configuration are missing from the existing example:`,
-      (name) => name,
-    )
-  }
-
-  const doc = docs.documentation
-  printList(
-    doc.undocumentedContracts,
-    `${String(doc.undocumentedContracts.length)} undocumented contract(s) (no documentEnv() linked):`,
-    (c) => `${c.exportName} (${c.file})`,
-  )
-  printList(
-    doc.undocumentedVariables,
-    `${String(doc.undocumentedVariables.length)} undocumented variable(s):`,
-    (v) => `${v.key} in ${v.exportName} (${v.file})`,
-  )
-  printList(
-    doc.staleDocEntries,
-    `${String(doc.staleDocEntries.length)} stale documentEnv() entry/entries (no matching schema variable):`,
-    (s) => `${s.key} in ${s.exportName} (${s.file})`,
-  )
-  printList(
-    doc.expiringSoon,
-    `${String(doc.expiringSoon.length)} variable(s)/contract(s) expiring soon or already expired:`,
-    (e) => {
-      const label = e.key ? `${e.key} in ${e.exportName}` : e.exportName
-      const status =
-        e.daysRemaining < 0
-          ? `expired ${String(Math.abs(e.daysRemaining))}d ago`
-          : `${String(e.daysRemaining)}d remaining`
-      return `${label}: ${e.expiresAt} (${status})`
-    },
-  )
-  printList(
-    doc.unresolvedLinks,
-    `${String(doc.unresolvedLinks.length)} documentEnv() call(s) could not be statically linked:`,
-    (u) => `${u.file}: ${u.reason}`,
-  )
-}
-
-/** The human-readable dependency-ownership section of a generate run's summary. */
-/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
-export function printUsageSummary(usage: NonNullable<GenerateResult["usage"]>): void {
-  if (usage.reportPath) {
-    process.stdout.write(`Wrote dependency ownership report: ${usage.reportPath}\n`)
-  }
-  printList(
-    usage.abandonedContracts,
-    `${String(usage.abandonedContracts.length)} abandoned contract(s) (never imported anywhere):`,
-    (f) => `${f.contractName} (${f.file})`,
-  )
-  printList(
-    usage.unresolvedConsumers,
-    `${String(usage.unresolvedConsumers.length)} contract(s) with unresolved consumers (barrel re-exports):`,
-    (f) => `${f.contractName}: ${f.reason}`,
-  )
-  printList(
-    usage.unconsumedOwnedVariables,
-    `${String(usage.unconsumedOwnedVariables.length)} unconsumed owned variable(s):`,
-    (f) => `${f.key} in ${f.contractName}`,
-  )
-  printList(
-    usage.indeterminate,
-    `${String(usage.indeterminate.length)} indeterminate finding(s) (dynamic access, never guessed at):`,
-    (f) => `${f.key} in ${f.contractName}: ${f.reason}`,
-  )
-  printList(
-    usage.parseWarnings,
-    `${String(usage.parseWarnings.length)} parse warning(s):`,
-    (w) => `${w.file}: ${w.message}`,
-  )
-}
+// `printDocsSummary()`/`printUsageSummary()` (the docs/env-example and
+// dependency-ownership sections of the human-readable summary) were removed
+// along with `--docs`/`--ownership` themselves: `artifactOptions()` no
+// longer ever populates `GenerateEnvArtifactsOptions.docs`/`.usage`, so
+// `result.docs`/`result.usage` below are now unconditionally `undefined`
+// on every real CLI run -- keeping either function (or its now-permanently-
+// false `if (result.docs)`/`if (result.usage)` call site) would be dead code
+// no CLI-level test could ever legitimately cover. See
+// specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md.
+// `computeDocumentation`/`writeDocumentation`/`computeUsage`/
+// `writeUsageReport` themselves are unaffected -- see
+// `examples/nextjs-app/scripts/generate-docs` for the same rendering,
+// now invoked directly as application code instead of through this CLI.
 
 /** A real generate run: write every requested artifact, then print a summary (or `--json` envelope). */
 async function runGenerateMode(args: ParsedArgs): Promise<void> {
@@ -655,10 +549,12 @@ async function runGenerateMode(args: ParsedArgs): Promise<void> {
     return
   }
 
-  const totalWarnings =
-    (result.manifest?.parseWarnings.length ?? 0) +
-    (result.docs?.documentation.unresolvedLinks.length ?? 0) +
-    (result.usage?.parseWarnings.length ?? 0)
+  // Only the manifest pass's own parse warnings feed this banner now --
+  // `result.docs`/`result.usage` are always `undefined` from the CLI (see
+  // the comment above `runGenerateMode`), so their `parseWarnings`/
+  // `unresolvedLinks` terms were removed rather than kept as permanently-0
+  // addends.
+  const totalWarnings = result.manifest?.parseWarnings.length ?? 0
   if (totalWarnings > 0) {
     process.stdout.write(
       `⚠ ${totalWarnings} unresolved/dropped-schema warning(s) found -- details below. Re-run with --json for a machine-readable report.\n\n`,
@@ -666,8 +562,6 @@ async function runGenerateMode(args: ParsedArgs): Promise<void> {
   }
 
   if (result.manifest) printManifestSummary(result.manifest)
-  if (result.docs) printDocsSummary(result.docs)
-  if (result.usage) printUsageSummary(result.usage)
 
   if (args.evidence) {
     process.stdout.write(`Wrote evidence: ${args.evidence}\n`)
@@ -694,12 +588,10 @@ export async function main(): Promise<void> {
     return
   }
 
-  if (!args.location && !args.docs && !args.ownership && !args.evidence) {
+  if (!args.location && !args.evidence) {
     if (args.json) {
       writeJson(
-        serializeFailure(
-          new Error("At least one of --location, --docs, --ownership, or --evidence is required."),
-        ),
+        serializeFailure(new Error("At least one of --location or --evidence is required.")),
       )
     } else {
       process.stdout.write(helpText())

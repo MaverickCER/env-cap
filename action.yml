@@ -2,7 +2,7 @@ name: "env-cap report"
 description: "Runs env-cap and turns the result into PR annotations and a summary comment."
 inputs:
   args:
-    description: "Arguments passed to `env-cap --json`, e.g. '--docs docs/ENVIRONMENT.md --ownership docs/OWNERSHIP.md --strict-docs --evidence docs/env.evidence.json'. Include --evidence to persist the full audit-evidence artifact; without it, this run produces pass/fail output only."
+    description: "Arguments passed to `env-cap --json`, e.g. '--location src/generated/env.manifest.ts --strict-docs --evidence docs/env.evidence.json'. Include --evidence to get full documentation/ownership/expiring-secret reporting (PR annotations, the summary comment, and rotation-alert issues all read the persisted evidence artifact's Finding/Lifecycle Model, ADR 0038) -- without it, this run produces manifest-only pass/fail output. --docs/--ownership are no longer CLI flags at all (ADR 0046); this Action's own reporting no longer depends on them."
     required: true
   working-directory:
     description: "Directory to run env-cap from."

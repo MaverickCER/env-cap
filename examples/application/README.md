@@ -21,6 +21,9 @@ src/
   server.ts                 <- app code imports the one contract directly
 scripts/
   generate-manifest.mjs     <- build-time only, never imported by the app
+  generate-docs/
+    run.ts                   <- writes ENVIRONMENT.md/OWNERSHIP.md/.env.example (see its own README)
+    check.ts                  <- their --check counterpart
 features/
   database/env.schema.ts    <- reference only, unused: what this slice would
   payments/env.schema.ts       look like split into its own contract later
@@ -47,11 +50,17 @@ cp .env.example .env
 npm start
 ```
 
-`npm start` runs `docs` (writing `src/generated/env.manifest.ts`,
-`docs/ENVIRONMENT.md`, and `docs/env.evidence.json` (+ its `.fingerprint`
-sidecar) -- none of these are gitignored; all are committed on purpose
-so regenerating them shows up as an ordinary diff, the same way you'd review
-any other generated-but-tracked file) and then boots `src/server.ts`, which
+`npm start` runs `docs:reports` (which chains `docs` -- writing
+`src/generated/env.manifest.ts` and `docs/env.evidence.json` (+ its
+`.fingerprint` sidecar) via the `env-cap` CLI, the only two outputs with a
+real runtime/evidence contract, per [ADR
+0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)
+-- and then `scripts/generate-docs/run.ts`, writing `docs/ENVIRONMENT.md`,
+`docs/OWNERSHIP.md`, and `.env.example` directly from `env-cap/build` -- see
+[that script's own README](scripts/generate-docs/README.md)) -- none of
+these are gitignored; all are committed on purpose so regenerating them
+shows up as an ordinary diff, the same way you'd review any other
+generated-but-tracked file -- and then boots `src/server.ts`, which
 validates the environment and prints the resolved config.
 
 `.env.example` here is regenerated and overwritten directly on every run

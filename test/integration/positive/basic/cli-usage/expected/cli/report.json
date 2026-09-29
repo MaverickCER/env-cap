@@ -5,8 +5,8 @@
   "ok": true,
   "requested": {
     "manifest": true,
-    "docs": true,
-    "usage": true,
+    "docs": false,
+    "usage": false,
     "evidence": true
   },
   "manifest": {
@@ -24,140 +24,10 @@
     "warnings": [],
     "parseWarnings": []
   },
-  "docs": {
-    "docsPath": "<EXAMPLE_ROOT>/docs/ENVIRONMENT.md",
-    "envExample": {
-      "writtenPath": "<EXAMPLE_ROOT>/.env.example",
-      "staleVariables": [],
-      "variablesToComment": [],
-      "variablesToAdd": []
-    },
-    "contracts": [
-      {
-        "file": "src/env.ts",
-        "exportName": "env",
-        "contractName": "app",
-        "variableCount": 5,
-        "active": true,
-        "documented": true
-      }
-    ],
-    "catalog": [
-      {
-        "file": "<EXAMPLE_ROOT>/src/env.ts",
-        "exportName": "env",
-        "contractName": "app",
-        "active": true,
-        "documented": true,
-        "owner": "platform-team",
-        "variables": {
-          "DATABASE_URL": {
-            "description": "Postgres connection string.",
-            "owner": "platform-team",
-            "setupInstructions": "Provision a Postgres instance and paste its connection string, e.g. postgres://user:pass@host:5432/dbname.",
-            "required": true,
-            "hasDefault": false,
-            "hasProcessor": true,
-            "hasValidator": false,
-            "documented": true
-          },
-          "PORT": {
-            "description": "Database port.",
-            "owner": "platform-team",
-            "hasDefault": true,
-            "hasProcessor": true,
-            "hasValidator": true,
-            "documented": true
-          },
-          "LOG_LEVEL": {
-            "description": "Minimum log level for this application's logger.",
-            "owner": "platform-team",
-            "hasDefault": true,
-            "hasProcessor": true,
-            "processorReturnType": "string",
-            "hasValidator": true,
-            "documented": true
-          },
-          "PAYMENT_PROVIDER": {
-            "description": "Which payment provider this deployment uses.",
-            "owner": "platform-team",
-            "setupInstructions": "Set to \"stripe\" or \"paypal\" to match the gateway this deployment integrates.",
-            "hasDefault": true,
-            "hasProcessor": true,
-            "processorReturnType": "string",
-            "hasValidator": true,
-            "documented": true
-          },
-          "STRIPE_KEY": {
-            "description": "Stripe secret key used to authenticate server-side API calls.",
-            "owner": "platform-team",
-            "setupInstructions": "Create a restricted API key in the Stripe dashboard.",
-            "required": true,
-            "hasDefault": false,
-            "hasProcessor": true,
-            "processorReturnType": "string",
-            "hasValidator": true,
-            "documented": true,
-            "metadata": {
-              "documentation": "https://dashboard.stripe.com/apikeys"
-            }
-          }
-        }
-      }
-    ],
-    "parseWarnings": [],
-    "documentation": {
-      "undocumentedContracts": [],
-      "undocumentedVariables": [],
-      "staleDocEntries": [],
-      "expiringSoon": [],
-      "nonstandardSensitivityLevels": [],
-      "unresolvedLinks": []
-    }
-  },
-  "usage": {
-    "reportPath": "<EXAMPLE_ROOT>/docs/OWNERSHIP.md",
-    "dependencyOwnership": [
-      {
-        "contractName": "app",
-        "file": "src/env.ts",
-        "owner": "platform-team",
-        "variableCount": 5,
-        "consumers": [
-          "src/server.ts"
-        ]
-      }
-    ],
-    "abandonedContracts": [],
-    "unresolvedConsumers": [],
-    "unconsumedOwnedVariables": [
-      {
-        "contractName": "app",
-        "owner": "platform-team",
-        "key": "DATABASE_URL",
-        "staleOrMissingCitations": []
-      },
-      {
-        "contractName": "app",
-        "owner": "platform-team",
-        "key": "STRIPE_KEY",
-        "staleOrMissingCitations": []
-      }
-    ],
-    "indeterminate": [],
-    "asserted": [],
-    "parseWarnings": [],
-    "scannedSurfaces": [
-      {
-        "label": "application",
-        "root": "."
-      }
-    ]
-  },
   "evidence": {
     "schemaVersion": 1,
     "provenance": {
-      "generatedAt": "2026-09-26T23:31:07.923Z",
+      "generatedAt": "2026-09-29T00:11:07.139Z",
       "toolVersion": "0.4.0"
     },
     "contract": {

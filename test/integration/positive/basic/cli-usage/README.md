@@ -14,13 +14,20 @@ src/
   startup.ts
   server.ts
 docs/
-  ENVIRONMENT.md            <- generated
-  OWNERSHIP.md              <- generated
   env.evidence.json          <- generated, do not edit (the full EvidenceModel, see ADR 0038)
   env.evidence.json.fingerprint  <- generated, do not edit (content hash, see ADR 0038)
 ```
 
-There is no `scripts/` directory here on purpose.
+There is no `scripts/` directory here on purpose -- which is also why this fixture only
+demonstrates the manifest and the persisted evidence artifact, not
+`docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md`/`.env.example`. Those three no longer have CLI flags at
+all (`--docs`/`--ownership`/`--env-example` were removed -- see [ADR
+0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)); every
+example that still generates them does so via a small `scripts/generate-docs/run.ts` calling
+`env-cap/build` directly (see e.g. `examples/application/scripts/generate-docs`), which would
+defeat this fixture's own "no wrapper script" point if added here. What's left --
+`--location`/`--evidence`/`--check`/`--json` -- is exactly the CLI surface ADR 0046 kept, so this
+fixture is, if anything, a purer demonstration of it now.
 
 ## Run it
 
@@ -47,10 +54,6 @@ npm run verify:env
 # formatted text. Conforms to schemas/env-cap-report.schema.json.
 npm run generate:env:json
 ```
-
-`generate:env` also passes `--env-example-on-existing overwrite`, so re-running it regenerates
-`.env.example` in place every time rather than leaving a timestamped sibling next to it (the
-CLI's default) -- see the root README's CLI section for the three available modes.
 
 ## Why this example exists
 

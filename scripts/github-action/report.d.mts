@@ -29,24 +29,34 @@ export interface ManifestSection {
   readonly warnings: readonly IssueLike[]
 }
 
-interface UndocumentedContractLike {
-  readonly file: string
-  readonly exportName: string
+// Structural, duck-typed mirrors of the relevant slices of `EvidenceModel`
+// (`src/build/evidence-model.ts` and the six canonical fact models it
+// assembles -- ADR 0024/0038), not the full generated types: only the
+// fields report.mjs's own (duck-typed) contract actually reads. `result
+// .evidence` is `--json`'s own copy of the exact same persisted evidence
+// artifact `--evidence <path>` writes to disk (ADR 0038), present only when
+// `--evidence` was passed to the CLI (see action.yml's own `args`
+// description) -- `result.docs`/`result.usage` no longer exist at all:
+// `--docs`/`--ownership` were removed from the CLI (ADR 0046).
+export interface FindingLocationLike {
+  readonly model: "contract" | "ownership" | "change"
+  readonly file?: string | undefined
+  readonly path?: string | undefined
+  readonly exportName?: string | undefined
+  readonly variable?: string | undefined
+  readonly contractName?: string | undefined
 }
-interface UndocumentedVariableLike {
-  readonly file: string
-  readonly exportName: string
-  readonly key: string
+export interface FindingLike {
+  readonly severity: "error" | "warning" | "info"
+  readonly code: string
+  readonly family: "compatibility" | "drift" | "documentation" | "ownership"
+  readonly message: string
+  readonly location: FindingLocationLike
 }
-interface StaleDocEntryLike {
-  readonly file: string
-  readonly exportName: string
-  readonly key: string
+interface FindingModelLike {
+  readonly findings: readonly FindingLike[]
 }
-interface UnresolvedLinkLike {
-  readonly file: string
-  readonly reason: string
-}
+
 interface ExpiringEntryLike {
   readonly file: string
   readonly exportName: string
@@ -54,61 +64,50 @@ interface ExpiringEntryLike {
   readonly expiresAt: string
   readonly daysRemaining: number
 }
-interface CatalogVariableLike {
-  readonly extra?: Readonly<Record<string, string>>
+interface LifecycleModelLike {
+  readonly expiring: readonly ExpiringEntryLike[]
 }
-interface CatalogContractLike {
+
+interface ContractModelVariableLike {
+  readonly key: string
+  readonly metadata?: Readonly<Record<string, unknown>>
+}
+interface ContractModelContractLike {
   readonly file: string
   readonly exportName: string
-  readonly variables: Readonly<Record<string, CatalogVariableLike>>
+  readonly variables: readonly ContractModelVariableLike[]
+}
+interface ContractModelLike {
+  readonly contracts: readonly ContractModelContractLike[]
 }
 
-export interface DocumentationSection {
-  // Each field is optional, matching report.mjs's own `doc.field ?? []`
+interface OwnershipModelContractLike {
+  readonly file: string
+  readonly exportName: string
+  readonly owner?: string
+}
+interface OwnershipModelLike {
+  readonly contracts: readonly OwnershipModelContractLike[]
+}
+
+interface DependencyModelContractLike {
+  readonly file: string
+  readonly exportName: string
+  readonly contractName: string
+  readonly consumingFiles: readonly string[]
+}
+interface DependencyModelLike {
+  readonly contracts: readonly DependencyModelContractLike[]
+}
+
+export interface EvidenceSection {
+  // Each field is optional, matching report.mjs's own `evidence?.field ?? []`
   // defensive handling -- a partial payload is exactly as valid as a full one.
-  readonly documentation: {
-    readonly undocumentedContracts?: readonly UndocumentedContractLike[]
-    readonly undocumentedVariables?: readonly UndocumentedVariableLike[]
-    readonly staleDocEntries?: readonly StaleDocEntryLike[]
-    readonly unresolvedLinks?: readonly UnresolvedLinkLike[]
-    readonly expiringSoon?: readonly ExpiringEntryLike[]
-  }
-  readonly catalog?: readonly CatalogContractLike[]
-}
-
-interface AbandonedContractLike {
-  readonly file: string
-  readonly contractName: string
-  readonly owner?: string
-}
-interface UnconsumedOwnedVariableLike {
-  readonly key: string
-  readonly contractName: string
-  readonly owner?: string
-}
-interface UnresolvedConsumerLike {
-  readonly file: string
-  readonly contractName: string
-  readonly reason: string
-}
-interface IndeterminateLike {
-  readonly key: string
-  readonly contractName: string
-  readonly reason: string
-}
-interface DependencyOwnershipEntryLike {
-  readonly contractName: string
-  readonly owner?: string
-  readonly consumers: readonly string[]
-}
-
-export interface UsageSection {
-  // Optional, matching report.mjs's own `usage.field ?? []` defensive handling.
-  readonly abandonedContracts?: readonly AbandonedContractLike[]
-  readonly unconsumedOwnedVariables?: readonly UnconsumedOwnedVariableLike[]
-  readonly unresolvedConsumers?: readonly UnresolvedConsumerLike[]
-  readonly indeterminate?: readonly IndeterminateLike[]
-  readonly dependencyOwnership?: readonly DependencyOwnershipEntryLike[]
+  readonly finding?: FindingModelLike
+  readonly lifecycle?: LifecycleModelLike
+  readonly contract?: ContractModelLike
+  readonly ownership?: OwnershipModelLike
+  readonly dependency?: DependencyModelLike
 }
 
 export interface ErrorSection {
@@ -122,14 +121,13 @@ export interface ReportResult {
   // only ever checks `result?.ok === false`, which is safely false when absent.
   readonly ok?: boolean
   readonly manifest?: ManifestSection
-  readonly docs?: DocumentationSection
-  readonly usage?: UsageSection
+  readonly evidence?: EvidenceSection
   readonly error?: ErrorSection
 }
 
 export function collectManifestFindings(manifest: ManifestSection | undefined): Finding[]
-export function collectDocumentationFindings(docs: DocumentationSection | undefined): Finding[]
-export function collectOwnershipFindings(usage: UsageSection | undefined): Finding[]
+export function collectDocumentationFindings(evidence: EvidenceSection | undefined): Finding[]
+export function collectOwnershipFindings(evidence: EvidenceSection | undefined): Finding[]
 export function collectErrorFindings(error: ErrorSection | undefined): Finding[]
 export function classifyFindings(result: ReportResult | undefined): Finding[]
 export function renderMarkdownSummary(result: ReportResult | undefined): string
