@@ -305,18 +305,19 @@
 
           <div class="code-block">
             <div class="code-block-header">
-              <span class="code-block-filename">npx env-cap --docs ... --ownership ...</span>
+              <span class="code-block-filename">npx env-cap --location ... --evidence ...</span>
               <button class="copy-button" type="button" data-copy-target="demo-output">Copy</button>
             </div>
 
             <!-- prettier-ignore -->
             <pre><code id="demo-output">Wrote manifest: src/generated/env.manifest.ts
             Discovered 1 contract(s).
-            Wrote docs: docs/ENVIRONMENT.md
+            Wrote evidence: docs/env.evidence.json
+
+[generate-docs] wrote docs/ENVIRONMENT.md (1 contract(s)), .env.example, and docs/OWNERSHIP.md (0 abandoned, 2 unconsumed owned variable(s)).
 
 1 variable(s)/contract(s) expiring soon or already expired:
 - STRIPE_KEY in env: 2026-09-01 (expired 9d ago)
-Wrote dependency ownership report: docs/OWNERSHIP.md
 
 2 unconsumed owned variable(s):
 - DATABASE_URL in app

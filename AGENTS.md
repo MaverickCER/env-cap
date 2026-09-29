@@ -96,10 +96,14 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
   script first and run that. If none exists, either call
   `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` (import from
   `env-cap/build`) from a build script, or run the CLI directly —
-  `npx env-cap --location src/generated/env.manifest.ts` (add `--docs`, `--env-example`,
-  `--strict`, etc. as needed; see the Public API map and `skills/env-cap/SKILL.md` for the
-  full option set). Commit the generated file only if the project already commits
-  generated artifacts; otherwise wire the command into CI.
+  `npx env-cap --location src/generated/env.manifest.ts` (add `--evidence`, `--strict`,
+  etc. as needed; see the Public API map and `skills/env-cap/SKILL.md` for the full option
+  set). `--docs`/`--ownership`/`--env-example` are not CLI flags — the documentation
+  catalog, `.env.example`, and dependency-ownership report have no runtime consumer, so
+  generating them is a `generateEnvArtifacts()`/`generateDocumentation()`/
+  `generateUsageReport()` call from a build script instead (see ADR 0046). Commit the
+  generated file only if the project already commits generated artifacts; otherwise wire
+  the command into CI.
 - Prefer migrations that are small, reviewable PRs covering one capability at a time,
   preserve existing validation and runtime behavior, and avoid new infrastructure unless
   it's actually required. See [`specs/migrations/`](specs/migrations/) for guide-by-guide

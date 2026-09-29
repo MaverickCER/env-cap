@@ -1001,8 +1001,10 @@ jobs:
 
       - uses: maverickcer/env-cap@v1
         with:
-          args: "--docs docs/ENVIRONMENT.md --expiring-within-days 45"
+          args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
 ```
+
+The Action reads the rotation-alert list from the persisted evidence artifact's Lifecycle Model (`result.evidence.lifecycle.expiring`), so `--evidence` is required here — `--docs`/`--expiring-within-days` are not CLI flags (see ADR 0046); the expiring-soon window itself is always the library's 30-day default when driven through the CLI this way.
 
 When running without a pull request context, the Action can create or update a GitHub issue containing expiring or expired configuration entries.
 

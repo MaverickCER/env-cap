@@ -473,11 +473,17 @@ checks) and only diverge at the last step: write, or compare-and-report (see
 [ADR 0011](decisions/0011-shared-discovery-compute-atomic-write-non-atomic.md)
 and [ADR 0016](decisions/0016-check-mode-compute-before-compare-never-partial-write.md)).
 Manifest, docs, `.env.example`, the ownership report, and the persisted
-evidence artifact are each optional per invocation
-(`--location`/`--docs`/`--ownership`/`--evidence`) and only appear above when
-requested — except the `EvidenceModel` backing that last one, which
-`computeArtifacts()` always builds regardless of whether `--evidence` was
-passed; the flag only controls whether it's also written to disk (ADR 0038).
+evidence artifact are each optional per `generateEnvArtifacts()`/
+`checkEnvArtifacts()` call (`manifest`/`docs`/`usage`/`evidence` options) and
+only appear above when requested. The `env-cap` CLI only exposes
+`--location`/`--evidence` of those four -- docs/`.env.example`/the ownership
+report have no CLI flag at all (ADR 0046: no verified runtime consumer, so
+generating them is application code calling `generateDocumentation()`/
+`generateUsageReport()` directly, not a CLI concern) -- except the
+`EvidenceModel` backing the persisted evidence artifact, which
+`computeArtifacts()` always builds regardless of whether `evidence`/
+`--evidence` was requested; that option only controls whether it's also
+written to disk (ADR 0038).
 Manifest compatibility/exclusive-group issues are the one category that still
 blocks (`CHECKS`, ADR 0009) — a documentation or ownership issue never does;
 both are surfaced as `Finding`s on the evidence artifact instead, for a team
