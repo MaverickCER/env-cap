@@ -1750,7 +1750,7 @@
       "properties": {
         "schemaVersion": {
           "type": "number",
-          "const": 2
+          "const": 3
         },
         "contracts": {
           "type": "array",
@@ -1806,7 +1806,7 @@
           "items": {
             "$ref": "#/definitions/LifecycleModelVariable"
           },
-          "description": "Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`) -- same \"only what's relevant\" scope `renderLifecycleReport()` already uses for its rows."
+          "description": "Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`, `authenticatorType`, `rotationPeriod`, `lastRotatedAt`, `rotationTriggerEvents`) -- same \"only what's relevant\" scope `renderLifecycleReport()` already uses for its rows."
         }
       },
       "required": [
@@ -1846,13 +1846,47 @@
         "retention": {
           "type": "string",
           "description": "Descriptive retention policy (e.g. \"delete after 90 days\") -- a policy statement, never computed or parsed, deliberately independent of `expiresAt`'s actual temporal constraint. See ADR 0035."
+        },
+        "authenticatorType": {
+          "type": "string",
+          "description": "See runtime.VariableDocs.authenticatorType."
+        },
+        "rotationPeriod": {
+          "type": "string",
+          "description": "See runtime.VariableDocs.rotationPeriod."
+        },
+        "lastRotatedAt": {
+          "type": "string",
+          "description": "See runtime.VariableDocs.lastRotatedAt."
+        },
+        "rotationTriggerEvents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "See runtime.VariableDocs.rotationTriggerEvents."
+        },
+        "rotationStatus": {
+          "$ref": "#/definitions/RotationComplianceStatus",
+          "description": "Computed, not stored -- see RotationComplianceStatus and `computeRotationStatus()`."
         }
       },
       "required": [
-        "key"
+        "key",
+        "rotationStatus"
       ],
       "additionalProperties": false,
       "description": "One variable's lifecycle data (expiry, deprecation, rename correlation)."
+    },
+    "RotationComplianceStatus": {
+      "type": "string",
+      "enum": [
+        "compliant",
+        "overdue",
+        "expired",
+        "undeclared"
+      ],
+      "description": "One variable's computed NIST SP 800-53 IA-5 rotation-compliance status -- see `computeRotationStatus()` for exactly how it's derived. Always present on a `LifecycleModelVariable` (never `undefined`) since a variable with literally nothing lifecycle-relevant set never reaches this model at all (`hasLifecycleData()` below) -- `\"undeclared\"` is itself the honest value for \"reached this model for some other lifecycle reason (e.g. `deprecated`) but declares none of the four rotation-specific fields.\""
     },
     "FindingModel": {
       "type": "object",

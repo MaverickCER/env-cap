@@ -27,7 +27,7 @@
   "evidence": {
     "schemaVersion": 1,
     "provenance": {
-      "generatedAt": "2026-09-29T00:11:07.139Z",
+      "generatedAt": "2026-09-30T00:52:20.912Z",
       "toolVersion": "0.4.0"
     },
     "contract": {
@@ -273,7 +273,7 @@
       "unownedVariables": []
     },
     "lifecycle": {
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "contracts": [],
       "expiring": []
     },

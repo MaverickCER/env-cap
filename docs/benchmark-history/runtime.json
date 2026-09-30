@@ -378,6 +378,87 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-09-30T01:06:45.849Z",
+      "gitCommit": "acfdc580ccef5ecbbc51feb0f3376dd0b68352f8",
+      "envCapVersion": "0.4.0",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "cold-start": {
+          "baseline": {
+            "medianMs": 41.56463499999995,
+            "variablesPerSecond": 2405.89
+          },
+          "stress": {
+            "medianMs": 69.31731799999989,
+            "variablesPerSecond": 14426.41
+          },
+          "extreme": {
+            "medianMs": 266.4905410000001,
+            "variablesPerSecond": 30019.83
+          },
+          "enterprise": {
+            "medianMs": 132.00830000000042,
+            "variablesPerSecond": 30490.51
+          }
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-30T09:28:49.295Z",
+      "gitCommit": "e8b1f56b0ea7d76d0d248d555d20ab8e0f59bf09",
+      "envCapVersion": "0.4.0",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "cold-start": {
+          "baseline": {
+            "medianMs": 54.17647299999999,
+            "variablesPerSecond": 1845.82
+          },
+          "stress": {
+            "medianMs": 88.6679650000001,
+            "variablesPerSecond": 11278.03
+          },
+          "extreme": {
+            "medianMs": 339.1728570000005,
+            "variablesPerSecond": 23586.79
+          },
+          "enterprise": {
+            "medianMs": 167.98143400000026,
+            "variablesPerSecond": 23960.98
+          }
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-30T10:05:59.168Z",
+      "gitCommit": "75b95639cdd4acfd8c13758ed332f22584d1ab6f",
+      "envCapVersion": "0.4.0",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "cold-start": {
+          "baseline": {
+            "medianMs": 53.52168599999999,
+            "variablesPerSecond": 1868.4
+          },
+          "stress": {
+            "medianMs": 88.65532800000005,
+            "variablesPerSecond": 11279.64
+          },
+          "extreme": {
+            "medianMs": 340.6959880000004,
+            "variablesPerSecond": 23481.34
+          },
+          "enterprise": {
+            "medianMs": 169.74667600000066,
+            "variablesPerSecond": 23711.8
+          }
+        }
+      }
     }
   ]
 }

@@ -76,6 +76,10 @@ documentEnv(schema, {
       description: "Postgres connection string.",
       setupInstructions: "Provision a Postgres instance and paste its connection string, e.g. postgres://user:pass@host:5432/dbname.",
       required: true,
+      authenticatorType: "database-credential",
+      rotationPeriod: "180 days",
+      lastRotatedAt: "2025-01-01",
+      rotationTriggerEvents: ["credential leak detected"],
     },
     PORT: {
       description: "Database port.",
@@ -96,6 +100,10 @@ documentEnv(schema, {
       required: true,
       expiresAt: "2026-09-01",
       refreshInstructions: "Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days.",
+      authenticatorType: "api-key",
+      rotationPeriod: "90 days",
+      lastRotatedAt: "2026-03-01",
+      rotationTriggerEvents: ["suspected compromise", "payments-team member offboarded"],
     },
   },
 });

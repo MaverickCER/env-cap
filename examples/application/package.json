@@ -5,7 +5,7 @@
   "description": "Minimal end-to-end example: capability-owned env.schema.ts files, a generated contract, and validateEnv() at startup.",
   "scripts": {
     "docs": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json",
-    "docs:reports": "npm run docs && tsx scripts/generate-docs/run.ts",
+    "docs:reports": "npm run docs && tsx scripts/generate-docs/run.ts && tsx scripts/rotation-log/run.ts",
     "check": "env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --check && tsx scripts/generate-docs/check.ts",
     "typecheck": "npm run docs:reports && tsc --noEmit",
     "start": "npm run docs:reports && tsx --env-file=.env src/server.ts"

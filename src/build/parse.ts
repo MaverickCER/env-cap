@@ -436,6 +436,14 @@ export interface DiscoveredVariableDocs extends EnvGovernanceFields {
   readonly description: string | undefined
   /** Statically-resolved `refreshInstructions`, if set to a string literal. */
   readonly refreshInstructions: string | undefined
+  /** Statically-resolved `authenticatorType`, if set to a string literal. */
+  readonly authenticatorType: string | undefined
+  /** Statically-resolved `rotationPeriod`, if set to a string literal. */
+  readonly rotationPeriod: string | undefined
+  /** Statically-resolved `lastRotatedAt`, if set to a string literal. */
+  readonly lastRotatedAt: string | undefined
+  /** Statically-resolved `rotationTriggerEvents`, if set to an array of string literals. */
+  readonly rotationTriggerEvents: readonly string[] | undefined
   /** Statically-resolved `setupInstructions`, if set to a string literal. */
   readonly setupInstructions: string | undefined
   /** Statically-resolved `required`, if set to a boolean literal. */
@@ -702,6 +710,10 @@ function extractVariableDocsMap(
     let sensitivity: string | undefined
     let expiresAt: string | undefined
     let refreshInstructions: string | undefined
+    let authenticatorType: string | undefined
+    let rotationPeriod: string | undefined
+    let lastRotatedAt: string | undefined
+    let rotationTriggerEvents: readonly string[] | undefined
     let setupInstructions: string | undefined
     let required: boolean | undefined
     let deprecated: boolean | undefined
@@ -746,6 +758,14 @@ function extractVariableDocsMap(
         expiresAt = evaluated.value
       else if (fieldName === "refreshInstructions" && typeof evaluated.value === "string")
         refreshInstructions = evaluated.value
+      else if (fieldName === "authenticatorType" && typeof evaluated.value === "string")
+        authenticatorType = evaluated.value
+      else if (fieldName === "rotationPeriod" && typeof evaluated.value === "string")
+        rotationPeriod = evaluated.value
+      else if (fieldName === "lastRotatedAt" && typeof evaluated.value === "string")
+        lastRotatedAt = evaluated.value
+      else if (fieldName === "rotationTriggerEvents" && isStringArray(evaluated.value))
+        rotationTriggerEvents = evaluated.value
       else if (fieldName === "setupInstructions" && typeof evaluated.value === "string")
         setupInstructions = evaluated.value
       else if (fieldName === "required" && typeof evaluated.value === "boolean")
@@ -789,6 +809,10 @@ function extractVariableDocsMap(
       sensitivity,
       expiresAt,
       refreshInstructions,
+      authenticatorType,
+      rotationPeriod,
+      lastRotatedAt,
+      rotationTriggerEvents,
       setupInstructions,
       required,
       deprecated,
@@ -876,5 +900,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isStringOrStringArray(value: unknown): value is string | readonly string[] {
   if (typeof value === "string") return true
+  return Array.isArray(value) && value.every((v) => typeof v === "string")
+}
+
+/**
+ * Unlike {@link isStringOrStringArray} (which also accepts a lone string, for fields like
+ * `dataResidency` that are conventionally either), `rotationTriggerEvents` is declared as
+ * `readonly string[]` only (see {@link runtime.VariableDocs.rotationTriggerEvents}) -- a bare
+ * string here is a type error at the call site, not an alternate accepted shape, so this rejects
+ * one rather than silently wrapping it into a single-element array.
+ */
+function isStringArray(value: unknown): value is readonly string[] {
   return Array.isArray(value) && value.every((v) => typeof v === "string")
 }

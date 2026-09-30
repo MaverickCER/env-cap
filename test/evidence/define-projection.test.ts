@@ -184,7 +184,7 @@ function makeEvidenceModel(): EvidenceModel {
       unownedVariables: [],
     },
     lifecycle: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       contracts: [],
       expiring: [],
     },

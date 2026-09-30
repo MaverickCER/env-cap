@@ -29,7 +29,7 @@ const EMPTY_EVIDENCE: EvidenceModel = {
   contract: { schemaVersion: 3, contracts: [] },
   dependency: { schemaVersion: 2, contracts: [], consumers: [], warnings: [], scannedSurfaces: [] },
   ownership: { schemaVersion: 1, contracts: [], unownedContracts: [], unownedVariables: [] },
-  lifecycle: { schemaVersion: 2, contracts: [], expiring: [] },
+  lifecycle: { schemaVersion: 3, contracts: [], expiring: [] },
   finding: { schemaVersion: 3, findings: [] },
   change: {
     schemaVersion: 1,

@@ -34,6 +34,14 @@ export interface DiscoveredVariable extends DiscoveredSchemaVariable, EnvGoverna
   /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
   readonly refreshInstructions: string | undefined
   /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
+  readonly authenticatorType: string | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
+  readonly rotationPeriod: string | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
+  readonly lastRotatedAt: string | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
+  readonly rotationTriggerEvents: readonly string[] | undefined
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
   readonly setupInstructions: string | undefined
   /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
   readonly required: boolean | undefined
@@ -372,6 +380,10 @@ export async function linkFiles(
         sensitivity: vd?.sensitivity,
         expiresAt: vd?.expiresAt,
         refreshInstructions: vd?.refreshInstructions,
+        authenticatorType: vd?.authenticatorType,
+        rotationPeriod: vd?.rotationPeriod,
+        lastRotatedAt: vd?.lastRotatedAt,
+        rotationTriggerEvents: vd?.rotationTriggerEvents,
         setupInstructions: vd?.setupInstructions,
         required: vd?.required,
         deprecated: vd?.deprecated,

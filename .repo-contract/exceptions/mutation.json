@@ -692,6 +692,15 @@
       "mutator": "BlockStatement",
       "original": "{\n    return { resolution: undefined, warning: undefined }\n  }",
       "replacement": "{}"
+    },
+    {
+      "id": "mutation:src/build/generate-usage.ts:ConditionalExpression:95abf6268fe6",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-29 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- test/build/usage-generate.test.ts's \"writes the Dependency & Ownership Report to disk when report.location is given\" genuinely fails (ENOENT: the report is never written), yet Stryker's own perTest coverage attribution still reports this mutant Survived. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/generate-usage.ts",
+      "mutator": "ConditionalExpression",
+      "original": "reportPath",
+      "replacement": "false"
     }
   ]
 }
