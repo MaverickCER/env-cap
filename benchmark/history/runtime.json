@@ -600,6 +600,83 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-09-30T17:20:07.152Z",
+      "gitCommit": "ccdb9473e7f70b9c71ccae7ceaaa3987c8ee4d41",
+      "runner": "GitHub Actions",
+      "versions": {
+        "benchmarkSchemaVersion": 1,
+        "benchmarkSuiteVersion": 1,
+        "benchmarkToolVersion": "1.0.0",
+        "envCapVersion": "0.4.0"
+      },
+      "measurements": {
+        "cold-start": {
+          "baseline": {
+            "medianMs": 48.87562500000013,
+            "inputs": {
+              "contracts": 10,
+              "variables": 100
+            },
+            "unitsPerSecond": 2250.61
+          },
+          "stress": {
+            "medianMs": 73.72332600000004,
+            "inputs": {
+              "contracts": 100,
+              "variables": 1000
+            },
+            "unitsPerSecond": 14920.65
+          },
+          "extreme": {
+            "medianMs": 261.17723399999977,
+            "inputs": {
+              "contracts": 800,
+              "variables": 8000
+            },
+            "unitsPerSecond": 33693.6
+          },
+          "enterprise": {
+            "medianMs": 138.21009199999935,
+            "inputs": {
+              "contracts": 250,
+              "variables": 4025
+            },
+            "unitsPerSecond": 30931.17
+          }
+        },
+        "helpers": {
+          "baseline": {
+            "medianMs": 2.2710490000008576,
+            "inputs": {
+              "operations": 10000
+            },
+            "unitsPerSecond": 4403251.54
+          },
+          "stress": {
+            "medianMs": 20.105341000000408,
+            "inputs": {
+              "operations": 100000
+            },
+            "unitsPerSecond": 4973802.73
+          },
+          "extreme": {
+            "medianMs": 165.14458000000013,
+            "inputs": {
+              "operations": 800000
+            },
+            "unitsPerSecond": 4844240.12
+          },
+          "enterprise": {
+            "medianMs": 82.1071370000027,
+            "inputs": {
+              "operations": 402500
+            },
+            "unitsPerSecond": 4902131.71
+          }
+        }
+      }
     }
   ]
 }
