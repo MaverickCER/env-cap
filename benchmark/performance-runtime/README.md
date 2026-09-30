@@ -1,6 +1,7 @@
 # Runtime performance benchmark
 
-Measures `createEnv()`/`validateEnv()`'s own cost as contract/variable count scales. See
+Measures `createEnv()`/`validateEnv()`'s own cost as contract/variable count scales, plus
+`env-cap/helpers`' shipped processor/validator throughput. See
 [`../README.md`](../README.md) for full methodology, tier definitions, and the
 "never compare" rules. This README covers only what's specific to this example.
 
@@ -35,3 +36,12 @@ ambiguous between "env-cap got slower" and "the fixture's processor got slower."
 Considered and cut from this example: `validation-failures`, `startup-validation` (warm
 repeated `validateEnv()` calls), and first-access-vs-cached-access. Each is either redundant
 with `cold-start` or doesn't correspond to a real code path -- see `../README.md`.
+
+A second named benchmark, **`helpers`**, across the same four tiers: every processor/validator
+`env-cap/helpers` ships, each called with a representative valid input, cycled
+`tierTotalVariables(tier) * 100` times per tier (see `scripts/run-benchmark.mjs`'s own comment for
+why the `×100` -- at a tier's raw variable count, a single sample is mostly measurement overhead,
+not real signal, since each call costs well under a microsecond). `totalMs` is processors+validators
+combined; `processorsMs`/`validatorsMs` report each half separately. Unlike `cold-start`, this runs
+entirely in-process (no child-process spawn), so its numbers are naturally noisier at small scale --
+see `../benchmark-fixtures/budgets.mjs`'s comment on why its regression budget is looser.

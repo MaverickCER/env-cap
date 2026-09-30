@@ -63,13 +63,26 @@ export function benchmarkId(category, name, tier, definitionVersion) {
   return `${category}-${name}-${tier}-s${BENCHMARK_SUITE_VERSION}-v${definitionVersion}`;
 }
 
-// Runtime: cold-start only. See ../README.md for why validation-failures,
-// startup-validation, and first/cached-access were considered and cut.
+// Runtime: cold-start (createEnv()/validateEnv()'s own cost) and helpers
+// (env-cap/helpers' shipped processors/validators throughput -- the one
+// piece of the public runtime surface cold-start deliberately does NOT
+// exercise, since cold-start's own fixtures use an identity processor and no
+// validator specifically to isolate env-cap's dispatch cost from arbitrary
+// processor/validator cost -- see ../README.md's "Runtime fixture design").
+// See ../README.md for why validation-failures, startup-validation, and
+// first/cached-access were considered and cut.
 export const RUNTIME_BENCHMARKS = {
   "cold-start": { tiers: TIER_NAMES, definitionVersion: 1 },
+  helpers: { tiers: TIER_NAMES, definitionVersion: 1 },
 };
 
-// Build-time: the 6 named benchmarks the plan settled on.
+// Build-time: the 6 named benchmarks the original plan settled on, plus
+// evidence-projection -- env-cap/evidence's defineEvidenceProjection() over
+// a generateEvidenceModel() snapshot, the other Stable build-time entry
+// point none of the original 6 exercised (all 6 go through
+// generateEnvManifest/generateDocumentation/generateUsageReport/
+// generateEnvArtifacts or the discovery primitive alone; none ever calls
+// generateEvidenceModel() or a projection).
 export const BUILDTIME_BENCHMARKS = {
   artifacts: { tiers: TIER_NAMES, definitionVersion: 1 },
   discovery: { tiers: TIER_NAMES, definitionVersion: 1 },
@@ -77,6 +90,7 @@ export const BUILDTIME_BENCHMARKS = {
   "documentation-payload": { tiers: ["stress"], definitionVersion: 1 },
   "scoped-include": { tiers: ["extreme"], definitionVersion: 1 },
   "edge-cases": { tiers: ["fixed"], definitionVersion: 1 },
+  "evidence-projection": { tiers: TIER_NAMES, definitionVersion: 1 },
 };
 
 /** Every (category, name, tier) the suite declares, independent of whether a given run produced a result for it. */
