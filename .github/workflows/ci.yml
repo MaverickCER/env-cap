@@ -27,127 +27,70 @@ permissions:
 # to run into a check every change actually has to pass.
 jobs:
   # Runs first, on every PR, and -- when the PR's own diff touches benchmarked
-  # code -- commits refreshed results straight onto the PR branch (see its own
-  # steps below for why). Every other job in this workflow now `needs` this
-  # one and checks out the PR branch's own live head rather than the
-  # originally-triggered SHA, so whatever this job just committed is exactly
-  # what `lint`/`contract`/etc. actually validate -- one real commit, one
-  # real CI pass, not two. This used to be a separate `benchmarks.yml`
-  # workflow running in parallel with this one, with a `carry-forward-
-  # required-checks.sh` step trying to copy this workflow's own results onto
-  # the benchmark commit after the fact -- that design assumed a
-  # `GITHUB_TOKEN`-authored push never fires its own `pull_request:
-  # synchronize` (an anti-recursion guard GitHub documents), but in practice
-  # it does, which meant every benchmark commit re-triggered a brand-new,
-  # separately-gated CI run on top of the carry-forward attempt -- a loop
-  # that could re-trigger indefinitely on real benchmark-timing noise between
-  # runs. Sequencing it first here, in the same workflow, removes the race
-  # (and the carry-forward script) entirely: there's only ever one workflow
-  # run per real push, and it validates the state that actually gets merged.
+  # code -- commits refreshed results straight onto the PR branch. Every
+  # other job in this workflow now `needs` this one and checks out the PR
+  # branch's own live head rather than the originally-triggered SHA, so
+  # whatever this job just committed is exactly what `lint`/`contract`/etc.
+  # actually validate -- one real commit, one real CI pass, not two. This
+  # used to be a separate `benchmarks.yml` workflow running in parallel with
+  # this one, with a `carry-forward-required-checks.sh` step trying to copy
+  # this workflow's own results onto the benchmark commit after the fact --
+  # that design assumed a `GITHUB_TOKEN`-authored push never fires its own
+  # `pull_request: synchronize` (an anti-recursion guard GitHub documents),
+  # but in practice it does, which meant every benchmark commit re-triggered
+  # a brand-new, separately-gated CI run on top of the carry-forward attempt
+  # -- a loop that could re-trigger indefinitely on real benchmark-timing
+  # noise between runs. Sequencing it first here, in the same workflow,
+  # removes the race (and the carry-forward script) entirely: there's only
+  # ever one workflow run per real push, and it validates the state that
+  # actually gets merged.
+  #
+  # As of internal-package-contract's "shared benchmark engine" (PR #22),
+  # this job's own steps (measure -> post/update the PR comment ->
+  # conditionally commit results+history) are no longer maintained here --
+  # they live once, for both env-cap and data-cap, in
+  # internal-package-contract's own reusable
+  # `.github/workflows/benchmark-pr.yml`, called below via `uses:`. This job
+  # still MUST keep the exact name `benchmark-pr`: `lint`/`verify` below (and
+  # `contract`/`badges`/`deploy` transitively, via their own identically-
+  # shaped conditions) all read `needs.benchmark-pr.result` by that exact
+  # job name.
+  #
+  # The anti-recursion-loop guard (`github.actor != 'github-actions[bot]'`,
+  # same-repo PRs only) and the per-PR concurrency group that used to live
+  # inline here now live INSIDE that reusable workflow's own job (see its
+  # own header comment in internal-package-contract) -- deliberately not
+  # duplicated here. `github.event_name`/`github.event`/`github.actor`
+  # inside a called reusable workflow are the CALLING workflow's own values,
+  # not the reusable workflow's -- GitHub documents this context propagation,
+  # so that condition evaluates exactly as it did when it lived inline in
+  # this file. When it evaluates false (a push-to-main run, a fork PR, or
+  # the bot's own re-triggered run), the reusable workflow's one job is
+  # skipped, and GitHub reports THIS calling job's own `result` as `skipped`
+  # too -- confirmed live (see this migration's own PR description for the
+  # exact run checked) -- exactly like the plain `if:`-skipped job this
+  # replaced. `lint`/`verify` below already tolerate that (see their own
+  # `if:`), unchanged.
   benchmark-pr:
-    # Same-repo PRs only -- a fork PR's GITHUB_TOKEN is read-only here, so the
-    # comment/commit/push steps below would just fail loudly; `lint`/`verify`
-    # below already treat this job being skipped as a pass (see their own
-    # `if:`), so a fork PR still gets full CI, just without the benchmark
-    # refresh/comment. `github.actor != 'github-actions[bot]'` is the other
-    # half of breaking the loop this job's own module comment describes: once
-    # this job's own commit becomes the HEAD that re-triggers this workflow,
-    # this run's own benchmark-pr sees itself as the actor and skips
-    # remeasuring entirely, so there is nothing left to recommit and no
-    # further re-trigger -- bounding a real push to at most one extra
-    # re-trigger, never an unbounded chain.
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    # Committing refreshed results onto the PR branch below is a real write
-    # to that PR's own history -- serialize per-PR so two overlapping runs (a
-    # fast second push right behind the first) never race that push, and
-    # cancel a stale one outright once a newer commit supersedes it.
-    concurrency:
-      group: benchmarks-${{ github.event.pull_request.number }}
-      cancel-in-progress: true
+    # Matches what the job's own steps need when they actually run (write a
+    # commit, push it, read/post/update a PR comment) -- required here
+    # because permissions for a called reusable workflow's GITHUB_TOKEN can
+    # only be reduced, never elevated, relative to what the CALLING job
+    # grants; this workflow's default `permissions: contents: read` above
+    # would otherwise cap the reusable workflow down to read-only.
     permissions:
       contents: write
       pull-requests: write
       statuses: write
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
-
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 22.x
-          cache: npm
-
-      - run: npm ci
-      - run: npm run build
-
-      - working-directory: benchmark/performance-runtime
-        run: npm install
-      - working-directory: benchmark/performance-buildtime
-        run: npm install
-
-      - name: Snapshot main's committed results as "previous"
-        run: |
-          git show origin/main:benchmark/performance-runtime/results.json > /tmp/previous-runtime.json || echo '{}' > /tmp/previous-runtime.json
-          git show origin/main:benchmark/performance-buildtime/results.json > /tmp/previous-buildtime.json || echo '{}' > /tmp/previous-buildtime.json
-
-      - run: npm run benchmark
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: benchmark-results
-          path: |
-            benchmark/performance-runtime/results.json
-            benchmark/performance-runtime/RESULTS.md
-            benchmark/performance-buildtime/results.json
-            benchmark/performance-buildtime/RESULTS.md
-          retention-days: 14
-
-      - name: Post or update the marker-tagged summary comment
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          node scripts/render-benchmark-summary.mjs /tmp/previous-runtime.json benchmark/performance-runtime/results.json /tmp/previous-buildtime.json benchmark/performance-buildtime/results.json > /tmp/summary.md
-          PR="${{ github.event.pull_request.number }}"
-          EXISTING=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" --jq '.[] | select(.body | startswith("<!-- env-cap-benchmark-summary -->")) | .id' | head -n1)
-          if [ -n "$EXISTING" ]; then
-            gh api "repos/${{ github.repository }}/issues/comments/${EXISTING}" -X PATCH -f body=@/tmp/summary.md
-          else
-            gh api "repos/${{ github.repository }}/issues/${PR}/comments" -X POST -f body=@/tmp/summary.md
-          fi
-
-      - name: Commit refreshed results into this PR, only when it touches benchmarked code
-        env:
-          GH_TOKEN: ${{ github.token }}
-          # Passed through the environment rather than interpolated straight into
-          # `run` -- a branch ref is attacker-influenced input and must never be
-          # spliced into the shell command text.
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: |
-          CHANGED=$(git diff --name-only origin/main...HEAD)
-          RELEVANT=$(echo "$CHANGED" | grep -E '^(src/|benchmark/)' | grep -vE '^benchmark/(performance-[^/]+/(results\.json|RESULTS\.md)$)' || true)
-          if [ -z "$RELEVANT" ]; then
-            echo "This PR doesn't touch benchmarked code paths -- comment posted above, nothing to commit."
-            exit 0
-          fi
-
-          node scripts/append-benchmark-history.mjs benchmark/performance-runtime/results.json docs/benchmark-history/runtime.json
-          node scripts/append-benchmark-history.mjs benchmark/performance-buildtime/results.json docs/benchmark-history/buildtime.json
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add benchmark/performance-runtime/results.json benchmark/performance-runtime/RESULTS.md benchmark/performance-buildtime/results.json benchmark/performance-buildtime/RESULTS.md docs/benchmark-history/runtime.json docs/benchmark-history/buildtime.json
-          if git diff --cached --quiet; then
-            echo "Freshly measured results match what's already committed -- nothing to push."
-            exit 0
-          fi
-          git commit -m "chore(benchmarks): refresh results.json"
-          git push origin HEAD:"$HEAD_REF"
+    uses: MaverickCER/internal-package-contract/.github/workflows/benchmark-pr.yml@d02029611467d32911f1be3331f5d21e6e04e09b # main, shared benchmark engine (PR #22)
+    with:
+      # env-cap's own directory-naming convention (data-cap's differs --
+      # this reusable workflow makes no assumption about either).
+      benchmark-dir: benchmark
+      history-dir: benchmark/history
+      budgets-path: benchmark/benchmark-fixtures/budgets.mjs
+      comment-marker: "<!-- env-cap-benchmark-summary -->"
+      node-version: 22.x
 
   # Dev-tooling checks (lint/format/API-report) are a property of the source
   # repo, not the published package's own runtime behavior across Node
@@ -630,6 +573,16 @@ jobs:
       # the hand-authored landing page. The Markdown report drift check in
       # the `verify` job is what guards the API surface itself.
       - run: npm run docs:api
+      # Same "generated fresh here, never committed" treatment as docs:api
+      # above -- internal-package-contract's shared benchmark engine builds
+      # the history chart page from the committed benchmark/history/*.json
+      # files (see benchmark-pr's own header comment above for where those
+      # come from). Lands at maverickcer.github.io/env-cap/benchmarks/.
+      - run: >-
+          node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs
+          --out docs/benchmarks/index.html
+          --history 'Runtime|benchmark/history/runtime.json'
+          --history 'Build-time|benchmark/history/buildtime.json'
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: docs-badges

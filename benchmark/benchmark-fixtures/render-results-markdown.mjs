@@ -1,6 +1,7 @@
 // Renders a committed results.json into a human-readable RESULTS.md.
 // Current-snapshot only -- no comparison, no history, no regression
-// language. That's render-benchmark-summary.mjs's job, run separately by CI.
+// language. That's internal-package-contract's render-summary.mjs's job (called
+// from the benchmark-pr reusable workflow), run separately by CI.
 
 function isDurationStats(value) {
   return value && typeof value === "object" && typeof value.medianMs === "number" && typeof value.iterations === "number";

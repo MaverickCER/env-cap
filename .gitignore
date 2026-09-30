@@ -10,6 +10,11 @@ api-docs
 docs/api
 docs/coverage-badge.json
 docs/size-badge.json
+
+# Same treatment as docs/api above -- render-page.mjs (internal-package-contract's
+# shared benchmark engine) rebuilds this fresh in the `deploy` job from the
+# committed benchmark/history/*.json, never committed itself.
+docs/benchmarks
 *.log
 .DS_Store
 .env

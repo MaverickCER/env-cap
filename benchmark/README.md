@@ -88,10 +88,11 @@ architectural split), never compared against each other (see "Never compare" bel
 
 `budgets.mjs` defines a `maxRegressionPercent` per named benchmark (`cold-start`: 10%, `artifacts`/
 `discovery`: 15%). This is a **highlighting** threshold only, checked by
-`scripts/render-benchmark-summary.mjs` — never a gate, never something that fails a CI check. A
-named benchmark with no budget entry (`standalone-vs-combined`, `documentation-payload`,
-`scoped-include`, `edge-cases`) is reported but never flagged; these are one-shot comparisons or
-fixed-input sanity checks, not tiered regression targets.
+internal-package-contract's shared `render-summary.mjs` (called from the `benchmark-pr` reusable
+workflow with `--budgets benchmark/benchmark-fixtures/budgets.mjs`) — never a gate, never something
+that fails a CI check. A named benchmark with no budget entry (`standalone-vs-combined`,
+`documentation-payload`, `scoped-include`, `edge-cases`) is reported but never flagged; these are
+one-shot comparisons or fixed-input sanity checks, not tiered regression targets.
 
 ## Benchmark interpretation rules
 
@@ -193,19 +194,25 @@ Five independent version numbers, each answering a different question:
   traceable to an explicit bump here.
 - `benchmarkToolVersion` — did the benchmark harness code itself change, independent of
   `envCapVersion` (the thing being measured)?
-- `historySchemaVersion` — did `docs/benchmark-history/*.json`'s own aggregate shape change?
+- `historySchemaVersion` — did `benchmark/history/*.json`'s own aggregate shape change? Currently
+  v2 (internal-package-contract's shared benchmark engine, PR #22) — each tier measurement carries
+  its full `inputs: Record<string, number>` alongside `medianMs`, not just a hardcoded
+  `variablesPerSecond`. A v1 entry (pre-migration) stays valid forever; it's just excluded from
+  complexity classification, never force-migrated.
 
-## `docs/benchmark-history/`
+## `benchmark/history/`
 
-`docs/benchmark-history/runtime.json` and `.../buildtime.json` are append-only arrays of compact
-entries (`medianMs` + a derived throughput figure per completed named-benchmark×tier, plus
-versions/commit/timestamp) — not the full per-run detail already in each commit's own
-`results.json`. Written to by CI only (never by a local `npm run benchmark`), on a PR whose own diff
-touches benchmarked code, in the same commit that refreshes `results.json` directly onto that PR's
-branch. This is a data layer for a
-future dashboard — structured, accumulating history only, no chart UI built yet. Living under
-`docs/` means it's already reachable as a stable URL once GitHub Pages deploys, ready for this
-project's own future dashboard or any external tool to consume.
+`benchmark/history/runtime.json` and `.../buildtime.json` are append-only arrays of compact entries
+(`medianMs` + `inputs` + a derived `unitsPerSecond` throughput figure per completed
+named-benchmark×tier, plus versions/commit/timestamp) — not the full per-run detail already in each
+commit's own `results.json`. Written to by internal-package-contract's shared `append-history.mjs`
+(called from the `benchmark-pr` reusable workflow, never by a local `npm run benchmark`), on a PR
+whose own diff touches benchmarked code, in the same commit that refreshes `results.json` directly
+onto that PR's branch. Moved here from `docs/benchmark-history/` to match data-cap's own
+`benchmarks/history/` convention as part of the shared-engine migration -- see git history for the
+rename. `docs/benchmarks/index.html` (generated fresh by the `deploy` job's `render-page.mjs` step,
+never committed, same treatment `docs/api/` gets) is this data's own rendered chart view, reachable
+at a stable URL once GitHub Pages deploys.
 
 ## Reproduction
 
