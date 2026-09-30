@@ -1,6 +1,15 @@
 {
   "exceptions": [
     {
+      "id": "mutation:src/build/resolution/resolve-tsconfig-paths.ts:OptionalChaining:1dfc4e6368e7",
+      "version": 1,
+      "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-30 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts test/build/resolution/resolve-tsconfig-paths.test.ts test/build/resolution/resolve-import.test.ts`) -- 2 real tests (\"returns undefined for a specifier that doesn't resolve to any real file\", \"memoizes repeated resolution of the same (importingFile, specifier) pair\") genuinely fail with a TypeError, yet Stryker's own perTest coverage attribution reported this mutant Survived in a real GitHub Actions CI run (a local run of the full suite killed it). See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
+      "file": "src/build/resolution/resolve-tsconfig-paths.ts",
+      "mutator": "OptionalChaining",
+      "original": "result.resolvedModule?.resolvedFileName",
+      "replacement": "result.resolvedModule.resolvedFileName"
+    },
+    {
       "id": "mutation:src/build/contract-model.ts:BlockStatement:c153895a7af0",
       "version": 1,
       "justification": "Confirmed Stryker false positive, not a coverage gap: verified 2026-09-16 by applying this exact mutation (Stryker's own location + replacement) directly to the source and running the full trimmed suite (`npx vitest run -c vitest.stryker.config.ts`) -- a real test genuinely fails, yet Stryker's own perTest coverage attribution still reports this mutant Survived/NoCoverage. See internal-package-contract's checks/mutation.ts doc comment for the general defect this is an instance of.",
