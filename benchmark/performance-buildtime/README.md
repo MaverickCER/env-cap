@@ -19,7 +19,7 @@ hand-authored and committed.
 
 ## What's measured
 
-Six named benchmarks:
+Seven named benchmarks:
 
 - **`artifacts`** (tiered `baseline`/`stress`/`extreme`/`enterprise`) -- the flagship number:
   `generateEnvArtifacts()`'s full cost (one shared discovery+link pass, per ADR 0011, plus three
@@ -46,6 +46,18 @@ Six named benchmarks:
   directory, a non-exported `createEnv()` call, a computed/template-literal key, and an
   eight-levels-deep nested schema. Confirms predictable behavior and correct warnings, not "how
   fast."
+- **`evidence-projection`** (tiered `baseline`/`stress`/`extreme`/`enterprise`) -- `env-cap/evidence`'s
+  `defineEvidenceProjection()`, the one Stable build-time-adjacent entry point none of the other six
+  benchmarks exercises. `totalMs` is one `generateEvidenceModel()` call (dominant cost -- discovery+
+  link once, then all six canonical fact models: contract/dependency/ownership/lifecycle/finding/
+  change) immediately followed by one projection call over a representative schema touching all six
+  models, mirroring env-cap's own reference projections. `projectionMs` is measured separately
+  against a single reused `EvidenceModel`, isolating the membrane's own `structuredClone()` +
+  tracking-Proxy cost from evidence-assembly cost. Sampled fewer times than `artifacts`/`discovery`
+  (5-8 vs. up to 30) since each call does strictly more work -- see `../benchmark-fixtures/
+  budgets.mjs`'s comment on why its regression budget is correspondingly looser. Runs before
+  `artifacts`/`standalone-vs-combined`/`scoped-include` so its own discovery pass never sees their
+  generated `_benchmark-output`/`standalone`/`combined`/`scoped-include` subdirectories.
 
 Considered and cut from this suite: `manifest`/`documentation`/`usage` as full tier ladders each
 (near-duplicate of `discovery`'s own cost, three times over), and AST parsing in isolation

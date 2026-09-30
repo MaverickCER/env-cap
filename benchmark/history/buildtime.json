@@ -1008,6 +1008,121 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-09-30T17:21:50.338Z",
+      "gitCommit": "ccdb9473e7f70b9c71ccae7ceaaa3987c8ee4d41",
+      "runner": "GitHub Actions",
+      "versions": {
+        "benchmarkSchemaVersion": 1,
+        "benchmarkSuiteVersion": 1,
+        "benchmarkToolVersion": "1.0.0",
+        "envCapVersion": "0.4.0"
+      },
+      "measurements": {
+        "evidence-projection": {
+          "baseline": {
+            "medianMs": 68.02942400000006,
+            "inputs": {
+              "contracts": 10,
+              "variables": 100
+            },
+            "unitsPerSecond": 1616.95
+          },
+          "stress": {
+            "medianMs": 331.500219,
+            "inputs": {
+              "contracts": 100,
+              "variables": 1000
+            },
+            "unitsPerSecond": 3318.25
+          },
+          "extreme": {
+            "medianMs": 2065.1567130000003,
+            "inputs": {
+              "contracts": 800,
+              "variables": 8000
+            },
+            "unitsPerSecond": 4261.18
+          },
+          "enterprise": {
+            "medianMs": 727.6969109999991,
+            "inputs": {
+              "contracts": 250,
+              "variables": 4025
+            },
+            "unitsPerSecond": 5874.7
+          }
+        },
+        "artifacts": {
+          "baseline": {
+            "medianMs": 67.12019399999917,
+            "inputs": {
+              "contracts": 10,
+              "variables": 100
+            },
+            "unitsPerSecond": 1638.85
+          },
+          "stress": {
+            "medianMs": 339.1049439999988,
+            "inputs": {
+              "contracts": 100,
+              "variables": 1000
+            },
+            "unitsPerSecond": 3243.83
+          },
+          "extreme": {
+            "medianMs": 3273.373663999999,
+            "inputs": {
+              "contracts": 800,
+              "variables": 8000
+            },
+            "unitsPerSecond": 2688.36
+          },
+          "enterprise": {
+            "medianMs": 992.4561600000015,
+            "inputs": {
+              "contracts": 250,
+              "variables": 4025
+            },
+            "unitsPerSecond": 4307.5
+          }
+        },
+        "discovery": {
+          "baseline": {
+            "medianMs": 1.751349999991362,
+            "inputs": {
+              "contracts": 10,
+              "variables": 100
+            },
+            "unitsPerSecond": 62808.69
+          },
+          "stress": {
+            "medianMs": 6.420224000001326,
+            "inputs": {
+              "contracts": 100,
+              "variables": 1000
+            },
+            "unitsPerSecond": 171333.59
+          },
+          "extreme": {
+            "medianMs": 47.975883999999496,
+            "inputs": {
+              "contracts": 800,
+              "variables": 8000
+            },
+            "unitsPerSecond": 183425.49
+          },
+          "enterprise": {
+            "medianMs": 15.223335000002407,
+            "inputs": {
+              "contracts": 250,
+              "variables": 4025
+            },
+            "unitsPerSecond": 280818.89
+          }
+        }
+      }
     }
   ]
 }

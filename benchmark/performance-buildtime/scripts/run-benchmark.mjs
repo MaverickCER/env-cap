@@ -12,8 +12,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { generateEnvArtifacts, generateEnvManifest, generateDocumentation, generateUsageReport, discoverSchemaFiles } from "env-cap/build";
+import { generateEnvArtifacts, generateEnvManifest, generateDocumentation, generateUsageReport, generateEvidenceModel, discoverSchemaFiles } from "env-cap/build";
 import { nodeBuildFileSystem } from "env-cap/node";
+import { defineEvidenceProjection } from "env-cap/evidence";
 
 import { generateBuildtimeFixtures } from "../../benchmark-fixtures/generator.mjs";
 import { hashFixtureTree } from "../../benchmark-fixtures/fixture-hash.mjs";
@@ -29,7 +30,36 @@ const fixturesRoot = path.join(exampleRoot, "fixtures", "generated");
 
 const DEFAULT_EXCLUDE = ["**/node_modules/**", "**/dist/**", "**/.git/**"];
 const IN_PROCESS_OPTS = { warmupIterations: 3, targetDurationMs: 1500, minIterations: 5, maxIterations: 30 };
+// generateEvidenceModel() runs strictly more work per call than any other
+// generator here -- discovery+link once, then all six canonical fact models
+// (contract/dependency/ownership/lifecycle/finding/change), where
+// generateEnvArtifacts() above only needs three renders off one shared pass.
+// A handful of samples is enough for this suite's "highlighting, not
+// gating" precision bar (see ../README.md) without multiplying the full
+// suite's wall-clock cost at the `extreme`/`enterprise` tiers.
+const EVIDENCE_MODEL_OPTS = { warmupIterations: 1, targetDurationMs: 800, minIterations: 5, maxIterations: 8 };
 const SHARED_CONFIGURATION = { ...IN_PROCESS_OPTS, gcEnabled: typeof global.gc === "function" };
+
+/**
+ * A representative projection touching all six canonical fact models inside
+ * `EvidenceModel` -- deliberately shaped like env-cap's own reference
+ * projections (`.env.example`, Environment Configuration Reference,
+ * Configuration Ownership; see `src/evidence/define-projection.ts`'s doc
+ * comment) rather than reading just one field, so the membrane's per-key
+ * `structuredClone()` + tracking-Proxy cost is exercised the way a real
+ * consumer's projection would exercise it.
+ */
+const benchmarkProjection = defineEvidenceProjection({
+  variableKeys: (evidence) => evidence.contract.contracts.flatMap((c) => c.variables.map((v) => v.key)),
+  ownersByContract: (evidence) => Object.fromEntries(evidence.ownership.contracts.map((c) => [c.exportName, c.owner])),
+  expiringSoonKeys: (evidence) => evidence.lifecycle.expiring.map((e) => e.key ?? e.exportName),
+  findingCountsBySeverity: (evidence) =>
+    evidence.finding.findings.reduce((acc, f) => {
+      acc[f.severity] = (acc[f.severity] ?? 0) + 1;
+      return acc;
+    }, {}),
+  consumingFileCounts: (evidence) => evidence.dependency.contracts.map((c) => c.consumingFiles.length),
+});
 
 /** generateEnvArtifacts()/generateEnvManifest()/etc. refuse to write outside their own `root` -- every output path must nest under the fixture root being generated against, same as any real consumer would place generated files inside their own project. */
 function outputPath(root, ...parts) {
@@ -211,6 +241,52 @@ async function runEdgeCases(definitionVersion) {
   };
 }
 
+/**
+ * `env-cap/evidence`'s own Stable entry point (`defineEvidenceProjection`)
+ * has no coverage anywhere else in this suite -- `artifacts`/`discovery`/
+ * `standalone-vs-combined` all exercise `generateEnvManifest`/
+ * `generateDocumentation`/`generateUsageReport`/`generateEnvArtifacts`, but
+ * none of them ever calls `generateEvidenceModel()` or runs a projection.
+ * `totalMs` is the primary, honest "what a consumer actually pays" number:
+ * one `generateEvidenceModel()` call (dominant cost -- discovery+link once,
+ * then all six fact models) immediately followed by one projection call.
+ * `projectionMs` is measured separately, against a single reused
+ * `EvidenceModel` built once outside the timed loop, at `IN_PROCESS_OPTS`'
+ * higher sample count since it's cheap, in-memory, and I/O-free -- same
+ * "auxiliary, separately measured, not an exact internal phase split"
+ * caveat `artifacts.discoveryMs` documents above.
+ */
+async function runEvidenceProjectionTier(tierName, definitionVersion, fixture) {
+  const buildEvidence = () =>
+    generateEvidenceModel({
+      root: fixture.outputDir,
+      fs: nodeBuildFileSystem,
+      include: ["**/env.schema.ts"],
+      exclude: DEFAULT_EXCLUDE,
+    });
+
+  const { samples: totalSamples } = await adaptiveSample(
+    () =>
+      timeIt(async () => {
+        const evidence = await buildEvidence();
+        benchmarkProjection(evidence);
+      }),
+    EVIDENCE_MODEL_OPTS,
+  );
+
+  const evidence = await buildEvidence();
+  const { samples: projectionSamples } = await adaptiveSample(() => timeIt(() => benchmarkProjection(evidence)), IN_PROCESS_OPTS);
+
+  return {
+    id: benchmarkId("buildtime", "evidence-projection", tierName, definitionVersion),
+    status: "completed",
+    inputs: { contracts: fixture.generated.contracts, variables: fixture.generated.variables },
+    fixtureHash: fixture.fixtureHash,
+    totalMs: computeDurationStats(totalSamples, EVIDENCE_MODEL_OPTS.warmupIterations),
+    projectionMs: computeDurationStats(projectionSamples, IN_PROCESS_OPTS.warmupIterations),
+  };
+}
+
 async function main() {
   const startedAt = new Date();
   const packageJson = JSON.parse(await fs.readFile(path.join(repoRoot, "package.json"), "utf8"));
@@ -222,6 +298,19 @@ async function main() {
   }
 
   const results = {};
+
+  // Runs before artifacts/standalone-vs-combined/scoped-include write their
+  // own `_benchmark-output`/`standalone`/`combined`/`scoped-include`
+  // subdirectories into these same fixture trees, so evidence-projection's
+  // own discovery pass only ever sees each tier's `contract-NNNN/` schema
+  // files -- never those benchmarks' generated output.
+  results["evidence-projection"] = { tiers: {} };
+  for (const tier of BUILDTIME_BENCHMARKS["evidence-projection"].tiers) {
+    console.log(`[performance-buildtime] evidence-projection.${tier} ...`);
+    const entry = await runEvidenceProjectionTier(tier, BUILDTIME_BENCHMARKS["evidence-projection"].definitionVersion, fixturesByTier[tier]);
+    results["evidence-projection"].tiers[tier] = entry;
+    console.log(`[performance-buildtime] evidence-projection.${tier}: median ${entry.totalMs.medianMs.toFixed(2)}ms (projection ${entry.projectionMs.medianMs.toFixed(2)}ms), n=${entry.totalMs.iterations}`);
+  }
 
   results.artifacts = { tiers: {} };
   for (const tier of BUILDTIME_BENCHMARKS.artifacts.tiers) {

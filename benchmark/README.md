@@ -78,7 +78,20 @@ of that was its own `createEnv` phase vs. its own `validateEnv` phase. `totalMs`
 and this script's own static imports, not env-cap's cost, but worth keeping visible rather than
 silently absorbed into one of the other two fields.
 
-### Build-time — `artifacts`, `discovery`, `standalone-vs-combined`, `documentation-payload`, `scoped-include`, `edge-cases`
+### Runtime — `helpers`
+
+A pure, in-process throughput benchmark over every processor and validator `env-cap/helpers`
+ships (`processors.toNumber()`, `validators.range()`, etc.) — the one piece of the public runtime
+surface `cold-start` deliberately does not exercise, since `cold-start`'s own fixtures use an
+identity processor and no validator specifically to isolate env-cap's own dispatch cost from
+arbitrary processor/validator cost (see "Runtime fixture design" above). Each tier cycles through a
+representative (function, valid-input) pair for every shipped processor/validator,
+`tierTotalVariables(tier) * 100` times total (the `×100` multiplier exists only because a single
+call costs well under a microsecond — see the benchmark script's own comment for the measured noise
+that justified it). `totalMs` is the combined processors+validators cost; `processorsMs`/
+`validatorsMs` report each half separately.
+
+### Build-time — `artifacts`, `discovery`, `standalone-vs-combined`, `documentation-payload`, `scoped-include`, `edge-cases`, `evidence-projection`
 
 See [`performance-buildtime/README.md`](performance-buildtime/README.md) for what each measures.
 Runtime and build-time are measured in separate examples (mirrors ADR 0001's runtime/build-time
@@ -87,7 +100,8 @@ architectural split), never compared against each other (see "Never compare" bel
 ## How regressions are surfaced
 
 `budgets.mjs` defines a `maxRegressionPercent` per named benchmark (`cold-start`: 10%, `artifacts`/
-`discovery`: 15%). This is a **highlighting** threshold only, checked by
+`discovery`: 15%, `helpers`/`evidence-projection`: 60% — see `budgets.mjs`'s own comments for why
+those two need a much looser band). This is a **highlighting** threshold only, checked by
 internal-package-contract's shared `render-summary.mjs` (called from the `benchmark-pr` reusable
 workflow with `--budgets benchmark/benchmark-fixtures/budgets.mjs`) — never a gate, never something
 that fails a CI check. A named benchmark with no budget entry (`standalone-vs-combined`,
@@ -182,6 +196,14 @@ either directory's own README:
   `scripts/check-size.mjs` at `prepublishOnly`). Reusing that measurement here as `metadata.package`
   context would duplicate an existing gate at a _weaker_ guarantee level; the gate stays
   authoritative.
+- **`env-cap/eslint-plugin`'s `no-raw-process-env` rule** — a real, Stable public export (see
+  VERSIONING.md), but it doesn't fit either of this suite's two categories: it runs inside a
+  consumer's own ESLint invocation (their config, their file set, their ESLint version), not as a
+  standalone env-cap code path this suite controls end to end the way `cold-start`/`artifacts` do.
+  A synthetic tiered benchmark here would mostly measure ESLint's own traversal cost at whatever
+  fixture size was chosen, not anything specific to this one rule. If a real performance question
+  about it ever comes up (a reported slowdown, say), it's better answered by profiling the actual
+  consumer project than by inventing a third benchmark category for one rule up front.
 
 ## Versioning
 
@@ -212,7 +234,11 @@ onto that PR's branch. Moved here from `docs/benchmark-history/` to match data-c
 `benchmarks/history/` convention as part of the shared-engine migration -- see git history for the
 rename. `docs/benchmarks/index.html` (generated fresh by the `deploy` job's `render-page.mjs` step,
 never committed, same treatment `docs/api/` gets) is this data's own rendered chart view, reachable
-at a stable URL once GitHub Pages deploys.
+at a stable URL once GitHub Pages deploys. `npm run docs:benchmarks` from the repo root runs the
+identical `render-page.mjs` invocation locally (same `--out`/`--history` arguments as the `deploy`
+job) -- `npm run contract` runs it automatically first, so `docs/index.html`'s "Benchmarks" nav
+link has something real to resolve against when the `DocsLinks` check crawls the site, exactly how
+`ApiDocs`/`npm run docs:api` already keeps `docs/api/index.html` present for the same check.
 
 ## Reproduction
 
