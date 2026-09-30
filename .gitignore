@@ -10,6 +10,20 @@ api-docs
 docs/api
 docs/coverage-badge.json
 docs/size-badge.json
+
+# Same treatment as docs/api above -- render-page.mjs (internal-package-contract's
+# shared benchmark engine) rebuilds this fresh in the `deploy` job from the
+# committed benchmark/history/*.json, never committed itself.
+docs/benchmarks
+
+# Ephemeral, fully re-derivable from dist/*.d.ts on every `npm run contract` run -- one
+# subdirectory per ApiContract target (runtime/, build/, helpers/, evidence/, eslint-plugin/ --
+# see internal-package-contract's own scripts/api-contract/targets.ts), each target's own
+# baseline.* is the only committed state. Mirrors internal-package-contract's own
+# repo-contract's identical entry.
+.repo-contract/api-contract/*/current.api.md
+.repo-contract/api-contract/*/current.api.json
+.repo-contract/api-contract/*/current.d.ts
 *.log
 .DS_Store
 .env

@@ -4,7 +4,8 @@
 //
 // Only measures. Never reads a previous results.json, never computes a
 // diff, never decides what's a regression -- that's
-// scripts/render-benchmark-summary.mjs's job, run separately by CI.
+// internal-package-contract's render-summary.mjs's job (called from the
+// benchmark-pr reusable workflow), run separately by CI.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";

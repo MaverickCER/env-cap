@@ -1,0 +1,371 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.59.3",
+    "schemaVersion": 1011,
+    "oldestForwardsCompatibleVersion": 1001,
+    "tsdocConfig": {
+      "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+      "noStandardTags": true,
+      "tagDefinitions": [
+        {
+          "tagName": "@alpha",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@beta",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@defaultValue",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@decorator",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@deprecated",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@eventProperty",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@example",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@experimental",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@inheritDoc",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@internal",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@label",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@link",
+          "syntaxKind": "inline",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@override",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@packageDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@param",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@privateRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@public",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@readonly",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@remarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@returns",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@sealed",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@see",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@throws",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@typeParam",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@virtual",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@jsx",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxRuntime",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxFrag",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxImportSource",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@betaDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@internalRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@preapproved",
+          "syntaxKind": "modifier"
+        }
+      ],
+      "supportForTags": {
+        "@alpha": true,
+        "@beta": true,
+        "@defaultValue": true,
+        "@decorator": true,
+        "@deprecated": true,
+        "@eventProperty": true,
+        "@example": true,
+        "@experimental": true,
+        "@inheritDoc": true,
+        "@internal": true,
+        "@label": true,
+        "@link": true,
+        "@override": true,
+        "@packageDocumentation": true,
+        "@param": true,
+        "@privateRemarks": true,
+        "@public": true,
+        "@readonly": true,
+        "@remarks": true,
+        "@returns": true,
+        "@sealed": true,
+        "@see": true,
+        "@throws": true,
+        "@typeParam": true,
+        "@virtual": true,
+        "@betaDocumentation": true,
+        "@internalRemarks": true,
+        "@preapproved": true
+      },
+      "reportUnsupportedHtmlElements": false
+    }
+  },
+  "kind": "Package",
+  "canonicalReference": "@maverickcer/env-cap!",
+  "docComment": "",
+  "name": "@maverickcer/env-cap",
+  "preserveMemberOrder": false,
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "@maverickcer/env-cap!",
+      "name": "",
+      "preserveMemberOrder": false,
+      "members": [
+        {
+          "kind": "Variable",
+          "canonicalReference": "@maverickcer/env-cap!noNodeFs:var",
+          "docComment": "/**\n * Flags any `import`/`require`/dynamic `import()` of `node:fs` in library\n * code, so a library surface acquires its filesystem capability from the\n * caller instead of reaching for `node:fs` itself (the same discipline\n * `repo-contract`'s ADR-0011 established for `child_process`/`process.env`).\n * See ADR 0040.\n *\n * @remarks\n *\n * Nothing is exempt by default. env-cap's own config allows `src/cli/**`\n * (the executable capability boundary that builds the `node:fs/promises`\n * adapter); a consuming project sets its own `allow` for its own entry\n * points.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "noNodeFs: "
+            },
+            {
+              "kind": "Content",
+              "text": "import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleModule",
+              "canonicalReference": "@typescript-eslint/utils!RuleModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<\"noNodeFs\", ["
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleOptions",
+              "canonicalReference": "@maverickcer/env-cap!~RuleOptions_2:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "], unknown, import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleListener",
+              "canonicalReference": "@typescript-eslint/utils!RuleListener:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> & {\n    name: string;\n}"
+            }
+          ],
+          "fileUrlPath": "src/eslint-plugin/no-node-fs.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "noNodeFs",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 8
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@maverickcer/env-cap!noRawProcessEnv:var",
+          "docComment": "/**\n * Flags any direct `process.env.X`/`process.env[\"X\"]` read in application code, so environment\n * access always goes through a capability's own `createEnv()` contract instead.\n *\n * @remarks\n *\n * `env.schema.ts`/`env.schema.tsx` files are always exempt (that's where `createEnv()` itself\n * reads `process.env`); the rule's `allow` option extends that exemption to a consuming\n * project's own trusted bootstrap code.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "noRawProcessEnv: "
+            },
+            {
+              "kind": "Content",
+              "text": "import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleModule",
+              "canonicalReference": "@typescript-eslint/utils!RuleModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<\"noRawProcessEnv\", ["
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleOptions",
+              "canonicalReference": "@maverickcer/env-cap!~RuleOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "], unknown, import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleListener",
+              "canonicalReference": "@typescript-eslint/utils!RuleListener:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> & {\n    name: string;\n}"
+            }
+          ],
+          "fileUrlPath": "src/eslint-plugin/no-raw-process-env.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "noRawProcessEnv",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 8
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@maverickcer/env-cap!plugin:var",
+          "docComment": "/**\n * `env-cap/eslint-plugin` -- a flat-config-shaped plugin object\n * ({ rules: { ... } }), consumed as:\n *\n * import envCapPlugin from \"env-cap/eslint-plugin\";\n *  export default [{ plugins: { \"env-cap\": envCapPlugin }, rules: { \"env-cap/no-raw-process-env\": \"error\" } }];\n *\n * A 4th public entry point alongside `.`, `./build`, `./helpers` -- see ADR 0017.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "plugin: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    rules: {\n        \"no-raw-process-env\": import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleModule",
+              "canonicalReference": "@typescript-eslint/utils!RuleModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<\"noRawProcessEnv\", [import(\"./no-raw-process-env.js\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleOptions",
+              "canonicalReference": "@maverickcer/env-cap!~RuleOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "], unknown, import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleListener",
+              "canonicalReference": "@typescript-eslint/utils!RuleListener:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> & {\n            name: string;\n        };\n        \"no-node-fs\": import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleModule",
+              "canonicalReference": "@typescript-eslint/utils!RuleModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<\"noNodeFs\", [import(\"./no-node-fs.js\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleOptions",
+              "canonicalReference": "@maverickcer/env-cap!~RuleOptions_2:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "], unknown, import(\"@typescript-eslint/utils/ts-eslint\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "RuleListener",
+              "canonicalReference": "@typescript-eslint/utils!RuleListener:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> & {\n            name: string;\n        };\n    };\n}"
+            }
+          ],
+          "fileUrlPath": "src/eslint-plugin/index.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "plugin",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 14
+          }
+        }
+      ]
+    }
+  ]
+}

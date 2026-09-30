@@ -57,6 +57,14 @@ export default tseslint.config(
       "examples",
       "benchmark",
       "docs",
+      // Tooling-owned data, not source: api-contract/ holds one subdirectory per ApiContract
+      // target (runtime/, build/, helpers/, evidence/, eslint-plugin/) of API-Extractor-backed
+      // snapshots of src/'s public surface (baseline.* committed as the compatibility diffing
+      // target, current.* regenerated every run -- `eslint --fix` rewriting baseline.* would
+      // corrupt that diff; see internal-package-contract's own
+      // scripts/api-contract/baseline-store.ts), and exceptions/ holds the reviewed-exception
+      // registries. Matches internal-package-contract's own repo-contract's identical exclusion.
+      ".repo-contract",
       "node_modules",
       "**/node_modules",
       "test/cross-runtime",
