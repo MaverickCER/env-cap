@@ -7646,12 +7646,14 @@ occur" -- it doesn't define how a *pre-existing* `expiresAt` and a *new* `rotati
   expiry, a certificate's NotAfter) -- once that date passes, the value has *literally* stopped
   being valid, which is categorically worse than merely being overdue for an internal policy
   rotation, and no internal rotation record can retroactively un-expire it.
-- Otherwise, if `rotationPeriod` is declared, it's checked against `lastRotatedAt`: both present
-  and both parseable (see `parseRotationPeriodDays()`) -> compute `lastRotatedAt + rotationPeriod`
-  and compare to `now` (`"overdue"` if that due date has passed, else `"compliant"`). Any other
-  case with `rotationPeriod` declared -- `lastRotatedAt` missing, or either value not statically
-  parseable -- fails closed to `"overdue"`: IA-5 asks for evidence a rotation actually happened on
-  schedule, and a declared obligation that can't be shown to have been met is reported as
+- Otherwise, if `rotationPeriod` is declared, it's checked against `lastRotatedAt`: both present,
+  both parseable (see `parseRotationPeriodDays()`), *and* `lastRotatedAt` no later than `now` ->
+  compute `lastRotatedAt + rotationPeriod` and compare to `now` (`"overdue"` if that due date has
+  passed, else `"compliant"`). Any other case with `rotationPeriod` declared -- `lastRotatedAt`
+  missing, either value not statically parseable, or `lastRotatedAt` itself in the future (a
+  rotation can't have happened yet, so trusting it would let a bad timestamp manufacture false
+  compliance) -- fails closed to `"overdue"`: IA-5 asks for evidence a rotation actually happened
+  on schedule, and a declared obligation that can't be shown to have been met is reported as
   non-compliant rather than silently passed as compliant.
 - Otherwise (rotation metadata declared -- `authenticatorType` and/or `lastRotatedAt` and/or
   `rotationTriggerEvents` -- but no `rotationPeriod` and no past-due `expiresAt`) -> `"compliant"`:
@@ -8468,6 +8470,14 @@ fit either grammar still has it stored and rendered verbatim everywhere else, it
 a computed due date, and `computeRotationStatus()` fails closed (`"overdue"`) rather than
 guessing at one. Month/year are calendar approximations (30/365 days) -- acceptable for a
 rotation-compliance signal, not precise enough for anything billing/calendar-accurate.
+
+A computed total of zero days (e.g. "0 days", "P0D", "P0Y0M0D" -- the digit grammar can't
+produce a *negative* total, but zero is reachable) is treated the same as an unparseable
+string, not a real duration: it returns `undefined` rather than `0`, so `computeRotationStatus()`
+falls into its own "declared but unverifiable" fail-closed path (`"overdue"`) instead of computing
+a degenerate due date equal to `lastRotatedAt` itself -- a nonsensical "rotate every zero days"
+policy should read as un-computable, not silently produce a technically-correct-but-meaningless
+due date.
 
 Both patterns are inlined at their `.exec()` call site, deliberately not hoisted to a
 module-level `const` -- same precedent as `source-position.ts`'s `parsePositionCitation()`: a
