@@ -1,0 +1,2812 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.59.3",
+    "schemaVersion": 1011,
+    "oldestForwardsCompatibleVersion": 1001,
+    "tsdocConfig": {
+      "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+      "noStandardTags": true,
+      "tagDefinitions": [
+        {
+          "tagName": "@alpha",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@beta",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@defaultValue",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@decorator",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@deprecated",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@eventProperty",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@example",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@experimental",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@inheritDoc",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@internal",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@label",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@link",
+          "syntaxKind": "inline",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@override",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@packageDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@param",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@privateRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@public",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@readonly",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@remarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@returns",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@sealed",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@see",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@throws",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@typeParam",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@virtual",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@jsx",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxRuntime",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxFrag",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxImportSource",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@betaDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@internalRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@preapproved",
+          "syntaxKind": "modifier"
+        }
+      ],
+      "supportForTags": {
+        "@alpha": true,
+        "@beta": true,
+        "@defaultValue": true,
+        "@decorator": true,
+        "@deprecated": true,
+        "@eventProperty": true,
+        "@example": true,
+        "@experimental": true,
+        "@inheritDoc": true,
+        "@internal": true,
+        "@label": true,
+        "@link": true,
+        "@override": true,
+        "@packageDocumentation": true,
+        "@param": true,
+        "@privateRemarks": true,
+        "@public": true,
+        "@readonly": true,
+        "@remarks": true,
+        "@returns": true,
+        "@sealed": true,
+        "@see": true,
+        "@throws": true,
+        "@typeParam": true,
+        "@virtual": true,
+        "@betaDocumentation": true,
+        "@internalRemarks": true,
+        "@preapproved": true
+      },
+      "reportUnsupportedHtmlElements": false
+    }
+  },
+  "kind": "Package",
+  "canonicalReference": "@maverickcer/env-cap!",
+  "docComment": "",
+  "name": "@maverickcer/env-cap",
+  "preserveMemberOrder": false,
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "@maverickcer/env-cap!",
+      "name": "",
+      "preserveMemberOrder": false,
+      "members": [
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!ContractDocs:interface",
+          "docComment": "/**\n * Contract-level documentation, plus everything {@link documentEnv}'s options used to carry that\n * only the generator ever read.\n *\n * @remarks\n *\n * Generic over `S`, the exact schema type {@link documentEnv} infers from its `schema` argument --\n * this is what makes `variables` below a closed, checked map (a typo'd or renamed key is a\n * compile error, not a silent no-op) rather than an open `Record<string, VariableDocs>` any string\n * would satisfy. `S` defaults to the widest possible schema so this type is still nameable on its\n * own (e.g. in a helper function's own parameter type) without narrowing to one specific contract.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ContractDocs<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvSchema",
+              "canonicalReference": "@maverickcer/env-cap!EnvSchema:type"
+            },
+            {
+              "kind": "Content",
+              "text": " = "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvSchema",
+              "canonicalReference": "@maverickcer/env-cap!EnvSchema:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "fileUrlPath": "src/runtime/document.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            }
+          ],
+          "name": "ContractDocs",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#active:member",
+              "docComment": "/**\n * When `false`, this contract is excluded from the generated manifest, docs' required section, and exclusiveGroup checks -- it still appears, marked disabled, in the feature catalog. Defaults to `true`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "active?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "active",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#auditRequired:member",
+              "docComment": "/**\n * Default audit-required assertion for this contract's variables -- see {@link VariableDocs.auditRequired}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "auditRequired?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "auditRequired",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#category:member",
+              "docComment": "/**\n * Groups this contract under a heading in the generated docs' feature catalog.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "category?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "category",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#dataResidency:member",
+              "docComment": "/**\n * Default data residency for this contract's variables -- see {@link VariableDocs.dataResidency}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dataResidency?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "dataResidency",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#deprecated:member",
+              "docComment": "/**\n * Marks this whole contract/feature as being phased out. Independent of `active` (on/off, not a phase-out signal).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "deprecated?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "deprecated",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#deprecatedReason:member",
+              "docComment": "/**\n * Why this contract is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "deprecatedReason?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "deprecatedReason",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#exclusiveGroup:member",
+              "docComment": "/**\n * The generator throws if two *active* contracts declare the same `exclusiveGroup` -- use it to mark interchangeable features (e.g. two database backends) as mutually exclusive.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "exclusiveGroup?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "exclusiveGroup",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#expiresAt:member",
+              "docComment": "/**\n * Whole-contract/feature sunset date, ISO date string.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "expiresAt?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "expiresAt",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#legalBasis:member",
+              "docComment": "/**\n * Default legal basis for this contract's variables -- see {@link VariableDocs.legalBasis}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "legalBasis?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "legalBasis",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#metadata:member",
+              "docComment": "/**\n * Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this feature -- see {@link VariableDocs.metadata}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "metadata?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, unknown>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "metadata",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#name:member",
+              "docComment": "/**\n * Overrides the auto-generated label used in generated docs. Purely cosmetic. Wins over `createEnv()`'s own `name` option, which in turn wins over the exported binding name.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "name?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#owner:member",
+              "docComment": "/**\n * Default owner for every variable in this contract that doesn't set its own `owner`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "owner?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "owner",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#purpose:member",
+              "docComment": "/**\n * Default reason this contract's variables' values are collected/used -- see {@link VariableDocs.purpose}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "purpose?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "purpose",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#retention:member",
+              "docComment": "/**\n * Default retention policy for this contract's variables -- see {@link VariableDocs.retention}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "retention?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "retention",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#sensitivity:member",
+              "docComment": "/**\n * Default sensitivity for every variable in this contract that doesn't set its own `sensitivity` -- see {@link VariableDocs.sensitivity} for why this is an open `string`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "sensitivity?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "sensitivity",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs#variables:member",
+              "docComment": "/**\n * Per-variable documentation, keyed by variable name -- keys are checked against `S`'s own keys\n * at compile time, so documenting a variable that was renamed or removed from `schema` (or a\n * plain typo) is a type error here, not a silently-ignored entry the generator would otherwise\n * have to report as \"stale\" after the fact. A schema key absent from `variables` entirely is\n * still valid (not every variable needs documentation) and is reported as undocumented by the\n * generator, exactly as before.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "variables?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        readonly [K in keyof S]?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VariableDocs",
+                  "canonicalReference": "@maverickcer/env-cap!VariableDocs:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "variables",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@maverickcer/env-cap!createEnv:function(1)",
+          "docComment": "/**\n * Declares a feature's environment contract. Colocate this call with the\n * feature that consumes the variables (e.g. `features/payments/env.schema.ts`).\n *\n * @remarks\n *\n * `createEnv` is runtime-only: `processor`/`validator`/`default` are the\n * whole vocabulary, because they're the only fields {@link validateEnv} actually\n * reads. Documentation -- description, ownership, lifecycle, category, and\n * everything else that only exists to generate docs -- lives in a separate\n * {@link documentEnv} call (see `document.ts`), which is entirely optional and\n * never required for this to work.\n *\n * @returns An {@link EnvContract} exposing one read-only getter per key -- there is no\n * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a\n * key throws until {@link validateEnv} has run successfully for the runtime this contract\n * was passed to.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function createEnv<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvSchema",
+              "canonicalReference": "@maverickcer/env-cap!EnvSchema:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">(schema: "
+            },
+            {
+              "kind": "Content",
+              "text": "S"
+            },
+            {
+              "kind": "Content",
+              "text": ", options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CreateEnvOptions",
+              "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvContract",
+              "canonicalReference": "@maverickcer/env-cap!EnvContract:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<S>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/create.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 7,
+            "endIndex": 9
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "schema",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "isOptional": true
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "createEnv"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions:interface",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface CreateEnvOptions "
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "CreateEnvOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions#name:member",
+              "docComment": "/**\n * A short, stable label for this contract (e.g. \"payments\", \"database\").\n * Used in error messages. Defaults to an auto-generated anonymous label if\n * omitted -- providing one is strongly recommended for readable validation\n * errors.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "name?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions#source:member",
+              "docComment": "/**\n * Pass `import.meta.url` here so validation errors point at the file that\n * declared the failing variable (e.g. \"features/payments/env.schema.ts\")\n * instead of just the short `name` label. There is no portable way for\n * `createEnv` to discover its caller's module URL on its own -- this is\n * always correct and never goes stale, since it's supplied by the JS\n * engine rather than hand-typed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "source?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "source",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@maverickcer/env-cap!DefaultValue:type",
+          "docComment": "/**\n * A default may be a literal value, or a zero-arg thunk evaluated lazily when the raw value is\n * undefined.\n *\n * @remarks\n *\n * The union is redundant at the type level (`unknown` alone already accepts a\n * function) -- it's kept because this type is public API, and collapsing it to bare `unknown`\n * would erase the one thing a reader of the generated `.d.ts` needs to learn here.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type DefaultValue = "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown | (() => unknown)"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "DefaultValue",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@maverickcer/env-cap!documentEnv:function(1)",
+          "docComment": "/**\n * Documents a schema for the generator: explains values, assigns ownership,\n * and describes lifecycle, feeding the generated docs artifact and\n * `.env.example`. Pass it the *same* schema object given to {@link createEnv}, so\n * the generator can statically link the two and verify every variable is\n * documented -- and so TypeScript can check `docs.variables`' keys against\n * `schema`'s own keys, the same object identity doing double duty for both\n * the generator's static link and the type checker's.\n *\n * @remarks\n *\n * A no-op at runtime by design -- nothing passed here is retained anywhere,\n * and this can never throw, no matter how malformed `schema`/`docs` are.\n * Calling it is entirely optional: {@link createEnv} works identically whether or\n * not a matching `documentEnv` call exists. The real \"is everything\n * documented?\" check, and every artifact this data drives (the docs\n * artifact's ownership matrix, dependency graph, lifecycle report, and\n * security review; `.env.example`'s comments), runs entirely inside\n * {@link build.generateEnvManifest}'s static analysis -- this function's only job at\n * runtime is to exist as a safe, harmless marker the AST parser can find,\n * and to give you type-checked argument shapes while writing it.\n *\n * `S` is inferred from `schema`, never written out by hand -- pass the\n * schema object literal (or a `const`-inferred reference to it) directly for\n * the strongest inference; an explicitly-widened `schema: EnvSchema`\n * annotation loses the per-key literal type and falls back to accepting any\n * string key in `docs.variables`, same as before this generic existed.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function documentEnv<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvSchema",
+              "canonicalReference": "@maverickcer/env-cap!EnvSchema:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">(schema: "
+            },
+            {
+              "kind": "Content",
+              "text": "S"
+            },
+            {
+              "kind": "Content",
+              "text": ", docs: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ContractDocs",
+              "canonicalReference": "@maverickcer/env-cap!ContractDocs:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<S>"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/document.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 8,
+            "endIndex": 9
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "schema",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "docs",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 7
+              },
+              "isOptional": false
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "documentEnv"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@maverickcer/env-cap!EnvContract:type",
+          "docComment": "/**\n * The object returned by {@link createEnv}. Each key is a lazily-resolved getter backed by the\n * runtime cache -- there is no global env object, only per-feature contracts like this one.\n *\n * @remarks\n *\n * `toString()` is intersected in (rather than left to the ambient `Object.prototype`\n * declaration) because `create.ts` genuinely overrides it to return a redacted\n * `EnvContract(\"name\")` representation, never resolved values -- see ADR 0006. Declaring\n * it here means the type accurately describes what calling `String(contract)` returns.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type EnvContract<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvSchema",
+              "canonicalReference": "@maverickcer/env-cap!EnvSchema:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly [K in keyof S]: "
+            },
+            {
+              "kind": "Reference",
+              "text": "InferEnvValue",
+              "canonicalReference": "@maverickcer/env-cap!InferEnvValue:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<S[K]>;\n} & {\n    toString(): string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "EnvContract",
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!EnvDefinition:interface",
+          "docComment": "/**\n * Configuration for one schema entry: how to default, process, and validate a single raw environment value.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface EnvDefinition<T> "
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "EnvDefinition",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!EnvDefinition#context:member",
+              "docComment": "/**\n * The validation context this variable belongs to (e.g. `\"server\"`,\n * `\"production\"`, `\"worker\"`) -- entirely application-defined; env-cap\n * never interprets, detects, or infers this string. Omitted (the\n * default) means the variable participates in every {@link validateEnv}\n * run regardless of `activeContexts`. A variable belongs to at most one\n * validation context -- see ADR 0022 for why this is a single `string`\n * and not `string[]`; do not widen it to an array to let one variable\n * join multiple contexts, that reintroduces the AND/OR ambiguity this\n * design deliberately avoids.\n *\n * @remarks\n *\n * Validation contexts are a participation filter only -- not\n * authentication, authorization, or a bundling/security boundary. See\n * ADR 0022's Formal Invariants.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "context?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "context",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!EnvDefinition#default:member",
+              "docComment": "/**\n * Literal fallback or lazy thunk used when the raw value is `undefined`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "default?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DefaultValue",
+                  "canonicalReference": "@maverickcer/env-cap!DefaultValue:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "default",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!EnvDefinition#processor:member",
+              "docComment": "/**\n * Converts the raw (or defaulted) value to `T`; passed through unprocessed when omitted.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "processor?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Processor",
+                  "canonicalReference": "@maverickcer/env-cap!Processor:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<T>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "processor",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!EnvDefinition#validator:member",
+              "docComment": "/**\n * Rejects an invalid processed value; return `true` to accept it.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "validator?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Validator",
+                  "canonicalReference": "@maverickcer/env-cap!Validator:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<T>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "validator",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "@maverickcer/env-cap!EnvNotReadyError:class",
+          "docComment": "/**\n * Thrown when a contract's value is accessed via property access before\n * {@link validateEnv} has completed successfully for it.\n *\n * @remarks\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling --\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class EnvNotReadyError extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Error",
+              "canonicalReference": "!Error:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/runtime/errors.ts",
+          "releaseTag": "Public",
+          "isAbstract": false,
+          "name": "EnvNotReadyError",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@maverickcer/env-cap!EnvNotReadyError:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `EnvNotReadyError` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(contractName: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", key: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "contractName",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "key",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  },
+                  "isOptional": false
+                }
+              ]
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@maverickcer/env-cap!EnvNotReadyError#code:member",
+              "docComment": "/**\n * Stable discriminant for programmatic handling; always `\"ENV_NOT_READY\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly code = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ENV_NOT_READY\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "code",
+              "propertyTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@maverickcer/env-cap!EnvSchema:type",
+          "docComment": "/**\n * A schema is a map of variable name -> definition.\n *\n * @remarks\n *\n * `EnvDefinition<any>` is used only as the generic *bound* here (never surfaced to consumers):\n * TypeScript infers a precise, per-key literal type for `S` from the object passed to\n * {@link createEnv}, so the resolved contract type (see {@link InferEnvValue}) stays fully\n * strict. This is the same variance workaround used by schema libraries like zod/trpc for\n * heterogeneous generic maps.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type EnvSchema = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvDefinition",
+              "canonicalReference": "@maverickcer/env-cap!EnvDefinition:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<any>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "EnvSchema",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 5
+          }
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "@maverickcer/env-cap!EnvValidationError:class",
+          "docComment": "/**\n * Thrown by {@link validateEnv} when one or more variables fail processing or\n * validation. Aggregates every failure across every contract in the batch --\n * the caller sees the whole picture in one error, not one-at-a-time.\n *\n * @remarks\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling --\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class EnvValidationError extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Error",
+              "canonicalReference": "!Error:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/runtime/errors.ts",
+          "releaseTag": "Public",
+          "isAbstract": false,
+          "name": "EnvValidationError",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@maverickcer/env-cap!EnvValidationError:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `EnvValidationError` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(failures: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VariableFailure",
+                  "canonicalReference": "@maverickcer/env-cap!VariableFailure:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "failures",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 4
+                  },
+                  "isOptional": false
+                }
+              ]
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@maverickcer/env-cap!EnvValidationError#code:member",
+              "docComment": "/**\n * Stable discriminant for programmatic handling; always `\"ENV_VALIDATION_FAILED\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly code = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"ENV_VALIDATION_FAILED\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "code",
+              "propertyTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@maverickcer/env-cap!EnvValidationError#failures:member",
+              "docComment": "/**\n * Every variable failure across every contract in the batch.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly failures: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VariableFailure",
+                  "canonicalReference": "@maverickcer/env-cap!VariableFailure:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "failures",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@maverickcer/env-cap!InferEnvValue:type",
+          "docComment": "/**\n * Resolves the application-facing type for one schema entry: processor return type, else the\n * default's type, else `string` (the shape raw process.env values naturally arrive in).\n *\n * @remarks\n *\n * Same documented generic-bound variance workaround as {@link EnvSchema} above --\n * `any` here is never surfaced to a consumer's inferred type.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type InferEnvValue<D extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "EnvDefinition",
+              "canonicalReference": "@maverickcer/env-cap!EnvDefinition:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<any>"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "D extends {\n    processor: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Processor",
+              "canonicalReference": "@maverickcer/env-cap!Processor:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<infer P>;\n} ? P : ["
+            },
+            {
+              "kind": "Reference",
+              "text": "UnwrapDefault",
+              "canonicalReference": "@maverickcer/env-cap!~UnwrapDefault:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<D>] extends [never] ? string : "
+            },
+            {
+              "kind": "Reference",
+              "text": "UnwrapDefault",
+              "canonicalReference": "@maverickcer/env-cap!~UnwrapDefault:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<D>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "InferEnvValue",
+          "typeParameters": [
+            {
+              "typeParameterName": "D",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 4,
+            "endIndex": 11
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@maverickcer/env-cap!isEnvContract:function(1)",
+          "docComment": "/**\n * Type guard: `true` when `value` was created by `createEnv` (i.e. is a registered contract).\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function isEnvContract(value: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "value",
+              "canonicalReference": "@maverickcer/env-cap!~value"
+            },
+            {
+              "kind": "Content",
+              "text": " is object"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/registry.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 5
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "value",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "isEnvContract"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@maverickcer/env-cap!Processor:type",
+          "docComment": "/**\n * Processes a raw value into a typed, ready-to-use application value. Must not read any other key.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type Processor<T> = "
+            },
+            {
+              "kind": "Content",
+              "text": "(value: unknown) => T"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "Processor",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@maverickcer/env-cap!RawEnv:type",
+          "docComment": "/**\n * The raw, unprocessed source of environment values (e.g. `process.env`, a resolved secrets bag).\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type RawEnv = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Readonly",
+              "canonicalReference": "!Readonly:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, unknown>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "RawEnv",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 5
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@maverickcer/env-cap!resetEnvCache:function(1)",
+          "docComment": "/**\n * Clears cached validation state. Intended for tests and dev tooling (e.g.\n * `beforeEach(() => resetEnvCache())` in a test suite that re-validates with\n * different fixture values per test) -- production applications validate\n * once at startup and should not normally call this.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function resetEnvCache(): "
+            },
+            {
+              "kind": "Content",
+              "text": "void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/reset.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [],
+          "name": "resetEnvCache"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@maverickcer/env-cap!validateEnv:function(1)",
+          "docComment": "/**\n * Validates every variable in every contract in `options.manifest` against\n * `options.values`, then caches the results.\n *\n * @remarks\n *\n * Idempotent: the first successful (or failed) call is authoritative for the life of the\n * process -- later calls return (or re-throw) that same outcome without re-running any\n * processor or validator. Concurrent in-flight calls share one underlying run.\n *\n * @throws\n *\n * {EnvValidationError} If any variable fails processing or validation.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function validateEnv(options: "
+            },
+            {
+              "kind": "Reference",
+              "text": "validateEnvOptions",
+              "canonicalReference": "@maverickcer/env-cap!validateEnvOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "validateEnvResult",
+              "canonicalReference": "@maverickcer/env-cap!validateEnvResult:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/validate.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 7
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "validateEnv"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!validateEnvOptions:interface",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface validateEnvOptions "
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "validateEnvOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!validateEnvOptions#activeContexts:member",
+              "docComment": "/**\n * The validation contexts active for this run (e.g. `[\"server\",\n * \"production\"]`) -- entirely application-defined; env-cap never\n * detects or infers these, the caller always computes and passes them\n * explicitly. A variable whose `context` isn't in this list is skipped\n * entirely (no default/processor/validator runs for it, and it stays in\n * its not-ready state, exactly as if this run had never happened for\n * it) -- see ADR 0022. A variable with no `context` always participates,\n * regardless of what's passed here. Omitted (the default) behaves as an\n * empty list: only variables with no `context` participate.\n *\n * @remarks\n *\n * Not part of the validation cache's identity -- {@link validateEnv}\n * remains one-shot per process exactly as before this option existed. A\n * second call does not re-evaluate `activeContexts`; it returns the\n * first call's result outright. Different active contexts belong to\n * different processes (e.g. a server process and a browser bundle),\n * never to two calls within the same one.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "activeContexts?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "activeContexts",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!validateEnvOptions#manifest:member",
+              "docComment": "/**\n * Every contract to validate -- typically the `contracts` array imported\n * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them\n * in one call: {@link validateEnv} only ever initializes once per process, so\n * a second call returns the first call's cached result without\n * re-running anything, even if it passes a different manifest.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "manifest: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EnvContract",
+                  "canonicalReference": "@maverickcer/env-cap!EnvContract:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<any>[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "manifest",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!validateEnvOptions#values:member",
+              "docComment": "/**\n * The raw source of environment values, e.g. `process.env` or a resolved secrets bag.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "values: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RawEnv",
+                  "canonicalReference": "@maverickcer/env-cap!RawEnv:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "values",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!validateEnvResult:interface",
+          "docComment": "/**\n * Aggregate counts from a completed {@link validateEnv} run.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface validateEnvResult "
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "validateEnvResult",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!validateEnvResult#contractCount:member",
+              "docComment": "/**\n * Number of contracts in the manifest that were validated.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly contractCount: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "contractCount",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!validateEnvResult#variableCount:member",
+              "docComment": "/**\n * Total number of variables validated across all contracts.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly variableCount: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "variableCount",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@maverickcer/env-cap!Validator:type",
+          "docComment": "/**\n * Validates an already-processed value; return `true` when valid, or a human-readable error\n * string when invalid.\n *\n * @remarks\n *\n * Receives the full raw env for conditional validation (e.g. \"required only if X\").\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type Validator<T> = "
+            },
+            {
+              "kind": "Content",
+              "text": "(value: T, rawEnv: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RawEnv",
+              "canonicalReference": "@maverickcer/env-cap!RawEnv:type"
+            },
+            {
+              "kind": "Content",
+              "text": ") => true | string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/runtime/types.ts",
+          "releaseTag": "Public",
+          "name": "Validator",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!VariableDocs:interface",
+          "docComment": "/**\n * Per-variable documentation. Every field is optional and unconstrained on\n * purpose -- there is no required shape, so documenting a variable never\n * fights the type checker, and you can add a field the generator doesn't\n * know about yet without it being rejected.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface VariableDocs "
+            }
+          ],
+          "fileUrlPath": "src/runtime/document.ts",
+          "releaseTag": "Public",
+          "name": "VariableDocs",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#auditRequired:member",
+              "docComment": "/**\n * Documentation-level assertion that this variable's handling must be auditable. Overrides the contract's own `auditRequired` for this key.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "auditRequired?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "auditRequired",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#authenticatorType:member",
+              "docComment": "/**\n * The kind of authenticator/secret this variable holds (e.g. \"api-key\", \"oauth-client-secret\",\n * \"database-password\", \"tls-certificate\") -- feeds the NIST SP 800-53 IA-5 rotation-compliance\n * report's \"authenticator type\" column (IA-5's main statement requires an organization-defined\n * rotation period \"by authenticator type,\" so this is what a generator groups/labels by).\n *\n * @remarks\n *\n * Deliberately an open `string`, not a closed union -- same \"open vocabulary\" pattern as\n * {@link sensitivity}: an org's own authenticator taxonomy is its own, and IA-5 itself never\n * names a fixed set of types either.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "authenticatorType?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "authenticatorType",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#dataResidency:member",
+              "docComment": "/**\n * Where this variable's value is/must be stored (a region, or a permitted set of regions). Overrides the contract's own `dataResidency` for this key.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dataResidency?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "dataResidency",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#deprecated:member",
+              "docComment": "/**\n * Marks this variable as being phased out. Independent of `expiresAt` (a rotation/sunset date) and of the contract-level `active` switch (on/off, not a phase-out signal).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "deprecated?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "deprecated",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#deprecatedReason:member",
+              "docComment": "/**\n * Why this variable is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "deprecatedReason?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "deprecatedReason",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#description:member",
+              "docComment": "/**\n * Human-readable explanation of what this variable is and what it controls.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "description?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "description",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#evidence:member",
+              "docComment": "/**\n * Developer-supplied evidence assertions for this variable -- verified over\n * time, unlike every other field above, which is declared and never\n * verified. Kept structurally separate for exactly that reason; see\n * {@link VariableEvidenceDocs}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "evidence?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VariableEvidenceDocs",
+                  "canonicalReference": "@maverickcer/env-cap!VariableEvidenceDocs:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "evidence",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#expiresAt:member",
+              "docComment": "/**\n * ISO date string (e.g. \"2026-06-01\") -- when this variable's current value stops being valid (a key rotation deadline, a sunset date, etc.).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "expiresAt?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "expiresAt",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#lastRotatedAt:member",
+              "docComment": "/**\n * ISO date string -- the last time this variable's value was actually rotated. Paired with\n * {@link rotationPeriod} to compute rotation compliance. Independent of {@link expiresAt}, which\n * states when the *current* value stops being valid, not when it was last changed -- a value can\n * be freshly rotated and still have a near-term `expiresAt` (a short-lived token), or long overdue\n * for rotation while its `expiresAt` (if any) is still comfortably in the future.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "lastRotatedAt?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "lastRotatedAt",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#legalBasis:member",
+              "docComment": "/**\n * The legal basis this variable's collection/use relies on -- framework-agnostic (e.g. \"user consent,\" \"contractual necessity\"), never a specific statute name. Overrides the contract's own `legalBasis` for this key.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "legalBasis?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "legalBasis",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#metadata:member",
+              "docComment": "/**\n * Structured, unsupported-key documentation -- any primitive or object value, for anything that\n * doesn't warrant its own named field. A previously-supported top-level key belongs in a named\n * field above instead of here once one exists for it.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "metadata?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, unknown>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "metadata",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#owner:member",
+              "docComment": "/**\n * Who owns this variable (a team, a handle, whatever your org uses). Overrides the contract's own `owner` for this key.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "owner?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "owner",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#purpose:member",
+              "docComment": "/**\n * Why this variable's value is collected/used -- a framework-agnostic fact (pairs with `legalBasis`; a specific citation like a GDPR article belongs in `metadata` instead). Overrides the contract's own `purpose` for this key.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "purpose?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "purpose",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#refreshInstructions:member",
+              "docComment": "/**\n * How to get a new value before/when it expires (e.g. \"Rotate in the Stripe dashboard, then redeploy.\").\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "refreshInstructions?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "refreshInstructions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#removeBy:member",
+              "docComment": "/**\n * ISO date string -- by when a deprecated variable must be removed. Only meaningful alongside `deprecated: true`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "removeBy?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "removeBy",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#renamedFrom:member",
+              "docComment": "/**\n * The previous environment variable name this one replaces, if this declaration is the result of a rename. Lets the Change Model correlate a remove+add pair into a single rename entry instead of two unrelated changes.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "renamedFrom?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "renamedFrom",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#required:member",
+              "docComment": "/**\n * Documentation-level assertion that this variable must be set. Independent of how (or whether) a validator actually enforces it.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "required?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "required",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#retention:member",
+              "docComment": "/**\n * Descriptive retention policy (e.g. \"delete after 90 days\"). A policy statement, not a computed value -- unlike `expiresAt`, nothing parses or evaluates this. Overrides the contract's own `retention` for this key.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "retention?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "retention",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#rotationPeriod:member",
+              "docComment": "/**\n * How often this variable's value must be rotated, in organization-defined terms (e.g. \"90\n * days\", \"P90D\", \"6 months\") -- IA-5's own \"organization-defined time period\" per authenticator\n * type (the time-based half of IA-5's two-trigger rotation model). Paired with\n * {@link lastRotatedAt} so a generator can compute whether rotation is actually current, rather\n * than only recording that a period was declared; see `lifecycle-model.ts`'s\n * `computeRotationStatus()` for exactly how the two combine with {@link expiresAt}.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "rotationPeriod?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "rotationPeriod",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#rotationTriggerEvents:member",
+              "docComment": "/**\n * IA-5's event-based rotation triggers that apply to this variable (e.g. \"suspected compromise\",\n * \"personnel change\", \"system update\") -- the event-based half of IA-5's two-trigger rotation\n * model. Structured and additive alongside the existing free-text {@link refreshInstructions}\n * rather than replacing it: this is a list a generator can render as its own column,\n * `refreshInstructions` stays prose (\"how to actually rotate it\"). Presence-only -- env-cap has\n * no way to observe whether a listed event actually occurred, so declaring this never by itself\n * changes a computed rotation-compliance status (see `lifecycle-model.ts`); it only makes the\n * event-based trigger's existence visible in generated output.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "rotationTriggerEvents?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "rotationTriggerEvents",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#sensitivity:member",
+              "docComment": "/**\n * How sensitive this variable's value is. Overrides the contract's own `sensitivity` for this\n * key.\n *\n * @remarks\n *\n * Deliberately an open `string`, not a closed union: an org's own sensitivity vocabulary is its\n * own, and a level env-cap doesn't recognize is always honored, never dropped. The generator\n * still reports a `NONSTANDARD_SENSITIVITY_LEVEL` finding (severity `info`, never blocking) for\n * anything outside `secret`/`credential`/`pii`/`config`, so vocabulary drift stays visible\n * without being enforced.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "sensitivity?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "sensitivity",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableDocs#setupInstructions:member",
+              "docComment": "/**\n * Explicit, actionable instructions for obtaining this variable's value the *first* time --\n * where `refreshInstructions` is \"how to rotate it once you already have one,\" this is \"how to\n * get one at all\" (e.g. \"Create a restricted API key in the Stripe dashboard under Developers ->\n * API keys, scoped to read/write Charges.\"). A named field specifically so this can render as\n * its own labeled line in generated docs, rather than requiring a `metadata.setup`-style\n * convention with no dedicated rendering or type checking.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setupInstructions?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "setupInstructions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!VariableEvidenceDocs:interface",
+          "docComment": "/**\n * Developer-supplied evidence assertions for one variable -- categorically\n * different from every field on {@link VariableDocs}: those are\n * declared-and-never-verified, while `dynamicAccess` is re-checked against\n * reality on every run (fresh / stale / missing). Kept structurally separate,\n * in `VariableDocs.evidence` rather than folded in alongside `description`/\n * `owner`/..., specifically so that different epistemic status is visible in\n * the shape itself and not only in a doc comment. See ADR 0037.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface VariableEvidenceDocs "
+            }
+          ],
+          "fileUrlPath": "src/runtime/document.ts",
+          "releaseTag": "Public",
+          "name": "VariableEvidenceDocs",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableEvidenceDocs#dynamicAccess:member",
+              "docComment": "/**\n * Citation(s) of where this variable is actually read dynamically --\n * somewhere env-cap's own static AST scan can't see (a shell script, a\n * Docker entrypoint, a sibling service). Each entry is a\n * `\"<relative-path>:<line>:<column>\"` citation.\n *\n * @remarks\n *\n * A developer's re-acknowledgment that access happens, never a claim\n * env-cap itself observed anything -- tracked as its own independent fact\n * and never folded into the AST-derived `VariableAccessStatus`. Re-verified\n * every run: a citation whose file no longer exists, or whose content has\n * visibly changed since it was last acknowledged, is flagged rather than\n * trusted forever.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dynamicAccess?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "dynamicAccess",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@maverickcer/env-cap!VariableFailure:interface",
+          "docComment": "/**\n * One variable's processing or validation failure, as recorded by {@link validateEnv}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface VariableFailure "
+            }
+          ],
+          "fileUrlPath": "src/runtime/errors.ts",
+          "releaseTag": "Public",
+          "name": "VariableFailure",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableFailure#contractName:member",
+              "docComment": "/**\n * The declaring contract's `name` (see {@link CreateEnvOptions}).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly contractName: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "contractName",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableFailure#kind:member",
+              "docComment": "/**\n * Which stage produced the failure.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly kind: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"processor\" | \"validator\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "kind",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableFailure#message:member",
+              "docComment": "/**\n * The error message from the developer's own processor/validator, or the thrown error's message.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly message: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "message",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableFailure#source:member",
+              "docComment": "/**\n * `import.meta.url` (or similar) passed to `createEnv`'s `source` option, if any. Falls back to `contractName` when absent.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly source: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "source",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@maverickcer/env-cap!VariableFailure#variable:member",
+              "docComment": "/**\n * The schema key that failed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly variable: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "variable",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        }
+      ]
+    }
+  ]
+}

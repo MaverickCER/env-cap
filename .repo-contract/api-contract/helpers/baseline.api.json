@@ -1,0 +1,690 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.59.3",
+    "schemaVersion": 1011,
+    "oldestForwardsCompatibleVersion": 1001,
+    "tsdocConfig": {
+      "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+      "noStandardTags": true,
+      "tagDefinitions": [
+        {
+          "tagName": "@alpha",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@beta",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@defaultValue",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@decorator",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@deprecated",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@eventProperty",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@example",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@experimental",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@inheritDoc",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@internal",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@label",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@link",
+          "syntaxKind": "inline",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@override",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@packageDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@param",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@privateRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@public",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@readonly",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@remarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@returns",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@sealed",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@see",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@throws",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@typeParam",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@virtual",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@jsx",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxRuntime",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxFrag",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxImportSource",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@betaDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@internalRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@preapproved",
+          "syntaxKind": "modifier"
+        }
+      ],
+      "supportForTags": {
+        "@alpha": true,
+        "@beta": true,
+        "@defaultValue": true,
+        "@decorator": true,
+        "@deprecated": true,
+        "@eventProperty": true,
+        "@example": true,
+        "@experimental": true,
+        "@inheritDoc": true,
+        "@internal": true,
+        "@label": true,
+        "@link": true,
+        "@override": true,
+        "@packageDocumentation": true,
+        "@param": true,
+        "@privateRemarks": true,
+        "@public": true,
+        "@readonly": true,
+        "@remarks": true,
+        "@returns": true,
+        "@sealed": true,
+        "@see": true,
+        "@throws": true,
+        "@typeParam": true,
+        "@virtual": true,
+        "@betaDocumentation": true,
+        "@internalRemarks": true,
+        "@preapproved": true
+      },
+      "reportUnsupportedHtmlElements": false
+    }
+  },
+  "kind": "Package",
+  "canonicalReference": "@maverickcer/env-cap!",
+  "docComment": "",
+  "name": "@maverickcer/env-cap",
+  "preserveMemberOrder": false,
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "@maverickcer/env-cap!",
+      "name": "",
+      "preserveMemberOrder": false,
+      "members": [
+        {
+          "kind": "Variable",
+          "canonicalReference": "@maverickcer/env-cap!processors:var",
+          "docComment": "/**\n * Convenience {@link runtime.Processor} implementations for common coercion\n * patterns (e.g. `processors.toNumber()`).\n *\n * @remarks\n *\n * Naming matches `@maverickcer/data-cap`'s `helpers.processors` -- but these\n * throw with a formatted `Error` message on invalid input, where data-cap's\n * silently return `undefined`. Do not assume the same failure mode when\n * moving between packages.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "processors: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    base64: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "base64",
+              "canonicalReference": "@maverickcer/env-cap!~base64:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    parseJSON: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "parseJSON",
+              "canonicalReference": "@maverickcer/env-cap!~parseJSON:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    split: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "split",
+              "canonicalReference": "@maverickcer/env-cap!~split:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toArray: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toArray",
+              "canonicalReference": "@maverickcer/env-cap!~toArray:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toBigInt: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toBigInt",
+              "canonicalReference": "@maverickcer/env-cap!~toBigInt:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toBoolean: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toBoolean",
+              "canonicalReference": "@maverickcer/env-cap!~toBoolean:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toDate: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toDate",
+              "canonicalReference": "@maverickcer/env-cap!~toDate:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toInteger: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toInteger",
+              "canonicalReference": "@maverickcer/env-cap!~toInteger:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toLowerCase: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toLowerCase",
+              "canonicalReference": "@maverickcer/env-cap!~toLowerCase:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toNumber: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toNumber",
+              "canonicalReference": "@maverickcer/env-cap!~toNumber:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toRegExp: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toRegExp",
+              "canonicalReference": "@maverickcer/env-cap!~toRegExp:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toString: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toString",
+              "canonicalReference": "@maverickcer/env-cap!~toString_2:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toURL: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toURL",
+              "canonicalReference": "@maverickcer/env-cap!~toURL:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    toUpperCase: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "toUpperCase",
+              "canonicalReference": "@maverickcer/env-cap!~toUpperCase:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    trim: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "trim",
+              "canonicalReference": "@maverickcer/env-cap!~trim:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}"
+            }
+          ],
+          "fileUrlPath": "src/helpers/index.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "processors",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 32
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@maverickcer/env-cap!validators:var",
+          "docComment": "/**\n * Convenience {@link runtime.Validator} implementations for common validation patterns (e.g. `validators.range(1, 65535)`).\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "validators: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    after: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "after",
+              "canonicalReference": "@maverickcer/env-cap!~after:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    all: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "all",
+              "canonicalReference": "@maverickcer/env-cap!~all:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    any: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "any",
+              "canonicalReference": "@maverickcer/env-cap!~any:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    before: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "before",
+              "canonicalReference": "@maverickcer/env-cap!~before:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    custom: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "custom",
+              "canonicalReference": "@maverickcer/env-cap!~custom:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    email: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "email",
+              "canonicalReference": "@maverickcer/env-cap!~email:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    endsWith: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "endsWith",
+              "canonicalReference": "@maverickcer/env-cap!~endsWith:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    enum: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "oneOf",
+              "canonicalReference": "@maverickcer/env-cap!~oneOf:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    finite: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "finite",
+              "canonicalReference": "@maverickcer/env-cap!~finite:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    future: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "future",
+              "canonicalReference": "@maverickcer/env-cap!~future:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    includes: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "includes",
+              "canonicalReference": "@maverickcer/env-cap!~includes:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    integer: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "integerValidator",
+              "canonicalReference": "@maverickcer/env-cap!~integer:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    length: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "length",
+              "canonicalReference": "@maverickcer/env-cap!~length_2:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    matches: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "matches",
+              "canonicalReference": "@maverickcer/env-cap!~matches:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    max: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "max",
+              "canonicalReference": "@maverickcer/env-cap!~max:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    maxItems: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "maxItems",
+              "canonicalReference": "@maverickcer/env-cap!~maxItems:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    maxLength: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "maxLength",
+              "canonicalReference": "@maverickcer/env-cap!~maxLength:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    min: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "min",
+              "canonicalReference": "@maverickcer/env-cap!~min:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    minItems: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "minItems",
+              "canonicalReference": "@maverickcer/env-cap!~minItems:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    minLength: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "minLength",
+              "canonicalReference": "@maverickcer/env-cap!~minLength:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    negative: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "negative",
+              "canonicalReference": "@maverickcer/env-cap!~negative:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    not: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "not",
+              "canonicalReference": "@maverickcer/env-cap!~not:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    oneOf: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "oneOf",
+              "canonicalReference": "@maverickcer/env-cap!~oneOf:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    optional: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "optional",
+              "canonicalReference": "@maverickcer/env-cap!~optional:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    past: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "past",
+              "canonicalReference": "@maverickcer/env-cap!~past:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    positive: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "positive",
+              "canonicalReference": "@maverickcer/env-cap!~positive:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    range: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "range",
+              "canonicalReference": "@maverickcer/env-cap!~range:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    refine: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "refine",
+              "canonicalReference": "@maverickcer/env-cap!~refine:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    regex: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "matches",
+              "canonicalReference": "@maverickcer/env-cap!~matches:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    required: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "required",
+              "canonicalReference": "@maverickcer/env-cap!~required:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    safeInteger: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "safeInteger",
+              "canonicalReference": "@maverickcer/env-cap!~safeInteger:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    unique: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "unique",
+              "canonicalReference": "@maverickcer/env-cap!~unique:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    url: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "urlValidator",
+              "canonicalReference": "@maverickcer/env-cap!~url:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    uuid: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "uuid",
+              "canonicalReference": "@maverickcer/env-cap!~uuid:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    uuidVersion: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "uuidVersion",
+              "canonicalReference": "@maverickcer/env-cap!~uuidVersion:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}"
+            }
+          ],
+          "fileUrlPath": "src/helpers/index.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "validators",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 72
+          }
+        }
+      ]
+    }
+  ]
+}
