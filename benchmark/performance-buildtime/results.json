@@ -29,9 +29,9 @@
       "gcEnabled": true
     },
     "timing": {
-      "startedAtUtc": "2026-09-30T01:06:46.302Z",
-      "finishedAtUtc": "2026-09-30T01:07:53.881Z",
-      "totalSuiteDurationMs": 67579
+      "startedAtUtc": "2026-09-30T09:28:49.881Z",
+      "finishedAtUtc": "2026-09-30T09:30:11.356Z",
+      "totalSuiteDurationMs": 81475
     },
     "generation": {
       "fixtureSeed": "deterministic-index-v1",
@@ -44,7 +44,7 @@
       "envCapVersion": "0.4.0"
     },
     "git": {
-      "gitCommit": "acfdc580ccef5ecbbc51feb0f3376dd0b68352f8",
+      "gitCommit": "e8b1f56b0ea7d76d0d248d555d20ab8e0f59bf09",
       "gitBranch": "feat/nist-ia5-rotation-log",
       "gitDirty": true
     },
@@ -159,22 +159,22 @@
             "variables": 100
           },
           "fixtureHash": "sha256:8f226868e5d25bd083576c35d1ab416f21c15eef8b5ea4b9ca51be6c671fe607",
-          "fixtureGenerationMs": 4,
+          "fixtureGenerationMs": 5,
           "totalMs": {
-            "minMs": 43.984895999999935,
-            "medianMs": 58.491431999999804,
-            "p95Ms": 62.67084599999998,
-            "maxMs": 62.91867699999966,
-            "stdDevMs": 3.7931923986427494,
-            "iterations": 24,
+            "minMs": 51.61169199999995,
+            "medianMs": 71.35998199999995,
+            "p95Ms": 80.2178570000001,
+            "maxMs": 80.2178570000001,
+            "stdDevMs": 6.406482608139253,
+            "iterations": 20,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 0.6428630000000339,
-            "medianMs": 1.29578199999969,
-            "p95Ms": 1.5114520000001903,
-            "maxMs": 3.5964930000000095,
-            "stdDevMs": 0.5005324828183013,
+            "minMs": 1.5435829999996713,
+            "medianMs": 1.8097060000000056,
+            "p95Ms": 3.9185959999999795,
+            "maxMs": 4.38488499999994,
+            "stdDevMs": 0.6259034628616914,
             "iterations": 30,
             "warmupIterations": 3
           },
@@ -192,22 +192,22 @@
             "variables": 1000
           },
           "fixtureHash": "sha256:49e74d1dfc80d977b126fb9cdd2889820b908a69b661117758421fe8bdce9661",
-          "fixtureGenerationMs": 28,
+          "fixtureGenerationMs": 31,
           "totalMs": {
-            "minMs": 318.1439280000004,
-            "medianMs": 329.7113669999999,
-            "p95Ms": 414.2816780000003,
-            "maxMs": 414.2816780000003,
-            "stdDevMs": 37.97416833751209,
+            "minMs": 353.21804299999985,
+            "medianMs": 371.3225059999995,
+            "p95Ms": 380.4987060000003,
+            "maxMs": 380.4987060000003,
+            "stdDevMs": 11.337924129876281,
             "iterations": 5,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 4.748822000000473,
-            "medianMs": 5.853831000000355,
-            "p95Ms": 6.832005999999637,
-            "maxMs": 6.852171000000453,
-            "stdDevMs": 0.6143690469413475,
+            "minMs": 6.2377950000000055,
+            "medianMs": 7.115912999999637,
+            "p95Ms": 8.475013999999646,
+            "maxMs": 8.55615300000045,
+            "stdDevMs": 0.6635709019806618,
             "iterations": 30,
             "warmupIterations": 3
           },
@@ -225,23 +225,23 @@
             "variables": 8000
           },
           "fixtureHash": "sha256:2908c366d38dbd9169cf5d35e5ef957abc7d1068df891c1429101513123d2735",
-          "fixtureGenerationMs": 147,
+          "fixtureGenerationMs": 201,
           "totalMs": {
-            "minMs": 2843.2660080000023,
-            "medianMs": 2875.2546970000003,
-            "p95Ms": 2909.0555730000015,
-            "maxMs": 2909.0555730000015,
-            "stdDevMs": 22.236009797218195,
+            "minMs": 3603.814258999999,
+            "medianMs": 3625.2130959999995,
+            "p95Ms": 3692.3242009999994,
+            "maxMs": 3692.3242009999994,
+            "stdDevMs": 36.364996042676665,
             "iterations": 5,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 34.81742200000008,
-            "medianMs": 39.596825000000536,
-            "p95Ms": 44.20002400000158,
-            "maxMs": 45.2942550000007,
-            "stdDevMs": 3.0702523489097757,
-            "iterations": 30,
+            "minMs": 43.569054999999935,
+            "medianMs": 48.79747800000041,
+            "p95Ms": 56.439061000004585,
+            "maxMs": 56.99013600000035,
+            "stdDevMs": 4.035812835046148,
+            "iterations": 27,
             "warmupIterations": 3
           },
           "outputBytes": {
@@ -258,22 +258,22 @@
             "variables": 4025
           },
           "fixtureHash": "sha256:d86db50b6d24f13b1b48628e9921132bf1d2d7e870b84c308083644e2ac5e168",
-          "fixtureGenerationMs": 369,
+          "fixtureGenerationMs": 68,
           "totalMs": {
-            "minMs": 864.3469410000034,
-            "medianMs": 879.633378999999,
-            "p95Ms": 883.2653799999971,
-            "maxMs": 883.2653799999971,
-            "stdDevMs": 6.6603835835981595,
+            "minMs": 1074.574529999998,
+            "medianMs": 1118.505670999999,
+            "p95Ms": 1133.1279119999963,
+            "maxMs": 1133.1279119999963,
+            "stdDevMs": 20.767488428632745,
             "iterations": 5,
             "warmupIterations": 3
           },
           "discoveryMs": {
-            "minMs": 10.802263999998104,
-            "medianMs": 12.599748000000545,
-            "p95Ms": 14.125099000004411,
-            "maxMs": 14.91319300000032,
-            "stdDevMs": 0.9520441336515976,
+            "minMs": 14.168471000004502,
+            "medianMs": 18.378002000004926,
+            "p95Ms": 20.350123999996867,
+            "maxMs": 20.35677399999986,
+            "stdDevMs": 1.8698080699395658,
             "iterations": 30,
             "warmupIterations": 3
           },
@@ -295,13 +295,13 @@
             "variables": 100
           },
           "fixtureHash": "sha256:8f226868e5d25bd083576c35d1ab416f21c15eef8b5ea4b9ca51be6c671fe607",
-          "fixtureGenerationMs": 4,
+          "fixtureGenerationMs": 5,
           "durationMs": {
-            "minMs": 0.7465060000031372,
-            "medianMs": 1.3295710000020335,
-            "p95Ms": 1.7518770000024233,
-            "maxMs": 1.8298129999966477,
-            "stdDevMs": 0.194997067929496,
+            "minMs": 0.9361150000040652,
+            "medianMs": 1.5604679999960354,
+            "p95Ms": 2.0196470000009867,
+            "maxMs": 3.6036410000015167,
+            "stdDevMs": 0.4004653264188164,
             "iterations": 30,
             "warmupIterations": 3
           }
@@ -314,13 +314,13 @@
             "variables": 1000
           },
           "fixtureHash": "sha256:49e74d1dfc80d977b126fb9cdd2889820b908a69b661117758421fe8bdce9661",
-          "fixtureGenerationMs": 28,
+          "fixtureGenerationMs": 31,
           "durationMs": {
-            "minMs": 4.657744999996794,
-            "medianMs": 5.671327000003657,
-            "p95Ms": 6.853090000004158,
-            "maxMs": 9.16992300000129,
-            "stdDevMs": 0.8341369189631905,
+            "minMs": 6.281060000001162,
+            "medianMs": 7.847868000004382,
+            "p95Ms": 8.269250999997894,
+            "maxMs": 8.768700000000536,
+            "stdDevMs": 0.6048416475605971,
             "iterations": 30,
             "warmupIterations": 3
           }
@@ -333,14 +333,14 @@
             "variables": 8000
           },
           "fixtureHash": "sha256:2908c366d38dbd9169cf5d35e5ef957abc7d1068df891c1429101513123d2735",
-          "fixtureGenerationMs": 147,
+          "fixtureGenerationMs": 201,
           "durationMs": {
-            "minMs": 34.50278799999796,
-            "medianMs": 38.38803799999732,
-            "p95Ms": 42.897241999999096,
-            "maxMs": 46.41252400000667,
-            "stdDevMs": 2.584395513638811,
-            "iterations": 30,
+            "minMs": 44.94011899999896,
+            "medianMs": 51.367686999998114,
+            "p95Ms": 57.00988099999813,
+            "maxMs": 57.58536200000526,
+            "stdDevMs": 4.044454698411694,
+            "iterations": 26,
             "warmupIterations": 3
           }
         },
@@ -352,13 +352,13 @@
             "variables": 4025
           },
           "fixtureHash": "sha256:d86db50b6d24f13b1b48628e9921132bf1d2d7e870b84c308083644e2ac5e168",
-          "fixtureGenerationMs": 369,
+          "fixtureGenerationMs": 68,
           "durationMs": {
-            "minMs": 10.983422999997856,
-            "medianMs": 13.744887000000745,
-            "p95Ms": 14.974734000003082,
-            "maxMs": 17.720815000000584,
-            "stdDevMs": 1.3365714448107566,
+            "minMs": 14.568366999999853,
+            "medianMs": 16.34290200000396,
+            "p95Ms": 19.223997999994026,
+            "maxMs": 19.425773000002664,
+            "stdDevMs": 1.4402082498556503,
             "iterations": 30,
             "warmupIterations": 3
           }
@@ -376,24 +376,24 @@
           },
           "fixtureHash": "sha256:49e74d1dfc80d977b126fb9cdd2889820b908a69b661117758421fe8bdce9661",
           "standaloneMs": {
-            "minMs": 359.45649499999854,
-            "medianMs": 360.9703940000036,
-            "p95Ms": 371.7579919999989,
-            "maxMs": 371.7579919999989,
-            "stdDevMs": 5.303458155682574,
+            "minMs": 386.2491270000028,
+            "medianMs": 440.1933940000017,
+            "p95Ms": 455.81483899999876,
+            "maxMs": 455.81483899999876,
+            "stdDevMs": 28.894691237810083,
             "iterations": 5,
             "warmupIterations": 3
           },
           "combinedMs": {
-            "minMs": 275.4431409999961,
-            "medianMs": 290.7439499999964,
-            "p95Ms": 304.7934800000003,
-            "maxMs": 304.7934800000003,
-            "stdDevMs": 8.63670204602031,
-            "iterations": 6,
+            "minMs": 344.0665420000005,
+            "medianMs": 351.11498500000016,
+            "p95Ms": 377.709861000003,
+            "maxMs": 377.709861000003,
+            "stdDevMs": 11.59903974507019,
+            "iterations": 5,
             "warmupIterations": 3
           },
-          "savingsPercent": 19.45
+          "savingsPercent": 20.24
         }
       }
     },
@@ -407,22 +407,22 @@
             "variables": 1000
           },
           "minimalDocsMs": {
-            "minMs": 128.54928800000198,
-            "medianMs": 135.16395300000295,
-            "p95Ms": 148.14314100000047,
-            "maxMs": 148.14314100000047,
-            "stdDevMs": 5.258284212966314,
-            "iterations": 11,
+            "minMs": 164.26793099999486,
+            "medianMs": 170.30113600000186,
+            "p95Ms": 187.73120899999776,
+            "maxMs": 187.73120899999776,
+            "stdDevMs": 7.008219224758689,
+            "iterations": 9,
             "warmupIterations": 3
           },
           "minimalDocsBytes": 732533,
           "heavyDocsMs": {
-            "minMs": 150.59072600000218,
-            "medianMs": 159.22137700000167,
-            "p95Ms": 166.08105500000238,
-            "maxMs": 166.08105500000238,
-            "stdDevMs": 3.809209996488522,
-            "iterations": 10,
+            "minMs": 185.18120199999976,
+            "medianMs": 206.6922640000048,
+            "p95Ms": 237.33490499999607,
+            "maxMs": 237.33490499999607,
+            "stdDevMs": 13.810559734553864,
+            "iterations": 8,
             "warmupIterations": 3
           },
           "heavyDocsBytes": 1611423
@@ -441,41 +441,41 @@
           "fixtureHash": "sha256:2908c366d38dbd9169cf5d35e5ef957abc7d1068df891c1429101513123d2735",
           "full": {
             "totalMs": {
-              "minMs": 1252.070620999999,
-              "medianMs": 1321.4675820000048,
-              "p95Ms": 1355.065300999995,
-              "maxMs": 1355.065300999995,
-              "stdDevMs": 34.935321964512895,
+              "minMs": 1586.4519140000048,
+              "medianMs": 1656.9535599999945,
+              "p95Ms": 1711.0684820000024,
+              "maxMs": 1711.0684820000024,
+              "stdDevMs": 48.96987671623919,
               "iterations": 5,
               "warmupIterations": 3
             },
             "discoveryMs": {
-              "minMs": 35.22847499999625,
-              "medianMs": 39.20689400000265,
-              "p95Ms": 43.76804699999775,
-              "maxMs": 44.931031000000075,
-              "stdDevMs": 2.569450822595592,
-              "iterations": 30,
+              "minMs": 43.92302900001232,
+              "medianMs": 52.018341999995755,
+              "p95Ms": 57.34146900000633,
+              "maxMs": 60.550371000004816,
+              "stdDevMs": 4.710539824644206,
+              "iterations": 26,
               "warmupIterations": 3
             }
           },
           "scoped": {
             "totalMs": {
-              "minMs": 39.394226999997045,
-              "medianMs": 44.047091000000364,
-              "p95Ms": 48.06110199999239,
-              "maxMs": 49.86371399999916,
-              "stdDevMs": 2.6140308420654734,
-              "iterations": 30,
+              "minMs": 49.5189790000004,
+              "medianMs": 54.88770300000033,
+              "p95Ms": 60.42868100000487,
+              "maxMs": 60.64281300001312,
+              "stdDevMs": 3.1714993190696212,
+              "iterations": 25,
               "warmupIterations": 3
             },
             "discoveryMs": {
-              "minMs": 32.8949649999995,
-              "medianMs": 35.845570000004955,
-              "p95Ms": 40.26483200000075,
-              "maxMs": 41.94707199999539,
-              "stdDevMs": 2.3779832584173177,
-              "iterations": 30,
+              "minMs": 42.02210699999705,
+              "medianMs": 48.29528299999947,
+              "p95Ms": 53.64161900000181,
+              "maxMs": 56.75376399999368,
+              "stdDevMs": 3.865376566698325,
+              "iterations": 28,
               "warmupIterations": 3
             }
           }
@@ -492,7 +492,7 @@
             "contractsGenerated": 3,
             "parseWarnings": 1
           },
-          "durationMs": 4,
+          "durationMs": 5,
           "parseWarnings": [
             {
               "file": "invalid/env.schema.ts",
