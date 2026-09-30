@@ -720,6 +720,51 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-09-30T10:07:21.621Z",
+      "gitCommit": "75b95639cdd4acfd8c13758ed332f22584d1ab6f",
+      "envCapVersion": "0.4.0",
+      "benchmarkSuiteVersion": 1,
+      "runner": "GitHub Actions",
+      "measurements": {
+        "artifacts": {
+          "baseline": {
+            "medianMs": 70.84941299999991,
+            "variablesPerSecond": 1411.44
+          },
+          "stress": {
+            "medianMs": 374.1539809999995,
+            "variablesPerSecond": 2672.7
+          },
+          "extreme": {
+            "medianMs": 3630.2735439999997,
+            "variablesPerSecond": 2203.69
+          },
+          "enterprise": {
+            "medianMs": 1107.3074200000046,
+            "variablesPerSecond": 3634.94
+          }
+        },
+        "discovery": {
+          "baseline": {
+            "medianMs": 1.6768530000044848,
+            "variablesPerSecond": 59635.52
+          },
+          "stress": {
+            "medianMs": 6.855709999996179,
+            "variablesPerSecond": 145863.81
+          },
+          "extreme": {
+            "medianMs": 48.311078999999154,
+            "variablesPerSecond": 165593.49
+          },
+          "enterprise": {
+            "medianMs": 16.065145000000484,
+            "variablesPerSecond": 250542.4
+          }
+        }
+      }
     }
   ]
 }
