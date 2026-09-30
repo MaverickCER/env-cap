@@ -1,5 +1,5 @@
 {
-  "historySchemaVersion": 1,
+  "historySchemaVersion": 2,
   "entries": [
     {
       "timestamp": "2026-09-27T00:56:57.976Z",
@@ -762,6 +762,87 @@
           "enterprise": {
             "medianMs": 16.065145000000484,
             "variablesPerSecond": 250542.4
+          }
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-30T14:02:14.552Z",
+      "gitCommit": "e84fa82c4f97b75b50731cbfda5aeba4f22ea566",
+      "runner": "GitHub Actions",
+      "versions": {
+        "benchmarkSchemaVersion": 1,
+        "benchmarkSuiteVersion": 1,
+        "benchmarkToolVersion": "1.0.0",
+        "envCapVersion": "0.4.0"
+      },
+      "measurements": {
+        "artifacts": {
+          "baseline": {
+            "medianMs": 75.31871300000012,
+            "inputs": {
+              "contracts": 10,
+              "variables": 100
+            },
+            "unitsPerSecond": 1460.46
+          },
+          "stress": {
+            "medianMs": 381.7217389999996,
+            "inputs": {
+              "contracts": 100,
+              "variables": 1000
+            },
+            "unitsPerSecond": 2881.68
+          },
+          "extreme": {
+            "medianMs": 3812.784824999999,
+            "inputs": {
+              "contracts": 800,
+              "variables": 8000
+            },
+            "unitsPerSecond": 2308.02
+          },
+          "enterprise": {
+            "medianMs": 1195.500924,
+            "inputs": {
+              "contracts": 250,
+              "variables": 4025
+            },
+            "unitsPerSecond": 3575.91
+          }
+        },
+        "discovery": {
+          "baseline": {
+            "medianMs": 1.8984829999972135,
+            "inputs": {
+              "contracts": 10,
+              "variables": 100
+            },
+            "unitsPerSecond": 57941
+          },
+          "stress": {
+            "medianMs": 8.394152000000759,
+            "inputs": {
+              "contracts": 100,
+              "variables": 1000
+            },
+            "unitsPerSecond": 131043.61
+          },
+          "extreme": {
+            "medianMs": 63.145494000003964,
+            "inputs": {
+              "contracts": 800,
+              "variables": 8000
+            },
+            "unitsPerSecond": 139360.7
+          },
+          "enterprise": {
+            "medianMs": 20.545185000002675,
+            "inputs": {
+              "contracts": 250,
+              "variables": 4025
+            },
+            "unitsPerSecond": 208077.95
           }
         }
       }
