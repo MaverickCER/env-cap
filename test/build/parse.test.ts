@@ -613,6 +613,10 @@ describe("extractContractDocs", () => {
             sensitivity: "secret",
             expiresAt: "2026-06-01",
             refreshInstructions: "Rotate in the RDS console.",
+            authenticatorType: "database-credential",
+            rotationPeriod: "90 days",
+            lastRotatedAt: "2026-03-01",
+            rotationTriggerEvents: ["suspected compromise", "personnel change"],
             setupInstructions: "Provision a Postgres instance and paste its connection string.",
             required: true,
             deprecated: true,
@@ -657,6 +661,10 @@ describe("extractContractDocs", () => {
     expect(dbUrl.sensitivity).toBe("secret")
     expect(dbUrl.expiresAt).toBe("2026-06-01")
     expect(dbUrl.refreshInstructions).toBe("Rotate in the RDS console.")
+    expect(dbUrl.authenticatorType).toBe("database-credential")
+    expect(dbUrl.rotationPeriod).toBe("90 days")
+    expect(dbUrl.lastRotatedAt).toBe("2026-03-01")
+    expect(dbUrl.rotationTriggerEvents).toEqual(["suspected compromise", "personnel change"])
     expect(dbUrl.setupInstructions).toBe(
       "Provision a Postgres instance and paste its connection string.",
     )
@@ -672,6 +680,64 @@ describe("extractContractDocs", () => {
     expect(dbUrl.auditRequired).toBe(true)
     expect(dbUrl.metadata).toEqual({ setup: "Ask #data-platform for a connection string." })
     expect(dbUrl.evidence?.dynamicAccess).toEqual(["scripts/migrate.sh:12:4"])
+  })
+
+  it("rejects rotationTriggerEvents when it's an array with a non-string element, unlike a well-formed string array", async () => {
+    const warnings: { file: string; message: string }[] = []
+    const docs = extractContractDocs(
+      objectLiteral(`{
+        variables: {
+          DATABASE_URL: {
+            rotationTriggerEvents: ["suspected compromise", 123],
+          },
+        },
+      }`),
+      "/repo/x.ts",
+      "postgres",
+      warnings,
+    )
+    const dbUrl = docs.variables.get("DATABASE_URL")!
+    // The whole field is dropped, not just the bad element -- `rotationTriggerEvents` isn't
+    // per-entry-validated the way `evidence.dynamicAccess` is (there's no "malformed citation"
+    // concept for a free-text event name), so a single wrong-typed entry invalidates the array.
+    expect(dbUrl.rotationTriggerEvents).toBeUndefined()
+  })
+
+  it("does not mistake a later string-array field (dataResidency) for rotationTriggerEvents -- each field's own fieldName check is independently load-bearing", async () => {
+    const warnings: { file: string; message: string }[] = []
+    const docs = extractContractDocs(
+      objectLiteral(`{
+        variables: {
+          DATABASE_URL: {
+            dataResidency: ["EU", "US"],
+          },
+        },
+      }`),
+      "/repo/x.ts",
+      "postgres",
+      warnings,
+    )
+    const dbUrl = docs.variables.get("DATABASE_URL")!
+    expect(dbUrl.dataResidency).toEqual(["EU", "US"])
+    expect(dbUrl.rotationTriggerEvents).toBeUndefined()
+  })
+
+  it("accepts an empty rotationTriggerEvents array as well-formed", async () => {
+    const warnings: { file: string; message: string }[] = []
+    const docs = extractContractDocs(
+      objectLiteral(`{
+        variables: {
+          DATABASE_URL: {
+            rotationTriggerEvents: [],
+          },
+        },
+      }`),
+      "/repo/x.ts",
+      "postgres",
+      warnings,
+    )
+    const dbUrl = docs.variables.get("DATABASE_URL")!
+    expect(dbUrl.rotationTriggerEvents).toEqual([])
   })
 
   it("keeps well-formed evidence.dynamicAccess citations and drops malformed ones with a warning, per entry", async () => {
@@ -1146,6 +1212,10 @@ describe("extractContractDocs", () => {
             sensitivity: 123,
             expiresAt: 123,
             refreshInstructions: 123,
+            authenticatorType: 123,
+            rotationPeriod: 123,
+            lastRotatedAt: 123,
+            rotationTriggerEvents: 123,
             setupInstructions: 123,
             required: 123,
             deprecated: "yes",
@@ -1172,6 +1242,10 @@ describe("extractContractDocs", () => {
     expect(dbUrl.sensitivity).toBeUndefined()
     expect(dbUrl.expiresAt).toBeUndefined()
     expect(dbUrl.refreshInstructions).toBeUndefined()
+    expect(dbUrl.authenticatorType).toBeUndefined()
+    expect(dbUrl.rotationPeriod).toBeUndefined()
+    expect(dbUrl.lastRotatedAt).toBeUndefined()
+    expect(dbUrl.rotationTriggerEvents).toBeUndefined()
     expect(dbUrl.setupInstructions).toBeUndefined()
     expect(dbUrl.deprecated).toBeUndefined()
     expect(dbUrl.deprecatedReason).toBeUndefined()

@@ -511,7 +511,7 @@ describe("generateEnvArtifacts", () => {
     expect(result.evidence.provenance.toolVersion.length).toBeGreaterThan(0)
   })
 
-  it("a link-time parse warning reaches both the manifest and docs results' parseWarnings", async () => {
+  it("a link-time parse warning reaches the manifest, docs, AND usage results' parseWarnings", async () => {
     await write(
       "features/unresolvable/env.schema.ts",
       `export const dynamicEnv = createEnv(someFactory(), { name: "dynamic" });`,
@@ -523,6 +523,11 @@ describe("generateEnvArtifacts", () => {
       include: ["features/payments/**/env.schema.ts", "features/unresolvable/**/env.schema.ts"],
       manifest: { location: "src/generated/warning.manifest.ts" },
       docs: { location: "docs/warning.ENVIRONMENT.md" },
+      // No `report` location -- proves `usage.parseWarnings` is populated
+      // whenever the usage pass runs at all, not only when a report is
+      // actually written to disk (see `usageResult`'s own guard in
+      // generate-env-artifacts.ts, gated on `usageOptions` alone).
+      usage: {},
     })
 
     expect(
@@ -532,6 +537,16 @@ describe("generateEnvArtifacts", () => {
     ).toBe(true)
     expect(
       result.docs!.parseWarnings.some((w) =>
+        w.message.includes("does not pass an inline object literal"),
+      ),
+    ).toBe(true)
+    // `usage.parseWarnings` is sourced from a different array than
+    // manifest/docs' own (`[...packageWarnings, ...tsconfigWarnings,
+    // ...linkResult.warnings]`, passed straight through `computeUsage()` --
+    // see that call site's own doc comment) -- this is the one assertion
+    // that actually exercises it, rather than just the two arrays above.
+    expect(
+      result.usage!.parseWarnings.some((w) =>
         w.message.includes("does not pass an inline object literal"),
       ),
     ).toBe(true)

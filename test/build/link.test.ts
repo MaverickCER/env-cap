@@ -102,7 +102,7 @@ describe("linkFiles", () => {
       "docs/payments.docs.ts",
       `
       import { paymentsSchema } from "../payments/env.schema.js";
-      documentEnv(paymentsSchema, { owner: "payments-team", sensitivity: "credential", deprecated: true, deprecatedReason: "Superseded by payments-v2.", variables: { STRIPE_KEY: { description: "Stripe secret key.", sensitivity: "secret", removeBy: "2027-01-01", renamedFrom: "STRIPE_SECRET" } } });
+      documentEnv(paymentsSchema, { owner: "payments-team", sensitivity: "credential", deprecated: true, deprecatedReason: "Superseded by payments-v2.", variables: { STRIPE_KEY: { description: "Stripe secret key.", sensitivity: "secret", removeBy: "2027-01-01", renamedFrom: "STRIPE_SECRET", authenticatorType: "api-key", rotationPeriod: "90 days", lastRotatedAt: "2026-03-01", rotationTriggerEvents: ["suspected compromise"] } } });
       `,
     )
 
@@ -117,6 +117,12 @@ describe("linkFiles", () => {
     expect(result.contracts[0]?.variables[0]?.sensitivity).toBe("secret")
     expect(result.contracts[0]?.variables[0]?.removeBy).toBe("2027-01-01")
     expect(result.contracts[0]?.variables[0]?.renamedFrom).toBe("STRIPE_SECRET")
+    expect(result.contracts[0]?.variables[0]?.authenticatorType).toBe("api-key")
+    expect(result.contracts[0]?.variables[0]?.rotationPeriod).toBe("90 days")
+    expect(result.contracts[0]?.variables[0]?.lastRotatedAt).toBe("2026-03-01")
+    expect(result.contracts[0]?.variables[0]?.rotationTriggerEvents).toEqual([
+      "suspected compromise",
+    ])
   })
 
   it("resolves a documentEnv() schema reference imported through a tsconfig path alias (ADR 0023, Experimental)", async () => {
@@ -470,6 +476,10 @@ function makeVariable(
     sensitivity: undefined,
     expiresAt: undefined,
     refreshInstructions: undefined,
+    authenticatorType: undefined,
+    rotationPeriod: undefined,
+    lastRotatedAt: undefined,
+    rotationTriggerEvents: undefined,
     setupInstructions: undefined,
     required: undefined,
     deprecated: undefined,

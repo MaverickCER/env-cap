@@ -55,6 +55,46 @@ export interface VariableDocs {
   /** How to get a new value before/when it expires (e.g. "Rotate in the Stripe dashboard, then redeploy."). */
   refreshInstructions?: string
   /**
+   * The kind of authenticator/secret this variable holds (e.g. "api-key", "oauth-client-secret",
+   * "database-password", "tls-certificate") -- feeds the NIST SP 800-53 IA-5 rotation-compliance
+   * report's "authenticator type" column (IA-5's main statement requires an organization-defined
+   * rotation period "by authenticator type," so this is what a generator groups/labels by).
+   *
+   * @remarks
+   * Deliberately an open `string`, not a closed union -- same "open vocabulary" pattern as
+   * {@link sensitivity}: an org's own authenticator taxonomy is its own, and IA-5 itself never
+   * names a fixed set of types either.
+   */
+  authenticatorType?: string
+  /**
+   * How often this variable's value must be rotated, in organization-defined terms (e.g. "90
+   * days", "P90D", "6 months") -- IA-5's own "organization-defined time period" per authenticator
+   * type (the time-based half of IA-5's two-trigger rotation model). Paired with
+   * {@link lastRotatedAt} so a generator can compute whether rotation is actually current, rather
+   * than only recording that a period was declared; see `lifecycle-model.ts`'s
+   * `computeRotationStatus()` for exactly how the two combine with {@link expiresAt}.
+   */
+  rotationPeriod?: string
+  /**
+   * ISO date string -- the last time this variable's value was actually rotated. Paired with
+   * {@link rotationPeriod} to compute rotation compliance. Independent of {@link expiresAt}, which
+   * states when the *current* value stops being valid, not when it was last changed -- a value can
+   * be freshly rotated and still have a near-term `expiresAt` (a short-lived token), or long overdue
+   * for rotation while its `expiresAt` (if any) is still comfortably in the future.
+   */
+  lastRotatedAt?: string
+  /**
+   * IA-5's event-based rotation triggers that apply to this variable (e.g. "suspected compromise",
+   * "personnel change", "system update") -- the event-based half of IA-5's two-trigger rotation
+   * model. Structured and additive alongside the existing free-text {@link refreshInstructions}
+   * rather than replacing it: this is a list a generator can render as its own column,
+   * `refreshInstructions` stays prose ("how to actually rotate it"). Presence-only -- env-cap has
+   * no way to observe whether a listed event actually occurred, so declaring this never by itself
+   * changes a computed rotation-compliance status (see `lifecycle-model.ts`); it only makes the
+   * event-based trigger's existence visible in generated output.
+   */
+  rotationTriggerEvents?: readonly string[]
+  /**
    * Explicit, actionable instructions for obtaining this variable's value the *first* time --
    * where `refreshInstructions` is "how to rotate it once you already have one," this is "how to
    * get one at all" (e.g. "Create a restricted API key in the Stripe dashboard under Developers ->

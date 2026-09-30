@@ -2937,6 +2937,14 @@ readonly auditRequired: boolean | undefined;
 EnvGovernanceFields.auditRequired
 ```
 
+##### authenticatorType
+
+```ts
+readonly authenticatorType: string | undefined;
+```
+
+From the linked `documentEnv()` call's matching `variables` entry, if any.
+
 ##### context
 
 ```ts
@@ -3144,6 +3152,14 @@ The environment variable name (the schema's object key).
 
 [`DiscoveredSchemaVariable`](#discoveredschemavariable).[`key`](#key-4)
 
+##### lastRotatedAt
+
+```ts
+readonly lastRotatedAt: string | undefined;
+```
+
+From the linked `documentEnv()` call's matching `variables` entry, if any.
+
 ##### legalBasis
 
 ```ts
@@ -3260,6 +3276,22 @@ readonly retention: string | undefined;
 EnvGovernanceFields.retention
 ```
 
+##### rotationPeriod
+
+```ts
+readonly rotationPeriod: string | undefined;
+```
+
+From the linked `documentEnv()` call's matching `variables` entry, if any.
+
+##### rotationTriggerEvents
+
+```ts
+readonly rotationTriggerEvents: readonly string[] | undefined;
+```
+
+From the linked `documentEnv()` call's matching `variables` entry, if any.
+
 ##### sensitivity
 
 ```ts
@@ -3315,6 +3347,14 @@ readonly auditRequired: boolean | undefined;
 ```ts
 EnvGovernanceFields.auditRequired
 ```
+
+##### authenticatorType
+
+```ts
+readonly authenticatorType: string | undefined;
+```
+
+Statically-resolved `authenticatorType`, if set to a string literal.
 
 ##### dataResidency
 
@@ -3381,6 +3421,14 @@ readonly key: string;
 ```
 
 The environment variable name this documentation applies to.
+
+##### lastRotatedAt
+
+```ts
+readonly lastRotatedAt: string | undefined;
+```
+
+Statically-resolved `lastRotatedAt`, if set to a string literal.
 
 ##### legalBasis
 
@@ -3473,6 +3521,22 @@ readonly retention: string | undefined;
 ```ts
 EnvGovernanceFields.retention
 ```
+
+##### rotationPeriod
+
+```ts
+readonly rotationPeriod: string | undefined;
+```
+
+Statically-resolved `rotationPeriod`, if set to a string literal.
+
+##### rotationTriggerEvents
+
+```ts
+readonly rotationTriggerEvents: readonly string[] | undefined;
+```
+
+Statically-resolved `rotationTriggerEvents`, if set to an array of string literals.
 
 ##### sensitivity
 
@@ -5274,7 +5338,7 @@ stays the absolute path `renderDocs()` itself expects.
 ##### schemaVersion
 
 ```ts
-readonly schemaVersion: 2;
+readonly schemaVersion: 3;
 ```
 
 ***
@@ -5337,7 +5401,7 @@ See [LifecycleModelVariable.retention](#retention-7).
 readonly variables: readonly LifecycleModelVariable[];
 ```
 
-Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`) -- same "only what's relevant" scope `renderLifecycleReport()` already uses for its rows.
+Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`, `authenticatorType`, `rotationPeriod`, `lastRotatedAt`, `rotationTriggerEvents`) -- same "only what's relevant" scope `renderLifecycleReport()` already uses for its rows.
 
 ***
 
@@ -5350,6 +5414,14 @@ One variable's lifecycle data (expiry, deprecation, rename correlation).
 [ContractModelVariable](#contractmodelvariable) -- this same declared variable's canonical starting point.
 
 #### Properties
+
+##### authenticatorType
+
+```ts
+readonly authenticatorType: string | undefined;
+```
+
+See [runtime.VariableDocs.authenticatorType](runtime.md#authenticatortype).
 
 ##### deprecated
 
@@ -5374,6 +5446,14 @@ readonly expiresAt: string | undefined;
 ```ts
 readonly key: string;
 ```
+
+##### lastRotatedAt
+
+```ts
+readonly lastRotatedAt: string | undefined;
+```
+
+See [runtime.VariableDocs.lastRotatedAt](runtime.md#lastrotatedat).
 
 ##### refreshInstructions
 
@@ -5402,6 +5482,30 @@ readonly retention: string | undefined;
 ```
 
 Descriptive retention policy (e.g. "delete after 90 days") -- a policy statement, never computed or parsed, deliberately independent of `expiresAt`'s actual temporal constraint. See ADR 0035.
+
+##### rotationPeriod
+
+```ts
+readonly rotationPeriod: string | undefined;
+```
+
+See [runtime.VariableDocs.rotationPeriod](runtime.md#rotationperiod).
+
+##### rotationStatus
+
+```ts
+readonly rotationStatus: RotationComplianceStatus;
+```
+
+Computed, not stored -- see [RotationComplianceStatus](#rotationcompliancestatus) and `computeRotationStatus()`.
+
+##### rotationTriggerEvents
+
+```ts
+readonly rotationTriggerEvents: readonly string[] | undefined;
+```
+
+See [runtime.VariableDocs.rotationTriggerEvents](runtime.md#rotationtriggerevents).
 
 ***
 
@@ -6881,6 +6985,22 @@ One contract, referenced by identity only -- see [ContractRef](#contractref) for
 
 ***
 
+### RotationComplianceStatus
+
+```ts
+type RotationComplianceStatus = "compliant" | "overdue" | "expired" | "undeclared";
+```
+
+One variable's computed NIST SP 800-53 IA-5 rotation-compliance status --
+see `computeRotationStatus()` for exactly how it's derived. Always present
+on a `LifecycleModelVariable` (never `undefined`) since a variable with
+literally nothing lifecycle-relevant set never reaches this model at all
+(`hasLifecycleData()` below) -- `"undeclared"` is itself the honest value
+for "reached this model for some other lifecycle reason (e.g. `deprecated`)
+but declares none of the four rotation-specific fields."
+
+***
+
 ### SchemaRef
 
 ```ts
@@ -7103,7 +7223,7 @@ Bump only when a reader could misinterpret the new shape -- same discipline ever
 ### LIFECYCLE\_MODEL\_SCHEMA\_VERSION
 
 ```ts
-const LIFECYCLE_MODEL_SCHEMA_VERSION: 2 = 2;
+const LIFECYCLE_MODEL_SCHEMA_VERSION: 3 = 3;
 ```
 
 Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows.
@@ -7482,6 +7602,67 @@ is the only caller that reads the file itself.
 #### Returns
 
 [`Reconciliation`](#reconciliation)
+
+***
+
+### computeRotationStatus()
+
+```ts
+function computeRotationStatus(variable, now): RotationComplianceStatus;
+```
+
+Computes one variable's NIST SP 800-53 IA-5 rotation-compliance status from its lifecycle facts,
+relative to `now`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `variable` | \{ `authenticatorType`: `string` \| `undefined`; `expiresAt`: `string` \| `undefined`; `lastRotatedAt`: `string` \| `undefined`; `rotationPeriod`: `string` \| `undefined`; `rotationTriggerEvents`: readonly `string`[] \| `undefined`; \} |
+| `variable.authenticatorType` | `string` \| `undefined` |
+| `variable.expiresAt` | `string` \| `undefined` |
+| `variable.lastRotatedAt` | `string` \| `undefined` |
+| `variable.rotationPeriod` | `string` \| `undefined` |
+| `variable.rotationTriggerEvents` | readonly `string`[] \| `undefined` |
+| `now` | `Date` |
+
+#### Returns
+
+[`RotationComplianceStatus`](#rotationcompliancestatus)
+
+#### Remarks
+
+**The judgment call this function makes** (IA-5's main statement itself only says "change or
+refresh authenticators [by an organization-defined period] or when [organization-defined events]
+occur" -- it doesn't define how a *pre-existing* `expiresAt` and a *new* `rotationPeriod`/
+`lastRotatedAt` pair should interact when both are declared on the same variable):
+
+- No rotation field declared at all (`hasRotationData()` false) -> `"undeclared"`. Not an error --
+  most variables aren't authenticators, and saying nothing about rotation is the common, correct
+  case, not a violation to report.
+- `expiresAt` is treated as authoritative and checked first, independent of everything else: if
+  it's a valid date already in the past, the status is `"expired"`, full stop. Rationale: `expiresAt`
+  is a pre-existing, often externally-imposed hard deadline (an API key's own issuer-enforced
+  expiry, a certificate's NotAfter) -- once that date passes, the value has *literally* stopped
+  being valid, which is categorically worse than merely being overdue for an internal policy
+  rotation, and no internal rotation record can retroactively un-expire it.
+- Otherwise, if `rotationPeriod` is declared, it's checked against `lastRotatedAt`: both present
+  and both parseable (see `parseRotationPeriodDays()`) -> compute `lastRotatedAt + rotationPeriod`
+  and compare to `now` (`"overdue"` if that due date has passed, else `"compliant"`). Any other
+  case with `rotationPeriod` declared -- `lastRotatedAt` missing, or either value not statically
+  parseable -- fails closed to `"overdue"`: IA-5 asks for evidence a rotation actually happened on
+  schedule, and a declared obligation that can't be shown to have been met is reported as
+  non-compliant rather than silently passed as compliant.
+- Otherwise (rotation metadata declared -- `authenticatorType` and/or `lastRotatedAt` and/or
+  `rotationTriggerEvents` -- but no `rotationPeriod` and no past-due `expiresAt`) -> `"compliant"`:
+  nothing here states a time-based obligation this variable could be failing to meet.
+
+`rotationTriggerEvents` (the event-based trigger) deliberately never changes the returned status
+by itself: env-cap has no way to observe whether a listed event (a suspected compromise, a
+personnel change, ...) actually occurred, so treating its mere presence as either compliant or
+overdue would be fabricating a signal. It's presence-only evidence that the event-based half of
+IA-5's two-trigger model was at least *declared* -- a generator can and should still surface it,
+just never fold it into this computed status.
 
 ***
 
@@ -8250,6 +8431,50 @@ boundary in this codebase.
 contract whose `file` matches a package-resolved path with that package's
 origin -- purely a lookup; `discoveredFiles` must already include those
 files (merged in by the caller via `mergeLocalAndPackageFiles()`).
+
+***
+
+### parseRotationPeriodDays()
+
+```ts
+function parseRotationPeriodDays(value): number | undefined;
+```
+
+Parses `rotationPeriod` (e.g. "90 days", "P90D", "6 months") into a whole number of days, or
+`undefined` when it isn't in either recognized grammar.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `string` |
+
+#### Returns
+
+`number` \| `undefined`
+
+#### Remarks
+
+`rotationPeriod` is documented (`runtime/document.ts`) as an organization-defined string much
+like `retention` -- but unlike `retention`, which is *never* parsed (a pure policy statement),
+`computeRotationStatus()` genuinely needs a numeric due date to compare against `now`. This
+function is the one place that tension is resolved: it recognizes two small, common, unambiguous
+grammars (a plain "<n> <unit>" -- singular/plural/abbreviated, case-insensitive, with or without
+a space, e.g. "90 days"/"90day"/"12weeks" -- and ISO 8601's calendar-duration form, date
+components only (`PnYnMnD`, no `T`/time-of-day component since a rotation period is never
+meaningfully finer than a day; bare `"P"` is not a duration) rather than attempting to parse
+arbitrary prose ("quarterly", "every other release", ...) -- an org whose policy string doesn't
+fit either grammar still has it stored and rendered verbatim everywhere else, it just can't feed
+a computed due date, and `computeRotationStatus()` fails closed (`"overdue"`) rather than
+guessing at one. Month/year are calendar approximations (30/365 days) -- acceptable for a
+rotation-compliance signal, not precise enough for anything billing/calendar-accurate.
+
+Both patterns are inlined at their `.exec()` call site, deliberately not hoisted to a
+module-level `const` -- same precedent as `source-position.ts`'s `parsePositionCitation()`: a
+module-level regex literal is a load-time-only ("static") mutation target, which Stryker's own
+`perTest` coverage analysis can't attribute to a specific covering test (see this package's own
+`stryker.config.mjs`), while an inline literal is re-evaluated -- and so mutation-tested -- on
+every call.
 
 ***
 

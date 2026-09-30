@@ -784,6 +784,23 @@ optional auditRequired?: boolean;
 
 Documentation-level assertion that this variable's handling must be auditable. Overrides the contract's own `auditRequired` for this key.
 
+##### authenticatorType?
+
+```ts
+optional authenticatorType?: string;
+```
+
+The kind of authenticator/secret this variable holds (e.g. "api-key", "oauth-client-secret",
+"database-password", "tls-certificate") -- feeds the NIST SP 800-53 IA-5 rotation-compliance
+report's "authenticator type" column (IA-5's main statement requires an organization-defined
+rotation period "by authenticator type," so this is what a generator groups/labels by).
+
+###### Remarks
+
+Deliberately an open `string`, not a closed union -- same "open vocabulary" pattern as
+[sensitivity](#sensitivity-1): an org's own authenticator taxonomy is its own, and IA-5 itself never
+names a fixed set of types either.
+
 ##### dataResidency?
 
 ```ts
@@ -834,6 +851,18 @@ optional expiresAt?: string;
 ```
 
 ISO date string (e.g. "2026-06-01") -- when this variable's current value stops being valid (a key rotation deadline, a sunset date, etc.).
+
+##### lastRotatedAt?
+
+```ts
+optional lastRotatedAt?: string;
+```
+
+ISO date string -- the last time this variable's value was actually rotated. Paired with
+[rotationPeriod](#rotationperiod) to compute rotation compliance. Independent of [expiresAt](#expiresat-1), which
+states when the *current* value stops being valid, not when it was last changed -- a value can
+be freshly rotated and still have a near-term `expiresAt` (a short-lived token), or long overdue
+for rotation while its `expiresAt` (if any) is still comfortably in the future.
 
 ##### legalBasis?
 
@@ -908,6 +937,34 @@ optional retention?: string;
 ```
 
 Descriptive retention policy (e.g. "delete after 90 days"). A policy statement, not a computed value -- unlike `expiresAt`, nothing parses or evaluates this. Overrides the contract's own `retention` for this key.
+
+##### rotationPeriod?
+
+```ts
+optional rotationPeriod?: string;
+```
+
+How often this variable's value must be rotated, in organization-defined terms (e.g. "90
+days", "P90D", "6 months") -- IA-5's own "organization-defined time period" per authenticator
+type (the time-based half of IA-5's two-trigger rotation model). Paired with
+[lastRotatedAt](#lastrotatedat) so a generator can compute whether rotation is actually current, rather
+than only recording that a period was declared; see `lifecycle-model.ts`'s
+`computeRotationStatus()` for exactly how the two combine with [expiresAt](#expiresat-1).
+
+##### rotationTriggerEvents?
+
+```ts
+optional rotationTriggerEvents?: readonly string[];
+```
+
+IA-5's event-based rotation triggers that apply to this variable (e.g. "suspected compromise",
+"personnel change", "system update") -- the event-based half of IA-5's two-trigger rotation
+model. Structured and additive alongside the existing free-text [refreshInstructions](#refreshinstructions)
+rather than replacing it: this is a list a generator can render as its own column,
+`refreshInstructions` stays prose ("how to actually rotate it"). Presence-only -- env-cap has
+no way to observe whether a listed event actually occurred, so declaring this never by itself
+changes a computed rotation-compliance status (see `lifecycle-model.ts`); it only makes the
+event-based trigger's existence visible in generated output.
 
 ##### sensitivity?
 
