@@ -4,18 +4,18 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **135 µs** per operation compared with a bare-minimum baseline (296%), about **$0.00028 – $0.0079 per million operations** of compute. Overall, it grows O(n) with workload size (measured exponent 0.85).
+For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **187 µs** per operation compared with a bare-minimum baseline (250%), about **$0.00039 – $0.0082 per million operations** of compute. Overall, it grows O(n) with workload size (measured exponent 0.73).
 
 > Dollar figures are **estimates** from published list prices (see _Cost model_ below) and are for comparing orders of magnitude, not for budgeting to the cent.
 
 | Cost | Typical (640 variables) | Largest (10240 variables) |
 | --- | --- | --- |
-| Added latency per operation | 135 µs | 679 µs |
-| Added latency, relative to baseline | 296% | 84% |
-| Added CPU time per operation | 702 µs | 1.31 ms |
-| Added memory per operation (heap delta) | 496.8 KiB | 359.7 KiB |
-| Estimated compute cost per 1M operations | $0.00028 – $0.0079 | $0.0014 – $0.015 |
-| Single-core throughput ceiling of the overhead alone | 7,395 ops/s | 1,472 ops/s |
+| Added latency per operation | 187 µs | 545 µs |
+| Added latency, relative to baseline | 250% | 39% |
+| Added CPU time per operation | 726 µs | 1.00 µs |
+| Added memory per operation (heap delta) | 330.4 KiB | 359.2 KiB |
+| Estimated compute cost per 1M operations | $0.00039 – $0.0082 | $0.000011 – $0.0011 |
+| Single-core throughput ceiling of the overhead alone | 5,346 ops/s | 1,833 ops/s |
 | Shipped code parsed at every cold start (gzip) | 5.6 KiB | 5.6 KiB |
 
 ## 1. End-to-end: the package's total impact
@@ -42,18 +42,18 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 | variables | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
-| 20 | 0.511 µs | 6.67 µs | 6.16 µs | 13× baseline | 7.47 µs | $0.000013 – $0.000084 |
-| 40 | 1.09 µs | 9.87 µs | 8.78 µs | 804% | 9.89 µs | $0.000018 – $0.00011 |
-| 80 | 2.38 µs | 18.1 µs | 15.7 µs | 661% | 10.3 µs | $0.000033 – $0.00012 |
-| 160 | 5.52 µs | 38.3 µs | 32.8 µs | 594% | 21.5 µs | $0.000068 – $0.00024 |
-| 320 | 15.7 µs | 75.6 µs | 59.9 µs | 380% | 31.4 µs | $0.00012 – $0.00035 |
-| 640 | 45.7 µs | 181 µs | 135 µs | 296% | 702 µs | $0.00028 – $0.0079 |
-| 1280 | 48.3 µs | 151 µs | 103 µs | 213% | 325 µs | $0.00021 – $0.0037 |
-| 2560 | 97.7 µs | 286 µs | 188 µs | 192% | 745 µs | $0.00039 – $0.0084 |
-| 5120 | 276 µs | 641 µs | 365 µs | 132% | 869 µs | $0.00076 – $0.0098 |
-| 10240 | 812 µs | 1.49 ms | 679 µs | 84% | 1.31 ms | $0.0014 – $0.015 |
+| 20 | 0.789 µs | 19.8 µs | 19.0 µs | 25× baseline | 22.1 µs | $0.00004 – $0.00025 |
+| 40 | 1.64 µs | 25.9 µs | 24.3 µs | 16× baseline | 23.7 µs | $0.000051 – $0.00027 |
+| 80 | 3.34 µs | 38.8 µs | 35.4 µs | 12× baseline | 30.2 µs | $0.000074 – $0.00034 |
+| 160 | 7.58 µs | 67.0 µs | 59.4 µs | 784% | 46.4 µs | $0.00012 – $0.00052 |
+| 320 | 23.1 µs | 132 µs | 109 µs | 470% | 73.8 µs | $0.00023 – $0.00083 |
+| 640 | 74.8 µs | 262 µs | 187 µs | 250% | 726 µs | $0.00039 – $0.0082 |
+| 1280 | 85.0 µs | 264 µs | 179 µs | 210% | 712 µs | $0.00037 – $0.008 |
+| 2560 | 255 µs | 452 µs | 197 µs | 77% | 643 µs | $0.00041 – $0.0072 |
+| 5120 | 623 µs | 965 µs | 342 µs | 55% | 836 µs | $0.00071 – $0.0094 |
+| 10240 | 1.38 ms | 1.93 ms | 545 µs | 39% | 1.00 µs | $0.000011 – $0.0011 |
 
-**How the total grows:** O(n) (linear), exponent 0.85 over 10 sizes.
+**How the total grows:** O(n) (linear), exponent 0.73 over 10 sizes.
 
 ## 2. Function by function
 
@@ -61,57 +61,61 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Documented | Measured | Agreement | At 640 | At 10240 |
 | --- | --- | --- | --- | --- | --- |
-| `process start with n variables declared (cold start)` | O(n) | O(log n) | 🟡 close (neighbouring class) | 43.9 ms | 192 ms |
-| `createEnv (declare a contract)` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 115 µs | 3.64 ms |
-| `validateEnv (validate n values)` | O(n) | O(n) | ✅ matches | 181 µs | 1.57 ms |
-| `processors.base64()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.215 µs | 1.19 µs |
-| `processors.parseJSON()` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 73.0 µs | 1.33 ms |
-| `processors.split(",")` | O(n) | O(n) | ✅ matches | 9.51 µs | 150 µs |
-| `processors.toArray(",", [trim()])` | O(n) | O(n) | ✅ matches | 21.8 µs | 344 µs |
-| `processors.toBigInt()` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 1.04 µs | 67.9 µs |
-| `processors.toBoolean()` | O(1) | O(1) | ✅ matches | 0.0573 µs | 0.0578 µs |
-| `processors.toDate()` | O(1) | O(1) | ✅ matches | 0.180 µs | 0.179 µs |
-| `processors.toInteger()` | O(1) | O(1) | ✅ matches | 0.0579 µs | 0.0578 µs |
-| `processors.toLowerCase()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.105 µs | 0.815 µs |
-| `processors.toNumber()` | O(1) | O(1) | ✅ matches | 0.0543 µs | 0.0544 µs |
-| `processors.toRegExp()` | O(n) | O(n) | ✅ matches | 0.554 µs | 7.00 µs |
-| `processors.toString()` | O(1) | O(1) | ✅ matches | 0.0531 µs | 0.0532 µs |
-| `processors.toURL()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.485 µs | 4.59 µs |
-| `processors.toUpperCase()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.115 µs | 0.839 µs |
-| `processors.trim()` | O(n) | O(n) | ✅ matches | 0.596 µs | 8.33 µs |
-| `validators.after(date)` | O(1) | O(1) | ✅ matches | 0.116 µs | 0.116 µs |
-| `validators.all(...validators)` | O(n) | O(n) | ✅ matches | 0.775 µs | 12.8 µs |
-| `validators.any(...validators)` | O(n) | O(n) | ✅ matches | 4.86 µs | 76.0 µs |
-| `validators.before(date)` | O(1) | O(1) | ✅ matches | 0.119 µs | 0.119 µs |
-| `validators.custom(fn)` | O(1) | O(1) | ✅ matches | 0.0475 µs | 0.0472 µs |
-| `validators.email()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.619 µs | 6.96 µs |
-| `validators.endsWith(suffix)` | O(1) | O(1) | ✅ matches | 0.0582 µs | 0.0578 µs |
-| `validators.finite()` | O(1) | O(1) | ✅ matches | 0.0466 µs | 0.0474 µs |
-| `validators.future()` | O(1) | O(1) | ✅ matches | 0.152 µs | 0.151 µs |
-| `validators.includes(text)` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.0713 µs | 0.260 µs |
-| `validators.integer()` | O(1) | O(1) | ✅ matches | 0.0468 µs | 0.0467 µs |
-| `validators.length(n)` | O(1) | O(1) | ✅ matches | 0.0479 µs | 0.0478 µs |
-| `validators.matches(regex)` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.330 µs | 2.86 µs |
-| `validators.max(limit)` | O(1) | O(1) | ✅ matches | 0.0476 µs | 0.0477 µs |
-| `validators.maxItems(limit)` | O(1) | O(1) | ✅ matches | 0.0476 µs | 0.0491 µs |
-| `validators.maxLength(limit)` | O(1) | O(1) | ✅ matches | 0.0475 µs | 0.0475 µs |
-| `validators.min(limit)` | O(1) | O(1) | ✅ matches | 0.0482 µs | 0.0477 µs |
-| `validators.minItems(limit)` | O(1) | O(1) | ✅ matches | 0.0473 µs | 0.0475 µs |
-| `validators.minLength(limit)` | O(1) | O(1) | ✅ matches | 0.0483 µs | 0.0481 µs |
-| `validators.negative()` | O(1) | O(1) | ✅ matches | 0.0473 µs | 0.0474 µs |
-| `validators.not(validator)` | O(1) | O(1) | ✅ matches | 0.0487 µs | 0.0482 µs |
-| `validators.oneOf(options)` | O(n) | O(n) | ✅ matches | 1.16 µs | 7.39 µs |
-| `validators.optional(validator)` | O(1) | O(1) | ✅ matches | 0.0474 µs | 0.0475 µs |
-| `validators.past()` | O(1) | O(1) | ✅ matches | 0.154 µs | 0.153 µs |
-| `validators.positive()` | O(1) | O(1) | ✅ matches | 0.0469 µs | 0.0471 µs |
-| `validators.range(min, max)` | O(1) | O(1) | ✅ matches | 0.0476 µs | 0.0475 µs |
-| `validators.refine(validator, message)` | O(1) | O(1) | ✅ matches | 0.0479 µs | 0.0478 µs |
-| `validators.required()` | O(1) | O(1) | ✅ matches | 0.0478 µs | 0.0487 µs |
-| `validators.safeInteger()` | O(1) | O(1) | ✅ matches | 0.0467 µs | 0.0471 µs |
-| `validators.unique()` | O(n) | O(n) | ✅ matches | 8.68 µs | 254 µs |
-| `validators.url()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.481 µs | 4.53 µs |
-| `validators.uuid()` | O(1) | O(1) | ✅ matches | 0.157 µs | 0.158 µs |
-| `validators.uuidVersion(v)` | O(1) | O(1) | ✅ matches | 0.156 µs | 0.157 µs |
+| `process start with n variables declared (cold start)` | O(n) | O(log n) | 🟡 close (neighbouring class) | 45.2 ms | 232 ms |
+| `createEnv (declare a contract)` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 185 µs | 4.32 ms |
+| `validateEnv (validate n values)` | O(n) | O(n) | ✅ matches | 281 µs | 2.07 ms |
+| `processors.base64()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.468 µs | 1.34 µs |
+| `processors.parseJSON()` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 80.1 µs | 1.65 ms |
+| `processors.split(",")` | O(n) | O(n) | ✅ matches | 12.2 µs | 202 µs |
+| `processors.toArray(",", [trim()])` | O(n) | O(n) | ✅ matches | 60.2 µs | 693 µs |
+| `processors.toBigInt()` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 1.86 µs | 146 µs |
+| `processors.toBoolean()` | O(1) | O(1) | ✅ matches | 0.102 µs | 0.102 µs |
+| `processors.toDate()` | O(1) | O(1) | ✅ matches | 0.319 µs | 0.312 µs |
+| `processors.toInteger()` | O(1) | O(1) | ✅ matches | 0.0869 µs | 0.0827 µs |
+| `processors.toLowerCase()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.177 µs | 1.20 µs |
+| `processors.toNumber()` | O(1) | O(1) | ✅ matches | 0.0817 µs | 0.0818 µs |
+| `processors.toRegExp()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.998 µs | 8.50 µs |
+| `processors.toString()` | O(1) | O(1) | ✅ matches | 0.0862 µs | 0.0813 µs |
+| `processors.toURL()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.794 µs | 4.26 µs |
+| `processors.toUpperCase()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.182 µs | 1.38 µs |
+| `processors.trim()` | O(n) | O(n) | ✅ matches | 1.04 µs | 12.5 µs |
+| `validators.after(date)` | O(1) | O(1) | ✅ matches | 0.186 µs | 0.182 µs |
+| `validators.all(...validators)` | O(n) | O(n) | ✅ matches | 1.39 µs | 20.9 µs |
+| `validators.any(...validators)` | O(n) | O(n) | ✅ matches | 8.81 µs | 138 µs |
+| `validators.before(date)` | O(1) | O(1) | ✅ matches | 0.181 µs | 0.189 µs |
+| `validators.custom(fn)` | O(1) | O(1) | ✅ matches | 0.0655 µs | 0.0660 µs |
+| `validators.email()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.941 µs | 6.24 µs |
+| `validators.endsWith(suffix)` | O(1) | O(1) | ✅ matches | 0.0886 µs | 0.0951 µs |
+| `validators.finite()` | O(1) | O(1) | ✅ matches | 0.0694 µs | 0.0710 µs |
+| `validators.future()` | O(1) | O(1) | ✅ matches | 0.272 µs | 0.272 µs |
+| `validators.includes(text)` | O(n) | O(1) | ⚠️ differs | 0.0951 µs | 0.146 µs |
+| `validators.integer()` | O(1) | O(1) | ✅ matches | 0.0698 µs | 0.0720 µs |
+| `validators.length(n)` | O(1) | O(1) | ✅ matches | 0.0702 µs | 0.0706 µs |
+| `validators.matches(regex)` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.498 µs | 3.76 µs |
+| `validators.max(limit)` | O(1) | O(1) | ✅ matches | 0.0703 µs | 0.0707 µs |
+| `validators.maxItems(limit)` | O(1) | O(1) | ✅ matches | 0.0709 µs | 0.0699 µs |
+| `validators.maxLength(limit)` | O(1) | O(1) | ✅ matches | 0.0699 µs | 0.0702 µs |
+| `validators.min(limit)` | O(1) | O(1) | ✅ matches | 0.0701 µs | 0.0699 µs |
+| `validators.minItems(limit)` | O(1) | O(1) | ✅ matches | 0.0709 µs | 0.0695 µs |
+| `validators.minLength(limit)` | O(1) | O(1) | ✅ matches | 0.0698 µs | 0.0715 µs |
+| `validators.negative()` | O(1) | O(1) | ✅ matches | 0.0705 µs | 0.0702 µs |
+| `validators.not(validator)` | O(1) | O(1) | ✅ matches | 0.0850 µs | 0.0707 µs |
+| `validators.oneOf(options)` | O(n) | O(n) | ✅ matches | 1.45 µs | 10.2 µs |
+| `validators.optional(validator)` | O(1) | O(1) | ✅ matches | 0.0705 µs | 0.0709 µs |
+| `validators.past()` | O(1) | O(1) | ✅ matches | 0.274 µs | 0.275 µs |
+| `validators.positive()` | O(1) | O(1) | ✅ matches | 0.0708 µs | 0.0722 µs |
+| `validators.range(min, max)` | O(1) | O(1) | ✅ matches | 0.0706 µs | 0.0707 µs |
+| `validators.refine(validator, message)` | O(1) | O(1) | ✅ matches | 0.0722 µs | 0.0706 µs |
+| `validators.required()` | O(1) | O(1) | ✅ matches | 0.0712 µs | 0.0719 µs |
+| `validators.safeInteger()` | O(1) | O(1) | ✅ matches | 0.0707 µs | 0.0702 µs |
+| `validators.unique()` | O(n) | O(n) | ✅ matches | 11.0 µs | 396 µs |
+| `validators.url()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.733 µs | 3.91 µs |
+| `validators.uuid()` | O(1) | O(1) | ✅ matches | 0.243 µs | 0.247 µs |
+| `validators.uuidVersion(v)` | O(1) | O(1) | ✅ matches | 0.243 µs | 0.242 µs |
+
+> **Needs attention.** These functions grow at a different rate than documented. Either the code regressed or the documentation is wrong -- decide which, then fix it:
+>
+> - `validator-includes`: documented O(n), measured O(1) (exponent 0.07)
 
 ### `process start with n variables declared (cold start)`
 
@@ -136,20 +140,20 @@ Every function the package exposes is measured on its own across the full size l
 - **warm module cache** -- A fresh process has no warm cache by definition.
 - **bundled loading** -- Measured through Node's native ESM loader; bundlers change module-evaluation cost and are application-specific.
 
-**Measured: O(log n)** (exponent 0.27, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.30, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 29.9 ms | 32.7 ms | 1.41 ms | 67.2 KiB | 33 |
-| 40 | 31.6 ms | 36.6 ms | 1.45 ms | 62.0 KiB | 32 |
-| 80 | 32.5 ms | 34.2 ms | 1.45 ms | 62.1 KiB | 31 |
-| 160 | 35.0 ms | 35.7 ms | 1.47 ms | 62.1 KiB | 29 |
-| 320 | 39.5 ms | 41.1 ms | 1.50 ms | 62.1 KiB | 25 |
-| 640 | 43.9 ms | 48.1 ms | 1.53 ms | 62.1 KiB | 23 |
-| 1280 | 53.2 ms | 94.9 ms | 1.50 ms | 62.1 KiB | 19 |
-| 2560 | 72.8 ms | 120 ms | 1.43 ms | 62.1 KiB | 14 |
-| 5120 | 112 ms | 150 ms | 1.56 ms | 62.1 KiB | 9 |
-| 10240 | 192 ms | 252 ms | 1.47 ms | 62.1 KiB | 5 |
+| 20 | 30.5 ms | 30.7 ms | 1.93 ms | 156.3 KiB | 33 |
+| 40 | 31.7 ms | 34.4 ms | 2.03 ms | 155.5 KiB | 32 |
+| 80 | 35.5 ms | 36.7 ms | 2.04 ms | 153.1 KiB | 28 |
+| 160 | 34.6 ms | 35.7 ms | 1.95 ms | 153.1 KiB | 29 |
+| 320 | 39.6 ms | 41.1 ms | 2.03 ms | 153.0 KiB | 25 |
+| 640 | 45.2 ms | 46.6 ms | 2.06 ms | 153.1 KiB | 22 |
+| 1280 | 59.3 ms | 62.6 ms | 2.15 ms | 152.7 KiB | 17 |
+| 2560 | 91.0 ms | 97.0 ms | 2.31 ms | 152.8 KiB | 11 |
+| 5120 | 131 ms | 136 ms | 2.26 ms | 152.7 KiB | 8 |
+| 10240 | 232 ms | 234 ms | 2.17 ms | 152.7 KiB | 4 |
 
 ### `createEnv (declare a contract)`
 
@@ -168,20 +172,20 @@ Every function the package exposes is measured on its own across the full size l
 | contract naming | fixed at "unique name per call" | Each call registers a new contract name; reusing a name takes a different (error) path. |
 | runtime | fixed at "Node (V8)" | Measured on Node only; Bun, Deno and edge runtimes are not covered. |
 
-**Measured: O(n log n)** (exponent 1.33, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.24, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 2.80 µs | 3.03 µs | 2.98 µs | 7.7 KiB | 357,471 |
-| 40 | 4.62 µs | 4.88 µs | 11.1 µs | 11.1 KiB | 216,591 |
-| 80 | 8.67 µs | 8.92 µs | 18.4 µs | 21.1 KiB | 115,398 |
-| 160 | 17.7 µs | 18.3 µs | 35.1 µs | 41.4 KiB | 56,615 |
-| 320 | 39.9 µs | 40.7 µs | 71.4 µs | 82.8 KiB | 25,088 |
-| 640 | 115 µs | 121 µs | 176 µs | 167.0 KiB | 8,669 |
-| 1280 | 2.03 ms | 2.28 ms | 2.88 ms | 486.2 KiB | 493 |
-| 2560 | 2.22 ms | 2.28 ms | 3.08 ms | 808.3 KiB | 450 |
-| 5120 | 2.73 ms | 3.06 ms | 3.64 ms | 1.5 MiB | 367 |
-| 10240 | 3.64 ms | 3.77 ms | 4.59 ms | 2.7 MiB | 275 |
+| 20 | 5.55 µs | 6.00 µs | 21.7 µs | 7.7 KiB | 180,047 |
+| 40 | 9.06 µs | 10.0 µs | 34.6 µs | 11.3 KiB | 110,424 |
+| 80 | 13.3 µs | 13.8 µs | 36.1 µs | 21.4 KiB | 75,269 |
+| 160 | 25.7 µs | 26.9 µs | 62.8 µs | 42.0 KiB | 38,873 |
+| 320 | 58.9 µs | 60.5 µs | 125 µs | 84.4 KiB | 16,964 |
+| 640 | 185 µs | 188 µs | 293 µs | 173.1 KiB | 5,417 |
+| 1280 | 2.32 ms | 2.40 ms | 3.17 ms | 482.1 KiB | 431 |
+| 2560 | 2.52 ms | 2.63 ms | 3.42 ms | 901.0 KiB | 397 |
+| 5120 | 3.25 ms | 3.54 ms | 4.11 ms | 1.5 MiB | 308 |
+| 10240 | 4.32 ms | 4.64 ms | 5.32 ms | 2.7 MiB | 231 |
 
 ### `validateEnv (validate n values)`
 
@@ -204,20 +208,20 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** This is the end-to-end operation itself.
 
-**Measured: O(n)** (exponent 0.86, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.74, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 6.67 µs | 12.4 µs | 9.00 µs | 5.6 KiB | 149,993 |
-| 40 | 10.4 µs | 18.9 µs | 14.0 µs | 8.4 KiB | 95,997 |
-| 80 | 18.0 µs | 22.4 µs | 21.0 µs | 17.8 KiB | 55,685 |
-| 160 | 35.4 µs | 48.7 µs | 38.0 µs | 47.9 KiB | 28,269 |
-| 320 | 78.1 µs | 120 µs | 82.0 µs | 160.6 KiB | 12,807 |
-| 640 | 181 µs | 197 µs | 839 µs | 583.8 KiB | 5,524 |
-| 1280 | 158 µs | 202 µs | 482 µs | 175.0 KiB | 6,311 |
-| 2560 | 304 µs | 382 µs | 1.03 ms | 403.0 KiB | 3,292 |
-| 5120 | 713 µs | 833 µs | 1.41 ms | 695.1 KiB | 1,403 |
-| 10240 | 1.57 ms | 1.68 ms | 2.61 ms | 1.3 MiB | 637 |
+| 20 | 20.8 µs | 27.1 µs | 23.0 µs | 5.4 KiB | 48,075 |
+| 40 | 27.5 µs | 44.2 µs | 29.0 µs | 8.2 KiB | 36,376 |
+| 80 | 40.5 µs | 57.2 µs | 43.0 µs | 17.7 KiB | 24,703 |
+| 160 | 69.7 µs | 83.8 µs | 72.0 µs | 47.8 KiB | 14,344 |
+| 320 | 137 µs | 151 µs | 140 µs | 160.5 KiB | 7,312 |
+| 640 | 281 µs | 311 µs | 959 µs | 584.8 KiB | 3,556 |
+| 1280 | 281 µs | 321 µs | 977 µs | 174.8 KiB | 3,558 |
+| 2560 | 475 µs | 637 µs | 1.18 ms | 398.7 KiB | 2,105 |
+| 5120 | 1.06 ms | 1.42 ms | 1.96 ms | 691.3 KiB | 944 |
+| 10240 | 2.07 ms | 3.01 ms | 2.85 ms | 1.3 MiB | 483 |
 
 ### `processors.base64()`
 
@@ -240,20 +244,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.26, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.17, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.216 µs | 0.427 µs | 0.220 µs | 484 B | 4,638,415 |
-| 40 | 0.164 µs | 0.274 µs | 0.173 µs | 481 B | 6,079,181 |
-| 80 | 0.178 µs | 0.267 µs | 0.184 µs | 481 B | 5,623,090 |
-| 160 | 0.181 µs | 0.184 µs | 0.184 µs | 354 B | 5,529,968 |
-| 320 | 0.194 µs | 0.199 µs | 0.781 µs | 354 B | 5,152,408 |
-| 640 | 0.215 µs | 0.225 µs | 1.02 µs | 355 B | 4,659,394 |
-| 1280 | 0.276 µs | 0.283 µs | 1.31 µs | 358 B | 3,622,192 |
-| 2560 | 0.392 µs | 0.416 µs | 1.45 µs | 364 B | 2,549,721 |
-| 5120 | 0.636 µs | 0.654 µs | 1.88 µs | 383 B | 1,571,748 |
-| 10240 | 1.19 µs | 1.51 µs | 1.21 µs | 526 B | 842,972 |
+| 20 | 0.794 µs | 1.47 µs | 0.831 µs | 477 B | 1,258,746 |
+| 40 | 0.380 µs | 0.644 µs | 0.389 µs | 348 B | 2,630,954 |
+| 80 | 0.409 µs | 0.704 µs | 0.424 µs | 349 B | 2,444,812 |
+| 160 | 0.364 µs | 0.577 µs | 0.372 µs | 351 B | 2,746,305 |
+| 320 | 0.543 µs | 0.678 µs | 0.563 µs | 486 B | 1,842,011 |
+| 640 | 0.468 µs | 0.811 µs | 0.475 µs | 373 B | 2,136,294 |
+| 1280 | 1.05 µs | 1.64 µs | 1.09 µs | 516 B | 952,212 |
+| 2560 | 0.783 µs | 1.45 µs | 0.798 µs | 421 B | 1,276,825 |
+| 5120 | 1.29 µs | 1.81 µs | 1.32 µs | 436 B | 773,694 |
+| 10240 | 1.34 µs | 2.23 µs | 1.36 µs | 436 B | 747,670 |
 
 ### `processors.parseJSON()`
 
@@ -276,20 +280,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n log n)** (exponent 1.18, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.11, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.996 µs | 1.07 µs | 3.90 µs | 562 B | 1,004,351 |
-| 40 | 1.94 µs | 1.99 µs | 5.50 µs | 722 B | 514,965 |
-| 80 | 3.74 µs | 3.84 µs | 9.26 µs | 915 B | 267,434 |
-| 160 | 15.3 µs | 15.9 µs | 33.3 µs | 6.4 KiB | 65,387 |
-| 320 | 33.8 µs | 35.6 µs | 67.1 µs | 12.7 KiB | 29,606 |
-| 640 | 73.0 µs | 88.2 µs | 145 µs | 25.3 KiB | 13,690 |
-| 1280 | 145 µs | 154 µs | 264 µs | 50.4 KiB | 6,895 |
-| 2560 | 305 µs | 319 µs | 514 µs | 112.2 KiB | 3,281 |
-| 5120 | 644 µs | 673 µs | 1.10 ms | 192.6 KiB | 1,552 |
-| 10240 | 1.33 ms | 1.40 ms | 2.29 ms | 392.3 KiB | 749 |
+| 20 | 1.79 µs | 2.09 µs | 1.80 µs | 435 B | 558,705 |
+| 40 | 3.32 µs | 3.77 µs | 13.4 µs | 596 B | 300,986 |
+| 80 | 5.75 µs | 6.86 µs | 17.1 µs | 917 B | 173,999 |
+| 160 | 23.5 µs | 25.9 µs | 83.7 µs | 6.5 KiB | 42,577 |
+| 320 | 39.1 µs | 41.2 µs | 90.7 µs | 12.5 KiB | 25,547 |
+| 640 | 80.1 µs | 85.7 µs | 174 µs | 24.5 KiB | 12,488 |
+| 1280 | 171 µs | 180 µs | 383 µs | 48.5 KiB | 5,840 |
+| 2560 | 351 µs | 357 µs | 639 µs | 116.0 KiB | 2,846 |
+| 5120 | 800 µs | 831 µs | 1.26 ms | 192.6 KiB | 1,249 |
+| 10240 | 1.65 ms | 1.74 ms | 2.64 ms | 392.3 KiB | 607 |
 
 ### `processors.split(",")`
 
@@ -312,20 +316,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.91, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.93, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.696 µs | 0.754 µs | 0.701 µs | 722 B | 1,437,756 |
-| 40 | 0.724 µs | 0.785 µs | 2.97 µs | 1.0 KiB | 1,382,103 |
-| 80 | 1.29 µs | 1.31 µs | 2.98 µs | 1.6 KiB | 777,366 |
-| 160 | 2.45 µs | 2.53 µs | 5.20 µs | 2.9 KiB | 408,487 |
-| 320 | 4.77 µs | 5.05 µs | 9.90 µs | 5.4 KiB | 209,483 |
-| 640 | 9.51 µs | 9.68 µs | 19.1 µs | 10.4 KiB | 105,189 |
-| 1280 | 18.8 µs | 19.0 µs | 36.4 µs | 20.5 KiB | 53,215 |
-| 2560 | 37.6 µs | 38.3 µs | 72.0 µs | 42.1 KiB | 26,582 |
-| 5120 | 74.9 µs | 75.7 µs | 139 µs | 85.0 KiB | 13,349 |
-| 10240 | 150 µs | 155 µs | 269 µs | 169.2 KiB | 6,685 |
+| 20 | 0.602 µs | 1.41 µs | 0.615 µs | 723 B | 1,661,899 |
+| 40 | 1.02 µs | 1.98 µs | 1.03 µs | 1.0 KiB | 980,939 |
+| 80 | 1.75 µs | 2.46 µs | 1.78 µs | 1.6 KiB | 570,353 |
+| 160 | 2.94 µs | 5.26 µs | 10.4 µs | 2.9 KiB | 340,186 |
+| 320 | 5.47 µs | 9.11 µs | 17.7 µs | 5.4 KiB | 182,687 |
+| 640 | 12.2 µs | 22.6 µs | 48.8 µs | 10.5 KiB | 81,664 |
+| 1280 | 29.8 µs | 35.1 µs | 82.7 µs | 20.8 KiB | 33,543 |
+| 2560 | 39.5 µs | 51.0 µs | 115 µs | 41.3 KiB | 25,325 |
+| 5120 | 77.4 µs | 125 µs | 217 µs | 82.2 KiB | 12,914 |
+| 10240 | 202 µs | 215 µs | 418 µs | 167.2 KiB | 4,950 |
 
 ### `processors.toArray(",", [trim()])`
 
@@ -348,20 +352,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.89, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 1.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 1.47 µs | 1.57 µs | 6.24 µs | 2.6 KiB | 678,327 |
-| 40 | 2.67 µs | 2.84 µs | 7.01 µs | 4.6 KiB | 374,040 |
-| 80 | 2.88 µs | 2.93 µs | 6.67 µs | 8.7 KiB | 346,793 |
-| 160 | 5.61 µs | 5.74 µs | 11.4 µs | 16.8 KiB | 178,165 |
-| 320 | 11.0 µs | 11.5 µs | 21.5 µs | 33.0 KiB | 90,848 |
-| 640 | 21.8 µs | 23.2 µs | 42.0 µs | 65.6 KiB | 45,799 |
-| 1280 | 43.3 µs | 44.0 µs | 81.1 µs | 130.6 KiB | 23,103 |
-| 2560 | 86.6 µs | 107 µs | 163 µs | 260.6 KiB | 11,547 |
-| 5120 | 172 µs | 180 µs | 311 µs | 532.2 KiB | 5,801 |
-| 10240 | 344 µs | 361 µs | 622 µs | 1.0 MiB | 2,906 |
+| 20 | 2.80 µs | 3.95 µs | 2.94 µs | 2.7 KiB | 357,591 |
+| 40 | 2.37 µs | 3.93 µs | 4.90 µs | 4.6 KiB | 422,760 |
+| 80 | 4.36 µs | 9.71 µs | 17.7 µs | 8.7 KiB | 229,605 |
+| 160 | 7.86 µs | 18.8 µs | 29.2 µs | 16.8 KiB | 127,294 |
+| 320 | 33.7 µs | 76.4 µs | 86.1 µs | 33.3 KiB | 29,695 |
+| 640 | 60.2 µs | 101 µs | 180 µs | 66.0 KiB | 16,604 |
+| 1280 | 140 µs | 215 µs | 387 µs | 131.2 KiB | 7,168 |
+| 2560 | 235 µs | 290 µs | 680 µs | 261.4 KiB | 4,262 |
+| 5120 | 400 µs | 701 µs | 1.10 ms | 539.7 KiB | 2,499 |
+| 10240 | 693 µs | 828 µs | 1.78 ms | 1.1 MiB | 1,442 |
 
 ### `processors.toBigInt()`
 
@@ -384,20 +388,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n log n)** (exponent 1.13, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.11, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0936 µs | 0.114 µs | 0.0971 µs | 281 B | 10,682,143 |
-| 40 | 0.105 µs | 0.106 µs | 0.106 µs | 288 B | 9,550,696 |
-| 80 | 0.134 µs | 0.136 µs | 0.135 µs | 304 B | 7,453,840 |
-| 160 | 0.266 µs | 0.305 µs | 1.10 µs | 336 B | 3,757,633 |
-| 320 | 0.461 µs | 0.494 µs | 1.59 µs | 401 B | 2,166,931 |
-| 640 | 1.04 µs | 1.12 µs | 2.99 µs | 537 B | 964,479 |
-| 1280 | 2.79 µs | 2.87 µs | 6.83 µs | 810 B | 358,079 |
-| 2560 | 9.67 µs | 10.5 µs | 20.4 µs | 1.3 KiB | 103,431 |
-| 5120 | 35.9 µs | 37.6 µs | 69.4 µs | 2.4 KiB | 27,893 |
-| 10240 | 67.9 µs | 69.4 µs | 132 µs | 4.5 KiB | 14,734 |
+| 20 | 0.176 µs | 0.301 µs | 0.184 µs | 282 B | 5,691,955 |
+| 40 | 0.170 µs | 0.196 µs | 0.173 µs | 289 B | 5,887,083 |
+| 80 | 0.224 µs | 0.264 µs | 0.229 µs | 305 B | 4,455,161 |
+| 160 | 0.484 µs | 0.514 µs | 0.488 µs | 337 B | 2,065,137 |
+| 320 | 0.894 µs | 0.938 µs | 0.901 µs | 401 B | 1,118,126 |
+| 640 | 1.86 µs | 1.97 µs | 6.95 µs | 538 B | 536,515 |
+| 1280 | 4.30 µs | 4.60 µs | 12.2 µs | 811 B | 232,667 |
+| 2560 | 13.3 µs | 14.1 µs | 32.2 µs | 1.3 KiB | 74,957 |
+| 5120 | 45.4 µs | 46.7 µs | 98.3 µs | 2.4 KiB | 22,009 |
+| 10240 | 146 µs | 150 µs | 313 µs | 4.5 KiB | 6,830 |
 
 ### `processors.toBoolean()`
 
@@ -420,20 +424,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.04, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0678 µs | 0.0972 µs | 0.0707 µs | 305 B | 14,757,764 |
-| 40 | 0.0587 µs | 0.0635 µs | 0.0620 µs | 272 B | 17,033,454 |
-| 80 | 0.0577 µs | 0.0584 µs | 0.0580 µs | 272 B | 17,337,284 |
-| 160 | 0.0576 µs | 0.0586 µs | 0.0582 µs | 272 B | 17,356,337 |
-| 320 | 0.0573 µs | 0.0583 µs | 0.0575 µs | 272 B | 17,452,604 |
-| 640 | 0.0573 µs | 0.0581 µs | 0.0578 µs | 272 B | 17,461,055 |
-| 1280 | 0.0573 µs | 0.0581 µs | 0.0580 µs | 272 B | 17,449,335 |
-| 2560 | 0.0570 µs | 0.0586 µs | 0.0572 µs | 272 B | 17,530,482 |
-| 5120 | 0.0573 µs | 0.0584 µs | 0.0579 µs | 272 B | 17,457,065 |
-| 10240 | 0.0578 µs | 0.0588 µs | 0.0586 µs | 272 B | 17,291,658 |
+| 20 | 0.183 µs | 0.329 µs | 0.191 µs | 322 B | 5,461,781 |
+| 40 | 0.0971 µs | 0.182 µs | 0.103 µs | 273 B | 10,294,972 |
+| 80 | 0.0936 µs | 0.164 µs | 0.0974 µs | 273 B | 10,685,263 |
+| 160 | 0.110 µs | 0.147 µs | 0.117 µs | 273 B | 9,084,446 |
+| 320 | 0.104 µs | 0.159 µs | 0.109 µs | 273 B | 9,604,976 |
+| 640 | 0.102 µs | 0.155 µs | 0.107 µs | 273 B | 9,826,392 |
+| 1280 | 0.109 µs | 0.153 µs | 0.116 µs | 273 B | 9,155,511 |
+| 2560 | 0.105 µs | 0.157 µs | 0.109 µs | 273 B | 9,536,401 |
+| 5120 | 0.102 µs | 0.131 µs | 0.106 µs | 273 B | 9,768,979 |
+| 10240 | 0.102 µs | 0.146 µs | 0.108 µs | 273 B | 9,777,039 |
 
 ### `processors.toDate()`
 
@@ -456,20 +460,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.193 µs | 0.254 µs | 0.199 µs | 361 B | 5,168,317 |
-| 40 | 0.181 µs | 0.211 µs | 0.183 µs | 345 B | 5,517,241 |
-| 80 | 0.180 µs | 0.186 µs | 0.801 µs | 344 B | 5,564,129 |
-| 160 | 0.181 µs | 0.183 µs | 0.182 µs | 344 B | 5,531,219 |
-| 320 | 0.181 µs | 0.183 µs | 0.182 µs | 344 B | 5,533,512 |
-| 640 | 0.180 µs | 0.182 µs | 0.831 µs | 344 B | 5,557,386 |
-| 1280 | 0.180 µs | 0.183 µs | 0.852 µs | 344 B | 5,561,993 |
-| 2560 | 0.179 µs | 0.183 µs | 0.801 µs | 344 B | 5,581,590 |
-| 5120 | 0.178 µs | 0.184 µs | 0.763 µs | 344 B | 5,604,767 |
-| 10240 | 0.179 µs | 0.182 µs | 0.830 µs | 344 B | 5,598,361 |
+| 20 | 0.325 µs | 0.486 µs | 0.338 µs | 362 B | 3,075,732 |
+| 40 | 0.318 µs | 0.393 µs | 0.322 µs | 361 B | 3,147,503 |
+| 80 | 0.322 µs | 0.407 µs | 0.328 µs | 362 B | 3,101,765 |
+| 160 | 0.317 µs | 0.363 µs | 0.323 µs | 361 B | 3,152,436 |
+| 320 | 0.335 µs | 0.394 µs | 0.342 µs | 361 B | 2,988,407 |
+| 640 | 0.319 µs | 0.371 µs | 0.325 µs | 362 B | 3,134,948 |
+| 1280 | 0.316 µs | 0.368 µs | 0.322 µs | 361 B | 3,165,958 |
+| 2560 | 0.325 µs | 0.400 µs | 0.330 µs | 361 B | 3,081,647 |
+| 5120 | 0.319 µs | 0.385 µs | 0.324 µs | 361 B | 3,137,842 |
+| 10240 | 0.312 µs | 0.368 µs | 0.319 µs | 362 B | 3,200,703 |
 
 ### `processors.toInteger()`
 
@@ -492,20 +496,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.05, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.104 µs | 0.134 µs | 0.103 µs | 305 B | 9,648,203 |
-| 40 | 0.0591 µs | 0.0602 µs | 0.0595 µs | 304 B | 16,928,348 |
-| 80 | 0.0581 µs | 0.0591 µs | 0.0585 µs | 304 B | 17,225,202 |
-| 160 | 0.0576 µs | 0.0582 µs | 0.0578 µs | 304 B | 17,373,080 |
-| 320 | 0.0577 µs | 0.0582 µs | 0.0582 µs | 304 B | 17,339,113 |
-| 640 | 0.0579 µs | 0.0587 µs | 0.0584 µs | 304 B | 17,273,755 |
-| 1280 | 0.0577 µs | 0.0581 µs | 0.0581 µs | 304 B | 17,318,182 |
-| 2560 | 0.0583 µs | 0.0591 µs | 0.0586 µs | 304 B | 17,165,714 |
-| 5120 | 0.0580 µs | 0.0587 µs | 0.0586 µs | 304 B | 17,236,345 |
-| 10240 | 0.0578 µs | 0.0584 µs | 0.0580 µs | 304 B | 17,303,583 |
+| 20 | 0.0852 µs | 0.226 µs | 0.0897 µs | 305 B | 11,735,206 |
+| 40 | 0.0838 µs | 0.207 µs | 0.0890 µs | 305 B | 11,932,160 |
+| 80 | 0.0871 µs | 0.157 µs | 0.0917 µs | 305 B | 11,476,503 |
+| 160 | 0.0877 µs | 0.116 µs | 0.0915 µs | 305 B | 11,401,586 |
+| 320 | 0.0889 µs | 0.161 µs | 0.0917 µs | 305 B | 11,251,589 |
+| 640 | 0.0869 µs | 0.182 µs | 0.0897 µs | 305 B | 11,511,896 |
+| 1280 | 0.0852 µs | 0.161 µs | 0.0899 µs | 305 B | 11,741,084 |
+| 2560 | 0.0828 µs | 0.182 µs | 0.0870 µs | 305 B | 12,070,112 |
+| 5120 | 0.0818 µs | 0.154 µs | 0.0877 µs | 305 B | 12,226,512 |
+| 10240 | 0.0827 µs | 0.156 µs | 0.0855 µs | 305 B | 12,097,337 |
 
 ### `processors.toLowerCase()`
 
@@ -528,20 +532,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.39, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.40, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0709 µs | 0.0911 µs | 0.0756 µs | 289 B | 14,099,511 |
-| 40 | 0.0622 µs | 0.0632 µs | 0.0630 µs | 304 B | 16,078,566 |
-| 80 | 0.0642 µs | 0.0647 µs | 0.0646 µs | 344 B | 15,582,172 |
-| 160 | 0.0701 µs | 0.0958 µs | 0.0704 µs | 424 B | 14,268,599 |
-| 320 | 0.0817 µs | 0.0825 µs | 0.0825 µs | 585 B | 12,241,775 |
-| 640 | 0.105 µs | 0.131 µs | 0.504 µs | 905 B | 9,535,161 |
-| 1280 | 0.158 µs | 0.164 µs | 0.571 µs | 1.5 KiB | 6,318,961 |
-| 2560 | 0.247 µs | 0.269 µs | 0.876 µs | 2.8 KiB | 4,050,095 |
-| 5120 | 0.431 µs | 0.475 µs | 1.19 µs | 5.3 KiB | 2,318,885 |
-| 10240 | 0.815 µs | 0.848 µs | 1.89 µs | 10.7 KiB | 1,226,590 |
+| 20 | 0.103 µs | 0.146 µs | 0.109 µs | 289 B | 9,746,883 |
+| 40 | 0.0960 µs | 0.121 µs | 0.0998 µs | 305 B | 10,413,509 |
+| 80 | 0.104 µs | 0.147 µs | 0.109 µs | 345 B | 9,575,189 |
+| 160 | 0.110 µs | 0.136 µs | 0.115 µs | 425 B | 9,065,625 |
+| 320 | 0.133 µs | 0.172 µs | 0.136 µs | 585 B | 7,528,108 |
+| 640 | 0.177 µs | 0.230 µs | 0.183 µs | 905 B | 5,651,794 |
+| 1280 | 0.264 µs | 0.301 µs | 0.269 µs | 1.5 KiB | 3,783,762 |
+| 2560 | 0.402 µs | 0.503 µs | 0.407 µs | 2.8 KiB | 2,486,455 |
+| 5120 | 0.685 µs | 0.752 µs | 2.81 µs | 5.4 KiB | 1,458,977 |
+| 10240 | 1.20 µs | 1.27 µs | 4.49 µs | 10.5 KiB | 835,357 |
 
 ### `processors.toNumber()`
 
@@ -564,20 +568,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0568 µs | 0.0772 µs | 0.0581 µs | 248 B | 17,613,636 |
-| 40 | 0.0550 µs | 0.0560 µs | 0.0556 µs | 248 B | 18,176,039 |
-| 80 | 0.0545 µs | 0.0680 µs | 0.0549 µs | 248 B | 18,362,779 |
-| 160 | 0.0545 µs | 0.0555 µs | 0.0551 µs | 248 B | 18,355,811 |
-| 320 | 0.0546 µs | 0.0556 µs | 0.0549 µs | 248 B | 18,314,465 |
-| 640 | 0.0543 µs | 0.0597 µs | 0.0546 µs | 248 B | 18,420,068 |
-| 1280 | 0.0546 µs | 0.0555 µs | 0.0549 µs | 248 B | 18,327,221 |
-| 2560 | 0.0543 µs | 0.0571 µs | 0.0550 µs | 248 B | 18,406,555 |
-| 5120 | 0.0543 µs | 0.0552 µs | 0.0545 µs | 248 B | 18,427,245 |
-| 10240 | 0.0544 µs | 0.0556 µs | 0.0549 µs | 248 B | 18,397,912 |
+| 20 | 0.0808 µs | 0.121 µs | 0.0833 µs | 249 B | 12,371,966 |
+| 40 | 0.0806 µs | 0.119 µs | 0.0857 µs | 249 B | 12,412,548 |
+| 80 | 0.0816 µs | 0.141 µs | 0.0851 µs | 249 B | 12,249,153 |
+| 160 | 0.0795 µs | 0.115 µs | 0.0815 µs | 248 B | 12,583,893 |
+| 320 | 0.0800 µs | 0.117 µs | 0.0835 µs | 249 B | 12,505,464 |
+| 640 | 0.0817 µs | 0.119 µs | 0.0853 µs | 249 B | 12,246,070 |
+| 1280 | 0.0823 µs | 0.136 µs | 0.0884 µs | 249 B | 12,150,267 |
+| 2560 | 0.0814 µs | 0.117 µs | 0.0836 µs | 248 B | 12,287,582 |
+| 5120 | 0.0830 µs | 0.123 µs | 0.0866 µs | 249 B | 12,049,390 |
+| 10240 | 0.0818 µs | 0.121 µs | 0.0841 µs | 248 B | 12,224,221 |
 
 ### `processors.toRegExp()`
 
@@ -600,20 +604,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.66, 10 sizes) -- ✅ matches.
+**Measured: O(log n)** (exponent 0.61, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.128 µs | 0.147 µs | 0.132 µs | 323 B | 7,800,111 |
-| 40 | 0.133 µs | 0.150 µs | 0.134 µs | 308 B | 7,544,576 |
-| 80 | 0.172 µs | 0.175 µs | 0.837 µs | 307 B | 5,801,782 |
-| 160 | 0.224 µs | 0.230 µs | 0.914 µs | 307 B | 4,464,684 |
-| 320 | 0.332 µs | 0.404 µs | 1.13 µs | 307 B | 3,012,987 |
-| 640 | 0.554 µs | 0.563 µs | 2.35 µs | 311 B | 1,806,155 |
-| 1280 | 0.987 µs | 0.993 µs | 2.57 µs | 311 B | 1,013,181 |
-| 2560 | 1.84 µs | 1.87 µs | 4.15 µs | 314 B | 542,433 |
-| 5120 | 3.56 µs | 3.63 µs | 7.48 µs | 320 B | 280,865 |
-| 10240 | 7.00 µs | 7.10 µs | 14.5 µs | 335 B | 142,896 |
+| 20 | 0.207 µs | 0.278 µs | 0.216 µs | 318 B | 4,839,843 |
+| 40 | 0.226 µs | 0.260 µs | 0.231 µs | 314 B | 4,420,679 |
+| 80 | 0.291 µs | 0.355 µs | 0.299 µs | 321 B | 3,441,876 |
+| 160 | 0.390 µs | 0.459 µs | 0.396 µs | 316 B | 2,563,123 |
+| 320 | 0.595 µs | 0.631 µs | 0.601 µs | 315 B | 1,679,529 |
+| 640 | 0.998 µs | 1.07 µs | 2.08 µs | 318 B | 1,002,087 |
+| 1280 | 1.57 µs | 1.73 µs | 5.87 µs | 321 B | 637,182 |
+| 2560 | 2.55 µs | 2.72 µs | 7.58 µs | 323 B | 391,618 |
+| 5120 | 4.50 µs | 4.98 µs | 12.7 µs | 335 B | 222,440 |
+| 10240 | 8.50 µs | 9.49 µs | 21.8 µs | 354 B | 117,682 |
 
 ### `processors.toString()`
 
@@ -640,16 +644,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0551 µs | 0.0578 µs | 0.0572 µs | 249 B | 18,154,066 |
-| 40 | 0.0539 µs | 0.0551 µs | 0.0541 µs | 248 B | 18,556,947 |
-| 80 | 0.0533 µs | 0.0548 µs | 0.0539 µs | 248 B | 18,755,541 |
-| 160 | 0.0532 µs | 0.113 µs | 0.0536 µs | 248 B | 18,804,882 |
-| 320 | 0.0538 µs | 0.135 µs | 0.0556 µs | 248 B | 18,573,868 |
-| 640 | 0.0531 µs | 0.0538 µs | 0.0531 µs | 248 B | 18,824,176 |
-| 1280 | 0.0532 µs | 0.0541 µs | 0.0535 µs | 248 B | 18,810,811 |
-| 2560 | 0.0533 µs | 0.0554 µs | 0.0536 µs | 248 B | 18,745,494 |
-| 5120 | 0.0532 µs | 0.0539 µs | 0.0536 µs | 248 B | 18,804,690 |
-| 10240 | 0.0532 µs | 0.0551 µs | 0.0536 µs | 248 B | 18,796,839 |
+| 20 | 0.0864 µs | 0.109 µs | 0.0907 µs | 249 B | 11,573,866 |
+| 40 | 0.0819 µs | 0.0970 µs | 0.0836 µs | 248 B | 12,212,720 |
+| 80 | 0.0818 µs | 0.0982 µs | 0.0843 µs | 249 B | 12,223,344 |
+| 160 | 0.0830 µs | 0.0886 µs | 0.0856 µs | 249 B | 12,049,021 |
+| 320 | 0.0847 µs | 0.0976 µs | 0.0868 µs | 249 B | 11,808,221 |
+| 640 | 0.0862 µs | 0.109 µs | 0.0907 µs | 249 B | 11,598,196 |
+| 1280 | 0.0864 µs | 0.110 µs | 0.0890 µs | 249 B | 11,579,337 |
+| 2560 | 0.0846 µs | 0.100 µs | 0.0873 µs | 249 B | 11,818,363 |
+| 5120 | 0.0847 µs | 0.0930 µs | 0.0870 µs | 249 B | 11,802,783 |
+| 10240 | 0.0813 µs | 0.0947 µs | 0.0830 µs | 248 B | 12,305,374 |
 
 ### `processors.toURL()`
 
@@ -672,20 +676,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.49, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.32, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.251 µs | 0.467 µs | 0.255 µs | 578 B | 3,991,107 |
-| 40 | 0.230 µs | 0.277 µs | 0.232 µs | 545 B | 4,357,196 |
-| 80 | 0.224 µs | 0.230 µs | 0.226 µs | 585 B | 4,466,528 |
-| 160 | 0.272 µs | 0.277 µs | 1.27 µs | 664 B | 3,672,508 |
-| 320 | 0.345 µs | 0.351 µs | 0.696 µs | 825 B | 2,901,394 |
-| 640 | 0.485 µs | 0.501 µs | 1.96 µs | 1.1 KiB | 2,060,829 |
-| 1280 | 0.787 µs | 0.804 µs | 2.44 µs | 1.7 KiB | 1,270,919 |
-| 2560 | 1.38 µs | 1.40 µs | 1.40 µs | 3.0 KiB | 722,741 |
-| 5120 | 2.51 µs | 2.54 µs | 7.53 µs | 5.5 KiB | 398,964 |
-| 10240 | 4.59 µs | 4.85 µs | 9.66 µs | 10.6 KiB | 217,639 |
+| 20 | 0.614 µs | 1.21 µs | 0.808 µs | 523 B | 1,628,771 |
+| 40 | 0.484 µs | 0.593 µs | 0.494 µs | 546 B | 2,065,936 |
+| 80 | 0.505 µs | 0.569 µs | 0.514 µs | 586 B | 1,979,903 |
+| 160 | 0.552 µs | 0.608 µs | 0.560 µs | 665 B | 1,811,213 |
+| 320 | 0.656 µs | 0.736 µs | 0.665 µs | 826 B | 1,523,812 |
+| 640 | 0.794 µs | 0.916 µs | 0.804 µs | 1.1 KiB | 1,259,087 |
+| 1280 | 1.07 µs | 1.16 µs | 1.09 µs | 1.7 KiB | 930,250 |
+| 2560 | 1.59 µs | 1.75 µs | 3.36 µs | 3.0 KiB | 627,243 |
+| 5120 | 2.48 µs | 2.59 µs | 9.45 µs | 5.6 KiB | 403,570 |
+| 10240 | 4.26 µs | 4.44 µs | 15.0 µs | 10.6 KiB | 234,736 |
 
 ### `processors.toUpperCase()`
 
@@ -708,20 +712,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.38, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.42, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0745 µs | 0.0950 µs | 0.0769 µs | 289 B | 13,419,355 |
-| 40 | 0.0722 µs | 0.0745 µs | 0.0729 µs | 304 B | 13,846,220 |
-| 80 | 0.0747 µs | 0.0773 µs | 0.0750 µs | 344 B | 13,382,836 |
-| 160 | 0.0802 µs | 0.0814 µs | 0.0806 µs | 424 B | 12,471,549 |
-| 320 | 0.0915 µs | 0.0939 µs | 0.0927 µs | 585 B | 10,925,698 |
-| 640 | 0.115 µs | 0.117 µs | 0.116 µs | 905 B | 8,695,652 |
-| 1280 | 0.169 µs | 0.173 µs | 0.653 µs | 1.5 KiB | 5,908,608 |
-| 2560 | 0.261 µs | 0.288 µs | 0.952 µs | 2.8 KiB | 3,836,558 |
-| 5120 | 0.442 µs | 0.466 µs | 1.41 µs | 5.3 KiB | 2,263,852 |
-| 10240 | 0.839 µs | 0.924 µs | 1.98 µs | 10.7 KiB | 1,192,221 |
+| 20 | 0.108 µs | 0.146 µs | 0.111 µs | 289 B | 9,276,032 |
+| 40 | 0.106 µs | 0.143 µs | 0.112 µs | 305 B | 9,413,006 |
+| 80 | 0.106 µs | 0.139 µs | 0.109 µs | 345 B | 9,452,992 |
+| 160 | 0.118 µs | 0.156 µs | 0.123 µs | 425 B | 8,449,004 |
+| 320 | 0.140 µs | 0.188 µs | 0.143 µs | 585 B | 7,151,021 |
+| 640 | 0.182 µs | 0.228 µs | 0.186 µs | 905 B | 5,506,347 |
+| 1280 | 0.266 µs | 0.334 µs | 0.271 µs | 1.5 KiB | 3,762,001 |
+| 2560 | 0.485 µs | 0.895 µs | 0.501 µs | 2.8 KiB | 2,061,111 |
+| 5120 | 0.814 µs | 1.33 µs | 0.830 µs | 5.4 KiB | 1,228,486 |
+| 10240 | 1.38 µs | 1.92 µs | 4.79 µs | 10.5 KiB | 725,884 |
 
 ### `processors.trim()`
 
@@ -744,20 +748,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.77, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.72, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0791 µs | 0.0878 µs | 0.0802 µs | 272 B | 12,643,836 |
-| 40 | 0.0947 µs | 0.0961 µs | 0.460 µs | 272 B | 10,559,192 |
-| 80 | 0.137 µs | 0.140 µs | 0.586 µs | 272 B | 7,289,240 |
-| 160 | 0.211 µs | 0.276 µs | 0.903 µs | 272 B | 4,742,314 |
-| 320 | 0.335 µs | 0.742 µs | 1.10 µs | 272 B | 2,986,652 |
-| 640 | 0.596 µs | 0.615 µs | 1.64 µs | 272 B | 1,676,857 |
-| 1280 | 1.11 µs | 1.14 µs | 2.56 µs | 273 B | 901,024 |
-| 2560 | 2.14 µs | 2.21 µs | 4.66 µs | 273 B | 467,109 |
-| 5120 | 4.20 µs | 4.25 µs | 8.76 µs | 274 B | 238,014 |
-| 10240 | 8.33 µs | 8.49 µs | 17.3 µs | 275 B | 120,100 |
+| 20 | 0.137 µs | 0.156 µs | 0.139 µs | 273 B | 7,325,203 |
+| 40 | 0.183 µs | 0.238 µs | 0.189 µs | 273 B | 5,470,754 |
+| 80 | 0.280 µs | 0.392 µs | 0.283 µs | 273 B | 3,573,634 |
+| 160 | 0.432 µs | 0.560 µs | 0.436 µs | 273 B | 2,312,164 |
+| 320 | 0.717 µs | 0.793 µs | 0.725 µs | 273 B | 1,395,328 |
+| 640 | 1.04 µs | 1.12 µs | 3.47 µs | 273 B | 960,414 |
+| 1280 | 1.89 µs | 2.01 µs | 5.89 µs | 273 B | 528,711 |
+| 2560 | 3.49 µs | 3.72 µs | 10.2 µs | 274 B | 286,604 |
+| 5120 | 6.18 µs | 6.53 µs | 15.8 µs | 276 B | 161,819 |
+| 10240 | 12.5 µs | 13.0 µs | 31.9 µs | 279 B | 80,016 |
 
 ### `validators.after(date)`
 
@@ -780,20 +784,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.03, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.04, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.125 µs | 0.153 µs | 0.127 µs | 465 B | 7,980,100 |
-| 40 | 0.117 µs | 0.218 µs | 0.160 µs | 280 B | 8,546,308 |
-| 80 | 0.175 µs | 0.186 µs | 0.181 µs | 465 B | 5,698,630 |
-| 160 | 0.125 µs | 0.184 µs | 0.126 µs | 281 B | 8,030,769 |
-| 320 | 0.116 µs | 0.118 µs | 0.117 µs | 280 B | 8,631,007 |
-| 640 | 0.116 µs | 0.121 µs | 0.117 µs | 280 B | 8,631,221 |
-| 1280 | 0.115 µs | 0.117 µs | 0.542 µs | 280 B | 8,662,696 |
-| 2560 | 0.116 µs | 0.118 µs | 0.116 µs | 280 B | 8,653,351 |
-| 5120 | 0.115 µs | 0.118 µs | 0.116 µs | 280 B | 8,670,461 |
-| 10240 | 0.116 µs | 0.118 µs | 0.464 µs | 280 B | 8,649,773 |
+| 20 | 0.291 µs | 0.417 µs | 0.325 µs | 356 B | 3,437,877 |
+| 40 | 0.197 µs | 0.316 µs | 0.204 µs | 306 B | 5,080,023 |
+| 80 | 0.190 µs | 0.297 µs | 0.194 µs | 305 B | 5,270,225 |
+| 160 | 0.183 µs | 0.357 µs | 0.190 µs | 249 B | 5,460,942 |
+| 320 | 0.186 µs | 0.225 µs | 0.192 µs | 249 B | 5,362,698 |
+| 640 | 0.186 µs | 0.301 µs | 0.191 µs | 249 B | 5,376,043 |
+| 1280 | 0.195 µs | 0.326 µs | 0.202 µs | 250 B | 5,123,482 |
+| 2560 | 0.190 µs | 0.341 µs | 0.197 µs | 249 B | 5,267,232 |
+| 5120 | 0.186 µs | 0.314 µs | 0.191 µs | 249 B | 5,387,594 |
+| 10240 | 0.182 µs | 0.356 µs | 0.191 µs | 249 B | 5,486,233 |
 
 ### `validators.all(...validators)`
 
@@ -816,20 +820,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.84, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.85, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0896 µs | 0.341 µs | 0.0959 µs | 434 B | 11,159,520 |
-| 40 | 0.0952 µs | 0.112 µs | 0.0977 µs | 305 B | 10,501,328 |
-| 80 | 0.139 µs | 0.140 µs | 0.669 µs | 304 B | 7,215,333 |
-| 160 | 0.237 µs | 0.240 µs | 1.12 µs | 304 B | 4,214,154 |
-| 320 | 0.412 µs | 0.414 µs | 1.45 µs | 304 B | 2,428,152 |
-| 640 | 0.775 µs | 0.804 µs | 2.40 µs | 305 B | 1,290,634 |
-| 1280 | 1.62 µs | 1.65 µs | 4.00 µs | 305 B | 616,045 |
-| 2560 | 3.20 µs | 3.27 µs | 7.37 µs | 305 B | 312,530 |
-| 5120 | 6.29 µs | 6.44 µs | 14.7 µs | 307 B | 158,931 |
-| 10240 | 12.8 µs | 13.4 µs | 27.3 µs | 309 B | 78,132 |
+| 20 | 0.124 µs | 1.25 µs | 0.146 µs | 252 B | 8,078,424 |
+| 40 | 0.154 µs | 0.764 µs | 0.161 µs | 250 B | 6,495,626 |
+| 80 | 0.236 µs | 2.18 µs | 0.243 µs | 250 B | 4,240,333 |
+| 160 | 0.394 µs | 0.821 µs | 0.409 µs | 250 B | 2,536,520 |
+| 320 | 0.715 µs | 2.46 µs | 0.741 µs | 252 B | 1,399,278 |
+| 640 | 1.39 µs | 1.63 µs | 1.43 µs | 256 B | 718,468 |
+| 1280 | 2.77 µs | 4.89 µs | 2.86 µs | 455 B | 361,300 |
+| 2560 | 5.28 µs | 6.28 µs | 5.40 µs | 464 B | 189,322 |
+| 5120 | 10.5 µs | 12.9 µs | 10.7 µs | 301 B | 95,488 |
+| 10240 | 20.9 µs | 24.1 µs | 21.7 µs | 539 B | 47,821 |
 
 ### `validators.any(...validators)`
 
@@ -852,20 +856,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.95, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.96, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.225 µs | 0.399 µs | 0.234 µs | 1.5 KiB | 4,437,247 |
-| 40 | 0.370 µs | 0.620 µs | 0.373 µs | 2.7 KiB | 2,699,735 |
-| 80 | 0.672 µs | 0.691 µs | 1.79 µs | 5.2 KiB | 1,488,341 |
-| 160 | 1.26 µs | 1.33 µs | 3.01 µs | 10.2 KiB | 790,514 |
-| 320 | 2.47 µs | 2.71 µs | 5.82 µs | 20.2 KiB | 405,489 |
-| 640 | 4.86 µs | 5.17 µs | 10.8 µs | 40.2 KiB | 205,872 |
-| 1280 | 9.86 µs | 10.5 µs | 20.3 µs | 80.2 KiB | 101,410 |
-| 2560 | 19.1 µs | 20.2 µs | 39.8 µs | 160.2 KiB | 52,311 |
-| 5120 | 38.1 µs | 39.1 µs | 76.9 µs | 320.3 KiB | 26,255 |
-| 10240 | 76.0 µs | 80.5 µs | 155 µs | 640.3 KiB | 13,155 |
+| 20 | 0.356 µs | 1.74 µs | 0.375 µs | 1.5 KiB | 2,806,722 |
+| 40 | 0.598 µs | 0.813 µs | 0.602 µs | 2.7 KiB | 1,672,553 |
+| 80 | 1.20 µs | 1.35 µs | 1.22 µs | 5.2 KiB | 833,718 |
+| 160 | 2.31 µs | 2.71 µs | 2.34 µs | 10.4 KiB | 433,361 |
+| 320 | 4.43 µs | 4.89 µs | 9.33 µs | 20.2 KiB | 225,778 |
+| 640 | 8.81 µs | 9.91 µs | 8.87 µs | 40.2 KiB | 113,510 |
+| 1280 | 17.5 µs | 19.5 µs | 54.6 µs | 80.4 KiB | 57,024 |
+| 2560 | 33.5 µs | 35.7 µs | 69.6 µs | 160.4 KiB | 29,831 |
+| 5120 | 67.5 µs | 75.1 µs | 140 µs | 320.5 KiB | 14,818 |
+| 10240 | 138 µs | 147 µs | 291 µs | 640.5 KiB | 7,228 |
 
 ### `validators.before(date)`
 
@@ -888,20 +892,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.118 µs | 0.129 µs | 0.119 µs | 336 B | 8,462,809 |
-| 40 | 0.118 µs | 0.122 µs | 0.119 µs | 336 B | 8,456,206 |
-| 80 | 0.119 µs | 0.121 µs | 0.120 µs | 336 B | 8,424,662 |
-| 160 | 0.119 µs | 0.120 µs | 0.119 µs | 336 B | 8,433,729 |
-| 320 | 0.119 µs | 0.120 µs | 0.241 µs | 336 B | 8,423,822 |
-| 640 | 0.119 µs | 0.180 µs | 0.119 µs | 336 B | 8,411,800 |
-| 1280 | 0.119 µs | 0.120 µs | 0.119 µs | 336 B | 8,432,281 |
-| 2560 | 0.119 µs | 0.120 µs | 0.119 µs | 336 B | 8,414,227 |
-| 5120 | 0.119 µs | 0.120 µs | 0.119 µs | 336 B | 8,422,398 |
-| 10240 | 0.119 µs | 0.124 µs | 0.121 µs | 336 B | 8,374,557 |
+| 20 | 0.190 µs | 0.309 µs | 0.194 µs | 249 B | 5,269,456 |
+| 40 | 0.189 µs | 0.343 µs | 0.196 µs | 249 B | 5,299,093 |
+| 80 | 0.191 µs | 0.348 µs | 0.195 µs | 249 B | 5,243,759 |
+| 160 | 0.186 µs | 0.330 µs | 0.191 µs | 249 B | 5,374,628 |
+| 320 | 0.186 µs | 0.303 µs | 0.191 µs | 249 B | 5,369,054 |
+| 640 | 0.181 µs | 0.285 µs | 0.187 µs | 249 B | 5,529,298 |
+| 1280 | 0.183 µs | 0.214 µs | 0.188 µs | 249 B | 5,456,648 |
+| 2560 | 0.187 µs | 0.307 µs | 0.192 µs | 249 B | 5,356,596 |
+| 5120 | 0.182 µs | 0.354 µs | 0.188 µs | 249 B | 5,481,388 |
+| 10240 | 0.189 µs | 0.342 µs | 0.199 µs | 250 B | 5,286,439 |
 
 ### `validators.custom(fn)`
 
@@ -924,20 +928,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0482 µs | 0.0551 µs | 0.0500 µs | 304 B | 20,751,620 |
-| 40 | 0.0472 µs | 0.0480 µs | 0.0479 µs | 304 B | 21,169,841 |
-| 80 | 0.0470 µs | 0.0526 µs | 0.0476 µs | 304 B | 21,279,312 |
-| 160 | 0.0470 µs | 0.0476 µs | 0.0473 µs | 304 B | 21,267,043 |
-| 320 | 0.0472 µs | 0.0477 µs | 0.0477 µs | 304 B | 21,187,948 |
-| 640 | 0.0475 µs | 0.0483 µs | 0.0478 µs | 304 B | 21,041,575 |
-| 1280 | 0.0470 µs | 0.0475 µs | 0.0475 µs | 304 B | 21,277,162 |
-| 2560 | 0.0470 µs | 0.0476 µs | 0.0477 µs | 304 B | 21,284,493 |
-| 5120 | 0.0472 µs | 0.0479 µs | 0.0480 µs | 304 B | 21,183,794 |
-| 10240 | 0.0472 µs | 0.0478 µs | 0.0475 µs | 304 B | 21,182,850 |
+| 20 | 0.0676 µs | 0.171 µs | 0.0723 µs | 249 B | 14,792,372 |
+| 40 | 0.0664 µs | 0.181 µs | 0.0711 µs | 249 B | 15,053,687 |
+| 80 | 0.0661 µs | 0.190 µs | 0.0697 µs | 249 B | 15,120,569 |
+| 160 | 0.0662 µs | 0.167 µs | 0.0693 µs | 249 B | 15,107,274 |
+| 320 | 0.0661 µs | 0.201 µs | 0.0704 µs | 249 B | 15,122,155 |
+| 640 | 0.0655 µs | 0.175 µs | 0.0687 µs | 249 B | 15,264,115 |
+| 1280 | 0.0675 µs | 0.177 µs | 0.0710 µs | 249 B | 14,814,579 |
+| 2560 | 0.0698 µs | 0.182 µs | 0.0762 µs | 249 B | 14,335,776 |
+| 5120 | 0.0667 µs | 0.0717 µs | 0.0692 µs | 249 B | 14,985,784 |
+| 10240 | 0.0660 µs | 0.0851 µs | 0.0690 µs | 249 B | 15,143,369 |
 
 ### `validators.email()`
 
@@ -960,20 +964,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.65, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.46, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.132 µs | 0.189 µs | 0.167 µs | 317 B | 7,578,150 |
-| 40 | 0.141 µs | 0.156 µs | 0.176 µs | 313 B | 7,095,159 |
-| 80 | 0.186 µs | 0.196 µs | 0.200 µs | 315 B | 5,373,455 |
-| 160 | 0.252 µs | 0.261 µs | 0.269 µs | 316 B | 3,974,927 |
-| 320 | 0.378 µs | 0.390 µs | 0.393 µs | 315 B | 2,645,503 |
-| 640 | 0.619 µs | 0.674 µs | 0.636 µs | 319 B | 1,614,679 |
-| 1280 | 0.948 µs | 1.00 µs | 2.26 µs | 304 B | 1,054,337 |
-| 2560 | 1.81 µs | 1.85 µs | 4.24 µs | 305 B | 552,095 |
-| 5120 | 3.52 µs | 3.59 µs | 7.09 µs | 305 B | 284,168 |
-| 10240 | 6.96 µs | 7.09 µs | 14.2 µs | 307 B | 143,755 |
+| 20 | 0.400 µs | 0.434 µs | 0.474 µs | 449 B | 2,499,671 |
+| 40 | 0.407 µs | 0.434 µs | 0.500 µs | 448 B | 2,456,097 |
+| 80 | 0.265 µs | 0.471 µs | 0.350 µs | 264 B | 3,767,898 |
+| 160 | 0.555 µs | 1.20 µs | 0.692 µs | 457 B | 1,800,305 |
+| 320 | 0.636 µs | 0.660 µs | 0.750 µs | 452 B | 1,572,327 |
+| 640 | 0.941 µs | 1.34 µs | 1.00 µs | 448 B | 1,062,191 |
+| 1280 | 1.32 µs | 1.45 µs | 2.74 µs | 250 B | 759,340 |
+| 2560 | 1.87 µs | 1.95 µs | 5.80 µs | 249 B | 534,210 |
+| 5120 | 3.28 µs | 3.49 µs | 8.75 µs | 250 B | 304,997 |
+| 10240 | 6.24 µs | 6.43 µs | 15.8 µs | 252 B | 160,326 |
 
 ### `validators.endsWith(suffix)`
 
@@ -996,20 +1000,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0645 µs | 0.0780 µs | 0.0700 µs | 305 B | 15,511,298 |
-| 40 | 0.0580 µs | 0.0677 µs | 0.0585 µs | 304 B | 17,240,711 |
-| 80 | 0.0576 µs | 0.0587 µs | 0.0578 µs | 304 B | 17,368,362 |
-| 160 | 0.0580 µs | 0.0586 µs | 0.0588 µs | 304 B | 17,251,287 |
-| 320 | 0.0575 µs | 0.0586 µs | 0.0578 µs | 304 B | 17,379,860 |
-| 640 | 0.0582 µs | 0.0588 µs | 0.0586 µs | 304 B | 17,193,264 |
-| 1280 | 0.0581 µs | 0.0589 µs | 0.0587 µs | 304 B | 17,216,643 |
-| 2560 | 0.0577 µs | 0.0650 µs | 0.0581 µs | 304 B | 17,336,982 |
-| 5120 | 0.0575 µs | 0.0581 µs | 0.0582 µs | 304 B | 17,402,390 |
-| 10240 | 0.0578 µs | 0.0586 µs | 0.0585 µs | 304 B | 17,305,946 |
+| 20 | 0.0884 µs | 0.204 µs | 0.0982 µs | 305 B | 11,313,131 |
+| 40 | 0.0886 µs | 0.106 µs | 0.0911 µs | 305 B | 11,286,310 |
+| 80 | 0.0886 µs | 0.112 µs | 0.0916 µs | 305 B | 11,288,654 |
+| 160 | 0.0922 µs | 0.114 µs | 0.0949 µs | 305 B | 10,850,742 |
+| 320 | 0.0879 µs | 0.108 µs | 0.0898 µs | 304 B | 11,379,999 |
+| 640 | 0.0886 µs | 0.101 µs | 0.0909 µs | 304 B | 11,280,422 |
+| 1280 | 0.0904 µs | 0.113 µs | 0.0939 µs | 305 B | 11,067,614 |
+| 2560 | 0.0891 µs | 0.106 µs | 0.0918 µs | 305 B | 11,220,609 |
+| 5120 | 0.0894 µs | 0.105 µs | 0.0912 µs | 304 B | 11,187,523 |
+| 10240 | 0.0951 µs | 0.124 µs | 0.0979 µs | 305 B | 10,512,336 |
 
 ### `validators.finite()`
 
@@ -1036,16 +1040,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0501 µs | 0.0534 µs | 0.0512 µs | 305 B | 19,977,500 |
-| 40 | 0.0474 µs | 0.0485 µs | 0.0483 µs | 304 B | 21,100,901 |
-| 80 | 0.0469 µs | 0.0477 µs | 0.0475 µs | 304 B | 21,333,333 |
-| 160 | 0.0467 µs | 0.0475 µs | 0.0469 µs | 304 B | 21,431,731 |
-| 320 | 0.0468 µs | 0.0868 µs | 0.0472 µs | 304 B | 21,364,372 |
-| 640 | 0.0466 µs | 0.0476 µs | 0.0469 µs | 304 B | 21,450,287 |
-| 1280 | 0.0468 µs | 0.0491 µs | 0.0472 µs | 304 B | 21,359,413 |
-| 2560 | 0.0468 µs | 0.0483 µs | 0.0471 µs | 304 B | 21,371,938 |
-| 5120 | 0.0469 µs | 0.107 µs | 0.0476 µs | 304 B | 21,328,834 |
-| 10240 | 0.0474 µs | 0.0483 µs | 0.0480 µs | 304 B | 21,104,923 |
+| 20 | 0.0745 µs | 0.103 µs | 0.0799 µs | 305 B | 13,424,418 |
+| 40 | 0.0722 µs | 0.0870 µs | 0.0747 µs | 305 B | 13,848,504 |
+| 80 | 0.0691 µs | 0.0846 µs | 0.0717 µs | 304 B | 14,467,786 |
+| 160 | 0.0697 µs | 0.0950 µs | 0.0731 µs | 305 B | 14,345,630 |
+| 320 | 0.0711 µs | 0.0966 µs | 0.0741 µs | 304 B | 14,058,692 |
+| 640 | 0.0694 µs | 0.0966 µs | 0.0715 µs | 304 B | 14,408,417 |
+| 1280 | 0.0697 µs | 0.0809 µs | 0.0715 µs | 304 B | 14,349,424 |
+| 2560 | 0.0692 µs | 0.102 µs | 0.0714 µs | 304 B | 14,452,256 |
+| 5120 | 0.0693 µs | 0.0982 µs | 0.0710 µs | 304 B | 14,439,978 |
+| 10240 | 0.0710 µs | 0.0987 µs | 0.0739 µs | 305 B | 14,090,620 |
 
 ### `validators.future()`
 
@@ -1068,20 +1072,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.164 µs | 0.171 µs | 0.169 µs | 434 B | 6,097,345 |
-| 40 | 0.151 µs | 0.155 µs | 0.151 µs | 432 B | 6,632,750 |
-| 80 | 0.152 µs | 0.153 µs | 0.152 µs | 432 B | 6,597,938 |
-| 160 | 0.152 µs | 0.155 µs | 0.153 µs | 432 B | 6,594,928 |
-| 320 | 0.153 µs | 0.177 µs | 0.154 µs | 432 B | 6,529,899 |
-| 640 | 0.152 µs | 0.155 µs | 0.609 µs | 432 B | 6,598,949 |
-| 1280 | 0.150 µs | 0.152 µs | 0.152 µs | 432 B | 6,652,192 |
-| 2560 | 0.151 µs | 0.152 µs | 0.723 µs | 432 B | 6,637,168 |
-| 5120 | 0.151 µs | 0.154 µs | 0.724 µs | 432 B | 6,637,168 |
-| 10240 | 0.151 µs | 0.153 µs | 0.744 µs | 432 B | 6,644,190 |
+| 20 | 0.271 µs | 0.303 µs | 0.276 µs | 417 B | 3,695,583 |
+| 40 | 0.273 µs | 0.302 µs | 0.279 µs | 417 B | 3,658,922 |
+| 80 | 0.273 µs | 0.304 µs | 0.278 µs | 417 B | 3,660,731 |
+| 160 | 0.271 µs | 0.311 µs | 0.276 µs | 417 B | 3,694,132 |
+| 320 | 0.274 µs | 0.310 µs | 0.279 µs | 417 B | 3,655,978 |
+| 640 | 0.272 µs | 0.298 µs | 0.278 µs | 417 B | 3,671,708 |
+| 1280 | 0.270 µs | 0.310 µs | 0.277 µs | 417 B | 3,706,840 |
+| 2560 | 0.274 µs | 0.297 µs | 0.277 µs | 417 B | 3,655,711 |
+| 5120 | 0.271 µs | 0.297 µs | 0.274 µs | 417 B | 3,689,290 |
+| 10240 | 0.272 µs | 0.310 µs | 0.276 µs | 417 B | 3,679,519 |
 
 ### `validators.includes(text)`
 
@@ -1104,20 +1108,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.22, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(1)** (exponent 0.07, 10 sizes) -- ⚠️ differs.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0590 µs | 0.0638 µs | 0.0612 µs | 304 B | 16,955,436 |
-| 40 | 0.0597 µs | 0.0610 µs | 0.0608 µs | 304 B | 16,748,480 |
-| 80 | 0.0594 µs | 0.0602 µs | 0.0600 µs | 304 B | 16,836,151 |
-| 160 | 0.0611 µs | 0.0641 µs | 0.0618 µs | 304 B | 16,366,409 |
-| 320 | 0.0643 µs | 0.0650 µs | 0.0653 µs | 304 B | 15,557,422 |
-| 640 | 0.0713 µs | 0.0722 µs | 0.0720 µs | 304 B | 14,020,218 |
-| 1280 | 0.0834 µs | 0.0844 µs | 0.0839 µs | 304 B | 11,992,016 |
-| 2560 | 0.116 µs | 0.119 µs | 0.116 µs | 304 B | 8,655,960 |
-| 5120 | 0.174 µs | 0.175 µs | 0.792 µs | 304 B | 5,749,421 |
-| 10240 | 0.260 µs | 0.270 µs | 1.03 µs | 304 B | 3,843,632 |
+| 20 | 0.0889 µs | 0.123 µs | 0.0932 µs | 305 B | 11,251,869 |
+| 40 | 0.0894 µs | 0.124 µs | 0.0932 µs | 305 B | 11,186,425 |
+| 80 | 0.0890 µs | 0.106 µs | 0.0913 µs | 305 B | 11,240,408 |
+| 160 | 0.0909 µs | 0.125 µs | 0.0938 µs | 305 B | 11,005,493 |
+| 320 | 0.0923 µs | 0.128 µs | 0.0958 µs | 305 B | 10,833,503 |
+| 640 | 0.0951 µs | 0.129 µs | 0.0990 µs | 305 B | 10,511,417 |
+| 1280 | 0.103 µs | 0.140 µs | 0.106 µs | 305 B | 9,693,958 |
+| 2560 | 0.109 µs | 0.147 µs | 0.113 µs | 305 B | 9,200,700 |
+| 5120 | 0.121 µs | 0.166 µs | 0.125 µs | 305 B | 8,239,114 |
+| 10240 | 0.146 µs | 0.196 µs | 0.151 µs | 305 B | 6,857,225 |
 
 ### `validators.integer()`
 
@@ -1140,20 +1144,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0501 µs | 0.0523 µs | 0.0506 µs | 305 B | 19,958,315 |
-| 40 | 0.0473 µs | 0.0485 µs | 0.0480 µs | 304 B | 21,151,487 |
-| 80 | 0.0468 µs | 0.0476 µs | 0.0472 µs | 304 B | 21,368,190 |
-| 160 | 0.0467 µs | 0.0478 µs | 0.0470 µs | 304 B | 21,392,659 |
-| 320 | 0.0469 µs | 0.0477 µs | 0.0474 µs | 304 B | 21,321,508 |
-| 640 | 0.0468 µs | 0.0476 µs | 0.0471 µs | 304 B | 21,356,146 |
-| 1280 | 0.0468 µs | 0.0480 µs | 0.0475 µs | 304 B | 21,348,165 |
-| 2560 | 0.0467 µs | 0.0475 µs | 0.0471 µs | 304 B | 21,435,528 |
-| 5120 | 0.0471 µs | 0.0479 µs | 0.0476 µs | 304 B | 21,212,533 |
-| 10240 | 0.0467 µs | 0.0475 µs | 0.0471 µs | 304 B | 21,427,678 |
+| 20 | 0.0715 µs | 0.0966 µs | 0.0738 µs | 305 B | 13,986,014 |
+| 40 | 0.0707 µs | 0.101 µs | 0.0734 µs | 305 B | 14,135,824 |
+| 80 | 0.0696 µs | 0.0835 µs | 0.0719 µs | 304 B | 14,365,604 |
+| 160 | 0.0708 µs | 0.0741 µs | 0.0744 µs | 305 B | 14,118,115 |
+| 320 | 0.0694 µs | 0.0950 µs | 0.0712 µs | 304 B | 14,410,752 |
+| 640 | 0.0698 µs | 0.0848 µs | 0.0719 µs | 304 B | 14,329,600 |
+| 1280 | 0.0713 µs | 0.0873 µs | 0.0756 µs | 305 B | 14,030,728 |
+| 2560 | 0.0700 µs | 0.0844 µs | 0.0726 µs | 304 B | 14,294,185 |
+| 5120 | 0.0692 µs | 0.0849 µs | 0.0713 µs | 304 B | 14,445,067 |
+| 10240 | 0.0720 µs | 0.0884 µs | 0.0751 µs | 304 B | 13,894,257 |
 
 ### `validators.length(n)`
 
@@ -1176,20 +1180,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0495 µs | 0.0518 µs | 0.0506 µs | 305 B | 20,196,855 |
-| 40 | 0.0481 µs | 0.0488 µs | 0.0487 µs | 304 B | 20,773,322 |
-| 80 | 0.0480 µs | 0.0488 µs | 0.0488 µs | 304 B | 20,838,978 |
-| 160 | 0.0477 µs | 0.0486 µs | 0.0481 µs | 304 B | 20,958,084 |
-| 320 | 0.0478 µs | 0.0484 µs | 0.0481 µs | 304 B | 20,924,551 |
-| 640 | 0.0479 µs | 0.114 µs | 0.0484 µs | 304 B | 20,883,578 |
-| 1280 | 0.0486 µs | 0.0496 µs | 0.0493 µs | 304 B | 20,571,335 |
-| 2560 | 0.0483 µs | 0.0492 µs | 0.0490 µs | 304 B | 20,721,691 |
-| 5120 | 0.0478 µs | 0.0492 µs | 0.0490 µs | 304 B | 20,905,669 |
-| 10240 | 0.0478 µs | 0.0492 µs | 0.0480 µs | 304 B | 20,904,039 |
+| 20 | 0.0715 µs | 0.0903 µs | 0.0738 µs | 305 B | 13,993,003 |
+| 40 | 0.0697 µs | 0.0868 µs | 0.0723 µs | 304 B | 14,338,419 |
+| 80 | 0.0704 µs | 0.0884 µs | 0.0739 µs | 305 B | 14,213,028 |
+| 160 | 0.0711 µs | 0.0915 µs | 0.0756 µs | 305 B | 14,056,286 |
+| 320 | 0.0695 µs | 0.0932 µs | 0.0715 µs | 304 B | 14,379,488 |
+| 640 | 0.0702 µs | 0.0865 µs | 0.0729 µs | 305 B | 14,247,448 |
+| 1280 | 0.0740 µs | 0.0904 µs | 0.0772 µs | 304 B | 13,521,807 |
+| 2560 | 0.0701 µs | 0.0874 µs | 0.0724 µs | 304 B | 14,270,077 |
+| 5120 | 0.0701 µs | 0.0816 µs | 0.0720 µs | 304 B | 14,271,270 |
+| 10240 | 0.0706 µs | 0.0916 µs | 0.0733 µs | 305 B | 14,156,365 |
 
 ### `validators.matches(regex)`
 
@@ -1212,20 +1216,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.54, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.50, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.102 µs | 0.128 µs | 0.120 µs | 317 B | 9,834,776 |
-| 40 | 0.101 µs | 0.110 µs | 0.129 µs | 314 B | 9,920,000 |
-| 80 | 0.112 µs | 0.116 µs | 0.147 µs | 313 B | 8,966,245 |
-| 160 | 0.145 µs | 0.155 µs | 0.179 µs | 312 B | 6,883,163 |
-| 320 | 0.225 µs | 0.241 µs | 0.250 µs | 314 B | 4,438,896 |
-| 640 | 0.330 µs | 0.339 µs | 0.353 µs | 313 B | 3,033,547 |
-| 1280 | 0.437 µs | 0.448 µs | 1.24 µs | 304 B | 2,288,814 |
-| 2560 | 0.783 µs | 0.795 µs | 2.05 µs | 304 B | 1,277,170 |
-| 5120 | 1.47 µs | 1.50 µs | 3.36 µs | 305 B | 679,870 |
-| 10240 | 2.86 µs | 2.98 µs | 6.22 µs | 305 B | 349,730 |
+| 20 | 0.177 µs | 0.229 µs | 0.250 µs | 317 B | 5,637,773 |
+| 40 | 0.184 µs | 0.217 µs | 0.240 µs | 317 B | 5,426,525 |
+| 80 | 0.214 µs | 0.578 µs | 0.280 µs | 317 B | 4,665,920 |
+| 160 | 0.264 µs | 0.290 µs | 0.308 µs | 316 B | 3,784,571 |
+| 320 | 0.378 µs | 0.456 µs | 0.450 µs | 320 B | 2,644,803 |
+| 640 | 0.498 µs | 0.647 µs | 0.541 µs | 313 B | 2,009,996 |
+| 1280 | 0.845 µs | 1.02 µs | 1.78 µs | 305 B | 1,183,167 |
+| 2560 | 1.29 µs | 1.61 µs | 4.68 µs | 305 B | 775,777 |
+| 5120 | 2.00 µs | 2.12 µs | 6.08 µs | 305 B | 499,542 |
+| 10240 | 3.76 µs | 4.08 µs | 10.9 µs | 307 B | 266,125 |
 
 ### `validators.max(limit)`
 
@@ -1248,20 +1252,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0478 µs | 0.0594 µs | 0.0480 µs | 304 B | 20,942,408 |
-| 40 | 0.0472 µs | 0.0480 µs | 0.0479 µs | 304 B | 21,175,370 |
-| 80 | 0.0476 µs | 0.0483 µs | 0.0482 µs | 304 B | 20,987,289 |
-| 160 | 0.0475 µs | 0.0484 µs | 0.0482 µs | 304 B | 21,046,871 |
-| 320 | 0.0472 µs | 0.0480 µs | 0.0476 µs | 304 B | 21,173,556 |
-| 640 | 0.0476 µs | 0.0484 µs | 0.0480 µs | 304 B | 21,015,688 |
-| 1280 | 0.0473 µs | 0.0480 µs | 0.0476 µs | 304 B | 21,152,733 |
-| 2560 | 0.0472 µs | 0.0484 µs | 0.0476 µs | 304 B | 21,169,560 |
-| 5120 | 0.0476 µs | 0.0486 µs | 0.0481 µs | 304 B | 21,029,389 |
-| 10240 | 0.0477 µs | 0.0483 µs | 0.0481 µs | 304 B | 20,974,790 |
+| 20 | 0.0700 µs | 0.0806 µs | 0.0724 µs | 304 B | 14,290,124 |
+| 40 | 0.0698 µs | 0.0808 µs | 0.0721 µs | 304 B | 14,331,117 |
+| 80 | 0.0702 µs | 0.0816 µs | 0.0716 µs | 304 B | 14,250,961 |
+| 160 | 0.0695 µs | 0.0829 µs | 0.0726 µs | 304 B | 14,395,393 |
+| 320 | 0.0700 µs | 0.0803 µs | 0.0713 µs | 304 B | 14,295,197 |
+| 640 | 0.0703 µs | 0.0761 µs | 0.0736 µs | 305 B | 14,221,315 |
+| 1280 | 0.0707 µs | 0.0844 µs | 0.0730 µs | 304 B | 14,148,366 |
+| 2560 | 0.0699 µs | 0.0803 µs | 0.0712 µs | 304 B | 14,308,497 |
+| 5120 | 0.0714 µs | 0.0806 µs | 0.0737 µs | 304 B | 14,007,547 |
+| 10240 | 0.0707 µs | 0.0796 µs | 0.0734 µs | 305 B | 14,135,626 |
 
 ### `validators.maxItems(limit)`
 
@@ -1288,16 +1292,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0474 µs | 0.0594 µs | 0.0480 µs | 304 B | 21,076,913 |
-| 40 | 0.0479 µs | 0.0485 µs | 0.0487 µs | 304 B | 20,898,281 |
-| 80 | 0.0486 µs | 0.0502 µs | 0.0498 µs | 304 B | 20,587,514 |
-| 160 | 0.0474 µs | 0.0751 µs | 0.0480 µs | 304 B | 21,098,827 |
-| 320 | 0.0474 µs | 0.0488 µs | 0.0480 µs | 304 B | 21,108,179 |
-| 640 | 0.0476 µs | 0.0486 µs | 0.0480 µs | 304 B | 21,007,874 |
-| 1280 | 0.0468 µs | 0.0477 µs | 0.0472 µs | 304 B | 21,357,357 |
-| 2560 | 0.0479 µs | 0.0483 µs | 0.0482 µs | 304 B | 20,876,647 |
-| 5120 | 0.0482 µs | 0.0492 µs | 0.0488 µs | 304 B | 20,751,133 |
-| 10240 | 0.0491 µs | 0.0571 µs | 0.0493 µs | 304 B | 20,373,514 |
+| 20 | 0.0694 µs | 0.0866 µs | 0.0722 µs | 304 B | 14,415,830 |
+| 40 | 0.0698 µs | 0.0856 µs | 0.0716 µs | 304 B | 14,327,008 |
+| 80 | 0.0695 µs | 0.0898 µs | 0.0720 µs | 304 B | 14,397,215 |
+| 160 | 0.0713 µs | 0.0905 µs | 0.0752 µs | 305 B | 14,034,347 |
+| 320 | 0.0713 µs | 0.0907 µs | 0.0735 µs | 304 B | 14,021,618 |
+| 640 | 0.0709 µs | 0.0932 µs | 0.0746 µs | 305 B | 14,113,699 |
+| 1280 | 0.0700 µs | 0.0867 µs | 0.0730 µs | 305 B | 14,288,130 |
+| 2560 | 0.0696 µs | 0.0866 µs | 0.0720 µs | 304 B | 14,364,664 |
+| 5120 | 0.0697 µs | 0.0867 µs | 0.0716 µs | 304 B | 14,348,045 |
+| 10240 | 0.0699 µs | 0.0769 µs | 0.0713 µs | 304 B | 14,301,908 |
 
 ### `validators.maxLength(limit)`
 
@@ -1324,16 +1328,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0486 µs | 0.0601 µs | 0.0500 µs | 304 B | 20,578,778 |
-| 40 | 0.0481 µs | 0.0513 µs | 0.0488 µs | 304 B | 20,792,254 |
-| 80 | 0.0475 µs | 0.0483 µs | 0.0479 µs | 304 B | 21,051,431 |
-| 160 | 0.0478 µs | 0.0482 µs | 0.0482 µs | 304 B | 20,935,215 |
-| 320 | 0.0476 µs | 0.0485 µs | 0.0480 µs | 304 B | 21,006,417 |
-| 640 | 0.0475 µs | 0.0483 µs | 0.0478 µs | 304 B | 21,064,622 |
-| 1280 | 0.0478 µs | 0.0483 µs | 0.0480 µs | 304 B | 20,934,685 |
-| 2560 | 0.0477 µs | 0.0484 µs | 0.0481 µs | 304 B | 20,983,052 |
-| 5120 | 0.0477 µs | 0.0486 µs | 0.0480 µs | 304 B | 20,972,422 |
-| 10240 | 0.0475 µs | 0.0485 µs | 0.0479 µs | 304 B | 21,066,959 |
+| 20 | 0.0703 µs | 0.0929 µs | 0.0737 µs | 305 B | 14,232,162 |
+| 40 | 0.0712 µs | 0.0896 µs | 0.0739 µs | 305 B | 14,039,970 |
+| 80 | 0.0698 µs | 0.0861 µs | 0.0718 µs | 304 B | 14,323,586 |
+| 160 | 0.0703 µs | 0.0888 µs | 0.0735 µs | 305 B | 14,223,099 |
+| 320 | 0.0700 µs | 0.0867 µs | 0.0717 µs | 304 B | 14,279,968 |
+| 640 | 0.0699 µs | 0.0877 µs | 0.0728 µs | 304 B | 14,309,764 |
+| 1280 | 0.0697 µs | 0.0869 µs | 0.0708 µs | 304 B | 14,341,750 |
+| 2560 | 0.0698 µs | 0.0871 µs | 0.0714 µs | 304 B | 14,326,455 |
+| 5120 | 0.0706 µs | 0.0893 µs | 0.0726 µs | 305 B | 14,158,276 |
+| 10240 | 0.0702 µs | 0.0866 µs | 0.0731 µs | 305 B | 14,254,256 |
 
 ### `validators.min(limit)`
 
@@ -1356,20 +1360,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0482 µs | 0.0549 µs | 0.0487 µs | 304 B | 20,762,646 |
-| 40 | 0.0478 µs | 0.0482 µs | 0.0480 µs | 304 B | 20,934,466 |
-| 80 | 0.0476 µs | 0.0485 µs | 0.0479 µs | 304 B | 20,997,812 |
-| 160 | 0.0479 µs | 0.0486 µs | 0.0485 µs | 304 B | 20,889,228 |
-| 320 | 0.0476 µs | 0.0488 µs | 0.0485 µs | 304 B | 20,996,764 |
-| 640 | 0.0482 µs | 0.0489 µs | 0.0488 µs | 304 B | 20,741,284 |
-| 1280 | 0.0475 µs | 0.0483 µs | 0.0479 µs | 304 B | 21,059,377 |
-| 2560 | 0.0475 µs | 0.0493 µs | 0.0480 µs | 304 B | 21,062,192 |
-| 5120 | 0.0475 µs | 0.0482 µs | 0.0479 µs | 304 B | 21,043,860 |
-| 10240 | 0.0477 µs | 0.0484 µs | 0.0480 µs | 304 B | 20,958,743 |
+| 20 | 0.0695 µs | 0.0801 µs | 0.0710 µs | 304 B | 14,378,271 |
+| 40 | 0.0697 µs | 0.0797 µs | 0.0715 µs | 304 B | 14,354,207 |
+| 80 | 0.0696 µs | 0.0848 µs | 0.0727 µs | 305 B | 14,359,892 |
+| 160 | 0.0698 µs | 0.0780 µs | 0.0713 µs | 304 B | 14,328,961 |
+| 320 | 0.0695 µs | 0.0836 µs | 0.0713 µs | 304 B | 14,379,833 |
+| 640 | 0.0701 µs | 0.0871 µs | 0.0722 µs | 305 B | 14,274,943 |
+| 1280 | 0.0697 µs | 0.0844 µs | 0.0715 µs | 304 B | 14,349,424 |
+| 2560 | 0.0703 µs | 0.0811 µs | 0.0718 µs | 304 B | 14,222,778 |
+| 5120 | 0.0697 µs | 0.0765 µs | 0.0719 µs | 305 B | 14,342,935 |
+| 10240 | 0.0699 µs | 0.0804 µs | 0.0720 µs | 304 B | 14,299,713 |
 
 ### `validators.minItems(limit)`
 
@@ -1396,16 +1400,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0479 µs | 0.0542 µs | 0.0481 µs | 304 B | 20,894,640 |
-| 40 | 0.0480 µs | 0.0495 µs | 0.0487 µs | 304 B | 20,816,428 |
-| 80 | 0.0475 µs | 0.0491 µs | 0.0481 µs | 304 B | 21,050,602 |
-| 160 | 0.0477 µs | 0.0573 µs | 0.0507 µs | 304 B | 20,962,656 |
-| 320 | 0.0474 µs | 0.112 µs | 0.0781 µs | 304 B | 21,098,447 |
-| 640 | 0.0473 µs | 0.126 µs | 0.0928 µs | 304 B | 21,138,577 |
-| 1280 | 0.0474 µs | 0.0480 µs | 0.0485 µs | 304 B | 21,109,376 |
-| 2560 | 0.0484 µs | 0.0517 µs | 0.0495 µs | 304 B | 20,642,166 |
-| 5120 | 0.0478 µs | 0.0486 µs | 0.0482 µs | 304 B | 20,917,847 |
-| 10240 | 0.0475 µs | 0.0481 µs | 0.0478 µs | 304 B | 21,049,129 |
+| 20 | 0.0702 µs | 0.0871 µs | 0.0729 µs | 304 B | 14,254,774 |
+| 40 | 0.0692 µs | 0.0863 µs | 0.0714 µs | 304 B | 14,441,974 |
+| 80 | 0.0703 µs | 0.0887 µs | 0.0729 µs | 305 B | 14,219,851 |
+| 160 | 0.0715 µs | 0.0908 µs | 0.0738 µs | 305 B | 13,990,142 |
+| 320 | 0.0712 µs | 0.0914 µs | 0.0756 µs | 305 B | 14,041,000 |
+| 640 | 0.0709 µs | 0.0905 µs | 0.0727 µs | 305 B | 14,097,635 |
+| 1280 | 0.0732 µs | 0.0863 µs | 0.0756 µs | 304 B | 13,657,056 |
+| 2560 | 0.0703 µs | 0.0885 µs | 0.0727 µs | 305 B | 14,222,091 |
+| 5120 | 0.0690 µs | 0.0840 µs | 0.0721 µs | 304 B | 14,495,534 |
+| 10240 | 0.0695 µs | 0.0818 µs | 0.0716 µs | 304 B | 14,387,581 |
 
 ### `validators.minLength(limit)`
 
@@ -1428,20 +1432,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0489 µs | 0.0522 µs | 0.0500 µs | 304 B | 20,469,258 |
-| 40 | 0.0481 µs | 0.0489 µs | 0.0488 µs | 304 B | 20,809,613 |
-| 80 | 0.0481 µs | 0.0488 µs | 0.0485 µs | 304 B | 20,783,373 |
-| 160 | 0.0479 µs | 0.0488 µs | 0.0484 µs | 304 B | 20,890,449 |
-| 320 | 0.0481 µs | 0.0514 µs | 0.0484 µs | 304 B | 20,800,458 |
-| 640 | 0.0483 µs | 0.0486 µs | 0.0485 µs | 304 B | 20,716,587 |
-| 1280 | 0.0480 µs | 0.0488 µs | 0.0484 µs | 304 B | 20,822,435 |
-| 2560 | 0.0479 µs | 0.0488 µs | 0.0484 µs | 304 B | 20,868,310 |
-| 5120 | 0.0481 µs | 0.0488 µs | 0.0486 µs | 304 B | 20,810,253 |
-| 10240 | 0.0481 µs | 0.0491 µs | 0.0486 µs | 304 B | 20,785,241 |
+| 20 | 0.0715 µs | 0.0921 µs | 0.0756 µs | 305 B | 13,976,955 |
+| 40 | 0.0733 µs | 0.0916 µs | 0.0772 µs | 305 B | 13,639,064 |
+| 80 | 0.0709 µs | 0.0888 µs | 0.0732 µs | 304 B | 14,108,385 |
+| 160 | 0.0709 µs | 0.0896 µs | 0.0732 µs | 305 B | 14,100,249 |
+| 320 | 0.0707 µs | 0.0932 µs | 0.0733 µs | 305 B | 14,135,027 |
+| 640 | 0.0698 µs | 0.0831 µs | 0.0715 µs | 304 B | 14,336,049 |
+| 1280 | 0.119 µs | 0.132 µs | 0.150 µs | 312 B | 8,406,894 |
+| 2560 | 0.0696 µs | 0.0831 µs | 0.0710 µs | 304 B | 14,374,350 |
+| 5120 | 0.0711 µs | 0.0887 µs | 0.0734 µs | 305 B | 14,069,970 |
+| 10240 | 0.0715 µs | 0.0885 µs | 0.0736 µs | 304 B | 13,982,982 |
 
 ### `validators.negative()`
 
@@ -1464,20 +1468,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0474 µs | 0.0535 µs | 0.0480 µs | 304 B | 21,077,481 |
-| 40 | 0.0473 µs | 0.0481 µs | 0.0476 µs | 304 B | 21,141,577 |
-| 80 | 0.0477 µs | 0.0552 µs | 0.0483 µs | 304 B | 20,962,656 |
-| 160 | 0.0471 µs | 0.0481 µs | 0.0475 µs | 304 B | 21,214,319 |
-| 320 | 0.0471 µs | 0.0478 µs | 0.0475 µs | 304 B | 21,253,599 |
-| 640 | 0.0473 µs | 0.0503 µs | 0.0476 µs | 304 B | 21,152,542 |
-| 1280 | 0.0472 µs | 0.0478 µs | 0.0476 µs | 304 B | 21,178,182 |
-| 2560 | 0.0472 µs | 0.0476 µs | 0.0475 µs | 304 B | 21,198,759 |
-| 5120 | 0.0472 µs | 0.0477 µs | 0.0475 µs | 304 B | 21,191,082 |
-| 10240 | 0.0474 µs | 0.0485 µs | 0.0480 µs | 304 B | 21,089,705 |
+| 20 | 0.0699 µs | 0.0862 µs | 0.0726 µs | 305 B | 14,297,848 |
+| 40 | 0.0691 µs | 0.0831 µs | 0.0713 µs | 304 B | 14,466,166 |
+| 80 | 0.0703 µs | 0.0833 µs | 0.0720 µs | 304 B | 14,225,970 |
+| 160 | 0.0707 µs | 0.0851 µs | 0.0739 µs | 305 B | 14,143,391 |
+| 320 | 0.0703 µs | 0.0840 µs | 0.0727 µs | 304 B | 14,216,900 |
+| 640 | 0.0705 µs | 0.0830 µs | 0.0724 µs | 304 B | 14,189,384 |
+| 1280 | 0.0711 µs | 0.0830 µs | 0.0737 µs | 304 B | 14,062,205 |
+| 2560 | 0.0709 µs | 0.0878 µs | 0.0738 µs | 305 B | 14,107,656 |
+| 5120 | 0.0706 µs | 0.0994 µs | 0.0739 µs | 305 B | 14,154,913 |
+| 10240 | 0.0702 µs | 0.0840 µs | 0.0730 µs | 304 B | 14,239,258 |
 
 ### `validators.not(validator)`
 
@@ -1500,20 +1504,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0488 µs | 0.0652 µs | 0.0500 µs | 304 B | 20,512,821 |
-| 40 | 0.0486 µs | 0.0496 µs | 0.0495 µs | 304 B | 20,574,894 |
-| 80 | 0.0482 µs | 0.0681 µs | 0.0492 µs | 304 B | 20,749,399 |
-| 160 | 0.0487 µs | 0.0540 µs | 0.0495 µs | 304 B | 20,535,446 |
-| 320 | 0.0500 µs | 0.0614 µs | 0.0507 µs | 305 B | 19,982,533 |
-| 640 | 0.0487 µs | 0.0682 µs | 0.0500 µs | 304 B | 20,516,766 |
-| 1280 | 0.0485 µs | 0.0495 µs | 0.0490 µs | 304 B | 20,639,175 |
-| 2560 | 0.0481 µs | 0.0596 µs | 0.0490 µs | 304 B | 20,797,700 |
-| 5120 | 0.0480 µs | 0.0531 µs | 0.0491 µs | 304 B | 20,818,567 |
-| 10240 | 0.0482 µs | 0.0503 µs | 0.0491 µs | 304 B | 20,736,571 |
+| 20 | 0.0705 µs | 0.117 µs | 0.0726 µs | 305 B | 14,174,611 |
+| 40 | 0.0725 µs | 0.142 µs | 0.0771 µs | 305 B | 13,785,086 |
+| 80 | 0.0705 µs | 0.0863 µs | 0.0726 µs | 305 B | 14,178,168 |
+| 160 | 0.0709 µs | 0.109 µs | 0.0746 µs | 305 B | 14,096,698 |
+| 320 | 0.0715 µs | 0.118 µs | 0.0753 µs | 305 B | 13,979,707 |
+| 640 | 0.0850 µs | 0.0933 µs | 0.105 µs | 308 B | 11,766,527 |
+| 1280 | 0.0715 µs | 0.0964 µs | 0.0757 µs | 305 B | 13,978,088 |
+| 2560 | 0.0706 µs | 0.0865 µs | 0.0728 µs | 305 B | 14,161,455 |
+| 5120 | 0.0710 µs | 0.116 µs | 0.0739 µs | 305 B | 14,083,077 |
+| 10240 | 0.0707 µs | 0.111 µs | 0.0728 µs | 305 B | 14,145,981 |
 
 ### `validators.oneOf(options)`
 
@@ -1536,20 +1540,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.80, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.76, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0773 µs | 0.0962 µs | 0.0786 µs | 304 B | 12,937,049 |
-| 40 | 0.117 µs | 0.119 µs | 0.119 µs | 304 B | 8,523,862 |
-| 80 | 0.205 µs | 0.209 µs | 0.726 µs | 304 B | 4,875,000 |
-| 160 | 0.250 µs | 0.254 µs | 0.924 µs | 304 B | 3,999,496 |
-| 320 | 0.555 µs | 0.573 µs | 1.97 µs | 305 B | 1,800,354 |
-| 640 | 1.16 µs | 1.19 µs | 2.79 µs | 305 B | 862,957 |
-| 1280 | 1.31 µs | 1.34 µs | 3.14 µs | 305 B | 764,032 |
-| 2560 | 3.78 µs | 3.83 µs | 8.46 µs | 306 B | 264,335 |
-| 5120 | 8.59 µs | 8.69 µs | 18.4 µs | 307 B | 116,470 |
-| 10240 | 7.39 µs | 7.73 µs | 16.7 µs | 307 B | 135,233 |
+| 20 | 0.114 µs | 0.144 µs | 0.118 µs | 305 B | 8,743,806 |
+| 40 | 0.174 µs | 0.212 µs | 0.178 µs | 305 B | 5,745,548 |
+| 80 | 0.301 µs | 0.325 µs | 0.305 µs | 305 B | 3,320,873 |
+| 160 | 0.357 µs | 0.398 µs | 0.361 µs | 305 B | 2,800,162 |
+| 320 | 0.781 µs | 0.825 µs | 2.94 µs | 305 B | 1,280,882 |
+| 640 | 1.45 µs | 1.74 µs | 4.50 µs | 305 B | 687,644 |
+| 1280 | 1.69 µs | 1.74 µs | 5.12 µs | 305 B | 592,690 |
+| 2560 | 4.27 µs | 4.52 µs | 11.0 µs | 306 B | 234,264 |
+| 5120 | 9.88 µs | 10.1 µs | 24.9 µs | 309 B | 101,215 |
+| 10240 | 10.2 µs | 10.5 µs | 23.4 µs | 308 B | 98,314 |
 
 ### `validators.optional(validator)`
 
@@ -1576,16 +1580,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0477 µs | 0.0533 µs | 0.0481 µs | 304 B | 20,972,171 |
-| 40 | 0.0475 µs | 0.0483 µs | 0.0481 µs | 304 B | 21,065,789 |
-| 80 | 0.0487 µs | 0.0507 µs | 0.0500 µs | 304 B | 20,534,759 |
-| 160 | 0.0475 µs | 0.0585 µs | 0.0479 µs | 304 B | 21,061,562 |
-| 320 | 0.0476 µs | 0.0587 µs | 0.0481 µs | 304 B | 21,006,473 |
-| 640 | 0.0474 µs | 0.0487 µs | 0.0479 µs | 304 B | 21,083,077 |
-| 1280 | 0.0481 µs | 0.0558 µs | 0.0487 µs | 304 B | 20,803,119 |
-| 2560 | 0.0479 µs | 0.0584 µs | 0.0487 µs | 304 B | 20,857,667 |
-| 5120 | 0.0482 µs | 0.0491 µs | 0.0486 µs | 304 B | 20,752,381 |
-| 10240 | 0.0475 µs | 0.0609 µs | 0.0481 µs | 304 B | 21,051,313 |
+| 20 | 0.0715 µs | 0.103 µs | 0.0745 µs | 305 B | 13,981,462 |
+| 40 | 0.0704 µs | 0.0839 µs | 0.0728 µs | 304 B | 14,211,528 |
+| 80 | 0.0708 µs | 0.0980 µs | 0.0732 µs | 305 B | 14,129,053 |
+| 160 | 0.0707 µs | 0.0963 µs | 0.0724 µs | 304 B | 14,145,130 |
+| 320 | 0.0708 µs | 0.0946 µs | 0.0735 µs | 304 B | 14,124,022 |
+| 640 | 0.0705 µs | 0.0900 µs | 0.0719 µs | 304 B | 14,185,871 |
+| 1280 | 0.0728 µs | 0.0996 µs | 0.0771 µs | 305 B | 13,734,486 |
+| 2560 | 0.0704 µs | 0.0965 µs | 0.0718 µs | 304 B | 14,202,483 |
+| 5120 | 0.0709 µs | 0.0960 µs | 0.0735 µs | 304 B | 14,113,174 |
+| 10240 | 0.0709 µs | 0.100 µs | 0.0737 µs | 305 B | 14,109,347 |
 
 ### `validators.past()`
 
@@ -1612,16 +1616,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.158 µs | 0.181 µs | 0.160 µs | 433 B | 6,342,052 |
-| 40 | 0.158 µs | 0.162 µs | 0.159 µs | 433 B | 6,344,227 |
-| 80 | 0.153 µs | 0.155 µs | 0.154 µs | 432 B | 6,555,352 |
-| 160 | 0.154 µs | 0.157 µs | 0.154 µs | 432 B | 6,514,380 |
-| 320 | 0.154 µs | 0.156 µs | 0.154 µs | 432 B | 6,508,619 |
-| 640 | 0.154 µs | 0.170 µs | 0.743 µs | 432 B | 6,507,592 |
-| 1280 | 0.153 µs | 0.216 µs | 0.154 µs | 432 B | 6,541,877 |
-| 2560 | 0.153 µs | 0.156 µs | 0.712 µs | 432 B | 6,537,283 |
-| 5120 | 0.153 µs | 0.155 µs | 0.153 µs | 432 B | 6,545,455 |
-| 10240 | 0.153 µs | 0.171 µs | 0.735 µs | 432 B | 6,544,246 |
+| 20 | 0.277 µs | 0.323 µs | 0.284 µs | 418 B | 3,611,578 |
+| 40 | 0.275 µs | 0.306 µs | 0.279 µs | 417 B | 3,633,686 |
+| 80 | 0.280 µs | 0.308 µs | 0.284 µs | 417 B | 3,574,530 |
+| 160 | 0.279 µs | 0.316 µs | 0.282 µs | 417 B | 3,586,006 |
+| 320 | 0.273 µs | 0.293 µs | 0.278 µs | 417 B | 3,660,503 |
+| 640 | 0.274 µs | 0.296 µs | 0.278 µs | 417 B | 3,645,479 |
+| 1280 | 0.273 µs | 0.310 µs | 0.278 µs | 417 B | 3,659,560 |
+| 2560 | 0.279 µs | 0.315 µs | 0.285 µs | 417 B | 3,584,271 |
+| 5120 | 0.276 µs | 0.299 µs | 0.281 µs | 417 B | 3,628,384 |
+| 10240 | 0.275 µs | 0.299 µs | 0.280 µs | 417 B | 3,642,050 |
 
 ### `validators.positive()`
 
@@ -1644,20 +1648,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0473 µs | 0.0549 µs | 0.0481 µs | 304 B | 21,145,281 |
-| 40 | 0.0473 µs | 0.0481 µs | 0.0477 µs | 304 B | 21,157,593 |
-| 80 | 0.0469 µs | 0.0475 µs | 0.0475 µs | 304 B | 21,314,236 |
-| 160 | 0.0469 µs | 0.0478 µs | 0.0472 µs | 304 B | 21,307,317 |
-| 320 | 0.0479 µs | 0.0626 µs | 0.0490 µs | 304 B | 20,861,090 |
-| 640 | 0.0469 µs | 0.0476 µs | 0.0472 µs | 304 B | 21,333,333 |
-| 1280 | 0.0467 µs | 0.0471 µs | 0.0469 µs | 304 B | 21,400,201 |
-| 2560 | 0.0469 µs | 0.0475 µs | 0.0472 µs | 304 B | 21,336,000 |
-| 5120 | 0.0469 µs | 0.0480 µs | 0.0471 µs | 304 B | 21,308,723 |
-| 10240 | 0.0471 µs | 0.0477 µs | 0.0477 µs | 304 B | 21,228,395 |
+| 20 | 0.0709 µs | 0.0855 µs | 0.0726 µs | 304 B | 14,103,306 |
+| 40 | 0.0705 µs | 0.0811 µs | 0.0724 µs | 304 B | 14,193,051 |
+| 80 | 0.0704 µs | 0.0868 µs | 0.0725 µs | 305 B | 14,194,610 |
+| 160 | 0.0704 µs | 0.0834 µs | 0.0730 µs | 304 B | 14,200,379 |
+| 320 | 0.0715 µs | 0.0880 µs | 0.0731 µs | 305 B | 13,978,699 |
+| 640 | 0.0708 µs | 0.0863 µs | 0.0730 µs | 304 B | 14,125,103 |
+| 1280 | 0.0706 µs | 0.0892 µs | 0.0740 µs | 305 B | 14,155,083 |
+| 2560 | 0.0717 µs | 0.0850 µs | 0.0730 µs | 304 B | 13,947,923 |
+| 5120 | 0.0706 µs | 0.0867 µs | 0.0726 µs | 304 B | 14,163,723 |
+| 10240 | 0.0722 µs | 0.0838 µs | 0.0737 µs | 304 B | 13,844,422 |
 
 ### `validators.range(min, max)`
 
@@ -1684,16 +1688,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0477 µs | 0.0547 µs | 0.0483 µs | 304 B | 20,977,279 |
-| 40 | 0.0480 µs | 0.0490 µs | 0.0488 µs | 304 B | 20,817,680 |
-| 80 | 0.0474 µs | 0.0478 µs | 0.0476 µs | 304 B | 21,090,006 |
-| 160 | 0.0476 µs | 0.0481 µs | 0.0479 µs | 304 B | 21,013,077 |
-| 320 | 0.0476 µs | 0.0485 µs | 0.0482 µs | 304 B | 21,010,713 |
-| 640 | 0.0476 µs | 0.0482 µs | 0.0482 µs | 304 B | 21,027,744 |
-| 1280 | 0.0477 µs | 0.0483 µs | 0.0485 µs | 304 B | 20,951,623 |
-| 2560 | 0.0475 µs | 0.0483 µs | 0.0480 µs | 304 B | 21,055,374 |
-| 5120 | 0.0477 µs | 0.0487 µs | 0.0481 µs | 304 B | 20,966,534 |
-| 10240 | 0.0475 µs | 0.0479 µs | 0.0480 µs | 304 B | 21,062,192 |
+| 20 | 0.0734 µs | 0.0895 µs | 0.0779 µs | 305 B | 13,625,956 |
+| 40 | 0.0709 µs | 0.0826 µs | 0.0732 µs | 304 B | 14,109,612 |
+| 80 | 0.0703 µs | 0.0817 µs | 0.0724 µs | 304 B | 14,215,270 |
+| 160 | 0.0707 µs | 0.0881 µs | 0.0729 µs | 305 B | 14,147,997 |
+| 320 | 0.0730 µs | 0.0851 µs | 0.0757 µs | 304 B | 13,707,716 |
+| 640 | 0.0706 µs | 0.0841 µs | 0.0728 µs | 304 B | 14,166,759 |
+| 1280 | 0.0706 µs | 0.0826 µs | 0.0727 µs | 304 B | 14,167,750 |
+| 2560 | 0.0710 µs | 0.0869 µs | 0.0733 µs | 305 B | 14,076,156 |
+| 5120 | 0.0706 µs | 0.0801 µs | 0.0722 µs | 304 B | 14,155,831 |
+| 10240 | 0.0707 µs | 0.0833 µs | 0.0739 µs | 305 B | 14,144,091 |
 
 ### `validators.refine(validator, message)`
 
@@ -1720,16 +1724,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0481 µs | 0.0658 µs | 0.0489 µs | 304 B | 20,773,582 |
-| 40 | 0.0479 µs | 0.0487 µs | 0.0488 µs | 304 B | 20,894,640 |
-| 80 | 0.0479 µs | 0.0606 µs | 0.0487 µs | 304 B | 20,857,438 |
-| 160 | 0.0486 µs | 0.0618 µs | 0.0500 µs | 304 B | 20,565,553 |
-| 320 | 0.0480 µs | 0.0612 µs | 0.0532 µs | 304 B | 20,830,080 |
-| 640 | 0.0479 µs | 0.0568 µs | 0.0488 µs | 304 B | 20,869,026 |
-| 1280 | 0.0485 µs | 0.0496 µs | 0.0498 µs | 304 B | 20,622,222 |
-| 2560 | 0.0481 µs | 0.0617 µs | 0.0491 µs | 304 B | 20,775,760 |
-| 5120 | 0.0481 µs | 0.0543 µs | 0.0490 µs | 304 B | 20,780,287 |
-| 10240 | 0.0478 µs | 0.0484 µs | 0.0481 µs | 304 B | 20,933,333 |
+| 20 | 0.0701 µs | 0.115 µs | 0.0717 µs | 305 B | 14,267,539 |
+| 40 | 0.0713 µs | 0.0868 µs | 0.0730 µs | 304 B | 14,028,266 |
+| 80 | 0.0726 µs | 0.101 µs | 0.0767 µs | 305 B | 13,783,382 |
+| 160 | 0.0709 µs | 0.0998 µs | 0.0739 µs | 305 B | 14,101,865 |
+| 320 | 0.0714 µs | 0.0861 µs | 0.0735 µs | 304 B | 14,013,973 |
+| 640 | 0.0722 µs | 0.102 µs | 0.0750 µs | 305 B | 13,859,141 |
+| 1280 | 0.0713 µs | 0.101 µs | 0.0735 µs | 305 B | 14,017,684 |
+| 2560 | 0.0710 µs | 0.0987 µs | 0.0739 µs | 305 B | 14,085,810 |
+| 5120 | 0.0714 µs | 0.0914 µs | 0.0738 µs | 305 B | 13,998,405 |
+| 10240 | 0.0706 µs | 0.0880 µs | 0.0728 µs | 305 B | 14,171,357 |
 
 ### `validators.required()`
 
@@ -1752,20 +1756,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0511 µs | 0.0656 µs | 0.0541 µs | 305 B | 19,565,571 |
-| 40 | 0.0493 µs | 0.0505 µs | 0.0500 µs | 304 B | 20,304,569 |
-| 80 | 0.0476 µs | 0.0482 µs | 0.0480 µs | 304 B | 20,993,057 |
-| 160 | 0.0476 µs | 0.0503 µs | 0.0479 µs | 304 B | 20,990,279 |
-| 320 | 0.0477 µs | 0.0482 µs | 0.0482 µs | 304 B | 20,968,859 |
-| 640 | 0.0478 µs | 0.0524 µs | 0.0483 µs | 304 B | 20,904,348 |
-| 1280 | 0.0491 µs | 0.0499 µs | 0.0495 µs | 304 B | 20,357,804 |
-| 2560 | 0.0477 µs | 0.0484 µs | 0.0479 µs | 304 B | 20,967,347 |
-| 5120 | 0.0487 µs | 0.0499 µs | 0.0490 µs | 304 B | 20,547,365 |
-| 10240 | 0.0487 µs | 0.0632 µs | 0.0490 µs | 304 B | 20,539,249 |
+| 20 | 0.0715 µs | 0.0967 µs | 0.0766 µs | 305 B | 13,989,539 |
+| 40 | 0.0715 µs | 0.0919 µs | 0.0749 µs | 305 B | 13,989,994 |
+| 80 | 0.0718 µs | 0.0892 µs | 0.0751 µs | 305 B | 13,918,275 |
+| 160 | 0.0712 µs | 0.0878 µs | 0.0743 µs | 305 B | 14,039,152 |
+| 320 | 0.0714 µs | 0.0834 µs | 0.0732 µs | 304 B | 14,008,377 |
+| 640 | 0.0712 µs | 0.0839 µs | 0.0732 µs | 304 B | 14,037,383 |
+| 1280 | 0.0717 µs | 0.0872 µs | 0.0741 µs | 304 B | 13,940,504 |
+| 2560 | 0.0712 µs | 0.0842 µs | 0.0731 µs | 304 B | 14,044,098 |
+| 5120 | 0.0716 µs | 0.0856 µs | 0.0743 µs | 304 B | 13,975,449 |
+| 10240 | 0.0719 µs | 0.0898 µs | 0.0741 µs | 305 B | 13,915,638 |
 
 ### `validators.safeInteger()`
 
@@ -1792,16 +1796,16 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.0505 µs | 0.0531 µs | 0.0519 µs | 305 B | 19,787,611 |
-| 40 | 0.0471 µs | 0.0476 µs | 0.0477 µs | 304 B | 21,238,653 |
-| 80 | 0.0467 µs | 0.0473 µs | 0.0471 µs | 304 B | 21,395,764 |
-| 160 | 0.0468 µs | 0.0473 µs | 0.0470 µs | 304 B | 21,368,889 |
-| 320 | 0.0468 µs | 0.0474 µs | 0.0473 µs | 304 B | 21,371,336 |
-| 640 | 0.0467 µs | 0.0535 µs | 0.0472 µs | 304 B | 21,392,991 |
-| 1280 | 0.0472 µs | 0.0482 µs | 0.0478 µs | 304 B | 21,196,176 |
-| 2560 | 0.0469 µs | 0.0473 µs | 0.0470 µs | 304 B | 21,334,442 |
-| 5120 | 0.0468 µs | 0.0475 µs | 0.0470 µs | 304 B | 21,361,104 |
-| 10240 | 0.0471 µs | 0.0480 µs | 0.0475 µs | 304 B | 21,230,769 |
+| 20 | 0.0711 µs | 0.0982 µs | 0.0749 µs | 305 B | 14,065,438 |
+| 40 | 0.0791 µs | 0.0882 µs | 0.0942 µs | 306 B | 12,640,835 |
+| 80 | 0.0730 µs | 0.0951 µs | 0.0804 µs | 305 B | 13,703,225 |
+| 160 | 0.0704 µs | 0.0877 µs | 0.0729 µs | 305 B | 14,196,253 |
+| 320 | 0.0704 µs | 0.0961 µs | 0.0729 µs | 304 B | 14,197,979 |
+| 640 | 0.0707 µs | 0.125 µs | 0.0730 µs | 305 B | 14,144,627 |
+| 1280 | 0.0707 µs | 0.0971 µs | 0.0731 µs | 305 B | 14,147,069 |
+| 2560 | 0.0713 µs | 0.0999 µs | 0.0744 µs | 305 B | 14,022,515 |
+| 5120 | 0.0709 µs | 0.101 µs | 0.0734 µs | 305 B | 14,104,833 |
+| 10240 | 0.0702 µs | 0.0962 µs | 0.0726 µs | 305 B | 14,247,633 |
 
 ### `validators.unique()`
 
@@ -1824,20 +1828,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 1.07, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 1.02, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.307 µs | 0.350 µs | 0.310 µs | 1.5 KiB | 3,261,462 |
-| 40 | 0.580 µs | 0.591 µs | 2.57 µs | 2.8 KiB | 1,722,709 |
-| 80 | 1.11 µs | 1.16 µs | 3.33 µs | 5.4 KiB | 902,189 |
-| 160 | 2.15 µs | 2.20 µs | 6.14 µs | 10.4 KiB | 464,396 |
-| 320 | 4.34 µs | 4.88 µs | 11.7 µs | 20.5 KiB | 230,642 |
-| 640 | 8.68 µs | 9.54 µs | 22.0 µs | 42.3 KiB | 115,148 |
-| 1280 | 18.6 µs | 21.3 µs | 43.1 µs | 84.7 KiB | 53,623 |
-| 2560 | 40.8 µs | 46.7 µs | 88.4 µs | 169.6 KiB | 24,508 |
-| 5120 | 107 µs | 121 µs | 224 µs | 330.1 KiB | 9,352 |
-| 10240 | 254 µs | 270 µs | 489 µs | 645.7 KiB | 3,934 |
+| 20 | 0.547 µs | 0.637 µs | 0.555 µs | 1.5 KiB | 1,826,772 |
+| 40 | 1.06 µs | 1.13 µs | 2.20 µs | 2.8 KiB | 942,385 |
+| 80 | 1.84 µs | 1.99 µs | 6.68 µs | 5.4 KiB | 543,433 |
+| 160 | 3.22 µs | 3.39 µs | 9.82 µs | 10.5 KiB | 310,456 |
+| 320 | 6.01 µs | 6.39 µs | 17.9 µs | 20.8 KiB | 166,327 |
+| 640 | 11.0 µs | 11.8 µs | 29.2 µs | 41.7 KiB | 91,239 |
+| 1280 | 22.3 µs | 23.6 µs | 61.0 µs | 82.6 KiB | 44,885 |
+| 2560 | 45.9 µs | 48.8 µs | 117 µs | 166.5 KiB | 21,776 |
+| 5120 | 164 µs | 167 µs | 354 µs | 327.1 KiB | 6,092 |
+| 10240 | 396 µs | 404 µs | 712 µs | 644.3 KiB | 2,524 |
 
 ### `validators.url()`
 
@@ -1860,20 +1864,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.51, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.36, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.194 µs | 0.255 µs | 0.197 µs | 577 B | 5,149,924 |
-| 40 | 0.208 µs | 0.212 µs | 0.209 µs | 601 B | 4,817,619 |
-| 80 | 0.206 µs | 0.211 µs | 0.208 µs | 640 B | 4,854,649 |
-| 160 | 0.252 µs | 0.258 µs | 0.253 µs | 721 B | 3,969,136 |
-| 320 | 0.317 µs | 0.326 µs | 1.47 µs | 881 B | 3,149,869 |
-| 640 | 0.481 µs | 0.507 µs | 0.489 µs | 1.2 KiB | 2,078,125 |
-| 1280 | 0.766 µs | 0.781 µs | 2.68 µs | 1.8 KiB | 1,305,613 |
-| 2560 | 1.33 µs | 1.53 µs | 3.88 µs | 3.0 KiB | 750,532 |
-| 5120 | 2.41 µs | 2.46 µs | 6.26 µs | 5.6 KiB | 415,446 |
-| 10240 | 4.53 µs | 4.65 µs | 10.8 µs | 10.6 KiB | 220,537 |
+| 20 | 0.434 µs | 0.482 µs | 0.441 µs | 578 B | 2,306,009 |
+| 40 | 0.432 µs | 0.472 µs | 0.438 µs | 601 B | 2,316,937 |
+| 80 | 0.443 µs | 0.490 µs | 0.451 µs | 641 B | 2,259,709 |
+| 160 | 0.480 µs | 0.519 µs | 0.483 µs | 721 B | 2,085,131 |
+| 320 | 0.576 µs | 0.620 µs | 0.582 µs | 881 B | 1,737,209 |
+| 640 | 0.733 µs | 0.808 µs | 0.743 µs | 1.2 KiB | 1,364,213 |
+| 1280 | 1.01 µs | 1.10 µs | 1.02 µs | 1.8 KiB | 986,851 |
+| 2560 | 1.51 µs | 1.71 µs | 1.53 µs | 3.1 KiB | 660,770 |
+| 5120 | 2.53 µs | 3.74 µs | 9.57 µs | 5.6 KiB | 394,662 |
+| 10240 | 3.91 µs | 4.10 µs | 12.3 µs | 10.9 KiB | 255,726 |
 
 ### `validators.uuid()`
 
@@ -1896,20 +1900,20 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.03, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.04, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.241 µs | 0.347 µs | 0.278 µs | 602 B | 4,154,166 |
-| 40 | 0.158 µs | 0.173 µs | 0.159 µs | 584 B | 6,324,444 |
-| 80 | 0.157 µs | 0.161 µs | 0.158 µs | 584 B | 6,368,549 |
-| 160 | 0.157 µs | 0.161 µs | 0.158 µs | 584 B | 6,376,083 |
-| 320 | 0.157 µs | 0.160 µs | 0.158 µs | 584 B | 6,369,395 |
-| 640 | 0.157 µs | 0.159 µs | 0.627 µs | 584 B | 6,382,218 |
-| 1280 | 0.157 µs | 0.162 µs | 0.159 µs | 584 B | 6,366,156 |
-| 2560 | 0.157 µs | 0.163 µs | 0.768 µs | 584 B | 6,378,612 |
-| 5120 | 0.158 µs | 0.162 µs | 0.630 µs | 584 B | 6,318,614 |
-| 10240 | 0.158 µs | 0.170 µs | 0.160 µs | 584 B | 6,326,925 |
+| 20 | 0.504 µs | 0.533 µs | 0.600 µs | 605 B | 1,983,602 |
+| 40 | 0.243 µs | 0.355 µs | 0.248 µs | 585 B | 4,109,888 |
+| 80 | 0.246 µs | 0.299 µs | 0.251 µs | 585 B | 4,058,767 |
+| 160 | 0.244 µs | 0.297 µs | 0.250 µs | 585 B | 4,103,190 |
+| 320 | 0.245 µs | 0.303 µs | 0.248 µs | 585 B | 4,079,402 |
+| 640 | 0.243 µs | 0.303 µs | 0.248 µs | 585 B | 4,114,760 |
+| 1280 | 0.245 µs | 0.303 µs | 0.248 µs | 585 B | 4,085,640 |
+| 2560 | 0.243 µs | 0.318 µs | 0.247 µs | 585 B | 4,112,765 |
+| 5120 | 0.307 µs | 0.333 µs | 0.325 µs | 588 B | 3,255,157 |
+| 10240 | 0.247 µs | 0.312 µs | 0.252 µs | 585 B | 4,054,071 |
 
 ### `validators.uuidVersion(v)`
 
@@ -1932,37 +1936,37 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 0.156 µs | 0.160 µs | 0.158 µs | 584 B | 6,404,270 |
-| 40 | 0.157 µs | 0.159 µs | 0.762 µs | 584 B | 6,370,203 |
-| 80 | 0.156 µs | 0.159 µs | 0.157 µs | 584 B | 6,400,586 |
-| 160 | 0.155 µs | 0.159 µs | 0.158 µs | 584 B | 6,434,063 |
-| 320 | 0.156 µs | 0.167 µs | 0.282 µs | 584 B | 6,413,462 |
-| 640 | 0.156 µs | 0.159 µs | 0.229 µs | 584 B | 6,392,961 |
-| 1280 | 0.156 µs | 0.159 µs | 0.157 µs | 584 B | 6,402,373 |
-| 2560 | 0.158 µs | 0.169 µs | 0.160 µs | 585 B | 6,322,471 |
-| 5120 | 0.157 µs | 0.167 µs | 0.158 µs | 584 B | 6,384,140 |
-| 10240 | 0.157 µs | 0.159 µs | 0.628 µs | 584 B | 6,382,835 |
+| 20 | 0.243 µs | 0.297 µs | 0.251 µs | 585 B | 4,122,012 |
+| 40 | 0.247 µs | 0.302 µs | 0.253 µs | 585 B | 4,043,748 |
+| 80 | 0.246 µs | 0.318 µs | 0.252 µs | 585 B | 4,057,935 |
+| 160 | 0.248 µs | 0.414 µs | 0.251 µs | 585 B | 4,032,427 |
+| 320 | 0.243 µs | 0.327 µs | 0.249 µs | 585 B | 4,107,114 |
+| 640 | 0.243 µs | 0.288 µs | 0.250 µs | 585 B | 4,111,274 |
+| 1280 | 0.243 µs | 0.281 µs | 0.247 µs | 585 B | 4,107,862 |
+| 2560 | 0.248 µs | 0.332 µs | 0.257 µs | 586 B | 4,033,650 |
+| 5120 | 0.244 µs | 0.272 µs | 0.247 µs | 585 B | 4,104,449 |
+| 10240 | 0.242 µs | 0.298 µs | 0.247 µs | 585 B | 4,137,732 |
 
 ## 3. What makes up the end-to-end overhead
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it, then compared with the total overhead from section 1. This shows where the cost actually lives, so effort goes to the function that matters. Shares are estimates: they can sum to slightly more or less than 100% because the two measurements were taken separately (the remainder is shown as _unattributed_).
 
-**At 640 variables** (total added: 135 µs)
+**At 640 variables** (total added: 187 µs)
 
 | Function | Calls / operation | Estimated time | Share of added time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `validate-env` | 1 | 181 µs | 134% | 100% |
+| `validate-env` | 1 | 281 µs | 150% | 107% |
 | _unattributed_ |  | 0 | 0.0% |  |
 
-**At 10240 variables** (total added: 679 µs)
+**At 10240 variables** (total added: 545 µs)
 
 | Function | Calls / operation | Estimated time | Share of added time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `validate-env` | 1 | 1.57 ms | 231% | 105% |
+| `validate-env` | 1 | 2.07 ms | 379% | 107% |
 | _unattributed_ |  | 0 | 0.0% |  |
 
 ## Cost model
@@ -1971,9 +1975,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-10-01T14:25:21.321Z` → `2026-10-01T14:26:14.861Z` (54 s), npm run benchmark
-- Machine: Apple M3, 8 logical core(s) (8 physical), 24576 MB RAM, darwin/arm64, Node v24.20.0, local
-- Git: `116792252ae9113f67e8a4b1f08a90d30ce82459` on `chore/no-minify-no-dist-urls` (uncommitted changes)
+- Run: `2026-10-02T00:44:24.130Z` → `2026-10-02T00:45:43.444Z` (79 s), ci
+- Machine: AMD EPYC 9V45 96-Core Processor, 4 logical core(s) (2 physical), 15990 MB RAM, linux/x64, Node v22.23.3, GitHub Actions
+- Git: `77acd16d0d0b13e9c162061da6d6f7d739436547` on `chore/no-minify-no-dist-urls` (uncommitted changes)
 - Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240 variables -- One environment variable declared in a contract and validated at startup. 640 is a large but realistic service: a few dozen contracts of around ten variables each.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).

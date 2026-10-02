@@ -4,18 +4,18 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **90.9 ms** per operation compared with a bare-minimum baseline (22× baseline), about **$0.189 – $1.83 per million operations** of compute. Overall, it grows O(n) with workload size (measured exponent 0.87).
+For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **139 ms** per operation compared with a bare-minimum baseline (20× baseline), about **$0.290 – $3.68 per million operations** of compute. Overall, it grows O(n) with workload size (measured exponent 0.75).
 
 > Dollar figures are **estimates** from published list prices (see _Cost model_ below) and are for comparing orders of magnitude, not for budgeting to the cent.
 
 | Cost | Typical (640 variables) | Largest (5120 variables) |
 | --- | --- | --- |
-| Added latency per operation | 90.9 ms | 909 ms |
-| Added latency, relative to baseline | 22× baseline | 29× baseline |
-| Added CPU time per operation | 163 ms | 1.15 s |
-| Added memory per operation (heap delta) | 32.3 MiB | 122.2 MiB |
-| Estimated compute cost per 1M operations | $0.189 – $1.83 | $1.89 – $12.96 |
-| Single-core throughput ceiling of the overhead alone | 11 ops/s | 1 ops/s |
+| Added latency per operation | 139 ms | 1.08 s |
+| Added latency, relative to baseline | 20× baseline | 19× baseline |
+| Added CPU time per operation | 328 ms | 1.50 s |
+| Added memory per operation (heap delta) | 9.4 MiB | 95.4 MiB |
+| Estimated compute cost per 1M operations | $0.290 – $3.68 | $2.26 – $16.83 |
+| Single-core throughput ceiling of the overhead alone | 7 ops/s | 1 ops/s |
 | Shipped code parsed at every cold start (gzip) | 42.4 KiB | 42.4 KiB |
 
 ## 1. End-to-end: the package's total impact
@@ -42,17 +42,17 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 | variables | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
-| 20 | 268 µs | 7.05 ms | 6.78 ms | 26× baseline | 14.5 ms | $0.014 – $0.163 |
-| 40 | 467 µs | 10.5 ms | 10.1 ms | 23× baseline | 17.6 ms | $0.021 – $0.198 |
-| 80 | 704 µs | 18.0 ms | 17.3 ms | 26× baseline | 36.2 ms | $0.036 – $0.407 |
-| 160 | 1.56 ms | 30.7 ms | 29.2 ms | 20× baseline | 67.3 ms | $0.061 – $0.757 |
-| 320 | 2.40 ms | 55.6 ms | 53.2 ms | 23× baseline | 112 ms | $0.111 – $1.26 |
-| 640 | 4.32 ms | 95.2 ms | 90.9 ms | 22× baseline | 163 ms | $0.189 – $1.83 |
-| 1280 | 8.12 ms | 183 ms | 175 ms | 23× baseline | 272 ms | $0.364 – $3.06 |
-| 2560 | 16.3 ms | 377 ms | 361 ms | 23× baseline | 511 ms | $0.752 – $5.75 |
-| 5120 | 32.0 ms | 941 ms | 909 ms | 29× baseline | 1.15 s | $1.89 – $12.96 |
+| 20 | 751 µs | 17.1 ms | 16.3 ms | 23× baseline | 48.9 ms | $0.034 – $0.549 |
+| 40 | 1.03 ms | 24.3 ms | 23.3 ms | 24× baseline | 76.0 ms | $0.049 – $0.855 |
+| 80 | 1.47 ms | 33.8 ms | 32.4 ms | 23× baseline | 120 ms | $0.067 – $1.35 |
+| 160 | 2.39 ms | 60.2 ms | 57.8 ms | 25× baseline | 181 ms | $0.120 – $2.04 |
+| 320 | 4.40 ms | 95.1 ms | 90.7 ms | 22× baseline | 266 ms | $0.189 – $2.99 |
+| 640 | 7.41 ms | 147 ms | 139 ms | 20× baseline | 328 ms | $0.290 – $3.68 |
+| 1280 | 15.2 ms | 270 ms | 255 ms | 18× baseline | 540 ms | $0.531 – $6.07 |
+| 2560 | 31.2 ms | 513 ms | 482 ms | 16× baseline | 801 ms | $1.00 – $9.00 |
+| 5120 | 61.5 ms | 1.14 s | 1.08 s | 19× baseline | 1.50 s | $2.26 – $16.83 |
 
-**How the total grows:** O(n) (linear), exponent 0.87 over 9 sizes.
+**How the total grows:** O(n) (linear), exponent 0.75 over 9 sizes.
 
 ## 2. Function by function
 
@@ -60,15 +60,15 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Documented | Measured | Agreement | At 640 | At 5120 |
 | --- | --- | --- | --- | --- | --- |
-| `discoverSchemaFiles` | O(n) | O(n) | ✅ matches | 1.96 ms | 13.7 ms |
-| `generateEnvManifest` (all-contracts) | O(n) | O(n) | ✅ matches | 33.2 ms | 404 ms |
-| `generateEnvManifest` (one-contract-scoped) | O(1) | O(log n) | 🟡 close (neighbouring class) | 4.18 ms | 14.5 ms |
-| `generateDocumentation` (minimal-docs) | O(n) | O(n) | ✅ matches | 33.6 ms | 230 ms |
-| `generateDocumentation` (heavy-docs) | O(n) | O(n) | ✅ matches | 43.1 ms | 309 ms |
-| `generateUsageReport` | O(n) | O(n) | ✅ matches | 61.4 ms | 361 ms |
-| `generateEnvArtifacts` | O(n) | O(n) | ✅ matches | 90.3 ms | 905 ms |
-| `generateEvidenceModel` | O(n) | O(n) | ✅ matches | 80.1 ms | 544 ms |
-| `defineEvidenceProjection (project)` | O(n) | O(n) | ✅ matches | 9.93 ms | 86.3 ms |
+| `discoverSchemaFiles` | O(n) | O(n) | ✅ matches | 3.00 ms | 20.7 ms |
+| `generateEnvManifest` (all-contracts) | O(n) | O(n) | ✅ matches | 79.0 ms | 533 ms |
+| `generateEnvManifest` (one-contract-scoped) | O(1) | O(log n) | 🟡 close (neighbouring class) | 5.84 ms | 23.6 ms |
+| `generateDocumentation` (minimal-docs) | O(n) | O(n) | ✅ matches | 84.1 ms | 377 ms |
+| `generateDocumentation` (heavy-docs) | O(n) | O(n) | ✅ matches | 87.3 ms | 454 ms |
+| `generateUsageReport` | O(n) | O(n) | ✅ matches | 108 ms | 534 ms |
+| `generateEnvArtifacts` | O(n) | O(n) | ✅ matches | 149 ms | 1.10 s |
+| `generateEvidenceModel` | O(n) | O(n) | ✅ matches | 141 ms | 767 ms |
+| `defineEvidenceProjection (project)` | O(n) | O(n) | ✅ matches | 12.2 ms | 124 ms |
 
 ### `discoverSchemaFiles`
 
@@ -94,15 +94,15 @@ Every function the package exposes is measured on its own across the full size l
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 235 µs | 240 µs | 998 µs | 52.0 KiB | 4,247 |
-| 40 | 231 µs | 246 µs | 748 µs | 86.1 KiB | 4,325 |
-| 80 | 388 µs | 447 µs | 1.15 ms | 159.4 KiB | 2,577 |
-| 160 | 611 µs | 962 µs | 1.41 ms | 303.2 KiB | 1,637 |
-| 320 | 1.13 ms | 1.26 ms | 2.67 ms | 595.7 KiB | 888 |
-| 640 | 1.96 ms | 2.09 ms | 3.50 ms | 1.1 MiB | 510 |
-| 1280 | 3.56 ms | 3.67 ms | 5.10 ms | 2.3 MiB | 281 |
-| 2560 | 6.91 ms | 7.19 ms | 8.68 ms | 4.5 MiB | 145 |
-| 5120 | 13.7 ms | 14.2 ms | 15.4 ms | 9.0 MiB | 73 |
+| 20 | 370 µs | 389 µs | 996 µs | 53.2 KiB | 2,706 |
+| 40 | 322 µs | 327 µs | 646 µs | 87.9 KiB | 3,105 |
+| 80 | 635 µs | 833 µs | 1.39 ms | 161.9 KiB | 1,576 |
+| 160 | 1.11 ms | 1.64 ms | 2.47 ms | 314.0 KiB | 898 |
+| 320 | 1.84 ms | 4.18 ms | 4.00 ms | 608.9 KiB | 544 |
+| 640 | 3.00 ms | 4.52 ms | 4.42 ms | 1.2 MiB | 334 |
+| 1280 | 5.65 ms | 6.00 ms | 9.33 ms | 2.3 MiB | 177 |
+| 2560 | 10.6 ms | 11.6 ms | 15.1 ms | 4.6 MiB | 95 |
+| 5120 | 20.7 ms | 22.3 ms | 25.4 ms | 9.2 MiB | 48 |
 
 ### `generateEnvManifest`
 
@@ -130,19 +130,19 @@ Every function the package exposes is measured on its own across the full size l
 
 The manifest covers every schema file in the project.
 
-**Measured: O(n)** (exponent 0.89, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.84, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 2.59 ms | 3.55 ms | 9.91 ms | 1.1 MiB | 386 |
-| 40 | 4.57 ms | 4.85 ms | 17.7 ms | 2.1 MiB | 219 |
-| 80 | 5.98 ms | 6.95 ms | 18.5 ms | 4.0 MiB | 167 |
-| 160 | 10.4 ms | 11.2 ms | 33.8 ms | 8.1 MiB | 96 |
-| 320 | 17.1 ms | 18.5 ms | 44.2 ms | 17.1 MiB | 59 |
-| 640 | 33.2 ms | 33.8 ms | 68.1 ms | 34.4 MiB | 30 |
-| 1280 | 67.5 ms | 70.2 ms | 114 ms | 18.5 MiB | 15 |
-| 2560 | 166 ms | 227 ms | 235 ms | 32.8 MiB | 6 |
-| 5120 | 404 ms | 424 ms | 549 ms | 7.7 MiB | 2 |
+| 20 | 5.01 ms | 8.86 ms | 12.9 ms | 1.1 MiB | 200 |
+| 40 | 7.33 ms | 12.9 ms | 19.2 ms | 2.1 MiB | 136 |
+| 80 | 14.2 ms | 18.2 ms | 41.5 ms | 3.6 MiB | 70 |
+| 160 | 23.3 ms | 28.2 ms | 61.1 ms | 7.2 MiB | 43 |
+| 320 | 41.6 ms | 45.6 ms | 113 ms | 4.3 MiB | 24 |
+| 640 | 79.0 ms | 83.8 ms | 199 ms | 8.6 MiB | 13 |
+| 1280 | 132 ms | 138 ms | 297 ms | 21.6 MiB | 8 |
+| 2560 | 236 ms | 247 ms | 475 ms | 37.7 MiB | 4 |
+| 5120 | 533 ms | 544 ms | 879 ms | 73.8 MiB | 2 |
 
 #### Variant `one-contract-scoped`
 
@@ -150,19 +150,19 @@ An `include` selects one schema file; discovery still walks the tree but only th
 
 **Expected for this variant: O(1).** Only the one selected file is parsed and rendered, and parsing dominates the cost; the directory walk that still happens grows with the tree but is tiny next to parsing, so the curve is effectively flat.
 
-**Measured: O(log n)** (exponent 0.35, 9 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.37, 9 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 1.98 ms | 4.95 ms | 8.39 ms | 640.8 KiB | 505 |
-| 40 | 2.69 ms | 3.09 ms | 9.47 ms | 669.8 KiB | 372 |
-| 80 | 2.23 ms | 3.27 ms | 7.55 ms | 715.7 KiB | 448 |
-| 160 | 3.19 ms | 3.44 ms | 13.6 ms | 844.8 KiB | 313 |
-| 320 | 3.02 ms | 3.63 ms | 10.7 ms | 1.0 MiB | 331 |
-| 640 | 4.18 ms | 4.84 ms | 13.2 ms | 1.5 MiB | 239 |
-| 1280 | 6.86 ms | 13.4 ms | 13.1 ms | 2.4 MiB | 146 |
-| 2560 | 9.98 ms | 11.7 ms | 21.0 ms | 4.1 MiB | 100 |
-| 5120 | 14.5 ms | 18.3 ms | 21.5 ms | 7.7 MiB | 69 |
+| 20 | 2.55 ms | 3.83 ms | 5.94 ms | 623.3 KiB | 391 |
+| 40 | 2.65 ms | 3.71 ms | 7.22 ms | 662.5 KiB | 378 |
+| 80 | 3.64 ms | 4.85 ms | 9.05 ms | 724.7 KiB | 275 |
+| 160 | 4.58 ms | 5.49 ms | 11.0 ms | 851.7 KiB | 218 |
+| 320 | 4.22 ms | 5.05 ms | 9.17 ms | 1.0 MiB | 237 |
+| 640 | 5.84 ms | 8.31 ms | 12.6 ms | 1.5 MiB | 171 |
+| 1280 | 7.69 ms | 9.93 ms | 11.9 ms | 2.4 MiB | 130 |
+| 2560 | 13.7 ms | 14.9 ms | 24.9 ms | 4.2 MiB | 73 |
+| 5120 | 23.6 ms | 25.4 ms | 41.8 ms | 7.9 MiB | 42 |
 
 ### `generateDocumentation`
 
@@ -188,37 +188,37 @@ An `include` selects one schema file; discovery still walks the tree but only th
 
 One short description per variable.
 
-**Measured: O(n)** (exponent 0.74, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.77, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 3.79 ms | 4.55 ms | 16.2 ms | 1.4 MiB | 264 |
-| 40 | 5.31 ms | 5.45 ms | 18.9 ms | 2.5 MiB | 188 |
-| 80 | 8.48 ms | 9.28 ms | 23.4 ms | 4.7 MiB | 118 |
-| 160 | 11.8 ms | 23.3 ms | 31.0 ms | 9.3 MiB | 84 |
-| 320 | 18.2 ms | 18.8 ms | 41.1 ms | 18.3 MiB | 55 |
-| 640 | 33.6 ms | 71.5 ms | 64.0 ms | 35.4 MiB | 30 |
-| 1280 | 61.7 ms | 63.3 ms | 105 ms | 29.6 MiB | 16 |
-| 2560 | 117 ms | 123 ms | 180 ms | 72.9 MiB | 9 |
-| 5120 | 230 ms | 235 ms | 383 ms | 41.1 MiB | 4 |
+| 20 | 4.94 ms | 9.56 ms | 13.6 ms | 1.3 MiB | 202 |
+| 40 | 9.52 ms | 11.8 ms | 24.8 ms | 2.5 MiB | 105 |
+| 80 | 15.5 ms | 19.2 ms | 42.3 ms | 4.8 MiB | 64 |
+| 160 | 24.0 ms | 29.4 ms | 63.3 ms | 8.5 MiB | 42 |
+| 320 | 48.5 ms | 54.2 ms | 125 ms | 7.3 MiB | 21 |
+| 640 | 84.1 ms | 88.1 ms | 212 ms | 18.3 MiB | 12 |
+| 1280 | 129 ms | 133 ms | 302 ms | 30.3 MiB | 8 |
+| 2560 | 212 ms | 221 ms | 433 ms | 50.6 MiB | 5 |
+| 5120 | 377 ms | 386 ms | 706 ms | 97.5 MiB | 3 |
 
 #### Variant `heavy-docs`
 
 Long descriptions and extra documentation fields per variable (a heavily documented enterprise).
 
-**Measured: O(n)** (exponent 0.79, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.76, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 3.84 ms | 4.83 ms | 15.9 ms | 1.6 MiB | 260 |
-| 40 | 5.51 ms | 6.73 ms | 20.0 ms | 2.9 MiB | 181 |
-| 80 | 9.52 ms | 10.9 ms | 28.0 ms | 5.7 MiB | 105 |
-| 160 | 14.2 ms | 16.8 ms | 36.7 ms | 11.2 MiB | 71 |
-| 320 | 24.2 ms | 25.1 ms | 54.9 ms | 22.1 MiB | 41 |
-| 640 | 43.1 ms | 45.0 ms | 76.6 ms | 43.3 MiB | 23 |
-| 1280 | 79.3 ms | 83.4 ms | 136 ms | 44.5 MiB | 13 |
-| 2560 | 154 ms | 164 ms | 244 ms | 83.5 MiB | 7 |
-| 5120 | 309 ms | 342 ms | 484 ms | 37.9 MiB | 3 |
+| 20 | 6.24 ms | 8.03 ms | 17.6 ms | 1.6 MiB | 160 |
+| 40 | 11.1 ms | 13.1 ms | 30.9 ms | 3.0 MiB | 90 |
+| 80 | 20.4 ms | 22.6 ms | 59.5 ms | 5.7 MiB | 49 |
+| 160 | 24.9 ms | 33.9 ms | 60.0 ms | 10.2 MiB | 40 |
+| 320 | 54.4 ms | 59.3 ms | 138 ms | 10.8 MiB | 18 |
+| 640 | 87.3 ms | 101 ms | 225 ms | 21.0 MiB | 11 |
+| 1280 | 149 ms | 157 ms | 347 ms | 27.6 MiB | 7 |
+| 2560 | 251 ms | 252 ms | 507 ms | 66.5 MiB | 4 |
+| 5120 | 454 ms | 466 ms | 800 ms | 140.6 MiB | 2 |
 
 ### `generateUsageReport`
 
@@ -240,19 +240,19 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 
 **In the end-to-end run:** Once per artifact run.
 
-**Measured: O(n)** (exponent 0.78, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.74, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 4.82 ms | 6.57 ms | 19.5 ms | 1.9 MiB | 208 |
-| 40 | 8.33 ms | 8.88 ms | 28.3 ms | 3.6 MiB | 120 |
-| 80 | 11.8 ms | 13.0 ms | 30.3 ms | 6.9 MiB | 85 |
-| 160 | 19.9 ms | 22.0 ms | 46.2 ms | 13.4 MiB | 50 |
-| 320 | 32.8 ms | 35.8 ms | 69.4 ms | 25.2 MiB | 30 |
-| 640 | 61.4 ms | 74.5 ms | 108 ms | 47.5 MiB | 16 |
-| 1280 | 110 ms | 190 ms | 184 ms | 17.0 MiB | 9 |
-| 2560 | 213 ms | 228 ms | 328 ms | 65.4 MiB | 5 |
-| 5120 | 361 ms | 461 ms | 521 ms | 78.3 MiB | 3 |
+| 20 | 7.79 ms | 12.7 ms | 22.7 ms | 1.6 MiB | 128 |
+| 40 | 14.5 ms | 17.5 ms | 44.3 ms | 3.5 MiB | 69 |
+| 80 | 25.9 ms | 30.3 ms | 74.8 ms | 6.1 MiB | 39 |
+| 160 | 33.4 ms | 42.9 ms | 96.5 ms | 11.4 MiB | 30 |
+| 320 | 55.9 ms | 93.0 ms | 146 ms | 4.7 MiB | 18 |
+| 640 | 108 ms | 111 ms | 274 ms | 17.4 MiB | 9 |
+| 1280 | 176 ms | 186 ms | 394 ms | 21.0 MiB | 6 |
+| 2560 | 296 ms | 300 ms | 564 ms | 42.7 MiB | 3 |
+| 5120 | 534 ms | 558 ms | 957 ms | 76.2 MiB | 2 |
 
 ### `generateEnvArtifacts`
 
@@ -274,19 +274,19 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 
 **In the end-to-end run:** This is the end-to-end operation itself.
 
-**Measured: O(n)** (exponent 0.88, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.77, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 6.88 ms | 8.06 ms | 22.9 ms | 3.3 MiB | 145 |
-| 40 | 10.1 ms | 10.3 ms | 26.3 ms | 6.2 MiB | 99 |
-| 80 | 16.0 ms | 16.5 ms | 35.3 ms | 12.0 MiB | 62 |
-| 160 | 28.2 ms | 29.2 ms | 60.7 ms | 23.7 MiB | 35 |
-| 320 | 49.3 ms | 79.2 ms | 92.3 ms | 46.7 MiB | 20 |
-| 640 | 90.3 ms | 92.5 ms | 150 ms | 33.2 MiB | 11 |
-| 1280 | 179 ms | 186 ms | 268 ms | 31.1 MiB | 6 |
-| 2560 | 382 ms | 421 ms | 520 ms | 49.4 MiB | 3 |
-| 5120 | 905 ms | 972 ms | 1.13 s | 127.1 MiB | 1 |
+| 20 | 13.9 ms | 15.0 ms | 46.6 ms | 3.3 MiB | 72 |
+| 40 | 22.0 ms | 24.3 ms | 71.4 ms | 5.9 MiB | 45 |
+| 80 | 34.9 ms | 42.1 ms | 110 ms | 11.2 MiB | 29 |
+| 160 | 60.0 ms | 64.4 ms | 169 ms | 8.3 MiB | 17 |
+| 320 | 98.1 ms | 105 ms | 259 ms | 8.0 MiB | 10 |
+| 640 | 149 ms | 157 ms | 337 ms | 10.7 MiB | 7 |
+| 1280 | 268 ms | 278 ms | 521 ms | 27.0 MiB | 4 |
+| 2560 | 509 ms | 523 ms | 857 ms | 19.6 MiB | 2 |
+| 5120 | 1.10 s | 1.13 s | 1.52 s | 104.2 MiB | 1 |
 
 ### `generateEvidenceModel`
 
@@ -305,19 +305,19 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
 | runtime | fixed at "Node (V8)" | Measured on Node only. |
 
-**Measured: O(n)** (exponent 0.85, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.81, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 5.87 ms | 6.21 ms | 20.3 ms | 2.8 MiB | 170 |
-| 40 | 6.70 ms | 9.05 ms | 13.4 ms | 5.3 MiB | 149 |
-| 80 | 14.2 ms | 19.9 ms | 33.9 ms | 10.6 MiB | 70 |
-| 160 | 20.6 ms | 25.4 ms | 32.4 ms | 17.7 MiB | 49 |
-| 320 | 43.7 ms | 44.9 ms | 83.7 ms | 38.3 MiB | 23 |
-| 640 | 80.1 ms | 82.9 ms | 135 ms | 18.8 MiB | 12 |
-| 1280 | 149 ms | 151 ms | 230 ms | 57.1 MiB | 7 |
-| 2560 | 283 ms | 288 ms | 393 ms | 49.8 MiB | 4 |
-| 5120 | 544 ms | 545 ms | 751 ms | 106.2 MiB | 2 |
+| 20 | 8.52 ms | 10.9 ms | 23.7 ms | 2.3 MiB | 117 |
+| 40 | 13.8 ms | 16.0 ms | 40.0 ms | 4.6 MiB | 72 |
+| 80 | 24.1 ms | 28.8 ms | 70.4 ms | 9.0 MiB | 42 |
+| 160 | 48.6 ms | 56.8 ms | 160 ms | 4.7 MiB | 21 |
+| 320 | 89.2 ms | 95.9 ms | 241 ms | 15.2 MiB | 11 |
+| 640 | 141 ms | 146 ms | 326 ms | 14.4 MiB | 7 |
+| 1280 | 228 ms | 234 ms | 440 ms | 30.1 MiB | 4 |
+| 2560 | 406 ms | 411 ms | 731 ms | 43.7 MiB | 2 |
+| 5120 | 767 ms | 770 ms | 1.22 s | 87.6 MiB | 1 |
 
 ### `defineEvidenceProjection (project)`
 
@@ -336,42 +336,42 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | projection shape | fixed at "five derived fields across all six fact models" | A projection that reads fewer fields still pays the clone; one that computes more adds proportional work. |
 | runtime | fixed at "Node (V8)" | Measured on Node only. |
 
-**Measured: O(n)** (exponent 0.97, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.94, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 405 µs | 538 µs | 1.26 ms | 284.8 KiB | 2,471 |
-| 40 | 701 µs | 729 µs | 1.57 ms | 515.1 KiB | 1,426 |
-| 80 | 1.36 ms | 1.48 ms | 3.10 ms | 1014.6 KiB | 737 |
-| 160 | 2.61 ms | 2.75 ms | 4.37 ms | 1.9 MiB | 384 |
-| 320 | 5.05 ms | 5.28 ms | 6.83 ms | 3.8 MiB | 198 |
-| 640 | 9.93 ms | 10.2 ms | 11.9 ms | 7.8 MiB | 101 |
-| 1280 | 20.2 ms | 20.8 ms | 22.2 ms | 15.6 MiB | 50 |
-| 2560 | 43.1 ms | 43.9 ms | 45.4 ms | 30.4 MiB | 23 |
-| 5120 | 86.3 ms | 114 ms | 90.5 ms | 61.1 MiB | 12 |
+| 20 | 698 µs | 1.09 ms | 2.43 ms | 315.8 KiB | 1,433 |
+| 40 | 1.05 ms | 1.44 ms | 2.76 ms | 559.7 KiB | 952 |
+| 80 | 1.78 ms | 2.51 ms | 3.60 ms | 1.0 MiB | 561 |
+| 160 | 3.27 ms | 4.18 ms | 6.08 ms | 2.0 MiB | 306 |
+| 320 | 6.33 ms | 7.07 ms | 10.6 ms | 4.0 MiB | 158 |
+| 640 | 12.2 ms | 12.8 ms | 15.9 ms | 8.1 MiB | 82 |
+| 1280 | 26.2 ms | 27.1 ms | 32.6 ms | 4.6 MiB | 38 |
+| 2560 | 53.2 ms | 55.9 ms | 62.6 ms | 9.8 MiB | 19 |
+| 5120 | 124 ms | 129 ms | 170 ms | 41.8 MiB | 8 |
 
 ## 3. What makes up the end-to-end overhead
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it, then compared with the total overhead from section 1. This shows where the cost actually lives, so effort goes to the function that matters. Shares are estimates: they can sum to slightly more or less than 100% because the two measurements were taken separately (the remainder is shown as _unattributed_).
 
-**At 640 variables** (total added: 90.9 ms)
+**At 640 variables** (total added: 139 ms)
 
 | Function | Calls / operation | Estimated time | Share of added time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `generate-artifacts` | 1 | 90.3 ms | 99% | 95% |
-| `generate-usage-report` | 1 | 61.4 ms | 68% | 64% |
-| `generate-documentation` | 1 | 33.6 ms | 37% | 35% |
-| `discover-schema-files` | 1 | 1.96 ms | 2.2% | 2.1% |
+| `generate-artifacts` | 1 | 149 ms | 107% | 101% |
+| `generate-usage-report` | 1 | 108 ms | 77% | 73% |
+| `generate-documentation` | 1 | 84.1 ms | 60% | 57% |
+| `discover-schema-files` | 1 | 3.00 ms | 2.2% | 2.0% |
 | _unattributed_ |  | 0 | 0.0% |  |
 
-**At 5120 variables** (total added: 909 ms)
+**At 5120 variables** (total added: 1.08 s)
 
 | Function | Calls / operation | Estimated time | Share of added time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `generate-artifacts` | 1 | 905 ms | 100% | 96% |
-| `generate-usage-report` | 1 | 361 ms | 40% | 38% |
-| `generate-documentation` | 1 | 230 ms | 25% | 24% |
-| `discover-schema-files` | 1 | 13.7 ms | 1.5% | 1.5% |
+| `generate-artifacts` | 1 | 1.10 s | 101% | 96% |
+| `generate-usage-report` | 1 | 534 ms | 49% | 47% |
+| `generate-documentation` | 1 | 377 ms | 35% | 33% |
+| `discover-schema-files` | 1 | 20.7 ms | 1.9% | 1.8% |
 | _unattributed_ |  | 0 | 0.0% |  |
 
 ## Cost model
@@ -380,9 +380,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-10-01T14:27:28.222Z` → `2026-10-01T14:28:21.013Z` (53 s), npm run benchmark
-- Machine: Apple M3, 8 logical core(s) (8 physical), 24576 MB RAM, darwin/arm64, Node v24.20.0, local
-- Git: `116792252ae9113f67e8a4b1f08a90d30ce82459` on `chore/no-minify-no-dist-urls` (uncommitted changes)
+- Run: `2026-10-02T00:45:43.860Z` → `2026-10-02T00:46:55.879Z` (72 s), ci
+- Machine: AMD EPYC 9V45 96-Core Processor, 4 logical core(s) (2 physical), 15990 MB RAM, linux/x64, Node v22.23.3, GitHub Actions
+- Git: `77acd16d0d0b13e9c162061da6d6f7d739436547` on `chore/no-minify-no-dist-urls` (uncommitted changes)
 - Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560, 5120 variables -- One environment variable declared in a schema file. Schema files hold ten variables each, so 640 variables is 64 files -- a large monorepo's worth of configuration. The ladder stops at 5,120 variables (512 files) because `discoverSchemaFiles` refuses more than 1,000 files as a sanity limit, which 10,240 variables would exceed.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
