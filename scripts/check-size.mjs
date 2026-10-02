@@ -18,7 +18,10 @@ const root = path.resolve(here, "..")
 
 const BUDGETS = [
   { label: "runtime", file: "dist/index.js", maxGzipBytes: 3 * 1024 },
-  { label: "helpers", file: "dist/helpers.js", maxGzipBytes: 3 * 1024 },
+  // Raised from 3KB to 4KB when minification became forbidden (internal-package-contract's
+  // NoMinify check): the budget was calibrated on minified output, and the same code unminified
+  // gzips to about 3.3KB. A one-time recalibration to the new baseline, not unexamined growth.
+  { label: "helpers", file: "dist/helpers.js", maxGzipBytes: 4 * 1024 },
   { label: "evidence", file: "dist/evidence.js", maxGzipBytes: 3 * 1024 },
   { label: "build", file: "dist/build.js", maxGzipBytes: 999 * 1024 },
   { label: "cli", file: "dist/cli/index.js", maxGzipBytes: 999 * 1024 },
