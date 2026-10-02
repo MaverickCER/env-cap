@@ -24,5 +24,10 @@
   // and heading structure TypeDoc's markdown theme controls, not us) produces
   // findings nobody can fix without hand-patching output the next build
   // discards -- so it is excluded here rather than hand-edited.
-  "ignores": ["docs/api-report/**", "docs/api/**"],
+  "ignores": [
+    "docs/api-report/**",
+    "docs/api/**",
+    "benchmarks/performance-runtime/BENCHMARKS.md",
+    "benchmarks/performance-buildtime/BENCHMARKS.md",
+  ],
 }

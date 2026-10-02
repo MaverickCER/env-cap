@@ -13,7 +13,7 @@ docs/size-badge.json
 
 # Same treatment as docs/api above -- render-page.mjs (internal-package-contract's
 # shared benchmark engine) rebuilds this fresh in the `deploy` job from the
-# committed benchmark/history/*.json, never committed itself.
+# committed benchmarks/history/*.json, never committed itself.
 docs/benchmarks
 
 # Ephemeral, fully re-derivable from dist/*.d.ts on every `npm run contract` run -- one
@@ -30,9 +30,9 @@ docs/benchmarks
 .env.*
 !.env.example
 test/integration/fixtures-generated
-benchmark/performance-runtime/fixtures
-benchmark/performance-buildtime/fixtures
-benchmark/performance-buildtime/edge-cases/_benchmark-output
+benchmarks/performance-runtime/fixtures
+benchmarks/performance-buildtime/fixtures
+benchmarks/performance-buildtime/edge-cases/_benchmark-output
 .claude
 .continue
 .github/copilot-instructions.md

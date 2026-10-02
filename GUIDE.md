@@ -1135,7 +1135,7 @@ operations:
 env-cap follows the second model's safety benefits while separating processing,
 validation, and access so repeated application usage remains constant-time.
 
-See the [performance documentation](./benchmark/README.md) for benchmark methodology
+See the [performance documentation](./benchmarks/README.md) for benchmark methodology
 and regression tracking.
 
 ## Documentation index

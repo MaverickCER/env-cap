@@ -1,0 +1,15 @@
+{
+  "name": "env-cap-example-performance-runtime",
+  "private": true,
+  "type": "module",
+  "description": "Runtime performance benchmark suite (shared internal-package-contract benchmark contract): end-to-end cost of env-cap, every runtime function across a ten-size ladder.",
+  "scripts": {
+    "benchmark": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs",
+    "benchmark:quick": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs --quick",
+    "benchmark:check": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs --check",
+    "benchmark:render": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs --render"
+  },
+  "dependencies": {
+    "env-cap": "file:../.."
+  }
+}
