@@ -1,0 +1,6 @@
+{
+  "root": "../..",
+  "bundleFiles": ["dist/build.js", "dist/node.js", "dist/evidence.js"],
+  "docsPath": "..",
+  "costRates": {}
+}

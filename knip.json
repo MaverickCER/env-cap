@@ -1,8 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/cli/json.ts!", "scripts/*.mjs", "benchmark/**/*.mjs"],
+  "entry": ["src/cli/json.ts!", "scripts/*.mjs", "benchmarks/**/*.mjs"],
   "project": ["src/**/*.{ts,tsx}!"],
-  "ignore": ["**/*.d.ts", "dist/**", "coverage/**", "reports/**", "examples/**", "benchmark/**"],
+  "ignore": ["**/*.d.ts", "dist/**", "coverage/**", "reports/**", "examples/**", "benchmarks/**"],
   // typedoc-plugin-markdown: genuinely used, but its "plugin" declaration now lives in
   // internal-package-contract's shared config/typedoc-markdown.json (this repo's own
   // typedoc.markdown.json only `extends` it -- see that file) -- knip's typedoc plugin

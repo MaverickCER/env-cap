@@ -10,7 +10,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const benchmarkRoot = path.join(root, "benchmark")
+const benchmarkRoot = path.join(root, "benchmarks")
 
 const EXAMPLES = ["performance-runtime", "performance-buildtime"]
 
@@ -18,11 +18,15 @@ for (const name of EXAMPLES) {
   const exampleDir = path.join(benchmarkRoot, name)
   if (!existsSync(path.join(exampleDir, "node_modules"))) {
     console.log(
-      `[skip] ${name}: node_modules not installed (run npm install in benchmark/${name} first)`,
+      `[skip] ${name}: node_modules not installed (run npm install in benchmarks/${name} first)`,
     )
     continue
   }
 
   console.log(`[benchmark] ${name}: running...`)
-  execFileSync("npm", ["run", "--silent", "benchmark"], { cwd: exampleDir, stdio: "inherit" })
+  execFileSync(
+    "npm",
+    ["run", "--silent", process.argv.includes("--check") ? "benchmark:check" : "benchmark"],
+    { cwd: exampleDir, stdio: "inherit" },
+  )
 }

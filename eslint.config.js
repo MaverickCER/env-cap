@@ -8,7 +8,7 @@ import tseslint from "typescript-eslint"
  * Scoped to this package's own source (src/, test/) plus its root-level
  * build/CI scripts -- matching tsconfig.json's own include/exclude list.
  * The three flagship examples under examples/, the benchmark projects
- * under benchmark/, and every relocated behavioral fixture under
+ * under benchmarks/, and every relocated behavioral fixture under
  * test/integration/{positive,negative}/, are separate, self-contained npm
  * projects with their own tsconfig/toolchain and are intentionally not
  * linted here; the website (docs/) is static HTML/CSS/JS reviewed
@@ -55,7 +55,7 @@ export default tseslint.config(
       // duplicate whatever findings already apply to the real tree.
       ".stryker-tmp",
       "examples",
-      "benchmark",
+      "benchmarks",
       "docs",
       // Tooling-owned data, not source: api-contract/ holds one subdirectory per ApiContract
       // target (runtime/, build/, helpers/, evidence/, eslint-plugin/) of API-Extractor-backed

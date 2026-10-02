@@ -1,0 +1,18 @@
+{
+  "name": "env-cap-example-performance-buildtime",
+  "private": true,
+  "type": "module",
+  "description": "Build-time performance benchmark suite (shared internal-package-contract benchmark contract): cost of env-cap discovery and artifact generation as configuration size grows.",
+  "scripts": {
+    "benchmark": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs",
+    "benchmark:quick": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs --quick",
+    "benchmark:check": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs --check",
+    "benchmark:render": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs --render"
+  },
+  "dependencies": {
+    "env-cap": "file:../.."
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

@@ -89,7 +89,7 @@ change the output, here's the new baseline" step, not something that should ever
 
 ## Looking for the performance benchmarks?
 
-They've moved to [`/benchmark`](../benchmark/) — project confidence tooling, not an adoption
+They've moved to [`/benchmarks`](../benchmarks/) — project confidence tooling, not an adoption
 sample like the three flagships above, so it lives as a top-level sibling of `examples/` rather
-than inside it. See [`benchmark/README.md`](../benchmark/README.md) for methodology, tier
+than inside it. See [`benchmarks/README.md`](../benchmarks/README.md) for methodology, tier
 definitions, and what's deliberately not measured and why.
