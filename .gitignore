@@ -48,3 +48,5 @@ benchmarks/performance-buildtime/edge-cases/_benchmark-output
 GEMINI.md
 .idea
 .tabnine
+# CodeScanning's exception registry lists weaknesses in the code, so it is never committed.
+.repo-contract/exceptions/code-scanning.json
