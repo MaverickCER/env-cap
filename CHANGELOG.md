@@ -1,5 +1,80 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- feat: sync internal-package-contract version automatically; centralize typedoc config (#24)
+- feat(benchmark): extend coverage to helpers/evidence, add benchmarks nav link
+- e84fa82: Migrates the benchmark pipeline onto internal-package-contract's shared
+  benchmark engine (PR #22): `scripts/append-benchmark-history.mjs` and
+  `scripts/render-benchmark-summary.mjs` are removed in favor of
+  internal-package-contract's own `append-history.mjs`/`render-summary.mjs`,
+  called from a new reusable `benchmark-pr` workflow
+  (`internal-package-contract/.github/workflows/benchmark-pr.yml`) that
+  replaces this repo's own inline job steps. Committed benchmark history moves
+  from `docs/benchmark-history/` to `benchmark/history/` (matching data-cap's
+  own convention) and gains a v2 schema that carries each tier's full `inputs`
+  alongside `medianMs`. The `deploy` job now also publishes a generated
+  `docs/benchmarks/index.html` history chart page, built fresh from
+  `render-page.mjs` on every deploy, never committed.
+
+  This is internal tooling only -- no change to any published runtime or
+  build-time API.
+
+- 08df0e4: **Breaking (pre-1.0 minor -- see VERSIONING.md's Stable pre-1.0 allowance):** removes `--docs`, `--ownership`, `--env-example`, and `--env-example-on-existing` (and, as a direct structural consequence, `--expiring-within-days`) from the `env-cap` CLI. Every remaining CLI flag either has a verified real runtime consumer (`--location`) or is inherent to the tool's own evidence/reporting contract (`--evidence`, `--json`, `--check`, `--strict`/`--strict-docs`/`--strict-ownership`) -- see [ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md).
+
+  The underlying generator functions are **not removed and are not breaking**: `generateDocumentation`, `generateUsageReport`, `computeDocumentation`, `writeDocumentation`, `computeUsage`, `writeUsageReport`, `generateEnvArtifacts` (including its own `docs`/`usage` options), and `checkEnvArtifacts` all remain fully exported from `env-cap/build`, unchanged. A project that used `--docs`/`--ownership`/`--env-example` now calls these directly from a small build script instead of a CLI flag -- see any of this repo's own `examples/*/scripts/generate-docs/{run.ts,check.ts}` for a complete, copyable pattern (generation and its `--check`-equivalent drift guard).
+
+  Also fixes a real bug this surfaced and migrates the first-party GitHub Action in the same change: `env-cap`'s Action (`scripts/github-action/report.mjs`) used to read `result.docs`/`result.usage` from the CLI's `--json` output for PR annotations, the summary comment, and rotation-alert issues (ADR 0018) -- since the CLI can no longer populate either field, that reporting would otherwise have gone silently empty for the documentation/ownership/expiring-secret sections regardless of `args`. `report.mjs` now reads `result.evidence` (Finding/Lifecycle/Contract/Ownership/Dependency Model, ADR 0038) instead, which requires `--evidence` in the Action's `args` for full reporting (manifest-only findings still work without it) -- see `action.yml`'s updated `args` description. Covered by a new end-to-end test (`test/scripts/github-action-report.test.ts`) that runs the real CLI entry point, not just a hand-built fixture object, which is what let the original gap through undetected.
+
+- acfdc58: Adds four new per-variable schema fields (`authenticatorType`, `rotationPeriod`, `lastRotatedAt`, `rotationTriggerEvents`) to `documentEnv()`'s `variables` shape, alongside the existing `expiresAt`/`refreshInstructions` lifecycle fields -- purely additive, no existing field's behavior changes. `env-cap/build`'s Lifecycle Model (`buildLifecycleModel()`) now threads these through and computes a `rotationStatus` (`compliant`/`overdue`/`expired`/`undeclared`) per variable that declares at least one of them, grounded in NIST SP 800-53 Rev. 5 **IA-5** (Authenticator Management)'s two-trigger rotation model (a time-based `rotationPeriod` and event-based `rotationTriggerEvents`) -- see `src/build/lifecycle-model.ts`'s `computeRotationStatus()` doc comment for the full interpretive judgment call on how a pre-existing `expiresAt` and the new `rotationPeriod`/`lastRotatedAt` pair combine. `LIFECYCLE_MODEL_SCHEMA_VERSION` bumps from 2 to 3 for the new fields, and `computeRotationStatus`/`parseRotationPeriodDays`/`RotationComplianceStatus` are newly exported from `env-cap/build`.
+
+  Also adds a new example generator, `examples/application/scripts/rotation-log/` (peer to `scripts/generate-docs/`, wired into that example's `docs:reports` npm script), demonstrating a real NIST IA-5 secrets-rotation compliance document (`docs/SECRETS-ROTATION-LOG.md`) built from `env-cap`'s own evidence artifact -- application-level code calling exported `env-cap/build` functions, the same pattern `generate-docs/` established; no new CLI flags. See that directory's own README for the architecture (`types.ts`/`build-model.ts`/`render.ts`/`print-lines.ts`/`run.ts`) and why there's no single official NIST-prescribed template for this document.
+
+- 5f4ca0f: Removes the `examples/nextjs-app` ISO 10007/ISO-IEC 27001 open-standard
+  alignment report generator (`scripts/open-config-alignment/`, the
+  `docs:alignment` script, and the two generated `docs/ISO-*.md` reports).
+  The generation logic behind these ISO-branded reports was never verified
+  against the real, licensed ISO standard text, creating real copyright/
+  mislabeling exposure -- this is a pure deletion, not a design change, and
+  no replacement generator is added in its place.
+
+### Patch Changes
+
+- fix: stop relying on chmod for the evidence-cache unreadable-file test
+- docs: regenerate api-report/build.md for the rotation-log schema additions
+- fix: regenerate paypal-consumer's stale lockfile pin and golden fixtures
+- chore(benchmarks): refresh results.json
+- fix: stop golden fixtures hardcoding a calendar date that eventually expires
+- chore(benchmarks): refresh results.json
+- fix: regenerate tsconfig-aliases-consumer's stale lockfile pin
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore: commit the first-ever api-contract baseline
+- ci: run benchmarks before contract/lint, in one workflow, to stop the re-approval loop
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- fix(size): recalibrate the helpers budget to unminified output
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- fix(test): close mutation-coverage gap on the --evidence-only text output path
+- chore: except a Stryker false-positive survivor in resolve-tsconfig-paths.ts
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json (132477d) (#22)
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- fix: real CI for bot-authored branches; benchmark results land in the PR itself (#23)
+- fix(scripts): update check-readme-example-fresh.mjs to the two-step docs flow
+- 549a694: Stop minifying the published build, move the benchmarks onto internal-package-contract's shared benchmark kit (documented suites, cost-first `BENCHMARKS.md`, `benchmarks/README.md`), and record the shipped URLs and Socket alerts as fully written exceptions.
+
 ## 0.4.0
 
 ### Minor Changes
