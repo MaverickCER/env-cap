@@ -2,7 +2,7 @@ import { nodeBuildFs } from "../support/build-filesystem.js"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { REPORT_REGENERATE_HINT, generatedBanner } from "../../src/build/generated-banner.js"
+import { reportRegenerateHint, generatedBanner } from "../../src/build/generated-banner.js"
 import { fileURLToPath } from "node:url"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { dynamicAccessVariableIdentity } from "../../src/build/citation-verification.js"
@@ -93,7 +93,7 @@ describe("generateUsageReport", () => {
     })
     expect(result.reportPath).toBe(path.resolve(fixtureRoot, "docs/OWNERSHIP.md"))
     const source = await fs.readFile(result.reportPath!, "utf8")
-    expect(source).toContain(generatedBanner("markdown", REPORT_REGENERATE_HINT))
+    expect(source).toContain(generatedBanner("markdown", reportRegenerateHint()))
     expect(source).toContain("Dependency & Ownership Report")
     expect(source).toContain("payments-team")
   })

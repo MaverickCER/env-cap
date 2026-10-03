@@ -2,7 +2,7 @@ import type { ContractModelContract, ContractModelVariable } from "./contract-mo
 import { governanceFieldsOf, type EnvGovernanceFields } from "./governance-fields.js"
 import type { DiscoveredVariableEvidence } from "./parse.js"
 import {
-  REPORT_REGENERATE_HINT,
+  reportRegenerateHint,
   evidenceDisclaimer,
   evidenceProjectionNote,
   generatedBanner,
@@ -409,7 +409,7 @@ function renderHeader(
   hasLifecycle: boolean,
 ): string[] {
   const lines = [
-    generatedBanner("markdown", REPORT_REGENERATE_HINT),
+    generatedBanner("markdown", reportRegenerateHint()),
     "",
     `> ${evidenceDisclaimer()}`,
     "",

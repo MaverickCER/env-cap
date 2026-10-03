@@ -1,14 +1,8 @@
-// Deliberately narrow imports -- `@typescript-eslint/utils`'s main entry
-// (`ESLintUtils`) re-exports its `ts-eslint` namespace, which includes
-// FlatESLint/ESLint wrapper classes that do a runtime `require("eslint")`.
-// Bundled into an ESM output (this package ships dependency-free, so
-// `@typescript-eslint/utils` is inlined at build time -- see tsup.config.ts),
-// that `require()` has no real CJS `require` to call and throws "Dynamic
-// require of eslint is not supported". `RuleCreator` alone lives at the
-// `eslint-utils` subpath and `AST_NODE_TYPES` in `@typescript-eslint/types`,
-// neither of which touch `eslint` at all.
+// `@typescript-eslint/utils` is an external optional peer (ADR 0048), resolved by the consumer's own
+// module loader, so its main entry is safe to import from; `RuleCreator` still comes from the
+// `eslint-utils` subpath to keep the loaded surface small.
 import { RuleCreator } from "@typescript-eslint/utils/eslint-utils"
-import { AST_NODE_TYPES } from "@typescript-eslint/types"
+import { AST_NODE_TYPES } from "@typescript-eslint/utils"
 import { globToRegExp } from "./glob.js"
 
 const createRule = RuleCreator(

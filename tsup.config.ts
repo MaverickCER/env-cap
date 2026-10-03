@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { defineConfig } from "tsup"
+import { defineConfig, type Options } from "tsup"
 
 // Read once, here, at build time -- NOT shipped in dist/. Substituted into
 // `src/build/tool-version.ts` and `src/cli/json.ts` via `define` below, so
@@ -15,7 +15,7 @@ const versionDefine = { __PACKAGE_VERSION__: JSON.stringify(packageVersion) }
 // Socket.dev supply-chain alert and internal-package-contract's NoMinify check fails the contract
 // on it. The built output ships exactly as esbuild prints it, comments included.
 
-export default defineConfig([
+const bundles: Options[] = [
   {
     name: "runtime",
     entry: { index: "src/runtime/index.ts" },
@@ -103,13 +103,10 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     treeshake: true,
-    // `@typescript-eslint/utils` (bundled -- see package.json's devDependency
-    // comment) internally does a dynamic `require("eslint")` for its
-    // FlatESLint/ESLint wrapper types, which esbuild's ESM output can't
-    // satisfy for a bundled dependency (only for a real, external runtime
-    // import) -- "Dynamic require of eslint is not supported" otherwise.
-    // Both are already peerDependencies a consumer has installed anyway.
-    external: ["eslint", "typescript"],
+    // `@typescript-eslint/utils` is an optional peer, NOT bundled (ADR 0048): a bundled copy is
+    // invisible to a consumer's `npm audit`/Dependabot/Socket and frozen at build time. Anyone
+    // linting TypeScript with ESLint already has it through `typescript-eslint`.
+    external: ["eslint", "typescript", "@typescript-eslint/utils"],
     // This entry point has both a default export (the plugin object) and a
     // named export (`noRawProcessEnv`, re-exported for direct consumption --
     // see its own module doc comment). tsup's built-in `cjsInterop` option
@@ -121,4 +118,17 @@ export default defineConfig([
     // `esbuildOptions.footer` here would land too early, before those
     // assignments exist).
   },
-])
+]
+
+// Maps keep pointing at `src/` lines but no longer embed the full source text of every file (and of
+// the vendored third-party code in the ESLint plugin bundle): that text was about 60% of the
+// unpacked package, and the sources are in the repository.
+export default defineConfig(
+  bundles.map((bundle) => ({
+    ...bundle,
+    esbuildOptions(options, context) {
+      options.sourcesContent = false
+      bundle.esbuildOptions?.(options, context)
+    },
+  })),
+)

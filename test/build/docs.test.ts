@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { REPORT_REGENERATE_HINT, generatedBanner } from "../../src/build/generated-banner.js"
+import { reportRegenerateHint, generatedBanner } from "../../src/build/generated-banner.js"
 import {
   renderDocs,
   extractPreviouslyDocumentedKeys,
@@ -101,7 +101,7 @@ describe("renderDocs", () => {
     })
     const docs = renderDocs([payments], options())
 
-    expect(docs).toContain(generatedBanner("markdown", REPORT_REGENERATE_HINT))
+    expect(docs).toContain(generatedBanner("markdown", reportRegenerateHint()))
     expect(docs).toContain(NOW.toISOString())
     expect(docs).toContain("## Table of contents")
     expect(docs).toContain("## Catalog")

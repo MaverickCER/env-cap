@@ -55,7 +55,8 @@ major version bump (once the package reaches 1.0 -- see
 - **The composite GitHub Action** (`action.yml`): its input and output names and meanings, and
   the PR comment's sections. The major tag it is used through (`uses: MaverickCER/env-cap@v0`
   while the package is 0.x, `@v1` from 1.0.0) moves only within a major version.
-- **Supported toolchain**: Node.js `>=22`, and the TypeScript versions named in the
+- **Supported toolchain**: Node.js `>=22`, `moduleResolution` `node16`/`nodenext`/`bundler` (not the legacy
+  `node10`, which cannot resolve subpath exports), and the TypeScript versions named in the
   `typescript` peer range. The build-time scanner needs TypeScript's classic compiler API; a
   TypeScript major that removes it is unsupported until a release says otherwise, and the CLI says
   so instead of failing with an import error.

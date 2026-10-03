@@ -8,11 +8,9 @@
  * warns ("no stryker.config.* and IPC_MUTATION isn't set") instead of actually
  * running -- see specs/decisions/0039-scanner-local-dataflow-boundary.md.
  *
- * The mutation-score threshold is NOT set here -- the `Mutation` check owns that
- * number (`MUTATION_THRESHOLD` in internal-package-contract) and reads the JSON
- * report directly. env-cap's own goal is 100% of tested mutants killed; the 80%
- * figure is the fleet floor, not the target -- matching data-cap's own
- * stryker.config.mjs precedent.
+ * The mutation-score threshold is NOT set here -- the `Mutation` check owns the policy
+ * (zero tolerance: every non-ignored mutant must be killed, or carry an exception record in
+ * `.repo-contract/exceptions/mutation.json`) and reads the JSON report directly.
  *
  * @type {import('@stryker-mutator/api/core').PartialStrykerOptions}
  */
@@ -30,18 +28,17 @@ export default {
   // each one -- the single largest contributor to wall time. Ignoring them
   // trades that for not mutating load-time-constant expressions.
   ignoreStatic: true,
-  disableTypeChecks: "{src,test}/**/*.{ts,tsx}",
-  // Stryker runs a trimmed vitest suite: `test/integration/**` and
-  // `test/examples/**` are excluded wholesale because their "generate fresh,
-  // diff against a committed golden" shape is inherently sandbox-relocation-
-  // sensitive (absolute paths / fingerprint hashes baked from the real repo
-  // root don't reproduce from `.stryker-tmp/sandbox-<id>/`). See
-  // vitest.stryker.config.ts's own header for the full root-cause writeup.
-  // Every `src/**` module those fixtures exercise has its own dedicated
-  // `test/build/*.test.ts` unit coverage; a line covered ONLY by an excluded
-  // test surfaces as Stryker `NoCoverage`, the right signal to add a unit
-  // test, not a false pass.
-  vitest: { configFile: "vitest.stryker.config.ts" },
+  disableTypeChecks: "src/**/*.ts",
+  // The full suite runs under Stryker, `test/integration/**` and `test/examples/**` included. They
+  // were once excluded on the belief that fixture paths and fingerprints depend on the repo's
+  // absolute location; `computeSourceFingerprint()` hashes root-relative paths now, and the two
+  // things that actually broke in the sandbox are fixed here instead:
+  //  - `disableTypeChecks` is limited to `src/`: matching `test/` too prepended `// @ts-nocheck` to
+  //    every fixture source file and shifted the line numbers the goldens pin;
+  //  - `symlinkNodeModules: false`, because junction-linking a fixture's nested `node_modules` back
+  //    to the real tree made `fs.realpath()`-based package resolution walk out of the sandbox.
+  vitest: { configFile: "vitest.config.ts" },
+  symlinkNodeModules: false,
   mutate: [
     "src/**/*.ts",
     "!src/**/*.test.ts",

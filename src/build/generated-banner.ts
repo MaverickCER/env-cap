@@ -28,12 +28,14 @@ function generatedFileMarker(): string {
 }
 
 /**
- * Regeneration instruction for a report the CLI does not write (ADR 0046): it is produced by the
+ * Regeneration instruction for a report the CLI does not write (ADR 0046) -- a function, not a
+ * `const`, for the same per-call-evaluation reason as `generatedFileMarker()`: it is produced by the
  * project's own script calling the `./build` generators, so naming `npx env-cap` there would send a
  * reader to a command that cannot regenerate it.
  */
-export const REPORT_REGENERATE_HINT =
-  "Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`."
+export function reportRegenerateHint(): string {
+  return "Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`."
+}
 
 /**
  * Renders the "do not edit by hand" marker in the given comment syntax.

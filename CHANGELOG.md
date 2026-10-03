@@ -261,7 +261,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches 1.0. Before 1.0, minor versions may include breaking changes.
 
-## [Unreleased]
+## [0.1.0] - 2026-08-02
+
+Carried over from the legacy hand-kept `[Unreleased]` block that sat above this release:
 
 - Build: **Experimental** TypeScript path-alias resolution -- a new `tsconfig`
   option (and CLI `--tsconfig <path>` / `--no-tsconfig`) on `generateEnvManifest()`/
@@ -279,7 +281,6 @@ once it reaches 1.0. Before 1.0, minor versions may include breaking changes.
   a real package (a real packed tarball, same shape as `examples/paypal-consumer`) to prove
   this composes correctly with cross-package discovery (ADR 0014) in one run.
 
-## [0.1.0] - 2026-08-02
 
 Initial release.
 
@@ -388,5 +389,4 @@ kind, toolVersion, ok, ... }`) instead of formatted text, for CI checks, PR
   several leftover, never-referenced CSS classes (`.card`, `.callout--warning`,
   `.callout--success`, `.comparison-table .is-positive`).
 
-[Unreleased]: https://github.com/maverickcer/env-cap/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/maverickcer/env-cap/releases/tag/v0.1.0

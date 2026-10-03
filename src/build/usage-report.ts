@@ -1,7 +1,7 @@
 import type { ScannedSurface } from "./dependency-graph.js"
 import type { DynamicAccessCitationProblem } from "./citation-verification.js"
 import {
-  REPORT_REGENERATE_HINT,
+  reportRegenerateHint,
   evidenceDisclaimer,
   evidenceProjectionNote,
   generatedBanner,
@@ -280,7 +280,7 @@ function renderParseWarnings(warnings: readonly ParseWarning[]): string[] {
  */
 export function renderUsageReport(computed: RenderUsageReportOptions): string {
   const lines = [
-    generatedBanner("markdown", REPORT_REGENERATE_HINT),
+    generatedBanner("markdown", reportRegenerateHint()),
     "",
     `> ${evidenceDisclaimer()}`,
     "",

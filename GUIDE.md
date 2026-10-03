@@ -931,10 +931,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: maverickcer/env-cap@v1
+      - uses: maverickcer/env-cap@v0
         with:
           args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
 ```
+
+The action runs the project's own installed `env-cap` (`devDependencies`) and never an unpinned
+`latest`: with no local install it needs `with: version: "<x.y.z>"` and otherwise fails with an
+explanation. Inputs reach the CLI through environment variables, not shell text, so a PR-controlled
+value forwarded into `args` cannot become a command.
+
+What this action reports (data-cap's sibling action reports the same sections minus the rotation
+alert): inline `::warning`/`::error` annotations, one sticky pull-request comment per `report-key`,
+and -- env-cap only, on runs with no pull request -- a GitHub issue for expiring or expired
+variables (`rotation-alert`, needs `issues: write`), closed again once nothing is expiring.
 
 `args` only reaches the CLI, so it can only drive `--location`/`--evidence`/
 `--strict`-family flags (ADR 0046) -- the persisted evidence artifact this
@@ -999,7 +1009,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: maverickcer/env-cap@v1
+      - uses: maverickcer/env-cap@v0
         with:
           args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
 ```

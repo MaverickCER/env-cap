@@ -167,7 +167,7 @@ declare → generate → validate → consume
 
 See the [Guide's Core workflow](GUIDE.md#core-workflow) for the complete generate/validate cycle.
 
-Node.js `>=22`. TypeScript 5 or 6 is only required for build-time manifest generation; the runtime works in plain JavaScript. See the [runtime support matrix](GUIDE.md#runtime-support-matrix) for Node, browser bundles, edge runtimes, Bun, and Deno.
+Node.js `>=22`. TypeScript 5 or 6 is only required for build-time manifest generation; the runtime works in plain JavaScript. TypeScript consumers need `moduleResolution` set to `node16`, `nodenext` or `bundler` to resolve the subpath exports (`./build`, `./helpers`, ...); the legacy `node10` resolver is not supported. `@maverickcer/env-cap/eslint-plugin` also needs `@typescript-eslint/utils` installed (an optional peer). See the [runtime support matrix](GUIDE.md#runtime-support-matrix) for Node, browser bundles, edge runtimes, Bun, and Deno.
 
 ## What declared metadata can express
 
@@ -287,6 +287,10 @@ The architecture is considered stable; APIs may continue to evolve based on prod
 If capability-owned configuration matches how you think about environment variables, try env-cap against one real schema.
 
 If it does not fit your application's configuration model, [open an issue](https://github.com/MaverickCER/env-cap/issues) and explain why.
+
+## Part of the MaverickCER toolkit
+
+`@maverickcer/env-cap` governs configuration and `data-cap` governs application data: siblings that apply the same capability-ownership model. `repo-contract` and `internal-package-contract` are how they are verified. See [the toolkit overview and glossary](https://github.com/MaverickCER/internal-package-contract/blob/main/TOOLKIT.md).
 
 ## Contributing
 

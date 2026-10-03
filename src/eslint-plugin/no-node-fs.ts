@@ -1,6 +1,6 @@
-// Same narrow-import rationale as `no-raw-process-env.ts` -- see its header.
+// Same import rationale as `no-raw-process-env.ts` -- see its header.
 import { RuleCreator } from "@typescript-eslint/utils/eslint-utils"
-import { AST_NODE_TYPES } from "@typescript-eslint/types"
+import { AST_NODE_TYPES } from "@typescript-eslint/utils"
 import { globToRegExp } from "./glob.js"
 
 const createRule = RuleCreator(

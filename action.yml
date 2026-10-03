@@ -9,7 +9,7 @@ inputs:
     required: false
     default: "."
   version:
-    description: "env-cap version to use via npx if not already a local devDependency."
+    description: "env-cap version to fetch via npx when it is not a local devDependency. Required in that case: the action fails rather than run an unpinned `latest`. Ignored when the project has env-cap installed."
     required: false
     default: ""
   comment:
@@ -38,22 +38,12 @@ runs:
     - id: run
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: |
-        set +e
-        # "env-cap" alone (no npm scope) does not exist on the public npm
-        # registry -- only the published "@maverickcer/env-cap" does (the
-        # unscoped name is only the *binary* name, from package.json's
-        # `bin` field, resolvable via `npx` without a scope ONLY when
-        # something already installed it locally, e.g. a consumer's own
-        # devDependency). Confirmed by hand: `npx --yes env-cap@<version>`
-        # 404s directly against the real registry. `--yes` here means "fetch
-        # it via npx if not already local" (this input's own description),
-        # so it must reference the real, scoped package name.
-        PKG="@maverickcer/env-cap"
-        if [ -n "${{ inputs.version }}" ]; then PKG="@maverickcer/env-cap@${{ inputs.version }}"; fi
-        npx --yes "$PKG" --json ${{ inputs.args }} > "$RUNNER_TEMP/env-cap-result.json"
-        echo "exit-code=$?" >> "$GITHUB_OUTPUT"
-        set -e
+      env:
+        INPUT_ARGS: ${{ inputs.args }}
+        INPUT_VERSION: ${{ inputs.version }}
+        RESULT_PATH: ${{ runner.temp }}/env-cap-result.json
+        ACTION_PATH: ${{ github.action_path }}
+      run: bash "$ACTION_PATH/scripts/github-action/run-cli.sh"
     - shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
@@ -64,6 +54,9 @@ runs:
         DO_ROTATION_ALERT: ${{ inputs.rotation-alert }}
         REPORT_KEY: ${{ inputs.report-key }}
         WORKING_DIRECTORY: ${{ inputs.working-directory }}
-      run: node "${{ github.action_path }}/scripts/github-action/report.mjs"
+        ACTION_PATH: ${{ github.action_path }}
+      run: node "$ACTION_PATH/scripts/github-action/report.mjs"
     - shell: bash
-      run: exit ${{ steps.run.outputs.exit-code }}
+      env:
+        CLI_EXIT_CODE: ${{ steps.run.outputs.exit-code }}
+      run: exit "$CLI_EXIT_CODE"

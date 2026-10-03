@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  reportRegenerateHint,
   evidenceDisclaimer,
   evidenceProjectionNote,
   generatedBanner,
@@ -93,5 +94,14 @@ describe("generatedBanner regeneration hint", () => {
     expect(generatedBanner("markdown", "Run the thing.")).toBe(
       "<!-- GENERATED FILE -- do not edit by hand. Run the thing. -->",
     )
+  })
+})
+
+describe("reportRegenerateHint()", () => {
+  it("names the generators that really produce a report, never the CLI", () => {
+    expect(reportRegenerateHint()).toContain("generateDocumentation()")
+    expect(reportRegenerateHint()).toContain("generateUsageReport()")
+    expect(reportRegenerateHint()).toContain("@maverickcer/env-cap/build")
+    expect(reportRegenerateHint()).not.toContain("npx env-cap")
   })
 })

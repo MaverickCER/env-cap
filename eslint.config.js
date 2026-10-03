@@ -32,7 +32,7 @@ export default tseslint.config(
   // contains another package (internal-package-contract) that also ships a
   // tsconfig.json, typescript-eslint's auto-detection for root-level `.ts`
   // config files this repo's own blocks don't otherwise scope (tsup.config.ts,
-  // vitest.config.ts, vitest.stryker.config.ts) becomes genuinely ambiguous
+  // vitest.config.ts) becomes genuinely ambiguous
   // between the two candidate roots -- confirmed directly: removing this
   // block reproduces the exact "multiple candidate TSConfigRootDirs" parsing
   // error on exactly those files. Setting it explicitly, globally, removes

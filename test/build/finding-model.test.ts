@@ -36,6 +36,18 @@ describe("buildFindingModel", () => {
     ])
   })
 
+  it("reports an honest undefined file when an escalated compatibility issue names none", () => {
+    const issue: CompatibilityIssue = {
+      severity: "warning",
+      variable: "PORT",
+      files: [],
+      reason: "escalated from another family",
+      code: "PROCESSOR_RETURN_TYPE_CONFLICT",
+    }
+    const model = buildFindingModel({ root: "/repo", compatibilityIssues: [issue] })
+    expect(model.findings[0]?.location).toMatchObject({ model: "contract", file: undefined })
+  })
+
   it("falls back to duplicate-variable-documentation when a compatibility issue has no code at all", () => {
     const issue: CompatibilityIssue = {
       severity: "warning",
