@@ -1,8 +1,8 @@
 // Build-time script. Run via `npm run project:drift` (after `generate:env`
 // has produced the committed artifacts this compares against -- see
 // package.json). Never imported by application code.
-import { checkEnvArtifacts, generateEvidenceModel } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { checkEnvArtifacts, generateEvidenceModel } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

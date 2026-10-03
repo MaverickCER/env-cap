@@ -1,4 +1,4 @@
-import { createEnv, documentEnv } from "env-cap";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * Two secret-backed variables whose real expiration signal lives in AWS

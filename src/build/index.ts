@@ -1,5 +1,5 @@
 /**
- * env-cap build-time entry point (`env-cap/build`).
+ * env-cap build-time entry point (`@maverickcer/env-cap/build`).
  *
  * Discovery, static analysis, cross-file linking, and manifest/docs/
  * ownership-report generation only -- this module imports `node:path` and
@@ -13,7 +13,7 @@
  * below carries a required `fs: BuildFileSystem` field; the `env-cap` CLI
  * builds a concrete `node:fs/promises` adapter and hands it in. A consumer
  * running these functions from their own Node build script imports the same
- * adapter from `env-cap/node` (`{ nodeBuildFileSystem }`).
+ * adapter from `@maverickcer/env-cap/node` (`{ nodeBuildFileSystem }`).
  *
  * The public API is deliberately curated: four generator functions
  * (`generateEnvManifest`, `generateDocumentation`, `generateUsageReport`,
@@ -212,7 +212,7 @@ export type { EnvExampleOnExisting, EnvExampleResult, Reconciliation } from "./e
 export type { DynamicAccessAssertion, SourcePosition } from "./source-position.js"
 // The Evidence Model (ADR 0024, ADR 0031) -- the assembled union of the
 // other six models plus provenance. This shape is also consumed (type-only)
-// by `env-cap/evidence`.
+// by `@maverickcer/env-cap/evidence`.
 export { EVIDENCE_MODEL_SCHEMA_VERSION } from "./evidence-model.js"
 export type { EvidenceModel, EvidenceProvenance } from "./evidence-model.js"
 // generateEvidenceModel() runs discovery once and assembles all

@@ -1,4 +1,4 @@
-import { createEnv, documentEnv } from "env-cap";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * Owned by a different team than the database/orm capabilities on purpose

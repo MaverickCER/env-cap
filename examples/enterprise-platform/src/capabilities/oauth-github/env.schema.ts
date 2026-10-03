@@ -1,4 +1,4 @@
-import { createEnv, documentEnv } from "env-cap";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * Plain `fetch`, no SDK -- the point of this capability is demonstrating

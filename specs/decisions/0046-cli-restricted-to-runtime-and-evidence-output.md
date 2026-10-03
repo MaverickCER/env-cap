@@ -15,7 +15,7 @@ removed too, as a direct structural consequence (see Context). Covered by
 (`src/build/generate-documentation.ts`, `src/build/generate-usage.ts`), and
 the higher-level orchestrators `generateDocumentation`/`generateUsageReport`/
 `generateEnvArtifacts`/`checkEnvArtifacts` that compose them, are **not**
-changed by this decision and remain fully exported from `env-cap/build`,
+changed by this decision and remain fully exported from `@maverickcer/env-cap/build`,
 Stable per ADR 0045. Nothing about the library surface shrank -- only what
 the packaged CLI binary can trigger by itself.
 
@@ -66,7 +66,7 @@ drifting from what a reasonable user expects). A flag whose only job is
 "write a file nothing else reads" earns its place by being _useful_, not by
 being _possible_ -- and it was already possible without the flag: every
 generator function it called was, and remains, a plain exported function
-from `env-cap/build`. Keeping `--docs`/`--ownership` in the CLI while their
+from `@maverickcer/env-cap/build`. Keeping `--docs`/`--ownership` in the CLI while their
 only real consumers turned out to be humans reading committed Markdown, not
 other code or a CI drift check with independent value, meant the CLI's
 surface area didn't reflect what the tool's flags were actually _for_.
@@ -107,7 +107,7 @@ move to application-level code: a project that wants
 `generateDocumentation()`/`generateUsageReport()` (or the lower-level
 `computeDocumentation`/`writeDocumentation`/`computeUsage`/
 `writeUsageReport`, or `checkEnvArtifacts()` for a `--check`-equivalent
-drift guard) directly from `env-cap/build` in its own build script, exactly
+drift guard) directly from `@maverickcer/env-cap/build` in its own build script, exactly
 as it would for any other custom reporting need this package doesn't build
 in (see ADR 0010's precedent: engine internals stay private until a
 primitive earns public status through real external use; these four
@@ -128,7 +128,7 @@ needed its `check` script updated the same way (a new
   invoking `env-cap --docs ...`/`--ownership ...`/`--env-example ...`/
   `--env-example-on-existing ...`/`--expiring-within-days ...` now fails
   with `Unknown argument: --docs` (etc.) instead of generating output. The
-  fix is mechanical: call the equivalent `env-cap/build` function directly
+  fix is mechanical: call the equivalent `@maverickcer/env-cap/build` function directly
   from a small script, following the pattern in any of this repo's own
   `examples/*/scripts/generate-docs/` directories.
 - `generateEnvArtifacts()`'s own `docs`/`usage` options (`GenerateEnvArtifactsOptions`)
@@ -147,7 +147,7 @@ hardcoded in `src/build/docs.ts`/`src/build/usage-report.ts`'s shared
 renderers) is now technically inaccurate for every example generating
 these through application code instead of the CLI. Left unchanged
 deliberately: both renderers are shared by every consumer of
-`env-cap/build`, not just these examples, so correcting the byline is a
+`@maverickcer/env-cap/build`, not just these examples, so correcting the byline is a
   golden-fixture-wide rendering change (touching every example's and
   integration fixture's committed output) out of proportion to this
   decision's actual scope -- a candidate for a focused follow-up, not

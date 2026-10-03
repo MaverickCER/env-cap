@@ -1,5 +1,5 @@
-// The `env-cap/node` entry point: the concrete, Node-backed
-// `BuildFileSystem` adapter a caller of `env-cap/build` hands to
+// The `@maverickcer/env-cap/node` entry point: the concrete, Node-backed
+// `BuildFileSystem` adapter a caller of `@maverickcer/env-cap/build` hands to
 // `generateEnvArtifacts` / `checkEnvArtifacts` (and the standalone generator
 // functions) as the required `fs` capability.
 //
@@ -10,12 +10,12 @@
 // here:
 //
 // ```ts
-// import { generateEnvArtifacts } from "env-cap/build"
-// import { nodeBuildFileSystem } from "env-cap/node"
+// import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
+// import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 //
 // await generateEnvArtifacts({ fs: nodeBuildFileSystem, root, manifest: { ... } })
 // ```
 //
 // A consumer in a non-Node runtime supplies their own `BuildFileSystem`
-// (`env-cap/build` exports the type) instead of importing this.
+// (`@maverickcer/env-cap/build` exports the type) instead of importing this.
 export { nodeBuildFileSystem } from "../cli/filesystem.js"

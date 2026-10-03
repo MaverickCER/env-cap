@@ -8,8 +8,8 @@ import { compareGoldenArtifacts, isInstalled, runScript } from "../../../support
  * projections -- the original ten (ADR 0024/0031/0032) plus an eleventh,
  * Joined Variable View, added afterward as a copyable cross-model join
  * example -- each built entirely through the public
- * API -- generateEvidenceModel() (env-cap/build) and
- * defineEvidenceProjection() (env-cap/evidence) -- with no
+ * API -- generateEvidenceModel() (@maverickcer/env-cap/build) and
+ * defineEvidenceProjection() (@maverickcer/env-cap/evidence) -- with no
  * privileged internal access, the same two entry points any consumer would
  * import. It reuses examples/application's exact schema (src/env.ts) so each
  * projection's output can be verified against the existing, already-tested

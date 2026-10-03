@@ -961,7 +961,7 @@ describe("generateEnvArtifacts -- the persisted evidence artifact (ADR 0038)", (
     await write("scripts/migrate.sh", "v1\n")
     await write(
       "features/cited/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { CITED_KEY: {} };
 export const citedEnv = createEnv(schema, { name: "cited" });
 documentEnv(schema, { owner: "cited-team", variables: { CITED_KEY: { evidence: { dynamicAccess: ["scripts/migrate.sh:1:1"] } } } });

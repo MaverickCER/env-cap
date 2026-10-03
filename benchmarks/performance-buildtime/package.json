@@ -10,7 +10,7 @@
     "benchmark:render": "node ../../node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs suite.mjs --render"
   },
   "dependencies": {
-    "env-cap": "file:../.."
+    "@maverickcer/env-cap": "file:../.."
   },
   "devDependencies": {
     "typescript": "^5.5.0"

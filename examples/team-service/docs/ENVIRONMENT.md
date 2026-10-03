@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-10-02T20:37:51.908Z_
+_Generated 2026-10-03T04:21:28.059Z_
 
 ## Changes since last report
 
@@ -154,10 +154,10 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-06-01 (**expired 123d ago**) | Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours. |
+| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-06-01 (**expired 124d ago**) | Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours. |
 | [`DATABASE_URL`](#mongodb-database_url) | data-platform-team | -- | -- |
 | [`MONGODB_REPLICA_SET`](#mongodb-mongodb_replica_set) | data-platform-team | -- | -- |
-| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-07-01 (**expired 93d ago**) | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
+| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-07-01 (**expired 94d ago**) | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
 | [`DATABASE_PROVIDER`](#prisma-database_provider) | data-platform-team | -- | -- |
 
 ## Security review

@@ -1,9 +1,9 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Migration" reference projection (plan Phase 23).
  *
- * No existing report type or `env-cap/build` renderer anchors
+ * No existing report type or `@maverickcer/env-cap/build` renderer anchors
  * this one -- flagged as such in the plan itself. This implements the
  * rename-correlation-checklist interpretation: for every variable rename
  * Change Model correlated from an authored `renamedFrom` (ADR 0029/0030 --

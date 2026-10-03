@@ -105,8 +105,8 @@ function renderBuildtimeContract(contractName, variables) {
     .join("\n")
 
   return (
-    `import { createEnv, documentEnv } from "env-cap";\n` +
-    `import { processors, validators } from "env-cap/helpers";\n\n` +
+    `import { createEnv, documentEnv } from "@maverickcer/env-cap";\n` +
+    `import { processors, validators } from "@maverickcer/env-cap/helpers";\n\n` +
     `const schema = {\n${schemaLines}\n};\n\n` +
     `export const contract = createEnv(schema, { name: ${JSON.stringify(contractName)}, source: import.meta.url });\n\n` +
     `documentEnv(schema, {\n` +
@@ -156,7 +156,7 @@ function renderRuntimeContract(contractName, varCount, globalIndexStart) {
     lines.push(`  ${key}: { processor: (value) => value },`)
   }
   return (
-    `import { createEnv } from "env-cap";\n\n` +
+    `import { createEnv } from "@maverickcer/env-cap";\n\n` +
     `const schema = {\n${lines.join("\n")}\n};\n\n` +
     `export const contract = createEnv(schema, { name: ${JSON.stringify(contractName)}, source: import.meta.url });\n`
   )

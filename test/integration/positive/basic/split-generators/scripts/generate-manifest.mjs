@@ -18,8 +18,8 @@ import {
   generateEnvManifest,
   generateEvidenceModel,
   generateUsageReport,
-} from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+} from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

@@ -20,7 +20,7 @@
     "project:joined-variables": "npm run generate:env && node scripts/project-joined-variables.mjs"
   },
   "dependencies": {
-    "env-cap": "file:../../../../.."
+    "@maverickcer/env-cap": "file:../../../../.."
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

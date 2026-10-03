@@ -11,8 +11,8 @@
 // config-reference.mjs, see its own doc comment). Regression protection
 // instead comes from the standard expected/ golden-file mechanism every
 // other example uses (see examples/README.md).
-import { generateEvidenceModel } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEvidenceModel } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

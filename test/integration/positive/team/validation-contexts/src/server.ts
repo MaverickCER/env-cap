@@ -2,7 +2,7 @@
 // Validates the *same* manifest client.ts validates, but with a different
 // activeContexts -- see README.md for why that has to be two separate
 // process invocations, not two validateEnv() calls in one script.
-import { EnvNotReadyError, validateEnv } from "env-cap";
+import { EnvNotReadyError, validateEnv } from "@maverickcer/env-cap";
 import { manifest } from "./generated/env.manifest.js";
 import { appEnv } from "../features/app/env.schema.js";
 

@@ -57,7 +57,7 @@ prop — the client component never imports `env-cap` itself.
 `src/env.ts` is the single explicit module every validation path shares:
 
 ```ts
-import { validateEnv } from "env-cap"
+import { validateEnv } from "@maverickcer/env-cap"
 import { manifest } from "./generated/env.manifest"
 
 await validateEnv({ values: process.env, manifest })
@@ -82,7 +82,7 @@ hitting `EnvNotReadyError` under `next start` before this was fixed). Two
 things fix it together:
 
 - `next.config.ts` sets `serverExternalPackages: ["env-cap"]`, so every chunk
-  resolves the same `require("env-cap")` through Node's module cache instead
+  resolves the same `require("@maverickcer/env-cap")` through Node's module cache instead
   of a separately bundled copy.
 - `route.ts` and `page.tsx` each import `"@/env"` (the same module
   `instrumentation.ts` imports) as their own first line — cheap and
@@ -112,7 +112,7 @@ npm start
 `src/generated/env.manifest.ts` and `docs/env.evidence.json` via the
 `env-cap` CLI -- then `scripts/generate-docs/run.ts`, which writes
 `docs/ENVIRONMENT.md`, `docs/OWNERSHIP.md`, and `.env.example` directly from
-`env-cap/build`'s still-exported `generateDocumentation()`/
+`@maverickcer/env-cap/build`'s still-exported `generateDocumentation()`/
 `generateUsageReport()` -- see [that script's own
 README](scripts/generate-docs/README.md) and [ADR
 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)

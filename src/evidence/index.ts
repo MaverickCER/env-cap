@@ -1,10 +1,10 @@
 /**
- * env-cap Evidence Model entry point (`env-cap/evidence`).
+ * env-cap Evidence Model entry point (`@maverickcer/env-cap/evidence`).
  *
  * `defineEvidenceProjection()` is the extensibility mechanism the seven
  * canonical fact models (ADR 0024) exist to serve. A projection is a named,
  * pure transform from the immutable `EvidenceModel` -- assembled at build
- * time by `generateEvidenceModel()`, `env-cap/build` -- to any
+ * time by `generateEvidenceModel()`, `@maverickcer/env-cap/build` -- to any
  * consumer-defined output shape, with automatic read-only enforcement and
  * field-level provenance. See ADR 0031 (why a 5th entry point) and ADR 0032
  * (the Proxy-based mechanism itself).

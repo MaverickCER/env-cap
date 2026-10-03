@@ -5,7 +5,7 @@
 Accepted. Implemented: `src/build/types.ts` (`BuildFileSystem`), threaded through
 every `src/build/**` module and every public options object in
 `src/build/index.ts`; `src/cli/filesystem.ts` (the concrete adapter), re-exported
-as the public `env-cap/node` entry (`src/node/index.ts`) for a
+as the public `@maverickcer/env-cap/node` entry (`src/node/index.ts`) for a
 consumer's own build script; `src/build/tool-version.ts` + `src/cli/json.ts`
 (version via build-time constant, not a self-read); `src/eslint-plugin/no-node-fs.ts`
 and `no-restricted-imports` in `eslint.config.js`; `scripts/verify-no-ambient-fs.mjs`.
@@ -78,7 +78,7 @@ because the concrete adapter is Node-backed. Only the six operations
 `src/build/**` actually calls are present (`readFile`, `writeFile`, `mkdir`,
 `readdir`, `stat`, `realpath`).
 
-**Not shared with `@maverickcer/data-cap`.** The two packages are
+**Not shared with `data-cap`.** The two packages are
 independent products with no runtime coupling; a shared types package to
 dedupe six signatures would add real cross-package coupling for negligible
 benefit. data-cap gets its own, structurally-identical interface.
@@ -87,14 +87,14 @@ Every public options object in `build/index.ts` carries a **required** `fs:
 BuildFileSystem`. Internal positional helpers take it as a parameter, or via
 `ImportResolutionContext` where a context object already exists.
 
-**The Node adapter ships as `env-cap/node`.** `repo-contract`'s
+**The Node adapter ships as `@maverickcer/env-cap/node`.** `repo-contract`'s
 consumers pass an existing npm package (`crossSpawn`, `process.env`); there is
 no equivalent off-the-shelf `node:fs/promises` → `BuildFileSystem` value, so
 env-cap ships one -- `nodeBuildFileSystem`, the same object the CLI uses -- from
 a dedicated executable-context entry. `./node` bundles `node:fs/promises`; the
 tarball guard exempts its resolved target exactly as it does `bin` and
 `./eslint-plugin`. `./build` stays clean: a consumer's build script does
-`import { nodeBuildFileSystem } from "env-cap/node"` and passes it
+`import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"` and passes it
 as `fs`. A non-Node consumer supplies their own `BuildFileSystem` and never
 imports `./node`.
 

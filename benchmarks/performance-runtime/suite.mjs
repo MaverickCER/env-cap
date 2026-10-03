@@ -8,8 +8,8 @@ import { execFileSync } from "node:child_process"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { defineSuite, timed } from "internal-package-contract/benchmark"
-import { createEnv, resetEnvCache, validateEnv } from "env-cap"
-import { processors, validators } from "env-cap/helpers"
+import { createEnv, resetEnvCache, validateEnv } from "@maverickcer/env-cap"
+import { processors, validators } from "@maverickcer/env-cap/helpers"
 import { generateRuntimeFixtures } from "../benchmark-fixtures/generator.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))

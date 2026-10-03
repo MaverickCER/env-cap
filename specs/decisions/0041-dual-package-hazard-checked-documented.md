@@ -68,7 +68,7 @@ for evaluators planning a mixed-module-system deployment.
 - **Ignoring it, undocumented.** Rejected — an unstated, unverified risk is
   strictly worse for an evaluator than a stated, tested one, even though
   the underlying limitation is identical either way.
-- **Matching `@maverickcer/data-cap`'s framing verbatim.** data-cap's
+- **Matching `data-cap`'s framing verbatim.** data-cap's
   hazard (ADR 0041 there) degrades _silently_ (its `defaultCoordinator`
   singleton just stops sharing work). env-cap's degrades _loudly_ (a
   `TypeError`). The risk class is the same; the documented consequence is

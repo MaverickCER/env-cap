@@ -493,7 +493,7 @@ describe("report.mjs against a real `env-cap --json` payload (not a synthetic fi
     // so STRIPE_KEY is also unconsumed.
     await write(
       "features/payments/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = {
   STRIPE_KEY: {},

@@ -15,8 +15,8 @@ own separate `--strict-docs`/`--strict-ownership` flags to escalate at all
 — `--strict` alone left them at `warn`. This was a deliberate, documented
 scoping (GUIDE.md/`--help` both said so explicitly), not an oversight.
 
-A cross-package parity audit ahead of both env-cap's and
-`@maverickcer/data-cap`'s `1.0` release compared the two siblings'
+A cross-package parity audit ahead of either package's `1.0` release
+compared the two siblings'
 identically-named `--strict`/`--strict-docs`/`--strict-ownership` flags and
 found they mean different things: data-cap's bare `--strict` already
 escalates every pass (docs, ownership, and its own flow-family findings)

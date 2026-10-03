@@ -36,7 +36,7 @@ takes no arguments except `--help`.
   `documentEnv`, one placeholder variable). `src/` if that directory
   already exists, project root otherwise.
 - `scripts/generate-env.mjs` — a runnable artifact generator calling
-  `generateEnvArtifacts()` with the `env-cap/node`
+  `generateEnvArtifacts()` with the `@maverickcer/env-cap/node`
   filesystem adapter.
 
 It is **filesystem-only and non-executing**: no subprocess, no

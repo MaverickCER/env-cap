@@ -20,7 +20,7 @@
     "@tanstack/react-router": "^1.120.0",
     "@tanstack/react-start": "^1.120.0",
     "bcryptjs": "^2.4.3",
-    "env-cap": "file:../..",
+    "@maverickcer/env-cap": "file:../..",
     "jose": "^5.9.0",
     "mongoose": "^8.9.0",
     "pino": "^9.5.0",

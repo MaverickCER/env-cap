@@ -1,4 +1,4 @@
-// env-cap build-time benchmark suite: the cost of the CLI/CI tooling (`env-cap/build`) that discovers
+// env-cap build-time benchmark suite: the cost of the CLI/CI tooling (`@maverickcer/env-cap/build`) that discovers
 // contracts and generates manifests, documentation, usage reports and evidence. This is development
 // and CI cost, not production request cost -- it is paid by every pipeline run and every developer
 // who regenerates artifacts. See ../READING-BENCHMARKS.md and ../WRITING-BENCHMARKS.md.
@@ -9,7 +9,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { defineSuite } from "internal-package-contract/benchmark"
-import { defineEvidenceProjection } from "env-cap/evidence"
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence"
 import {
   discoverSchemaFiles,
   generateDocumentation,
@@ -17,8 +17,8 @@ import {
   generateEnvManifest,
   generateEvidenceModel,
   generateUsageReport,
-} from "env-cap/build"
-import { nodeBuildFileSystem } from "env-cap/node"
+} from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 import { generateBuildtimeFixtures } from "../benchmark-fixtures/generator.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))

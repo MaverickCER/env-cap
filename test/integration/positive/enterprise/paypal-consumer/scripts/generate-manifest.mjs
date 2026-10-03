@@ -10,8 +10,8 @@
 // opt-in `packages` allowlist instead (ADR 0014, Experimental): it never
 // walks node_modules, it just resolves paypal-addon's own declared
 // "envCap.schema" package.json field.
-import { generateEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

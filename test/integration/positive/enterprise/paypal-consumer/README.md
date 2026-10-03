@@ -80,7 +80,7 @@ now agree on the same import for a package-resolved contract too.
 The dependency-ownership report is correct across this boundary as well --
 `--ownership` is no longer a CLI flag (see [ADR
 0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)),
-so generating it is a `generateUsageReport()` call from `env-cap/build`
+so generating it is a `generateUsageReport()` call from `@maverickcer/env-cap/build`
 instead, with the same `packages: ["@examples/paypal-addon"]` option a
 `--package @examples/paypal-addon` CLI flag used to set -- see
 `examples/team-service/scripts/generate-docs/run.ts` for the pattern (this

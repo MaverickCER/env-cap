@@ -1,4 +1,4 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Lifecycle" reference projection (plan Phase 19) --

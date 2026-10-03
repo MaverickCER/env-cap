@@ -45,7 +45,7 @@ export default defineConfig([
   },
   {
     name: "node",
-    // The `env-cap/node` entry -- the Node-backed
+    // The `@maverickcer/env-cap/node` entry -- the Node-backed
     // `BuildFileSystem` adapter (`src/cli/filesystem.ts`, re-exported through
     // `src/node/index.ts`). An executable-context entry like `bin` /
     // `./eslint-plugin`: it legitimately bundles `node:fs/promises`, and

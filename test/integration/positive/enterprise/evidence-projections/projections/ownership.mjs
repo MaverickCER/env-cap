@@ -1,4 +1,4 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Ownership" reference projection (plan Phase 18).
@@ -8,7 +8,7 @@ import { defineEvidenceProjection } from "env-cap/evidence";
  * describes -- `dependencyOwnership`/`abandonedContracts`/
  * `unresolvedConsumers`/`unconsumedOwnedVariables`/`indeterminate`/
  * `parseWarnings`, every one of those five finding-shape types publicly
- * exported from `env-cap/build`), not rendered Markdown --
+ * exported from `@maverickcer/env-cap/build`), not rendered Markdown --
  * `renderUsageReport()` itself is a private implementation detail of
  * `generateUsageReport()`'s orchestration (ADR 0010's boundary), never
  * re-exported. This projection's job is producing the *data* a consumer's

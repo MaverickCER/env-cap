@@ -20,7 +20,7 @@ async function write(relativePath: string, content: string): Promise<string> {
   return filePath
 }
 
-const SCHEMA_SOURCE = `import { createEnv, documentEnv } from "env-cap";
+const SCHEMA_SOURCE = `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = { STRIPE_KEY: {} };
 
@@ -109,7 +109,7 @@ describe("checkEnvArtifacts", () => {
     // force a real re-check comparison of both mapped outputs.
     await write(
       "features/notifications/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { SLACK_WEBHOOK: {} };
 export const notificationsEnv = createEnv(schema, { name: "notifications" });
 documentEnv(schema, { owner: "platform-team" });
@@ -117,7 +117,7 @@ documentEnv(schema, { owner: "platform-team" });
     )
     await write(
       "features/undocumented/env.schema.ts",
-      `import { createEnv } from "env-cap";
+      `import { createEnv } from "@maverickcer/env-cap";
 const schema = { UNDOCUMENTED_VAR: {} };
 export const undocumentedEnv = createEnv(schema, { name: "undocumented" });
 `,
@@ -177,7 +177,7 @@ export const undocumentedEnv = createEnv(schema, { name: "undocumented" });
     // a new discovered contract changes both the manifest and docs output.
     await write(
       "features/notifications/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = { SLACK_WEBHOOK: {} };
 
@@ -226,7 +226,7 @@ documentEnv(schema, {
       await generateEnvArtifacts(evidenceOptions)
       await write(
         "features/notifications/env.schema.ts",
-        `import { createEnv, documentEnv } from "env-cap";
+        `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = { SLACK_WEBHOOK: {} };
 
@@ -327,7 +327,7 @@ documentEnv(schema, {
     // .env.example.
     await write(
       "features/legacy/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const legacySchema = { LEGACY_VAR: {} };
 export const legacyEnv = createEnv(legacySchema, { name: "legacy" });
 documentEnv(legacySchema, { owner: "legacy-team" });
@@ -348,7 +348,7 @@ documentEnv(legacySchema, { owner: "legacy-team" });
     // longer declares at all -> staleVariables.
     await write(
       "features/payments/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = { STRIPE_KEY: {}, STRIPE_WEBHOOK_SECRET: {} };
 
@@ -365,7 +365,7 @@ documentEnv(schema, {
     )
     await write(
       "features/legacy/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const legacySchema = { LEGACY_VAR: {} };
 export const legacyEnv = createEnv(legacySchema, { name: "legacy" });
 documentEnv(legacySchema, { owner: "legacy-team", active: false });
@@ -395,7 +395,7 @@ documentEnv(legacySchema, { owner: "legacy-team", active: false });
 
     await write(
       "features/payments/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = { STRIPE_KEY: {}, STRIPE_WEBHOOK_SECRET: {} };
 
@@ -433,7 +433,7 @@ documentEnv(schema, {
     // .env.example, but no active contract needs it anymore.
     await write(
       "features/payments/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { STRIPE_KEY: {} };
 export const paymentsEnv = createEnv(schema, { name: "payments" });
 documentEnv(schema, { owner: "payments-team", active: false });
@@ -470,7 +470,7 @@ documentEnv(schema, { owner: "payments-team", active: false });
     // only remaining source.
     await write(
       "features/db-a/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { DATABASE_URL: {} };
 export const dbAEnv = createEnv(schema, { name: "db-a" });
 documentEnv(schema, { exclusiveGroup: "database", active: true });
@@ -478,7 +478,7 @@ documentEnv(schema, { exclusiveGroup: "database", active: true });
     )
     await write(
       "features/db-b/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { DATABASE_URL: {} };
 export const dbBEnv = createEnv(schema, { name: "db-b" });
 documentEnv(schema, { exclusiveGroup: "database", active: true });

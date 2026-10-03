@@ -7,7 +7,7 @@ import os from "node:os"
 import path from "node:path"
 
 /**
- * Verifies `env-cap/helpers`'s two namespaces are independently
+ * Verifies `@maverickcer/env-cap/helpers`'s two namespaces are independently
  * tree-shakeable by a downstream bundler, against the actual *built* file a
  * consumer would receive (not the source) -- the bug this guards against was
  * specifically introduced by the build step (tsup/esbuild lowering
@@ -35,72 +35,75 @@ const VALIDATORS_ONLY_MARKERS = [
   "Expected one of:",
 ]
 
-describe.skipIf(distMissing)("env-cap/helpers tree-shaking (requires `npm run build`)", () => {
-  let tmpDir: string
+describe.skipIf(distMissing)(
+  "@maverickcer/env-cap/helpers tree-shaking (requires `npm run build`)",
+  () => {
+    let tmpDir: string
 
-  beforeAll(() => {
-    tmpDir = mkdtempSync(path.join(os.tmpdir(), "env-cap-treeshake-"))
-  })
-
-  afterAll(() => {
-    rmSync(tmpDir, { recursive: true, force: true })
-  })
-
-  async function bundle(entryCode: string): Promise<{ code: string; gzip: number }> {
-    const entryFile = path.join(tmpDir, `entry-${Math.random().toString(36).slice(2)}.mjs`)
-    writeFileSync(entryFile, entryCode)
-    const result = await build({
-      entryPoints: [entryFile],
-      bundle: true,
-      minify: true,
-      format: "esm",
-      platform: "browser",
-      write: false,
+    beforeAll(() => {
+      tmpDir = mkdtempSync(path.join(os.tmpdir(), "env-cap-treeshake-"))
     })
-    const code = result.outputFiles[0]!.text // write: false guarantees at least the entry bundle
-    return { code, gzip: gzipSync(code).length }
-  }
 
-  it("importing only `processors` drops every `validators`-only string", async () => {
-    const { code } = await bundle(
-      `import { processors } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber);`,
-    )
-    for (const marker of VALIDATORS_ONLY_MARKERS) {
-      expect(code).not.toContain(marker)
+    afterAll(() => {
+      rmSync(tmpDir, { recursive: true, force: true })
+    })
+
+    async function bundle(entryCode: string): Promise<{ code: string; gzip: number }> {
+      const entryFile = path.join(tmpDir, `entry-${Math.random().toString(36).slice(2)}.mjs`)
+      writeFileSync(entryFile, entryCode)
+      const result = await build({
+        entryPoints: [entryFile],
+        bundle: true,
+        minify: true,
+        format: "esm",
+        platform: "browser",
+        write: false,
+      })
+      const code = result.outputFiles[0]!.text // write: false guarantees at least the entry bundle
+      return { code, gzip: gzipSync(code).length }
     }
-    // sanity check: the thing we actually asked for is still present.
-    expect(code).toContain("number")
-  })
 
-  it("importing only `validators` drops every `processors`-only string", async () => {
-    const { code } = await bundle(
-      `import { validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof validators.required);`,
-    )
-    for (const marker of PROCESSORS_ONLY_MARKERS) {
-      expect(code).not.toContain(marker)
-    }
-    expect(code).toContain("required")
-  })
-
-  it("importing both namespaces is meaningfully larger (gzip) than importing just one", async () => {
-    const [processorsOnly, both] = await Promise.all([
-      bundle(
+    it("importing only `processors` drops every `validators`-only string", async () => {
+      const { code } = await bundle(
         `import { processors } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber);`,
-      ),
-      bundle(
-        `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber, typeof validators.required);`,
-      ),
-    ])
-    // Pre-fix, this gap was ~7 bytes (both namespaces shipped regardless of
-    // which was imported). A real gap proves the unused namespace was cut.
-    expect(both.gzip - processorsOnly.gzip).toBeGreaterThan(100)
-  })
+      )
+      for (const marker of VALIDATORS_ONLY_MARKERS) {
+        expect(code).not.toContain(marker)
+      }
+      // sanity check: the thing we actually asked for is still present.
+      expect(code).toContain("number")
+    })
 
-  it("importing both namespaces still contains markers from both", async () => {
-    const { code } = await bundle(
-      `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber, typeof validators.required);`,
-    )
-    expect(code).toContain("required")
-    expect(code.includes("Expected a numeric value") || code.includes("number")).toBe(true)
-  })
-})
+    it("importing only `validators` drops every `processors`-only string", async () => {
+      const { code } = await bundle(
+        `import { validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof validators.required);`,
+      )
+      for (const marker of PROCESSORS_ONLY_MARKERS) {
+        expect(code).not.toContain(marker)
+      }
+      expect(code).toContain("required")
+    })
+
+    it("importing both namespaces is meaningfully larger (gzip) than importing just one", async () => {
+      const [processorsOnly, both] = await Promise.all([
+        bundle(
+          `import { processors } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber);`,
+        ),
+        bundle(
+          `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber, typeof validators.required);`,
+        ),
+      ])
+      // Pre-fix, this gap was ~7 bytes (both namespaces shipped regardless of
+      // which was imported). A real gap proves the unused namespace was cut.
+      expect(both.gzip - processorsOnly.gzip).toBeGreaterThan(100)
+    })
+
+    it("importing both namespaces still contains markers from both", async () => {
+      const { code } = await bundle(
+        `import { processors, validators } from ${JSON.stringify(helpersDist)};\nconsole.log(typeof processors.toNumber, typeof validators.required);`,
+      )
+      expect(code).toContain("required")
+      expect(code.includes("Expected a numeric value") || code.includes("number")).toBe(true)
+    })
+  },
+)

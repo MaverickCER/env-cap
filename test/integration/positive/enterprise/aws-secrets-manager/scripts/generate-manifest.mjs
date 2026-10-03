@@ -7,8 +7,8 @@
 // README, "Why tsx instead of node"). `tsx`'s loader hooks apply to the whole
 // module graph, so this `.mjs` entry point can still import a `.ts` module
 // the same way every other example's `src/index.ts` does.
-import { generateEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { liveExpirationDates } from "../src/live-expirations.js";

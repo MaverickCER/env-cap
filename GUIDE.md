@@ -160,7 +160,7 @@ Runtime access remains capability-scoped, while validation remains application-w
 
 ## Helpers
 
-`env-cap/helpers` provides optional convenience functions for common processor and validator patterns.
+`@maverickcer/env-cap/helpers` provides optional convenience functions for common processor and validator patterns.
 
 Helpers are intentionally not the core `env-cap` workflow. They are provided for smaller applications, prototypes, and straightforward configuration requirements where a lightweight convenience API is useful.
 
@@ -168,7 +168,7 @@ Already using Zod, envalid, or another validation library? Keep it and integrate
 
 ```ts
 import { createEnv } from "@maverickcer/env-cap"
-import { processors, validators } from "env-cap/helpers"
+import { processors, validators } from "@maverickcer/env-cap/helpers"
 
 export const databaseEnv = createEnv(
   {
@@ -264,7 +264,7 @@ The ownership model is identical whether the contract belongs to the application
 During development or CI:
 
 ```ts
-import { generateEnvManifest } from "env-cap/build"
+import { generateEnvManifest } from "@maverickcer/env-cap/build"
 
 await generateEnvManifest({
   location: "src/generated/env.manifest.ts",
@@ -783,12 +783,12 @@ get a flag. The rich Markdown docs catalog, the dependency & ownership
 report, and a reconciled `.env.example` have no such consumer -- nothing
 imports them the way application code imports the generated manifest -- so
 generating them is a few lines of application code instead, calling
-`env-cap/build`'s exported `generateDocumentation()`/`generateUsageReport()`
+`@maverickcer/env-cap/build`'s exported `generateDocumentation()`/`generateUsageReport()`
 directly:
 
 ```ts
-import { generateDocumentation, generateUsageReport } from "env-cap/build"
-import { nodeBuildFileSystem } from "env-cap/node"
+import { generateDocumentation, generateUsageReport } from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 
 await generateDocumentation({
   fs: nodeBuildFileSystem,
@@ -865,7 +865,7 @@ See [ADR 0013](specs/decisions/0013-json-output-is-a-versioned-mirror.md).
 
 A real, published JSON Schema for the `--json` envelope lives at
 [`schemas/env-cap-report.schema.json`](schemas/env-cap-report.schema.json), also
-resolvable as `env-cap/schema` -- for external, non-TypeScript tooling
+resolvable as `@maverickcer/env-cap/schema` -- for external, non-TypeScript tooling
 (a Go service, a Python dashboard, a generic CI linter) to validate or codegen
 against without hand-transcribing the shape above.
 
@@ -1016,7 +1016,7 @@ See [ADR 0018](specs/decisions/0018-rotation-alert-issue-on-non-pr-runs.md).
 
 ## ESLint plugin
 
-`env-cap/eslint-plugin` provides a `no-raw-process-env` rule (and its filesystem analogue `no-node-fs`, below) that helps enforce environment ownership boundaries.
+`@maverickcer/env-cap/eslint-plugin` provides a `no-raw-process-env` rule (and its filesystem analogue `no-node-fs`, below) that helps enforce environment ownership boundaries.
 
 It flags direct `process.env` access outside approved contract definitions, making configuration ownership enforceable through tooling rather than relying only on team conventions.
 
@@ -1027,7 +1027,7 @@ npm install -D eslint
 ```js id="f7m2s9"
 // eslint.config.js
 
-import envCapPlugin from "env-cap/eslint-plugin"
+import envCapPlugin from "@maverickcer/env-cap/eslint-plugin"
 
 export default [
   {
@@ -1101,7 +1101,7 @@ rules: {
 }
 ```
 
-Nothing is exempt unless you list it: the rule never guesses at what counts as an executable capability boundary. A consuming project that runs `env-cap/build` from its own script imports the ready-made adapter from `env-cap/node` (`{ nodeBuildFileSystem }`) rather than reaching for `node:fs` itself.
+Nothing is exempt unless you list it: the rule never guesses at what counts as an executable capability boundary. A consuming project that runs `@maverickcer/env-cap/build` from its own script imports the ready-made adapter from `@maverickcer/env-cap/node` (`{ nodeBuildFileSystem }`) rather than reaching for `node:fs` itself.
 
 Common questions about dotenv/Zod overlap, centralized configuration, AST analysis, incremental adoption, and ownership models are answered in the [FAQ](https://maverickcer.github.io/env-cap/#faq).
 

@@ -1,11 +1,11 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Dependency" reference projection (plan Phase 20) --
  * where the DOT/Mermaid/JSON graph-export rendering ADR 0027 explicitly
  * deferred out of Dependency Model itself now lives, as pure rendering over
  * Dependency Model's data. Unlike every projection before it, this one has
- * no existing `env-cap/build` renderer to reshape into at
+ * no existing `@maverickcer/env-cap/build` renderer to reshape into at
  * all -- `dependency-model.ts`'s own module doc comment says as much
  * ("Graph-format rendering ... is deliberately not here -- that's
  * presentation over this model's data, not the model itself"). This is

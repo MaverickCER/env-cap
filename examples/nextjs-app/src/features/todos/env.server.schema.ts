@@ -17,7 +17,7 @@
 // is enforced by code review/lint discipline, not by a mechanical guard on
 // this declaration itself. Documented as a real, deliberate tradeoff, not
 // silently assumed safe.
-import { createEnv, documentEnv } from "env-cap"
+import { createEnv, documentEnv } from "@maverickcer/env-cap"
 
 const schema = {
   DATABASE_URL: {

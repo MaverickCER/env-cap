@@ -52,7 +52,7 @@ describe.skipIf(distMissing)(
       await fs.rm(fixtureRoot, { recursive: true, force: true })
       await write(
         "features/payments/env.schema.ts",
-        `import { createEnv, documentEnv } from "env-cap";
+        `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { STRIPE_KEY: {} };
 export const paymentsEnv = createEnv(schema, { name: "payments" });
 documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { description: "Stripe secret key." } } });
@@ -82,7 +82,7 @@ documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { descrip
       await fs.rm(fixtureRoot, { recursive: true, force: true })
       await write(
         "features/payments/env.schema.ts",
-        `import { createEnv, documentEnv } from "env-cap";
+        `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { STRIPE_KEY: {} };
 export const paymentsEnv = createEnv(schema, { name: "payments" });
 documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { description: "Stripe secret key." } } });

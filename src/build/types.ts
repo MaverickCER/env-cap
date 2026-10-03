@@ -1,5 +1,5 @@
 /**
- * The filesystem capability `env-cap/build` requires from its caller.
+ * The filesystem capability `@maverickcer/env-cap/build` requires from its caller.
  *
  * `./build` is a **library surface**: it must not acquire filesystem access
  * implicitly (no `node:fs` import anywhere under `src/` outside `src/cli/`).

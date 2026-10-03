@@ -1,5 +1,5 @@
 import { DescribeSecretCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
-import type { LiveExpirationDates } from "env-cap/build";
+import type { LiveExpirationDates } from "@maverickcer/env-cap/build";
 
 /**
  * Uses the default AWS credential provider chain (environment variables,

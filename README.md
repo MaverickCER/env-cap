@@ -51,7 +51,7 @@ Run the build-time analysis against a real project. The manifest and the
 persisted evidence artifact -- the two outputs a real project actually reads
 at runtime/in CI (see [ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md))
 -- come from the CLI itself; the human-facing docs/ownership report come
-from a small script calling `env-cap/build` directly (see
+from a small script calling `@maverickcer/env-cap/build` directly (see
 `examples/application/scripts/generate-docs`):
 
 ```text

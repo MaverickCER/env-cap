@@ -2,10 +2,10 @@ import { noNodeFs } from "./no-node-fs.js"
 import { noRawProcessEnv } from "./no-raw-process-env.js"
 
 /**
- * `env-cap/eslint-plugin` -- a flat-config-shaped plugin object
+ * `@maverickcer/env-cap/eslint-plugin` -- a flat-config-shaped plugin object
  * ({ rules: { ... } }), consumed as:
  *
- *   import envCapPlugin from "env-cap/eslint-plugin";
+ *   import envCapPlugin from "@maverickcer/env-cap/eslint-plugin";
  *   export default [{ plugins: { "env-cap": envCapPlugin }, rules: { "env-cap/no-raw-process-env": "error" } }];
  *
  * A 4th public entry point alongside `.`, `./build`, `./helpers` -- see ADR 0017.

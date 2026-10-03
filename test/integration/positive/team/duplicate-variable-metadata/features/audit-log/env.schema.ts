@@ -1,4 +1,4 @@
-import { createEnv, documentEnv } from "env-cap";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /** See ../notifications/env.schema.ts's header comment -- this is the other half of the pair. */
 const schema = {

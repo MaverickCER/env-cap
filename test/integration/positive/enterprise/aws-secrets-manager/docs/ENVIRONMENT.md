@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-28T04:10:39.657Z_
+_Generated 2026-10-03T04:21:44.946Z_
 
 ## Changes since last report
 
@@ -85,8 +85,8 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-02-01 (**expired 239d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
-| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-01-01 (**expired 270d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
+| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-02-01 (**expired 244d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
+| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-01-01 (**expired 275d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
 
 ## Security review
 

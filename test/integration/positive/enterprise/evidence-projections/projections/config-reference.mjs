@@ -1,5 +1,5 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
-import { renderDocs } from "env-cap/build";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
+import { renderDocs } from "@maverickcer/env-cap/build";
 
 /** `undocumented-contract`/`undocumented-variable` Finding Model entries, reshaped into renderDocs()'s expected ref shapes. `finding.location.file` is already root-relative, POSIX-separated -- every canonical model (Finding Model included) shares that one convention, so no adapter is needed here. */
 function toUndocumentedRefs(evidence) {
@@ -30,7 +30,7 @@ function toUndocumentedRefs(evidence) {
  * same way any other closed-over constant would be: at definition time,
  * matching whatever value they passed to `generateEvidenceModel()` itself
  * (see scripts/project-config-reference.mjs). Defaults to 30, matching
- * `env-cap/build`'s own `DEFAULT_EXPIRING_WITHIN_DAYS`.
+ * `@maverickcer/env-cap/build`'s own `DEFAULT_EXPIRING_WITHIN_DAYS`.
  *
  * Known limitations (see README.md):
  *  - `previousContent` is always `undefined` -- a pure projection has no

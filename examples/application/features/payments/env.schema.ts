@@ -6,7 +6,7 @@
 // would look like split into its own capability-owned contract, per
 // specs/migrations/from-centralized-schema.md. See examples/team-service
 // for a working multi-contract example.
-// import { createEnv, documentEnv, type RawEnv } from "env-cap";
+// import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap";
 
 /**
  * The payments capability owns its own environment contract. Nothing outside

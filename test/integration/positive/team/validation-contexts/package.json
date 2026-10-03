@@ -11,7 +11,7 @@
     "start": "npm run example:server"
   },
   "dependencies": {
-    "env-cap": "file:../../../../.."
+    "@maverickcer/env-cap": "file:../../../../.."
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

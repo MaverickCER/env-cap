@@ -2,7 +2,7 @@
 // document -- see this directory's README for the full "why a generator
 // lives here, application-level, not in the library" story (same reasoning
 // as ../generate-docs, C5's own precedent this directory mirrors).
-import type { RotationComplianceStatus } from "env-cap/build"
+import type { RotationComplianceStatus } from "@maverickcer/env-cap/build"
 
 /**
  * One variable that declares at least one of env-cap's rotation-specific
@@ -26,7 +26,7 @@ export interface RotationLogEntry {
   readonly rotationTriggerEvents: readonly string[]
   /**
    * env-cap's own computed compliance status for this variable -- see
-   * `computeRotationStatus()` in `env-cap/build` for exactly how it's
+   * `computeRotationStatus()` in `@maverickcer/env-cap/build` for exactly how it's
    * derived. Never `"undeclared"` here: a variable with nothing rotation-
    * relevant declared never becomes an entry at all (see `build-model.ts`).
    */

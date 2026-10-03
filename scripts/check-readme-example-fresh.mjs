@@ -12,7 +12,7 @@
 // This script re-runs examples/application's own two doc-generation steps
 // -- the packaged `env-cap` CLI binary (manifest + evidence), then
 // `scripts/generate-docs/run.ts` (docs/ownership/.env.example via
-// `env-cap/build` directly, ADR 0046 -- `--docs`/`--ownership` no longer
+// `@maverickcer/env-cap/build` directly, ADR 0046 -- `--docs`/`--ownership` no longer
 // exist as CLI flags) -- in an isolated temp copy (same "copy + symlink
 // node_modules" approach as check-api-report.mjs's temp-dir diff, so
 // nothing in the real examples/application working tree is touched),
@@ -70,7 +70,7 @@ if (!existsSync(path.join(exampleDir, "node_modules"))) {
 // Split in two, matching examples/application's own `docs`/`docs:reports`
 // npm scripts (ADR 0046: `--docs`/`--ownership` were removed from the CLI --
 // the manifest/evidence step still goes through the packaged binary, the
-// docs/ownership step now calls `env-cap/build` directly via
+// docs/ownership step now calls `@maverickcer/env-cap/build` directly via
 // `scripts/generate-docs/run.ts`, copied into the temp dir below same as
 // every other file).
 const CLI_ARGS = [

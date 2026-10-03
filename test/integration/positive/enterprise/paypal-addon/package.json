@@ -23,7 +23,7 @@
     "pack:local": "npm run build && npm pack --pack-destination . && mv examples-paypal-addon-*.tgz paypal-addon.tgz"
   },
   "dependencies": {
-    "env-cap": "file:../../../../.."
+    "@maverickcer/env-cap": "file:../../../../.."
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -4,7 +4,7 @@
 // parent attributes separately (see ../../README.md); everything measured
 // below is createEnv's and validateEnv's own cost.
 
-import { validateEnv } from "env-cap";
+import { validateEnv } from "@maverickcer/env-cap";
 import { pathToFileURL } from "node:url";
 
 const [, , indexPath] = process.argv;

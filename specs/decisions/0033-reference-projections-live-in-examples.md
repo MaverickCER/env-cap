@@ -13,11 +13,11 @@ directory and presentation to readers changed.
 
 ADR 0024's plan calls for ten first-party reference projections (`.env.example`, Environment
 Configuration Reference, Configuration Inventory, and so on) built through
-`defineEvidenceProjection()` (`env-cap/evidence`, ADR 0031) with "no privileged
+`defineEvidenceProjection()` (`@maverickcer/env-cap/evidence`, ADR 0031) with "no privileged
 internal path" — the same public API a real consumer would use. Each one, in practice, needs
-both halves of that API: `generateEvidenceModel()` (Node-only, `env-cap/build`) to
+both halves of that API: `generateEvidenceModel()` (Node-only, `@maverickcer/env-cap/build`) to
 assemble an `EvidenceModel`, and `defineEvidenceProjection()` (isomorphic,
-`env-cap/evidence`) to project it. `src/evidence/` currently has exactly one
+`@maverickcer/env-cap/evidence`) to project it. `src/evidence/` currently has exactly one
 sanctioned cross-folder edge — a type-only import of `EvidenceModel` from `src/build/`, erased at
 compile time (ADR 0031) — and no edge at all onto any of `src/build/`'s actual renderer
 _functions_ (`renderEnvExample`, `renderDocs`, etc.), which several of these projections need to
@@ -27,8 +27,8 @@ call directly to stay "thin wrappers" rather than reimplemented rendering logic.
 
 - **The reference projections live in `examples/evidence-projections/`, a new example package
   structured like every other directory in `examples/`** — its own `package.json` depending on
-  `env-cap` via `file:../..`, importing `env-cap/build` and
-  `env-cap/evidence` exactly as an external consumer's own project would. Nothing
+  `env-cap` via `file:../..`, importing `@maverickcer/env-cap/build` and
+  `@maverickcer/env-cap/evidence` exactly as an external consumer's own project would. Nothing
   inside it reaches into `src/**/*.ts` or an unexported build internal.
 - **This is the literal, strongest form of "no privileged internal path."** A file living inside
   `src/build/` importing from `src/evidence/` (or vice versa) would still be _inside the

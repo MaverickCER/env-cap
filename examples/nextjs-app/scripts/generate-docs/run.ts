@@ -5,7 +5,7 @@
 // Neither has a real *runtime* consumer -- nothing in this app `import`s
 // ENVIRONMENT.md/OWNERSHIP.md/.env.example the way `src/env.ts` imports the
 // generated manifest -- so generating them moved from a CLI flag to plain
-// application code, calling `env-cap/build`'s still-fully-exported
+// application code, calling `@maverickcer/env-cap/build`'s still-fully-exported
 // `generateDocumentation()`/`generateUsageReport()` directly. Run via
 // `npm run docs:reports` (see package.json), which chains `npm run docs`
 // first so `docs/env.evidence.json` -- the evidence artifact this script
@@ -17,7 +17,7 @@
 // persisted evidence artifact's shape (`ContractModel`/`EvidenceModel`, a
 // separate, versioned projection -- see ADR 0038) and aren't reconstructible
 // from it; `assembleProject()`/`computeScanSurface()` (the internal pass
-// that produces them) are deliberately not part of `env-cap/build`'s public
+// that produces them) are deliberately not part of `@maverickcer/env-cap/build`'s public
 // surface (ADR 0010's "engine internals stay private" precedent). Each
 // orchestrator below runs its own real discovery+link pass instead -- the
 // same thing the removed CLI flags did under the hood -- rather than trying
@@ -28,8 +28,8 @@
 // docs/ownership catalogs, which need the richer, pre-projection shape.
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { generateDocumentation, generateUsageReport } from "env-cap/build"
-import { nodeBuildFileSystem } from "env-cap/node"
+import { generateDocumentation, generateUsageReport } from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const include = ["src/features/**/env.*.schema.ts"]

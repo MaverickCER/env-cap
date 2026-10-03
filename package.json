@@ -189,5 +189,10 @@
   "allowScripts": {
     "fsevents@2.3.3": true,
     "esbuild@0.28.2": true
+  },
+  "internal-package-contract": {
+    "apiTargets": {
+      ".": "src/runtime/index.ts"
+    }
   }
 }

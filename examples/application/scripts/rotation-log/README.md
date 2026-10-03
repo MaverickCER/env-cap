@@ -30,7 +30,7 @@ example established (C5), just for a different document.
 - [`print-lines.ts`](print-lines.ts) -- `printJsonLines()`, a shared line-by-line JSON printer
   `run.ts` uses to demonstrate the `build-model.ts` escape hatch on the console, not just document
   it.
-- [`run.ts`](run.ts) -- wires it together: reads `docs/env.evidence.json` via `env-cap/build`'s
+- [`run.ts`](run.ts) -- wires it together: reads `docs/env.evidence.json` via `@maverickcer/env-cap/build`'s
   `getEvidenceModel()`, builds the model, writes `docs/SECRETS-ROTATION-LOG.md`, and prints the raw
   model via `printJsonLines()`.
 

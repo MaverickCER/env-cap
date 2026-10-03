@@ -25,7 +25,7 @@
     "pack:local": "npm run build && npm pack --pack-destination . && mv examples-tsconfig-aliases-*.tgz tsconfig-aliases.tgz"
   },
   "dependencies": {
-    "env-cap": "file:../../../../.."
+    "@maverickcer/env-cap": "file:../../../../.."
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -8,7 +8,7 @@
 
 _Produced by `env-cap --docs`._
 
-_Generated 2026-09-28T04:10:39.963Z_
+_Generated 2026-10-03T04:21:37.925Z_
 
 ## Changes since last report
 
@@ -87,7 +87,7 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`WEBHOOK_URL`](#audit-log-webhook_url) | team-security | 2026-04-01 (**expired 180d ago**) | -- |
+| [`WEBHOOK_URL`](#audit-log-webhook_url) | team-security | 2026-04-01 (**expired 185d ago**) | -- |
 | [`WEBHOOK_URL`](#notifications-webhook_url) | team-notifications | -- | -- |
 
 ## Security review

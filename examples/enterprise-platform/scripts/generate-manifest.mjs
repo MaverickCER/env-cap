@@ -6,7 +6,7 @@
 // straight from a `docs`/`check` npm script for the manifest + persisted
 // evidence artifact (the two outputs with a real runtime/evidence contract,
 // per ADR 0046), plus a small `scripts/generate-docs/{run,check}.ts` pair
-// calling `env-cap/build` directly for docs/ownership/.env.example (no real
+// calling `@maverickcer/env-cap/build` directly for docs/ownership/.env.example (no real
 // runtime consumer); that split is the pattern to start from, and what
 // almost every project wants. This example keeps a hand-written script for
 // ALL FIVE artifacts, in one call, only because it does genuine custom
@@ -18,8 +18,8 @@
 // produce. If all you need is "generate the artifacts" or "fail CI when they
 // drift", `env-cap ... ` / `env-cap ... --check` already does it, and a
 // script wrapping it is one more thing to keep in sync.
-import { generateEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
