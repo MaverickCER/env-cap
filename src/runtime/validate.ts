@@ -33,7 +33,7 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
   if (state.status === "ready" && state.result) {
     return state.result
   }
-  // Stryker disable next-line ConditionalExpression, LogicalOperator
+  // Stryker disable next-line ConditionalExpression, LogicalOperator: a failed state always carries its error, so `status === "failed"` and `state.error` are interchangeable here (equivalent mutant)
   if (state.status === "failed" && state.error) {
     throw state.error
   }

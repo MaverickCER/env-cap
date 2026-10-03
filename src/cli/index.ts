@@ -174,7 +174,6 @@ export function parseArgs(argv: string[]): ParsedArgs {
   // Stryker disable next-line ArithmeticOperator
   const maxPasses = argv.length * 2 + 4
   for (let i = 0; i < argv.length; i++) {
-    // Stryker disable next-line UpdateOperator
     passes++
     // Unreachable by design for any correct `argv`, the same way the
     // `arg = argv[i] ?? ""` fallback just below is: this guard's whole
@@ -184,11 +183,11 @@ export function parseArgs(argv: string[]): ParsedArgs {
     // already-broken build to construct.
     // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
     if (passes > maxPasses) {
-      // Stryker disable next-line CallExpression
+      // Stryker disable CallExpression, StringLiteral: message of an unreachable internal-invariant error (parse loop bound)
       throw new Error(
-        // Stryker disable next-line StringLiteral
         `parseArgs: exceeded ${String(maxPasses)} iterations parsing ${String(argv.length)} argument(s) -- this should never happen for any real argv and indicates an internal parsing bug.`,
       )
+      // Stryker restore CallExpression, StringLiteral
     }
     // Provably unreachable for any real `string[]` input: the loop condition
     // `i < argv.length` guarantees `argv[i]` is in-bounds (hence defined)

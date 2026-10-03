@@ -42,7 +42,7 @@ export function globToRegExp(pattern: string): RegExp {
   // Hand-verified: mutating this and running the real suite passes unchanged.
   // Stryker disable next-line EqualityOperator
   for (let i = 0; i < pattern.length; i++) {
-    // Stryker disable next-line UpdateOperator
+    // Stryker disable next-line UpdateOperator: turns a bounded loop guard into an unbounded one, which can only show up as a hang; the guard is unreachable for any real pattern
     passes++
     // Unreachable by design for any correct `pattern`, the same way the
     // `char === undefined` guard just below is: this guard's whole purpose
@@ -50,11 +50,11 @@ export function globToRegExp(pattern: string): RegExp {
     // real test input (which only ever exercises correct code) can reach it.
     // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
     if (passes > maxPasses) {
-      // Stryker disable next-line CallExpression
+      // Stryker disable CallExpression, StringLiteral: message of that unreachable internal-invariant error
       throw new Error(
-        // Stryker disable next-line StringLiteral
         `globToRegExp: exceeded ${String(maxPasses)} iterations parsing pattern ${JSON.stringify(pattern)} -- this should never happen for any real pattern and indicates an internal parsing bug.`,
       )
+      // Stryker restore CallExpression, StringLiteral
     }
     const char = pattern[i]
     // The loop bound (`i < pattern.length`) already guarantees this branch

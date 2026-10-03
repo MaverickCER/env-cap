@@ -115,7 +115,7 @@ export async function buildCitationSnapshots(
       // every test passing.
       // Stryker disable next-line ArrayDeclaration
       const citations = variable.evidence?.dynamicAccess ?? []
-      // Stryker disable next-line ConditionalExpression
+      // Stryker disable next-line ConditionalExpression: looping over zero citations does nothing, so this early continue is an optimization with no observable effect (equivalent mutant)
       if (citations.length === 0) continue
 
       const identity = dynamicAccessVariableIdentity(file, contract.exportName, variable.key)

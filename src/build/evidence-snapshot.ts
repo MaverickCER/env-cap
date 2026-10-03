@@ -246,7 +246,7 @@ export function diffContracts(
           // direct mutation + a real suite run.
           // Stryker disable next-line StringLiteral
           "file",
-          // Stryker disable next-line StringLiteral
+          // Stryker disable next-line StringLiteral: the same reasoning as `file` just above: the two contracts of a matched pair share the same identity, so this field can never differ between them
           "exportName",
           // Genuinely skipped AND real-tested -- see "does not report the
           // whole variables array as a changed field" below.

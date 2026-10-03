@@ -12,3 +12,4 @@ Audit fixes ahead of 1.0.
 - Source maps no longer embed `sourcesContent` (about 60% of the unpacked package).
 - Every documented import now uses the published `@maverickcer/env-cap` name; `./node` is documented as Stable and in the API reference; `--help` links are absolute URLs.
 - Landing page: keyboard-focusable code blocks, a high-contrast theme toggle, forced-colors support.
+- Every `Stryker disable` now says why, 79 mutation exception records are gone, and mutation runs the full suite; `init` scaffolds an https check with `URL` instead of a string prefix.

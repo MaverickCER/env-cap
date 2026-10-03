@@ -84,7 +84,7 @@ export const noRawProcessEnv = createRule<[RuleOptions], "noRawProcessEnv">({
           // Stryker disable next-line ConditionalExpression
           obj.object.type === AST_NODE_TYPES.Identifier &&
           obj.object.name === "process" &&
-          // Stryker disable next-line ConditionalExpression
+          // Stryker disable next-line ConditionalExpression: see the note above: no AST shape reaches this position with a non-Identifier property while the object is `process`
           obj.property.type === AST_NODE_TYPES.Identifier &&
           obj.property.name === "env"
         ) {

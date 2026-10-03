@@ -37,7 +37,7 @@ describe("createEnv", () => {
       firstMessage = error instanceof Error ? error.message : ""
     }
     try {
-      // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- see above.
+      // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- reading a property only to trigger the lazy getter; the void operator is the point of the statement
       void second.X
     } catch (error) {
       secondMessage = error instanceof Error ? error.message : ""

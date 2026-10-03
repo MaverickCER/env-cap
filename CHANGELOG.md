@@ -281,7 +281,6 @@ Carried over from the legacy hand-kept `[Unreleased]` block that sat above this 
   a real package (a real packed tarball, same shape as `examples/paypal-consumer`) to prove
   this composes correctly with cross-package discovery (ADR 0014) in one run.
 
-
 Initial release.
 
 - Runtime: `createEnv()` / `validateEnv()` / `documentEnv()` -- capability-owned,

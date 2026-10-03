@@ -238,7 +238,7 @@ export function documentEnv<S extends EnvSchema>(schema: S, docs: ContractDocs<S
   // leak into every consumer's editor hover.
   // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator
   void schema
-  // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator
+  // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- documentEnv is an intentional runtime no-op marker read by static analysis; voiding the argument keeps it referenced
   void docs
 }
 // Stryker restore BlockStatement

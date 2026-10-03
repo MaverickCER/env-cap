@@ -310,7 +310,7 @@ export async function writeDocumentation(
       // Hand-verified: forcing this guard to `true` and running the real
       // suite passes unchanged.
       await writeEnvExample(contracts, envExamplePath, fs, {
-        // Stryker disable next-line ConditionalExpression
+        // Stryker disable next-line ConditionalExpression: passing `onExisting: undefined` and omitting the key are the same to the callee, which reads it with a default (equivalent mutant)
         ...(envExampleOnExisting === undefined ? {} : { onExisting: envExampleOnExisting }),
       })
     : undefined

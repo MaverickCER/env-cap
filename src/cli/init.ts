@@ -56,7 +56,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap"
 const schema = {
   EXAMPLE_API_URL: {
     processor: (value: unknown): string => String(value ?? ""),
-    validator: (value: string) => value.startsWith("https://") || "Expected an https:// URL.",
+    validator: (value: string) => (URL.canParse(value) && new URL(value).protocol === "https:") || "Expected an https URL.",
   },
 }
 

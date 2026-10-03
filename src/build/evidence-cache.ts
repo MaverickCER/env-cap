@@ -196,7 +196,7 @@ export async function getEvidenceModel(
   // (see the "(unreadable)" marker above), so what could still reach here
   // is deliberately unclear/future-proofing, not a known-reachable path.
   let currentFingerprint: string
-  // Stryker disable BlockStatement, StringLiteral
+  // Stryker disable BlockStatement, CallExpression, StringLiteral: reachable only if hashing the source files throws mid-run, which needs a fault-injecting filesystem; the fallback is a plain recompute
   try {
     currentFingerprint = await computeSourceFingerprint({
       fs: options.fs,
@@ -210,7 +210,7 @@ export async function getEvidenceModel(
       `could not compute a source fingerprint (${error instanceof Error ? error.message : String(error)})`,
     )
   }
-  // Stryker restore BlockStatement, StringLiteral
+  // Stryker restore BlockStatement, CallExpression, StringLiteral
 
   let storedFingerprint: string
   try {

@@ -69,7 +69,7 @@ describe("InferEnvValue / EnvContract generic inference", () => {
   })
 
   it("`context` never affects a resolved contract's per-key type (ADR 0022 invariant: validation contexts are runtime-only, never a type-level concept)", () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the binding exists only so the type assertions below can reference its inferred type
     const contract = createEnv({
       DATABASE_URL: {
         context: "server",

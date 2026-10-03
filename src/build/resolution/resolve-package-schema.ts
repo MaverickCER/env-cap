@@ -63,7 +63,6 @@ export type PackageSchemaResolutionResult =
 // hand: applying any mutation here and running the real suite directly
 // always fails a real test.
 function isRecord(value: unknown): value is Record<string, unknown> {
-  // Stryker disable next-line ConditionalExpression, EqualityOperator, LogicalOperator
   return typeof value === "object" && value !== null
 }
 
@@ -456,7 +455,6 @@ export async function resolvePackageImport(
   // flakiness. Hand-verified directly: forcing this predicate to `(pkg) =>
   // true` and running the real suite fails both of those tests immediately.
   const matched = allowedPackages.find(
-    // Stryker disable next-line ConditionalExpression
     (pkg) => specifier === pkg || specifier.startsWith(`${pkg}/`),
   )
   // Bypassing this guard when nothing matched is behaviorally equivalent,

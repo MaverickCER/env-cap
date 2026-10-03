@@ -85,7 +85,7 @@ export function renderManifest(
       // running the real suite passes unchanged.
       // Stryker disable next-line EqualityOperator
       for (let suffix = 1; suffix <= maxSuffix; suffix++) {
-        // Stryker disable next-line UpdateOperator
+        // Stryker disable next-line UpdateOperator: turns a bounded loop guard into an unbounded one, which can only show up as a hang; the guard is unreachable for any real input
         passes++
         // Unreachable by design for any correct input: this guard's whole
         // purpose is to fail fast when a *mutated* build's loop header is
@@ -93,11 +93,11 @@ export function renderManifest(
         // code) can reach it.
         // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
         if (passes > maxSuffix) {
-          // Stryker disable next-line CallExpression
+          // Stryker disable CallExpression, StringLiteral: message of that unreachable internal-invariant error
           throw new Error(
-            // Stryker disable next-line StringLiteral
             `renderManifest: exceeded ${String(maxSuffix)} attempts choosing a unique local import name for "${contract.exportName}" -- this should never happen and indicates an internal naming bug.`,
           )
+          // Stryker restore CallExpression, StringLiteral
         }
         const candidate = `${contract.exportName}_${suffix}`
         if (!usedNames.has(candidate)) {
@@ -113,11 +113,11 @@ export function renderManifest(
       // proceeding with `localName` left at its pre-loop value.
       // Stryker disable next-line ConditionalExpression,BlockStatement
       if (found === undefined) {
-        // Stryker disable next-line CallExpression
+        // Stryker disable CallExpression, StringLiteral: message of that unreachable internal-invariant error
         throw new Error(
-          // Stryker disable next-line StringLiteral
           `renderManifest: could not find a unique local import name for "${contract.exportName}" within ${String(maxSuffix)} attempts -- this should never happen and indicates an internal naming bug.`,
         )
+        // Stryker restore CallExpression, StringLiteral
       }
       localName = found
     }

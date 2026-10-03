@@ -211,7 +211,6 @@ export async function generateEvidenceModel(
     scanFiles,
     readFileCached,
     context,
-    // Stryker disable next-line ArrayDeclaration
     [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     scannedSurfaces,
     evidenceChanges?.dynamicAccessAcknowledgments,

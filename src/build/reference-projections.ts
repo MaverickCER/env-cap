@@ -136,7 +136,7 @@ export function groupVariablesByOwner<C extends OwnerBearingContract>(
 // disclaimer" test) despite Stryker reporting it Survived.
 // Stryker disable next-line ObjectLiteral
 export const configurationReference = defineEvidenceProjection<ConfigurationReference>({
-  // Stryker disable next-line ArrowFunction
+  // Stryker disable next-line ArrowFunction: the disclaimer thunk's text is only read by the Markdown printouts; the projection tests assert the projected shape, not this sentence
   disclaimer: () => evidenceDisclaimer(),
   entries: (evidence: EvidenceModel) => {
     const entries: ConfigurationReferenceEntry[] = []
@@ -189,7 +189,7 @@ export interface OwnershipSummary extends Record<string, unknown> {
  */
 // Stryker disable next-line ObjectLiteral
 export const ownershipSummary = defineEvidenceProjection<OwnershipSummary>({
-  // Stryker disable next-line ArrowFunction
+  // Stryker disable next-line ArrowFunction: same thunk as above, for the second projection
   disclaimer: () => evidenceDisclaimer(),
   owners: (evidence: EvidenceModel) => {
     const contracts = contractIndex(evidence.contract.contracts)
@@ -281,7 +281,6 @@ export interface ExpiringSoonReport extends Record<string, unknown> {
  */
 // Stryker disable next-line ObjectLiteral
 export const expiringSoonReport = defineEvidenceProjection<ExpiringSoonReport>({
-  // Stryker disable next-line ArrowFunction
   disclaimer: () => evidenceDisclaimer(),
   entries: (evidence: EvidenceModel) => {
     const contracts = contractIndex(evidence.contract.contracts)

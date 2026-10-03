@@ -95,7 +95,6 @@ export function defaultExclude(): string[] {
     // Stryker disable next-line StringLiteral
     "**/node_modules/**",
     "**/dist/**",
-    // Stryker disable next-line StringLiteral
     "**/.git/**",
   ]
 }

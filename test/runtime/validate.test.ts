@@ -182,7 +182,7 @@ describe("validateEnv pipeline", () => {
       {
         PORT: {
           processor: () => {
-            // eslint-disable-next-line @typescript-eslint/only-throw-error
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- throwing a non-Error is the case under test: validateEnv must wrap it
             throw "boom"
           },
         },
@@ -204,7 +204,7 @@ describe("validateEnv pipeline", () => {
       {
         PORT: {
           processor: () => {
-            // eslint-disable-next-line @typescript-eslint/only-throw-error
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- throwing a non-Error is the case under test: validateEnv must wrap it
             throw 42
           },
         },
@@ -227,7 +227,7 @@ describe("validateEnv pipeline", () => {
         PORT: {
           processor: (v) => Number(v),
           validator: () => {
-            // eslint-disable-next-line @typescript-eslint/only-throw-error
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- throwing a non-Error is the case under test: validateEnv must wrap it
             throw { code: 1 }
           },
         },

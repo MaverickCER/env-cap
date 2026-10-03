@@ -272,11 +272,8 @@ export async function computeArtifacts(
   // four lines (both variants) and running the real suite passes unchanged.
   // Stryker disable next-line ConditionalExpression,BooleanLiteral
   const manifestOptions = options.manifest === false ? undefined : options.manifest
-  // Stryker disable next-line ConditionalExpression,BooleanLiteral
   const docsOptions = options.docs === false ? undefined : options.docs
-  // Stryker disable next-line ConditionalExpression,BooleanLiteral
   const usageOptions = options.usage === false ? undefined : options.usage
-  // Stryker disable next-line ConditionalExpression,BooleanLiteral
   const evidenceOptions = options.evidence === false ? undefined : options.evidence
 
   const pathIssues: CompatibilityIssue[] = []

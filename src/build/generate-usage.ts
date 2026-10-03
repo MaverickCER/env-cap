@@ -170,7 +170,6 @@ export async function computeUsage(
   // (a type-narrowing regression, not a behavioral one), every other test
   // (1226) passes unchanged.
   const ownerFor = (file: string, exportName: string): string | undefined =>
-    // Stryker disable next-line OptionalChaining
     contractByIdentity.get(`${file}#${exportName}`)?.owner
   // A specific variable's *effective* owner (its own override, falling back
   // to the contract default) -- see ADR 0028. Used only for
