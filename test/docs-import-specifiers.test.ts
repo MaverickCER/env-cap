@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest"
 /**
  * Every import specifier the documentation, the agent skill, the examples and the fixtures show must be
  * the PUBLISHED name. The package is `@maverickcer/env-cap`; `env-cap` is only the binary and the brand.
- * `import("env-cap/build")` fails with ERR_MODULE_NOT_FOUND for a real user, and examples that install the
- * repository as `"env-cap": "file:../.."` hid exactly that from every test until this one.
+ * The unscoped name fails with ERR_MODULE_NOT_FOUND for a real user, and examples that install the
+ * repository under that name via a `file:` dependency hid exactly that from every test until this one.
  */
 const root = path.resolve(import.meta.dirname, "..")
 const tracked = execFileSync("git", ["ls-files"], { cwd: root, encoding: "utf8" })

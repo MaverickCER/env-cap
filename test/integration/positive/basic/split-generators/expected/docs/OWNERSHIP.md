@@ -1,12 +1,12 @@
-<!-- GENERATED FILE -- do not edit by hand. Run `npx env-cap` to regenerate. -->
+<!-- GENERATED FILE -- do not edit by hand. Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`. -->
 
 > Machine-generated engineering artifact assembled from statically-provable code facts and author-declared documentation. It can support a security, privacy, or compliance review. It does not itself establish compliance with any standard.
 
-> Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from.
+> Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from.
 
 # Dependency & Ownership Report
 
-_Produced by `env-cap --ownership`._
+_Produced by `generateUsageReport()` from `@maverickcer/env-cap/build`._
 
 Which feature owns each variable, which features consume that contract, and what the blast radius is if it changes.
 

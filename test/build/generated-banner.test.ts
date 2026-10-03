@@ -77,13 +77,21 @@ describe("evidenceDisclaimer", () => {
 describe("evidenceProjectionNote", () => {
   it("returns just the concept sentence when no evidencePath is given", () => {
     expect(evidenceProjectionNote()).toBe(
-      "Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from.",
+      "Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from.",
     )
   })
 
   it("appends the concrete path when evidencePath is given", () => {
     expect(evidenceProjectionNote("docs/env.evidence.json")).toBe(
-      "Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from. This run also wrote it to `docs/env.evidence.json`.",
+      "Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from. This run also wrote it to `docs/env.evidence.json`.",
+    )
+  })
+})
+
+describe("generatedBanner regeneration hint", () => {
+  it("lets a caller name the command that really regenerates the file", () => {
+    expect(generatedBanner("markdown", "Run the thing.")).toBe(
+      "<!-- GENERATED FILE -- do not edit by hand. Run the thing. -->",
     )
   })
 })

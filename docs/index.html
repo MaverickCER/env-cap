@@ -317,7 +317,7 @@
 [generate-docs] wrote docs/ENVIRONMENT.md (1 contract(s)), .env.example, and docs/OWNERSHIP.md (0 abandoned, 2 unconsumed owned variable(s)).
 
 1 variable(s)/contract(s) expiring soon or already expired:
-- STRIPE_KEY in env: 2026-09-01 (expired 9d ago)
+- STRIPE_KEY in env: 2026-09-01 (expired Nd ago)
 
 2 unconsumed owned variable(s):
 - DATABASE_URL in app
@@ -327,7 +327,8 @@
           <p>
             Not "CI failed" — a rotation deadline that already passed, and two variables a
             capability declares owning but nothing in the codebase actually reads. Both are real,
-            provable facts about this fixture, not synthetic examples.
+            provable facts about this fixture, not synthetic examples. (<code>N</code> is the number
+            of days since 2026-09-01, counted from the day you run it.)
           </p>
         </div>
       </section>

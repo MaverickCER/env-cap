@@ -47,7 +47,9 @@ documentEnv(paymentsSchema, {
 })
 ```
 
-Run the build-time analysis against a real project. The manifest and the
+Generate, then validate: the build-time analysis writes the manifest your code imports
+(`./generated/env.manifest`) and the evidence artifact, with one command (`npx env-cap init` scaffolds
+the same thing as a script, `scripts/generate-env.mjs`). The manifest and the
 persisted evidence artifact -- the two outputs a real project actually reads
 at runtime/in CI (see [ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md))
 -- come from the CLI itself; the human-facing docs/ownership report come
@@ -64,14 +66,14 @@ $ npx tsx scripts/generate-docs/run.ts
 [generate-docs] wrote docs/ENVIRONMENT.md (1 contract(s)), .env.example, and docs/OWNERSHIP.md (0 abandoned, 2 unconsumed owned variable(s)).
 
 1 variable(s)/contract(s) expiring soon or already expired:
-  - STRIPE_KEY in env: 2026-09-01 (expired 27d ago)
+  - STRIPE_KEY in env: 2026-09-01 (expired Nd ago)
 
 2 unconsumed owned variable(s):
   - DATABASE_URL in app
   - STRIPE_KEY in app
 ```
 
-This is real output from [`examples/application`](examples/application)'s own `npm run docs` and `npm run docs:reports` scripts, not a mockup.
+This is real output from [`examples/application`](examples/application)'s own `npm run docs` and `npm run docs:reports` scripts, not a mockup. The age (`Nd`) is counted from the day you run it, so it is shown as `N` here instead of a number that would rot.
 
 The important part is what the analysis can establish:
 
@@ -165,7 +167,7 @@ declare → generate → validate → consume
 
 See the [Guide's Core workflow](GUIDE.md#core-workflow) for the complete generate/validate cycle.
 
-Node.js `>=20`. TypeScript 5+ is only required for build-time manifest generation; the runtime works in plain JavaScript. See the [runtime support matrix](GUIDE.md#runtime-support-matrix) for Node, browser bundles, edge runtimes, Bun, and Deno.
+Node.js `>=22`. TypeScript 5 or 6 is only required for build-time manifest generation; the runtime works in plain JavaScript. See the [runtime support matrix](GUIDE.md#runtime-support-matrix) for Node, browser bundles, edge runtimes, Bun, and Deno.
 
 ## What declared metadata can express
 

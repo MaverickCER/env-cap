@@ -1,4 +1,5 @@
 import ts from "typescript"
+import { assertCompilerApi } from "./compiler-api.js"
 import { collectImportBindings } from "./parse.js"
 import type { ImportBinding } from "./parse.js"
 import { positionOf } from "./source-position.js"
@@ -292,6 +293,7 @@ function bindingElementKey(element: ts.BindingElement): string | ts.Expression {
 }
 
 export function scanFileForDependencies(filePath: string, sourceText: string): FileScanResult {
+  assertCompilerApi(ts)
   const scriptKind = filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS
   const sourceFile = ts.createSourceFile(
     filePath,

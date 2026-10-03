@@ -140,7 +140,7 @@ await generateEnvArtifacts({
   root,
   manifest: { location: "src/generated/env.manifest.ts" },
   docs: { location: "docs/ENVIRONMENT.md", envExample: { location: ".env.example" } },
-  usage: { report: { location: "docs/OWNERSHIP.md" } },
+  usage: { report: { location: "docs/ENV-OWNERSHIP.md" } },
   evidence: { location: "docs/env.evidence.json" },
 })
 ```

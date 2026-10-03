@@ -74,8 +74,13 @@ const FLAGSHIP_SCRIPTS = {
 // map -- by design, generate:env always fails there and nothing is ever
 // successfully generated, so there is nothing to golden.
 const FIXTURES = {
+  // The CLI writes only the manifest and the evidence artifact (ADR 0046): no docs, no .env.example.
   "test/integration/positive/basic/cli-usage": {
-    artifacts: STANDARD_ARTIFACTS_WITH_OWNERSHIP,
+    artifacts: [
+      "src/generated/env.manifest.ts",
+      "docs/env.evidence.json",
+      "docs/env.evidence.json.fingerprint",
+    ],
     cli: true,
   },
   "test/integration/positive/basic/split-generators": {

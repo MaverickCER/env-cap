@@ -24,15 +24,15 @@ describe("renderUsageReport", () => {
   it("renders only the banner and title when every section is empty", () => {
     const source = renderUsageReport(EMPTY)
     expect(source).toBe(
-      "<!-- GENERATED FILE -- do not edit by hand. Run `npx env-cap` to regenerate. -->\n" +
+      "<!-- GENERATED FILE -- do not edit by hand. Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`. -->\n" +
         "\n" +
         "> Machine-generated engineering artifact assembled from statically-provable code facts and author-declared documentation. It can support a security, privacy, or compliance review. It does not itself establish compliance with any standard.\n" +
         "\n" +
-        "> Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from.\n" +
+        "> Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from.\n" +
         "\n" +
         "# Dependency & Ownership Report\n" +
         "\n" +
-        "_Produced by `env-cap --ownership`._\n" +
+        "_Produced by `generateUsageReport()` from `@maverickcer/env-cap/build`._\n" +
         "\n" +
         "Which feature owns each variable, which features consume that contract, and what the blast radius is if it changes.\n",
     )
@@ -282,15 +282,15 @@ describe("renderUsageReport", () => {
       scannedSurfaces: [{ label: "application", root: "." }],
     })
     expect(source).toBe(
-      "<!-- GENERATED FILE -- do not edit by hand. Run `npx env-cap` to regenerate. -->\n" +
+      "<!-- GENERATED FILE -- do not edit by hand. Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`. -->\n" +
         "\n" +
         "> Machine-generated engineering artifact assembled from statically-provable code facts and author-declared documentation. It can support a security, privacy, or compliance review. It does not itself establish compliance with any standard.\n" +
         "\n" +
-        "> Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from.\n" +
+        "> Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from.\n" +
         "\n" +
         "# Dependency & Ownership Report\n" +
         "\n" +
-        "_Produced by `env-cap --ownership`._\n" +
+        "_Produced by `generateUsageReport()` from `@maverickcer/env-cap/build`._\n" +
         "\n" +
         "Which feature owns each variable, which features consume that contract, and what the blast radius is if it changes.\n" +
         "\n" +

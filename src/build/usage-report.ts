@@ -1,6 +1,11 @@
 import type { ScannedSurface } from "./dependency-graph.js"
 import type { DynamicAccessCitationProblem } from "./citation-verification.js"
-import { evidenceDisclaimer, evidenceProjectionNote, generatedBanner } from "./generated-banner.js"
+import {
+  REPORT_REGENERATE_HINT,
+  evidenceDisclaimer,
+  evidenceProjectionNote,
+  generatedBanner,
+} from "./generated-banner.js"
 import type { ParseWarning } from "./parse.js"
 import type { DynamicAccessAssertion, SourcePosition } from "./source-position.js"
 
@@ -275,7 +280,7 @@ function renderParseWarnings(warnings: readonly ParseWarning[]): string[] {
  */
 export function renderUsageReport(computed: RenderUsageReportOptions): string {
   const lines = [
-    generatedBanner("markdown"),
+    generatedBanner("markdown", REPORT_REGENERATE_HINT),
     "",
     `> ${evidenceDisclaimer()}`,
     "",
@@ -283,7 +288,7 @@ export function renderUsageReport(computed: RenderUsageReportOptions): string {
     "",
     "# Dependency & Ownership Report",
     "",
-    "_Produced by `env-cap --ownership`._",
+    "_Produced by `generateUsageReport()` from `@maverickcer/env-cap/build`._",
     "",
     "Which feature owns each variable, which features consume that contract, and what the blast radius is if it changes.",
     "",

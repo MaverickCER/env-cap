@@ -27,9 +27,25 @@ function generatedFileMarker(): string {
   return "GENERATED FILE"
 }
 
-/** Renders the "do not edit by hand" marker in the given comment syntax. */
-export function generatedBanner(format: "ts" | "markdown" = "ts"): string {
-  const text = `${generatedFileMarker()} -- do not edit by hand. Run \`npx env-cap\` to regenerate.`
+/**
+ * Regeneration instruction for a report the CLI does not write (ADR 0046): it is produced by the
+ * project's own script calling the `./build` generators, so naming `npx env-cap` there would send a
+ * reader to a command that cannot regenerate it.
+ */
+export const REPORT_REGENERATE_HINT =
+  "Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`."
+
+/**
+ * Renders the "do not edit by hand" marker in the given comment syntax.
+ * @param format - Comment syntax to render in.
+ * @param regenerate - How to regenerate; defaults to the CLI, which writes the manifest.
+ * @returns The comment line.
+ */
+export function generatedBanner(
+  format: "ts" | "markdown" = "ts",
+  regenerate = "Run `npx env-cap` to regenerate.",
+): string {
+  const text = `${generatedFileMarker()} -- do not edit by hand. ${regenerate}`
   // An object lookup, not a `format === "ts" ? ... : ...` ternary: with only
   // two checked literal values, a ternary's untaken branch is an "equivalent
   // mutant" magnet (mutating the "ts" comparison string still routes every
@@ -71,7 +87,7 @@ export function evidenceDisclaimer(): string {
 
 /**
  * States, by concept, that this artifact is a projection of env-cap's
- * Evidence Model (ADR 0031/0038) -- never a hardcoded path, since
+ * Evidence Model -- never a hardcoded path, since
  * `docs/env.evidence.json` only exists on a run that actually passed
  * `--evidence`; a project that never requests that flag would otherwise get
  * a note pointing at a file that doesn't exist. `evidencePath`, when this
@@ -80,7 +96,7 @@ export function evidenceDisclaimer(): string {
  */
 export function evidenceProjectionNote(evidencePath?: string): string {
   const concept =
-    "Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from."
+    "Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from."
   return evidencePath === undefined
     ? concept
     : `${concept} This run also wrote it to \`${evidencePath}\`.`

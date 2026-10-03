@@ -1,7 +1,12 @@
 import type { ContractModelContract, ContractModelVariable } from "./contract-model.js"
 import { governanceFieldsOf, type EnvGovernanceFields } from "./governance-fields.js"
 import type { DiscoveredVariableEvidence } from "./parse.js"
-import { evidenceDisclaimer, evidenceProjectionNote, generatedBanner } from "./generated-banner.js"
+import {
+  REPORT_REGENERATE_HINT,
+  evidenceDisclaimer,
+  evidenceProjectionNote,
+  generatedBanner,
+} from "./generated-banner.js"
 import { humanizeKey, renderMetadataValue } from "./humanize-key.js"
 import {
   effectiveAuditRequired,
@@ -404,7 +409,7 @@ function renderHeader(
   hasLifecycle: boolean,
 ): string[] {
   const lines = [
-    generatedBanner("markdown"),
+    generatedBanner("markdown", REPORT_REGENERATE_HINT),
     "",
     `> ${evidenceDisclaimer()}`,
     "",
@@ -412,7 +417,7 @@ function renderHeader(
     "",
     "# Environment Variables",
     "",
-    "_Produced by `env-cap --docs`._",
+    "_Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._",
     "",
     `_Generated ${options.generatedAt.toISOString()}_`,
     "",

@@ -409,7 +409,7 @@ Without it, a second `validateEnv()` call with different `values` silently retur
 
 | Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
 | -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
-| Node.js 20+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
+| Node.js 22+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
 | Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅          | ❌ not applicable — build-only, never bundle this into an app |
 | Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅          | ❌ not applicable                                             |
 | Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
@@ -803,7 +803,7 @@ await generateDocumentation({
 
 await generateUsageReport({
   fs: nodeBuildFileSystem,
-  report: { location: "docs/OWNERSHIP.md" },
+  report: { location: "docs/ENV-OWNERSHIP.md" },
 })
 ```
 
@@ -940,7 +940,7 @@ jobs:
 `--strict`-family flags (ADR 0046) -- the persisted evidence artifact this
 produces is what the Action's own PR annotations/summary comment/rotation
 alerts read from (Finding Model, ADR 0038), regardless of whether your repo
-also generates `docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md` as a separate step.
+also generates `docs/ENVIRONMENT.md`/`docs/ENV-OWNERSHIP.md` as a separate step (the scaffolded default is `ENV-OWNERSHIP.md` so it never collides with a sibling package's ownership report).
 
 | Input               | Default               | Purpose                                                                                               |
 | ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |

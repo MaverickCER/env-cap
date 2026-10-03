@@ -262,8 +262,9 @@ runtime consumer, so generating them is application-level code now, not a CLI
 concern. Call \`computeDocumentation\`/\`writeDocumentation\`/\`computeUsage\`/
 \`writeUsageReport\` (or the higher-level \`generateDocumentation\`/
 \`generateUsageReport\` orchestrators) directly from \`@maverickcer/env-cap/build\` in your
-own build script -- see \`examples/nextjs-app/scripts/generate-docs\` for a
-worked example, and specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md
+own build script -- see https://github.com/MaverickCER/env-cap/tree/main/examples/nextjs-app/scripts/generate-docs
+for a worked example, and
+https://github.com/MaverickCER/env-cap/blob/main/specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md
 for why.
 `
 }

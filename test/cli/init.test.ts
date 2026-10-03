@@ -421,7 +421,7 @@ describe("runInitCommand", () => {
       '    location: "docs/ENVIRONMENT.md",',
       '    envExample: { location: ".env.example", onExisting: "keep-sibling" },',
       "  },",
-      '  usage: { report: { location: "docs/OWNERSHIP.md" } },',
+      '  usage: { report: { location: "docs/ENV-OWNERSHIP.md" } },',
       "})",
       "",
       "console.log(`Discovered ${result.manifest?.contracts.length ?? 0} contract(s).`)",
