@@ -563,7 +563,7 @@ describe("generateEnvArtifacts", () => {
       if (file === docsLocation) throw new Error("simulated disk-full error")
       // Forwarding to the real multi-overload fs.writeFile with spread,
       // unknown-typed args -- no single overload matches, hence the `any` cast.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return -- the overloaded writeFile cannot be called with unknown-typed arguments, hence the cast
       return (actual.writeFile as any)(file, ...rest)
     })
 

@@ -85,7 +85,7 @@ function matchesContext(
 // That only works if this genuinely returns a Promise -- a synchronous
 // function returning/throwing a plain value would change both the
 // concurrent-sharing behavior and the timing of a thrown validation error.
-// eslint-disable-next-line @typescript-eslint/require-await
+// eslint-disable-next-line @typescript-eslint/require-await -- deliberately async so a thrown error becomes a rejection (see the note above)
 async function runValidation(
   options: validateEnvOptions,
   state: CacheState,

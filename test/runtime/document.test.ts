@@ -10,7 +10,7 @@ describe("documentEnv", () => {
     // Deliberately capturing a `void`-typed return to assert it's genuinely
     // undefined -- the whole point of this test (documentEnv() is inert,
     // ADR 0001), not an accidental misuse of a void expression.
-    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- the test checks the void-typed result on purpose (see the note above)
     const result = documentEnv(schema, {
       variables: {
         STRIPE_KEY: {
