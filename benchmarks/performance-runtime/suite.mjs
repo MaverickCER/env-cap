@@ -392,8 +392,9 @@ const VALIDATORS = [
     expected: "linear",
     reason: "A substring search scans the string, so cost follows its length.",
     sizeMeans: "Length of the string, in characters.",
-    content: "a long string that contains the substring at the end",
-    build: (n) => [validators.includes("example"), `${TEXT(n)}example`],
+    content:
+      "a long string made of near-misses of the substring (\"exampl\" repeated) with the real match at the end, so the search cannot skip ahead",
+    build: (n) => [validators.includes("example"), `${"exampl".repeat(Math.ceil(n / 6))}example`],
   },
   {
     slug: "integer",
