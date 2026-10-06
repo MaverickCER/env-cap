@@ -29,7 +29,10 @@ const bundles: Options[] = [
     // scripts/emit-dts-shims.mjs.
     dts: false,
     sourcemap: true,
-    clean: true,
+    // NOT `clean: true` here -- tsup runs the whole bundle array concurrently, and cleaning from
+    // inside one bundle races with the others writing into the same `dist/` (an intermittent
+    // `ENOENT: unlink dist/index.js.map` whenever a dependent project's install re-ran the build).
+    // `dist/` is cleaned once, deterministically, by `npm run clean` as the first step of `build`.
     treeshake: true,
   },
   {
