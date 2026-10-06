@@ -40,7 +40,7 @@ describe("InferEnvValue / EnvContract generic inference", () => {
     // validateEnv() has run). `contract` itself is intentionally only ever
     // used in type position below, to verify createEnv()'s inference
     // end-to-end from a real call, not its resolved runtime value.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the constant exists only so its type can be asserted
     const contract = createEnv({
       PORT: { default: 3000, processor: (value): number => Number(value) },
       NAME: { processor: (value): string => String(value) },
@@ -59,7 +59,7 @@ describe("InferEnvValue / EnvContract generic inference", () => {
     // pin this down -- `any` is bidirectionally assignable with everything, so an
     // accidental `any` could still pass a naive equality check. `.not.toBeAny()` is the
     // explicit assertion that closes that gap.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the constant exists only so its type can be asserted
     const contract = createEnv({
       STRIPE_KEY: { validator: (value: string) => value.length > 0 || "required" },
     })
@@ -69,7 +69,7 @@ describe("InferEnvValue / EnvContract generic inference", () => {
   })
 
   it("`context` never affects a resolved contract's per-key type (ADR 0022 invariant: validation contexts are runtime-only, never a type-level concept)", () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the binding exists only so the type assertions below can reference its inferred type
     const contract = createEnv({
       DATABASE_URL: {
         context: "server",

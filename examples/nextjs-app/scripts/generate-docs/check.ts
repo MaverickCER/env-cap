@@ -2,7 +2,7 @@
 // README for why this exists as application code rather than a CLI flag):
 // verifies docs/ENVIRONMENT.md, docs/OWNERSHIP.md, and .env.example are
 // exactly what a fresh `run.ts` would produce, without writing anything,
-// via `env-cap/build`'s exported `checkEnvArtifacts()` -- the same function
+// via `@maverickcer/env-cap/build`'s exported `checkEnvArtifacts()` -- the same function
 // the removed `env-cap --check --docs --ownership --env-example` combination
 // called internally. `env-cap --check` itself (see package.json's `check`
 // script, chained before this) still separately verifies the manifest and
@@ -11,8 +11,8 @@
 // example generates is drift-checked exactly as it was before.
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { checkEnvArtifacts } from "env-cap/build"
-import { nodeBuildFileSystem } from "env-cap/node"
+import { checkEnvArtifacts } from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const include = ["src/features/**/env.*.schema.ts"]

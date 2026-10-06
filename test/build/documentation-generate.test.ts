@@ -2,7 +2,7 @@ import { nodeBuildFs } from "../support/build-filesystem.js"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { generatedBanner } from "../../src/build/generated-banner.js"
+import { reportRegenerateHint, generatedBanner } from "../../src/build/generated-banner.js"
 import { fileURLToPath } from "node:url"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { EnvDocumentationGenerationError } from "../../src/build/errors.js"
@@ -71,7 +71,7 @@ describe("generateDocumentation", () => {
     })
 
     const docsSource = await fs.readFile(result.docsPath, "utf8")
-    expect(docsSource).toContain(generatedBanner("markdown"))
+    expect(docsSource).toContain(generatedBanner("markdown", reportRegenerateHint()))
     expect(docsSource).toContain("Stripe secret key")
 
     expect(result.documentation.undocumentedContracts).toEqual([

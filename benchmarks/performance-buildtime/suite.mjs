@@ -1,4 +1,4 @@
-// env-cap build-time benchmark suite: the cost of the CLI/CI tooling (`env-cap/build`) that discovers
+// env-cap build-time benchmark suite: the cost of the CLI/CI tooling (`@maverickcer/env-cap/build`) that discovers
 // contracts and generates manifests, documentation, usage reports and evidence. This is development
 // and CI cost, not production request cost -- it is paid by every pipeline run and every developer
 // who regenerates artifacts. See ../READING-BENCHMARKS.md and ../WRITING-BENCHMARKS.md.
@@ -9,7 +9,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { defineSuite } from "internal-package-contract/benchmark"
-import { defineEvidenceProjection } from "env-cap/evidence"
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence"
 import {
   discoverSchemaFiles,
   generateDocumentation,
@@ -17,8 +17,8 @@ import {
   generateEnvManifest,
   generateEvidenceModel,
   generateUsageReport,
-} from "env-cap/build"
-import { nodeBuildFileSystem } from "env-cap/node"
+} from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 import { generateBuildtimeFixtures } from "../benchmark-fixtures/generator.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -227,9 +227,9 @@ export default defineSuite({
           description:
             "An `include` selects one schema file; discovery still walks the tree but only that file is parsed.",
           options: { scoped: true },
-          expectedComplexity: "constant",
+          expectedComplexity: "logarithmic",
           complexityReason:
-            "Only the one selected file is parsed and rendered, and parsing dominates the cost; the directory walk that still happens grows with the tree but is tiny next to parsing, so the curve is effectively flat.",
+            "Only the one selected file is parsed and rendered, but the directory walk that still happens grows with the tree. Across the measured sizes it is a small, sub-linear share of the cost, so the curve rises slowly without being flat.",
         },
       ],
       notCovered: [

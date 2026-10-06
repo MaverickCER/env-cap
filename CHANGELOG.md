@@ -125,7 +125,7 @@
 - 69ff088: **Breaking, pre-1.0 (any Stable API may change in a minor per VERSIONING.md):**
   bare `--strict` now escalates every warning family (compatibility, documentation,
   ownership) to a hard error, not just manifest compatibility (ADR 0044). This
-  matches `@maverickcer/data-cap`'s own `--strict`, which already escalates
+  matches `data-cap`'s own `--strict`, which already escalates
   every pass. `--strict-docs`/`--strict-ownership` are unchanged and still work
   independently. A CI script relying on bare `--strict` _not_ escalating
   documentation/ownership warnings needs to switch to the scoped flags (or fix
@@ -252,7 +252,7 @@
 - d57c854: Fixes `LifecycleModel.expiring[].file` to be root-relative and POSIX-separated, matching `LifecycleModelContract.file` and every other canonical model's file convention -- it previously leaked an absolute, machine-specific filesystem path (`buildLifecycleModel()` called `computeExpiringEntries()` without relativizing its result, unlike the rest of the model). `ExpiringEntry`'s own doc comment (an absolute path) still applies to `computeExpiringEntries()`'s other direct consumers (e.g. `DocumentationFindings.expiringSoon`), which are unaffected.
 - Generalize `documentEnv()`'s `metadata` from a contract-only, string-valued field into a symmetric `Record<string, unknown>` field available at both contract and variable level, accepting any primitive or object value per key. `VariableDocs`'s previous open index signature (which silently swept unrecognized string-valued keys into an internal `extra` bag, and silently dropped anything else) is removed -- a value must now be nested under a literal `metadata: {...}` key to be captured. See ADR 0035.
 - 772d743: Fix `generateUsageReport()`'s `unconsumedOwnedVariables[].owner` ignoring a variable-level `owner` override when the contract has none set. It previously resolved ownership using only the contract's default `owner`, so a `documentEnv()` call setting `variables: { KEY: { owner: "..." } }` with no contract-level `owner` produced `owner: undefined` for that finding, disagreeing with the docs Catalog and ownership matrix (which already applied the variable-then-contract fallback correctly). `dependencyOwnership`/`abandonedContracts` are unaffected -- those are genuinely contract-level facts with no variable to override.
-- 44fc5a0: Relocate the import-resolution modules (`resolve-import.ts`, `resolve-tsconfig-paths.ts`, `resolve-package-schema.ts`, `resolve-within-root.ts`) into a new `src/build/resolution/` subfolder, consolidating the `resolveImportSpecifier()` chokepoint (relative → alias → package resolution, ADR 0023/ADR 0014) into one cohesive location. Internal reorganization only -- `env-cap/build`'s public export names, types, and behavior are unchanged; verified byte-identical before/after. Prompted by `@maverickcer/data-cap` needing the same resolver design; see that package's `src/build/resolution/` for the ported copy.
+- 44fc5a0: Relocate the import-resolution modules (`resolve-import.ts`, `resolve-tsconfig-paths.ts`, `resolve-package-schema.ts`, `resolve-within-root.ts`) into a new `src/build/resolution/` subfolder, consolidating the `resolveImportSpecifier()` chokepoint (relative → alias → package resolution, ADR 0023/ADR 0014) into one cohesive location. Internal reorganization only -- `env-cap/build`'s public export names, types, and behavior are unchanged; verified byte-identical before/after. Prompted by `data-cap` needing the same resolver design; see that package's `src/build/resolution/` for the ported copy.
 - Replace `DependencyModelVariable.lines: readonly number[]` (and the underlying `AccessSite`/`VariableAccessInfo` shapes) with `positions: readonly SourcePosition[]`, a `{ file, line, column }` per access site instead of a bare, file-less line number -- closes a gap where a variable read from more than one file had no way to tell which file a given line number came from. `DEPENDENCY_MODEL_SCHEMA_VERSION` bumped 1 -> 2. See ADR 0036.
 
 All notable changes to this project will be documented in this file.
@@ -261,7 +261,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches 1.0. Before 1.0, minor versions may include breaking changes.
 
-## [Unreleased]
+## [0.1.0] - 2026-08-02
+
+Carried over from the legacy hand-kept `[Unreleased]` block that sat above this release:
 
 - Build: **Experimental** TypeScript path-alias resolution -- a new `tsconfig`
   option (and CLI `--tsconfig <path>` / `--no-tsconfig`) on `generateEnvManifest()`/
@@ -278,8 +280,6 @@ once it reaches 1.0. Before 1.0, minor versions may include breaking changes.
   false positive it fixes; `examples/tsconfig-aliases-consumer` additionally installs it as
   a real package (a real packed tarball, same shape as `examples/paypal-consumer`) to prove
   this composes correctly with cross-package discovery (ADR 0014) in one run.
-
-## [0.1.0] - 2026-08-02
 
 Initial release.
 
@@ -388,5 +388,4 @@ kind, toolVersion, ok, ... }`) instead of formatted text, for CI checks, PR
   several leftover, never-referenced CSS classes (`.card`, `.callout--warning`,
   `.callout--success`, `.comparison-table .is-positive`).
 
-[Unreleased]: https://github.com/maverickcer/env-cap/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/maverickcer/env-cap/releases/tag/v0.1.0

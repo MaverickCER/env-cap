@@ -66,7 +66,6 @@ export async function discoverSchemaFiles(options: DiscoverOptions): Promise<str
   // accidental match) gives a caller a fast, actionable error instead of a
   // multi-minute hang with no feedback.
   if (included.length > MAX_DISCOVERED_SCHEMA_FILES) {
-    // Stryker disable next-line StringLiteral
     throw new Error(
       `discoverSchemaFiles: found ${String(included.length)} files matching "include" under ${options.root} -- more than the ${String(MAX_DISCOVERED_SCHEMA_FILES)}-file sanity limit. This almost always means "root" (or "include"/"exclude") resolved more broadly than intended -- e.g. an omitted "root" falling back to an unexpectedly large process.cwd() -- rather than a real project genuinely declaring this many contracts. Narrow "root"/"include"/"exclude" to the intended project boundary.`,
     )

@@ -24,7 +24,7 @@ demonstrates the manifest and the persisted evidence artifact, not
 all (`--docs`/`--ownership`/`--env-example` were removed -- see [ADR
 0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)); every
 example that still generates them does so via a small `scripts/generate-docs/run.ts` calling
-`env-cap/build` directly (see e.g. `examples/application/scripts/generate-docs`), which would
+`@maverickcer/env-cap/build` directly (see e.g. `examples/application/scripts/generate-docs`), which would
 defeat this fixture's own "no wrapper script" point if added here. What's left --
 `--location`/`--evidence`/`--check`/`--json` -- is exactly the CLI surface ADR 0046 kept, so this
 fixture is, if anything, a purer demonstration of it now.

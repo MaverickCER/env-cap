@@ -27,7 +27,7 @@ beforeAll(async () => {
 
   await writeFile(
     "features/payments/env.schema.ts",
-    `import { createEnv } from "env-cap";\nexport const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });\n`,
+    `import { createEnv } from "@maverickcer/env-cap";\nexport const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });\n`,
   )
 
   // A real allow-listed package with its own schema file, resolved via
@@ -41,7 +41,7 @@ beforeAll(async () => {
   await writeFile("node_modules/@fixtures/billing-pkg/dist/index.js", "module.exports = {};\n")
   await writeFile(
     "node_modules/@fixtures/billing-pkg/src/env.schema.ts",
-    `import { createEnv } from "env-cap";\nexport const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "billing" });\n`,
+    `import { createEnv } from "@maverickcer/env-cap";\nexport const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "billing" });\n`,
   )
 })
 

@@ -10,7 +10,7 @@
     "verify:env": "node scripts/check-artifacts.mjs"
   },
   "dependencies": {
-    "env-cap": "file:../../../../..",
+    "@maverickcer/env-cap": "file:../../../../..",
     "@examples/tsconfig-aliases": "file:../tsconfig-aliases/tsconfig-aliases.tgz"
   },
   "devDependencies": {

@@ -5,8 +5,8 @@ import type {
   EvidenceModel,
   SourcePosition,
   VariableAccessStatus,
-} from "env-cap/build";
-import { defineEvidenceProjection } from "env-cap/evidence";
+} from "@maverickcer/env-cap/build";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The configuration-governance evidence projection -- built entirely on
@@ -34,7 +34,7 @@ import { defineEvidenceProjection } from "env-cap/evidence";
 /** `ContractModelContract`/`ContractModelVariable`'s `owner`/`purpose`/`legalBasis`/`retention`/`dataResidency`/`auditRequired`
  *  fields aren't pre-resolved (Contract Model stores each level's raw value, matching
  *  `DiscoveredContract`/`DiscoveredVariable`'s own un-resolved storage) -- these mirror
- *  `env-cap/build`'s own `effectiveX()` helpers, which target `DiscoveredContract`/
+ *  `@maverickcer/env-cap/build`'s own `effectiveX()` helpers, which target `DiscoveredContract`/
  *  `DiscoveredVariable` specifically (a structurally different, Contract-Model-shaped type
  *  Lifecycle Model's `deprecated`/`deprecatedReason` fields keep the two from lining up exactly),
  *  reimplemented here against Contract Model's own shape directly. */

@@ -7,10 +7,10 @@ import envCapPlugin, { noNodeFs, noRawProcessEnv } from "../../src/eslint-plugin
 
 // Only test/eslint-plugin/no-raw-process-env.ts imports the rule module
 // directly -- nothing imports this barrel (`src/eslint-plugin/index.ts`)
-// itself, the actual `env-cap/eslint-plugin` entry point a
+// itself, the actual `@maverickcer/env-cap/eslint-plugin` entry point a
 // consumer's flat config imports (see ADR 0017) -- so it shows as 0%
 // covered without this test.
-describe("env-cap/eslint-plugin entry point", () => {
+describe("@maverickcer/env-cap/eslint-plugin entry point", () => {
   it("exports a flat-config-shaped plugin object with every rule", () => {
     expect(envCapPlugin).toEqual({
       rules: { "no-raw-process-env": noRawProcessEnv, "no-node-fs": noNodeFs },
@@ -31,12 +31,12 @@ const cjsDist = path.resolve(projectRoot, "dist/eslint-plugin/index.cjs")
 const distMissing = !existsSync(cjsDist)
 
 describe.skipIf(distMissing)(
-  "env-cap/eslint-plugin entry point: CJS require() interop (requires `npm run build`)",
+  "@maverickcer/env-cap/eslint-plugin entry point: CJS require() interop (requires `npm run build`)",
   () => {
     // src/eslint-plugin/index.ts has both a default export and a named
     // export (`noRawProcessEnv`) -- esbuild's plain CJS output for that
     // shape is `{ default: plugin, noRawProcessEnv }`, which would silently
-    // break a `require("env-cap/eslint-plugin")` consumer
+    // break a `require("@maverickcer/env-cap/eslint-plugin")` consumer
     // (e.g. an `eslint.config.cjs`) expecting the plugin object itself, the
     // same way `import envCapPlugin from "..."` already resolves it for ESM
     // consumers. See scripts/fix-eslint-plugin-cjs-interop.mjs.

@@ -4,8 +4,8 @@
 // -- generateEnvArtifacts() never reads environment values, only schema
 // shape (see ADR 0002). The failure this example demonstrates is a runtime
 // validateEnv() failure (see src/startup.ts), not a build-time one.
-import { generateEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

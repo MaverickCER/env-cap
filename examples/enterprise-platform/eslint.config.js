@@ -1,5 +1,5 @@
 import js from "@eslint/js";
-import envCapPlugin from "env-cap/eslint-plugin";
+import envCapPlugin from "@maverickcer/env-cap/eslint-plugin";
 import tseslint from "typescript-eslint";
 
 /**

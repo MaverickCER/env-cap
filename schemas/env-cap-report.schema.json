@@ -1143,7 +1143,7 @@
         "change"
       ],
       "additionalProperties": false,
-      "description": "The seventh canonical fact model (ADR 0024): the assembled union of the other six, plus provenance, the immutable input every `defineEvidenceProjection()` projector runs over (`env-cap/evidence`, ADR 0031)."
+      "description": "The seventh canonical fact model (ADR 0024): the assembled union of the other six, plus provenance, the immutable input every `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`, ADR 0031)."
     },
     "EvidenceProvenance": {
       "type": "object",

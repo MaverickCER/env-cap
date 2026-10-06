@@ -10,7 +10,7 @@ describe("documentEnv", () => {
     // Deliberately capturing a `void`-typed return to assert it's genuinely
     // undefined -- the whole point of this test (documentEnv() is inert,
     // ADR 0001), not an accidental misuse of a void expression.
-    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- the test checks the void-typed result on purpose (see the note above)
     const result = documentEnv(schema, {
       variables: {
         STRIPE_KEY: {
@@ -25,7 +25,7 @@ describe("documentEnv", () => {
 
   it("accepts name as a contract-level field", () => {
     const schema = { STRIPE_KEY: {} }
-    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- documentEnv returns void on purpose; the test asserts that return value is undefined
     const result = documentEnv(schema, { name: "Payments" })
     expect(result).toBeUndefined()
   })
@@ -44,7 +44,7 @@ describe("documentEnv", () => {
 
   it("still accepts a documented-but-not-required subset of a schema's keys -- documenting every variable is never mandatory", () => {
     const schema = { A: {}, B: {}, C: {} }
-    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- documentEnv returns void on purpose; the test asserts that return value is undefined
     const result = documentEnv(schema, {
       variables: { B: { description: "only B is documented" } },
     })
@@ -53,7 +53,7 @@ describe("documentEnv", () => {
 
   it("falls back to accepting any string key when schema is explicitly widened to the bare EnvSchema type", () => {
     const schema: EnvSchema = { A: {} }
-    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- documentEnv returns void on purpose; the test asserts that return value is undefined
     const result = documentEnv(schema, {
       variables: { ANYTHING_AT_ALL: { description: "widened" } },
     })

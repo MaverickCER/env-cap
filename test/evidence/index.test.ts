@@ -10,7 +10,7 @@ import * as evidenceEntryPoint from "../../src/evidence/index.js"
 // without this test the barrel's re-export statement never actually
 // executes and it shows as 0% covered, mirroring test/build/index.test.ts
 // and test/eslint-plugin/index.test.ts's own header comments.
-describe("env-cap/evidence entry point", () => {
+describe("@maverickcer/env-cap/evidence entry point", () => {
   it("re-exports defineEvidenceProjection", () => {
     expect(evidenceEntryPoint.defineEvidenceProjection).toBeTypeOf("function")
   })
@@ -22,7 +22,7 @@ const cjsDist = path.resolve(projectRoot, "dist/evidence.cjs")
 const distMissing = !existsSync(cjsDist)
 
 describe.skipIf(distMissing)(
-  "env-cap/evidence entry point: CJS require() interop (requires `npm run build`)",
+  "@maverickcer/env-cap/evidence entry point: CJS require() interop (requires `npm run build`)",
   () => {
     // Unlike src/eslint-plugin/index.ts (ADR 0017), this entry point has
     // only named exports, so it needs none of

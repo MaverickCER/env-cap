@@ -34,7 +34,7 @@ that criterion to each currently-Experimental surface:
   shape (see ADR 0031), not a temporary gap this promotion needed to close.
 - **The `init` CLI subcommand** (ADR 0042): its scaffolded file set and
   template contents have not needed to change since introduction.
-- **`env-cap/evidence`** (`defineEvidenceProjection`, `EvidenceModel`) and
+- **`@maverickcer/env-cap/evidence`** (`defineEvidenceProjection`, `EvidenceModel`) and
   **the persisted evidence artifact** format: see the caveat below --
   promoted along with everything else per this decision's scope, but with a
   real, named exception to the "no reported need to change" pattern the
@@ -55,7 +55,7 @@ honestly, rather than holding onto a designation that no longer describes
 something true for these APIs.
 
 **Named caveat, not silently dropped:** `VERSIONING.md`'s prior text for
-`env-cap/evidence` said real projection authorship "is likely to surface a
+`@maverickcer/env-cap/evidence` said real projection authorship "is likely to surface a
 better shape for `EvidenceProjectionResult.sources` in particular
 (currently flat `EvidenceModel` field-path strings, not yet resolved into
 structured `EvidenceReference`s -- see ADR 0032's Consequences)." That is a
@@ -87,7 +87,7 @@ minor-may-break allowance an Experimental surface would still have had.
 
 ## Alternatives considered
 
-- **Promote everything except `env-cap/evidence`/the evidence artifact
+- **Promote everything except `@maverickcer/env-cap/evidence`/the evidence artifact
   format, leaving those two Experimental until the `sources` question
   resolves.** This is the technically more conservative option, and was
   seriously considered given the caveat above is a real, specific,

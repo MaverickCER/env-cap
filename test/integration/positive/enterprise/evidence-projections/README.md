@@ -3,9 +3,9 @@
 `env-cap` doesn't decide what compliance means. It produces verifiable evidence from the
 configuration architecture, and provides the machinery necessary to transform that evidence into
 whatever downstream standard or policy a consumer requires. That machinery is
-`defineEvidenceProjection()` (`env-cap/evidence`), a pure, isomorphic transform from
+`defineEvidenceProjection()` (`@maverickcer/env-cap/evidence`), a pure, isomorphic transform from
 an immutable `EvidenceModel` snapshot (assembled at build time by `generateEvidenceModel()`,
-`env-cap/build`) to any output shape a consumer needs.
+`@maverickcer/env-cap/build`) to any output shape a consumer needs.
 
 This example ships env-cap's own first-party reference projections, built entirely through that
 same public API — no privileged internal access, the exact same two entry points a real consumer
@@ -124,7 +124,7 @@ the source (`src/build/lifecycle-model.ts`), not worked around here.
 
 **Configuration Dependency** (`projections/dependency-graph.mjs`) — DOT, Mermaid, and plain JSON
 graph export over Dependency Model. Unlike every projection before it, there's no existing
-`env-cap/build` renderer to reshape into at all: `dependency-model.ts`'s own module
+`@maverickcer/env-cap/build` renderer to reshape into at all: `dependency-model.ts`'s own module
 doc comment says graph-format rendering is "deliberately not here -- that's presentation over
 this model's data, not the model itself" (ADR 0027). This is genuinely new rendering logic, built
 from `DependencyModel.consumers` (ADR 0027's inverse file→contracts index) -- one node per
@@ -224,6 +224,6 @@ docs file to diff against.
 Each reference projection here is deliberately *not* new rendering logic. It's a reshape of one
 or more of the seven canonical fact models (`ContractModel`, `DependencyModel`, `OwnershipModel`,
 `LifecycleModel`, `FindingModel`, `ChangeModel`, and their `EvidenceModel` union) into whatever
-shape an existing, already-tested `env-cap/build` renderer/builder already expects,
+shape an existing, already-tested `@maverickcer/env-cap/build` renderer/builder already expects,
 then a direct call into it. That's the whole design: the seven fact models are the real API
 surface; a projection is a *view* over them, not a second, independently-drifting source of truth.

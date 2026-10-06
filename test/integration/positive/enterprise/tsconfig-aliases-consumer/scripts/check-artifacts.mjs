@@ -3,10 +3,10 @@
 // `--docs`/`--ownership`/`--env-example` were removed from the CLI surface
 // (see specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md);
 // this replaces the CLI-flag-based `verify:env` script this fixture used to
-// run, with `env-cap/build`'s exported `checkEnvArtifacts()` called with the
+// run, with `@maverickcer/env-cap/build`'s exported `checkEnvArtifacts()` called with the
 // exact same options generate-manifest.mjs passes to `generateEnvArtifacts()`.
-import { checkEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { checkEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

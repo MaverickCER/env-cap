@@ -354,7 +354,7 @@ describe.skipIf(distMissing)(
     // subdirectory. A relative-path lookup for env-cap's own package.json
     // (provenance.toolVersion) that only accounts for source's directory
     // depth resolves to the wrong location once bundled, and previously threw
-    // ENOENT for every consumer of *any* env-cap/build export,
+    // ENOENT for every consumer of *any* @maverickcer/env-cap/build export,
     // not just generateEvidenceModel() -- this must be exercised against the
     // real built file, not source, to actually catch that.
     it("resolves provenance.toolVersion without throwing", async () => {

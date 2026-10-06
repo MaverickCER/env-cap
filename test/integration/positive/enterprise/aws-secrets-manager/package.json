@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.600.0",
-    "env-cap": "file:../../../../.."
+    "@maverickcer/env-cap": "file:../../../../.."
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

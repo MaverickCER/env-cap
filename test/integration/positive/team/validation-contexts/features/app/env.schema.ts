@@ -1,5 +1,5 @@
-import { createEnv, documentEnv } from "env-cap";
-import { validators } from "env-cap/helpers";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
+import { validators } from "@maverickcer/env-cap/helpers";
 
 /**
  * One schema, one manifest, three variables demonstrating validation

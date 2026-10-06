@@ -8,8 +8,8 @@ import { execFileSync } from "node:child_process"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { defineSuite, timed } from "internal-package-contract/benchmark"
-import { createEnv, resetEnvCache, validateEnv } from "env-cap"
-import { processors, validators } from "env-cap/helpers"
+import { createEnv, resetEnvCache, validateEnv } from "@maverickcer/env-cap"
+import { processors, validators } from "@maverickcer/env-cap/helpers"
 import { generateRuntimeFixtures } from "../benchmark-fixtures/generator.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -389,11 +389,13 @@ const VALIDATORS = [
     slug: "includes",
     name: "includes(text)",
     use: "Requires a value to contain a fixed substring.",
-    expected: "linear",
-    reason: "A substring search scans the string, so cost follows its length.",
+    expected: "constant",
+    reason:
+      "A substring search scans the string, but the engine's native search is so fast that over the lengths measured the per-call overhead dominates and the curve is flat; it would turn linear only for strings far longer than a real environment value.",
     sizeMeans: "Length of the string, in characters.",
-    content: "a long string that contains the substring at the end",
-    build: (n) => [validators.includes("example"), `${TEXT(n)}example`],
+    content:
+      "a long string made of near-misses of the substring (\"exampl\" repeated) with the real match at the end, so the search cannot skip ahead",
+    build: (n) => [validators.includes("example"), `${"exampl".repeat(Math.ceil(n / 6))}example`],
   },
   {
     slug: "integer",

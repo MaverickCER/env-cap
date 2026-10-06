@@ -1,0 +1,36 @@
+{
+  "exceptions": [
+    {
+      "id": "suppression:eslint:*:examples/enterprise-platform/src/routeTree.gen.ts:4c39dd5d8f74",
+      "version": 2,
+      "justification": "TanStack Router's CLI writes this header into routeTree.gen.ts on every run; the file is generated, never hand-edited.",
+      "domain": "eslint",
+      "rule": "*",
+      "file": "examples/enterprise-platform/src/routeTree.gen.ts",
+      "anchor": "4c39dd5d8f74",
+      "ruleBroken": "Every ESLint suppression names its rule and says why.",
+      "attempted": "Looked for a generator option to emit named, described suppressions instead of the fixed header.",
+      "constraint": "The generator writes the header itself; there is no option for it, and the file is overwritten whenever routes change.",
+      "whyPreferable": "Ignoring the file in the lint and type config is a second place to keep in sync and would drop this record's review.",
+      "residualRisk": "None for the shipped package: the file is part of an example app and is regenerated.",
+      "revisitWhen": "The router generator supports a configurable header, or the example stops using generated routes.",
+      "expires": ""
+    },
+    {
+      "id": "suppression:typescript:ts-nocheck:examples/enterprise-platform/src/routeTree.gen.ts:0c21afd90434",
+      "version": 2,
+      "justification": "TanStack Router's CLI writes this header into routeTree.gen.ts on every run; the file is generated, never hand-edited.",
+      "domain": "typescript",
+      "rule": "ts-nocheck",
+      "file": "examples/enterprise-platform/src/routeTree.gen.ts",
+      "anchor": "0c21afd90434",
+      "ruleBroken": "Every TypeScript suppression names what it excuses and says why.",
+      "attempted": "Looked for a generator option to emit named, described suppressions instead of the fixed header.",
+      "constraint": "The generator writes the header itself; there is no option for it, and the file is overwritten whenever routes change.",
+      "whyPreferable": "Ignoring the file in the lint and type config is a second place to keep in sync and would drop this record's review.",
+      "residualRisk": "None for the shipped package: the file is part of an example app and is regenerated.",
+      "revisitWhen": "The router generator supports a configurable header, or the example stops using generated routes.",
+      "expires": ""
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { createEnv, documentEnv } from "env-cap";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * Hand-rolled sessions (bcryptjs + jose), not a third-party auth library --

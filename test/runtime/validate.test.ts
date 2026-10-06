@@ -59,7 +59,7 @@ describe("validateEnv pipeline", () => {
         STRIPE_KEY: {
           // Same "coerce unknown to string" idiom as helpers/processors.ts's
           // own String(value ?? "") -- see that file's lint-config comment.
-          // eslint-disable-next-line @typescript-eslint/no-base-to-string
+          // eslint-disable-next-line @typescript-eslint/no-base-to-string -- the default under test stringifies exactly like String(value ?? "")
           processor: (v) => String(v ?? ""),
           validator: (value: string, rawEnv) => {
             if (rawEnv["PAYMENT_PROVIDER"] !== "stripe") return true
@@ -182,7 +182,7 @@ describe("validateEnv pipeline", () => {
       {
         PORT: {
           processor: () => {
-            // eslint-disable-next-line @typescript-eslint/only-throw-error
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- throwing a non-Error is the case under test: validateEnv must wrap it
             throw "boom"
           },
         },
@@ -204,7 +204,7 @@ describe("validateEnv pipeline", () => {
       {
         PORT: {
           processor: () => {
-            // eslint-disable-next-line @typescript-eslint/only-throw-error
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- throwing a non-Error is the case under test: validateEnv must wrap it
             throw 42
           },
         },
@@ -227,7 +227,7 @@ describe("validateEnv pipeline", () => {
         PORT: {
           processor: (v) => Number(v),
           validator: () => {
-            // eslint-disable-next-line @typescript-eslint/only-throw-error
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- throwing a non-Error is the case under test: validateEnv must wrap it
             throw { code: 1 }
           },
         },
@@ -243,7 +243,7 @@ describe("validateEnv pipeline", () => {
       // Deliberately exercising the exact stringification this rule warns
       // about -- the test's whole point is proving a thrown non-Error value
       // degrades to this default, not stringifying it safely.
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- asserts the unsafe stringification that default produces
       expect(validationError.failures[0]?.message).toBe(String({ code: 1 }))
       expect(validationError.failures[0]?.message).toBe("[object Object]")
     }

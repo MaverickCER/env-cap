@@ -1,4 +1,5 @@
 import ts from "typescript"
+import { assertCompilerApi } from "./compiler-api.js"
 import type { EnvGovernanceFields } from "./governance-fields.js"
 import { evaluateLiteral, getStaticPropertyName } from "./literal-eval.js"
 import { parsePositionCitation, positionOf } from "./source-position.js"
@@ -112,6 +113,7 @@ export interface FileParseResult {
  * across files.
  */
 export function parseSchemaFile(filePath: string, sourceText: string): FileParseResult {
+  assertCompilerApi(ts)
   const sourceFile = ts.createSourceFile(
     filePath,
     sourceText,
@@ -746,7 +748,7 @@ function extractVariableDocsMap(
       // Stryker disable next-line ConditionalExpression
       if (fieldName === undefined) continue
       const evaluated = evaluateLiteral(field.initializer)
-      // Stryker disable next-line ConditionalExpression
+      // Stryker disable next-line ConditionalExpression: a non-literal initializer contributes nothing to the extracted docs either way, so continuing or falling through is unobservable
       if (!evaluated.ok) continue
 
       if (fieldName === "description" && typeof evaluated.value === "string")

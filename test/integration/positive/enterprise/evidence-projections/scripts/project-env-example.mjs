@@ -1,8 +1,8 @@
 // Build-time script. Run via `npm run project:env-example` (which runs
 // `generate:env` first, to produce the baseline .env.example this compares
 // against). Never imported by application code.
-import { generateEvidenceModel } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEvidenceModel } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

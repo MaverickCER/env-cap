@@ -1,5 +1,5 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
-import { effectiveOwner } from "env-cap/build";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
+import { effectiveOwner } from "@maverickcer/env-cap/build";
 
 /**
  * The "Configuration Inventory" reference projection (plan Phase 17). The
@@ -7,14 +7,14 @@ import { effectiveOwner } from "env-cap/build";
  * section (`docs.ts`'s own `buildCatalog()`/`CatalogContract` are
  * documented as "Same data renderCatalog() renders to Markdown, reshaped
  * for JSON/programmatic consumers instead of prose" -- but neither is
- * exported from the public `env-cap/build` barrel, so this
+ * exported from the public `@maverickcer/env-cap/build` barrel, so this
  * projection reproduces that same reshape here instead of calling it).
  *
  * Unlike every other projection in this example, this one needs no
  * `DiscoveredContract[]` reconstruction at all: the one piece of real logic
  * involved -- resolving a variable's *effective* owner (its own override,
  * falling back to the contract's) -- is `effectiveOwner()`, which is
- * exported publicly (`env-cap/build`, ADR 0028) and only ever
+ * exported publicly (`@maverickcer/env-cap/build`, ADR 0028) and only ever
  * reads `.owner` off whatever `{contract, variable}` pair it's given.
  * `ContractModelContract`/`ContractModelVariable` already carry `.owner`
  * directly, so this operates on Contract Model's own shape unmodified.

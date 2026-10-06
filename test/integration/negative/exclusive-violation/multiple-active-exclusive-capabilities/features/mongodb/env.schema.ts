@@ -1,5 +1,5 @@
-import { createEnv, documentEnv } from "env-cap";
-import { processors } from "env-cap/helpers";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
+import { processors } from "@maverickcer/env-cap/helpers";
 
 /**
  * Shipped dormant (active: false, now set via documentEnv -- see below) so a

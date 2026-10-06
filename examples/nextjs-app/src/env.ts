@@ -4,7 +4,7 @@
 // client bundle compiles and before any route handler runs, rather than
 // surfacing as a runtime crash the first time a page happens to read
 // `process.env`.
-import { validateEnv } from "env-cap"
+import { validateEnv } from "@maverickcer/env-cap"
 // Extensionless -- see instrumentation.ts's comment: Turbopack's resolver
 // doesn't map a literal ".js" specifier back to this ".ts" source file the
 // way tsc's own "moduleResolution: bundler" or tsx's loader do.

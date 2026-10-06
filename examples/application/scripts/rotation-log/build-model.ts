@@ -4,7 +4,7 @@
 // directory that touches either; an org that just wants the key values
 // (e.g. to feed its own dashboard, or a different renderer entirely) can
 // call this directly against any `EvidenceModel` it already has on hand.
-import type { EvidenceModel } from "env-cap/build"
+import type { EvidenceModel } from "@maverickcer/env-cap/build"
 import type { RotationLogEntry, RotationLogModel } from "./types.js"
 
 /**

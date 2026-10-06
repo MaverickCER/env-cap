@@ -7,7 +7,7 @@ import * as buildEntryPoint from "../../src/build/index.js"
 // covered despite every symbol it forwards being otherwise fully tested.
 // This test exists to exercise the barrel itself and pin its public surface
 // (see the file's own module-doc comment for what's deliberately excluded).
-describe("env-cap/build entry point", () => {
+describe("@maverickcer/env-cap/build entry point", () => {
   it("re-exports the four orchestrator generators", () => {
     expect(buildEntryPoint.generateDocumentation).toBeTypeOf("function")
     expect(buildEntryPoint.generateEnvArtifacts).toBeTypeOf("function")

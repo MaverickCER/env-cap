@@ -31,7 +31,7 @@ beforeEach(async () => {
   // (UNDOCUMENTED_VAR) so the docs pass has something real to report.
   await write(
     "features/payments/env.schema.ts",
-    `import { createEnv, documentEnv } from "env-cap";
+    `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = {
   STRIPE_KEY: {},
@@ -148,7 +148,7 @@ describe("main() -- unresolved/dropped-schema warning banner", () => {
     // warning instead of silently guessing.
     await write(
       "features/dynamic/env.schema.ts",
-      `import { createEnv } from "env-cap";
+      `import { createEnv } from "@maverickcer/env-cap";
 
 function buildSchema() {
   return { DYNAMIC_VAR: {} };
@@ -233,7 +233,7 @@ describe("main() -- --check", () => {
     // contracts) -- a new variable on the existing contract alone would not.
     await write(
       "features/notifications/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { SLACK_WEBHOOK: {} };
 export const notificationsEnv = createEnv(schema, { name: "notifications" });
 documentEnv(schema, { owner: "platform-team", variables: { SLACK_WEBHOOK: { description: "Slack webhook." } } });
@@ -410,7 +410,7 @@ describe("main() -- --check --json success", () => {
 
     await write(
       "features/notifications/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const schema = { SLACK_WEBHOOK: {} };
 export const notificationsEnv = createEnv(schema, { name: "notifications" });
 documentEnv(schema, { owner: "platform-team", variables: { SLACK_WEBHOOK: { description: "Slack webhook." } } });
@@ -445,11 +445,11 @@ describe("main() -- --check --strict throws on a real blocking incompatibility",
   async function writeConflictingFixture(): Promise<void> {
     await write(
       "features/check-broken-a/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const brokenAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "check-broken-a" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const brokenAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "check-broken-a" });\n`,
     )
     await write(
       "features/check-broken-b/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const brokenBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "check-broken-b" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const brokenBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "check-broken-b" });\n`,
     )
   }
 
@@ -503,11 +503,11 @@ describe("main() -- normal-flow non--json error propagation", () => {
   it("propagates the raw error via a bare throw when --json was not passed", async () => {
     await write(
       "features/propagation-a/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const propagationAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "propagation-a" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const propagationAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "propagation-a" });\n`,
     )
     await write(
       "features/propagation-b/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const propagationBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "propagation-b" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const propagationBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "propagation-b" });\n`,
     )
 
     process.argv = [
@@ -528,11 +528,11 @@ describe("main() -- normal-flow non--json error propagation", () => {
   it("writes a serialized failure and exits 1, instead of throwing, when --json IS passed (no --check)", async () => {
     await write(
       "features/propagation-json-a/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const propagationJsonAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "propagation-json-a" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const propagationJsonAEnv = createEnv({ SHARED: { processor: (v): string => String(v) } }, { name: "propagation-json-a" });\n`,
     )
     await write(
       "features/propagation-json-b/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const propagationJsonBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "propagation-json-b" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const propagationJsonBEnv = createEnv({ SHARED: { processor: (v): boolean => Boolean(v) } }, { name: "propagation-json-b" });\n`,
     )
 
     process.argv = [
@@ -561,11 +561,11 @@ describe("main() -- --exclude and --package flow through to generateEnvArtifacts
   it("--exclude narrows discovery and --package (an unresolvable name) surfaces as a harmless parse warning", async () => {
     await write(
       "features/wpe-excluded/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const wpeExcludedEnv = createEnv({ EXCLUDED_VAR: {} }, { name: "wpe-excluded" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const wpeExcludedEnv = createEnv({ EXCLUDED_VAR: {} }, { name: "wpe-excluded" });\n`,
     )
     await write(
       "features/wpe-included/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const wpeIncludedEnv = createEnv({ INCLUDED_VAR: {} }, { name: "wpe-included" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const wpeIncludedEnv = createEnv({ INCLUDED_VAR: {} }, { name: "wpe-included" });\n`,
     )
 
     process.argv = [
@@ -600,7 +600,7 @@ describe("main() -- --tsconfig/--no-tsconfig flow through to generateEnvArtifact
     )
     await write(
       "features/alias-billing/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "alias-billing" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const billingEnv = createEnv({ INVOICE_KEY: {} }, { name: "alias-billing" });\n`,
     )
     await write(
       "src/alias-consumer.ts",
@@ -663,11 +663,11 @@ describe("main() -- manifest.warnings (compatibility warnings, non-strict)", () 
   it("prints the compatibility-warning section when two contracts declare the same variable with differing, unannotated processors", async () => {
     await write(
       "features/warn-a/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const warnAEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v) } }, { name: "warn-a" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const warnAEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v) } }, { name: "warn-a" });\n`,
     )
     await write(
       "features/warn-b/env.schema.ts",
-      `import { createEnv } from "env-cap";\nexport const warnBEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v).trim() } }, { name: "warn-b" });\n`,
+      `import { createEnv } from "@maverickcer/env-cap";\nexport const warnBEnv = createEnv({ SHARED_VAR: { processor: (v) => String(v).trim() } }, { name: "warn-b" });\n`,
     )
 
     process.argv = [
@@ -738,7 +738,7 @@ describe("main() -- evidence changes since the last persisted snapshot (ADR 0038
 
     await write(
       "features/payments/env.schema.ts",
-      `import { createEnv, documentEnv } from "env-cap";
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 const schema = {
   STRIPE_KEY: {},
@@ -889,7 +889,7 @@ describe("main() -- --strict-docs / --strict-ownership", () => {
     // Before ADR 0044, bare --strict gated the compatibility family only, so
     // this same fixture's documentation/ownership warnings did not block it.
     // Now it does -- "strict" means every provable-error family, matching
-    // @maverickcer/data-cap's own bare --strict.
+    // data-cap's own bare --strict.
     await expect(main()).rejects.toThrow(/UNDOCUMENTED_VARIABLE|ABANDONED_CONTRACT/)
   })
 

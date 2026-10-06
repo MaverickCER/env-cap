@@ -15,14 +15,16 @@ major version bump (once the package reaches 1.0 -- see
   (`EnvValidationError`, `EnvNotReadyError`) from the package root.
 - **Documented build APIs**: `generateEnvManifest`, `generateDocumentation`,
   `generateUsageReport`, `generateEnvArtifacts` and their documented
-  options, from `env-cap/build`.
-- **CLI flags**: every flag listed in `env-cap --help`.
+  options, from `@maverickcer/env-cap/build`.
+- **`@maverickcer/env-cap/node`** (`nodeBuildFileSystem`): the only sanctioned way to give
+  `./build` a filesystem, and required by every generator script `init` scaffolds.
+- **CLI flags**: every flag listed in `env-cap --help`, and the CLI's exit codes.
 - **`--json` output**: versioned independently via its own `schemaVersion`
   field -- see [ADR 0013](specs/decisions/0013-json-output-is-a-versioned-mirror.md).
   A purely additive field never requires a `schemaVersion` bump; a changed
   or removed field does.
 - **The published JSON Schema** (`schemas/env-cap-report.schema.json`, the
-  `env-cap/schema` export), kept in lockstep with `--json`'s
+  `@maverickcer/env-cap/schema` export), kept in lockstep with `--json`'s
   documented shape and generated directly from it -- see
   [ADR 0019](specs/decisions/0019-published-json-schema-generated-from-types.md).
   Follows the same additive-only rule as `--json` itself.
@@ -30,19 +32,19 @@ major version bump (once the package reaches 1.0 -- see
   `generateEnvManifest()`/`generateEnvArtifacts()` writes.
 - **Documented configuration conventions**: for example, the `envCap.schema`
   package.json field (see [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)).
-- **The ESLint plugin**: `env-cap/eslint-plugin`'s exported rule
+- **The ESLint plugin**: `@maverickcer/env-cap/eslint-plugin`'s exported rule
   name(s), each rule's `RuleOptions` shape, and the default `env.schema.ts`/
   `.tsx` allowlist -- see [ADR 0017](specs/decisions/0017-eslint-plugin-entry-point.md).
 - **The `packages` option** (cross-package schema discovery, ADR 0014) and
   **`tsconfig` option** (TypeScript path-alias resolution, ADR 0023) on every
   generator.
-- **`env-cap/build`'s lower-level discovery/linking primitives** --
+- **`@maverickcer/env-cap/build`'s lower-level discovery/linking primitives** --
   everything `./build` exports beyond the four generator orchestrators,
   e.g. `discoverSchemaFiles`, `linkFiles`, `parseSchemaFile`, `renderManifest`,
   `renderDocs`, `detectCompatibilityIssues`, `detectExclusiveGroupIssues`,
   `generateEvidenceModel`, `getEvidenceModel`/`computeSourceFingerprint`,
   `renderUsageReport`, and their accompanying types.
-- **`env-cap/evidence`** (`defineEvidenceProjection`, and the `EvidenceModel`
+- **`@maverickcer/env-cap/evidence`** (`defineEvidenceProjection`, and the `EvidenceModel`
   shape it projects over) -- see [ADR 0031](specs/decisions/0031-evidence-entry-point.md)
   and [ADR 0032](specs/decisions/0032-evidence-projection-provenance-mechanism.md).
 - **The persisted evidence artifact** (`docs/env.evidence.json` or wherever a
@@ -50,6 +52,14 @@ major version bump (once the package reaches 1.0 -- see
   literal serialization of `EvidenceModel`.
 - **The `init` CLI subcommand**'s scaffolded file set and template contents
   -- see [ADR 0042](specs/decisions/0042-init-cli-subcommand-scaffolds-only.md).
+- **The composite GitHub Action** (`action.yml`): its input and output names and meanings, and
+  the PR comment's sections. The major tag it is used through (`uses: MaverickCER/env-cap@v0`
+  while the package is 0.x, `@v1` from 1.0.0) moves only within a major version.
+- **Supported toolchain**: Node.js `>=22`, `moduleResolution` `node16`/`nodenext`/`bundler` (not the legacy
+  `node10`, which cannot resolve subpath exports), and the TypeScript versions named in the
+  `typescript` peer range. The build-time scanner needs TypeScript's classic compiler API; a
+  TypeScript major that removes it is unsupported until a release says otherwise, and the CLI says
+  so instead of failing with an import error.
 
 All promoted from Experimental per [ADR 0045](specs/decisions/0045-promote-experimental-surfaces-to-stable.md)
 -- see that ADR for why each one had already cleared this tier's own
@@ -90,9 +100,16 @@ Never covered by semver, may change at any time without notice:
 Changelog](https://keepachangelog.com/en/1.1.0/)/semver convention, **minor
 versions may include breaking changes to the Stable tier before 1.0** --
 this document defines _scope_ (what would eventually be covered), not a
-promise that it is already fully locked in at `0.x`. The Experimental and
-Private tiers behave the same before and after 1.0: Experimental surfaces
-may change at any version; Private internals always may.
+promise that it is already fully locked in at `0.x`.
+
+How a `0.x` bump is chosen: the shared release tooling from
+`internal-package-contract` deflates one level below 1.0.0 -- a breaking change
+releases a minor, a feature a patch, and the API-contract gate requires only a
+minor for a breaking API diff -- so **nothing automated can publish `1.0.0`**.
+Crossing to 1.0.0 takes a human-authored `major` changeset, and that release
+pull request is not auto-merged. The Experimental and Private tiers behave the
+same before and after 1.0: Experimental surfaces may change at any version;
+Private internals always may.
 
 See [`SECURITY.md`](SECURITY.md#supported-versions) for the related, and
 separate, question of which versions receive security fixes.

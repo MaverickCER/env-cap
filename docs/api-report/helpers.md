@@ -266,7 +266,7 @@ Trims surrounding whitespace from a string (coercing nullish values to `""` firs
 
 #### Remarks
 
-Naming matches `@maverickcer/data-cap`'s `helpers.processors` -- but these
+Naming matches `data-cap`'s `helpers.processors` -- but these
 throw with a formatted `Error` message on invalid input, where data-cap's
 silently return `undefined`. Do not assume the same failure mode when
 moving between packages.

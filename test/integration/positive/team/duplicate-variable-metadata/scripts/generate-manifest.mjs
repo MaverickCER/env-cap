@@ -1,8 +1,8 @@
 // Build-time script. Run via `npm run generate:env` (warns, succeeds) or
 // `npm run generate:env:strict` (ENV_CAP_STRICT=1, escalates the warning to
 // a hard error). Never imported by application code.
-import { generateEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

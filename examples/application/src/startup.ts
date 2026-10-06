@@ -1,5 +1,5 @@
 // Application entry point. Validate once, before any capability code runs.
-import { validateEnv } from "env-cap";
+import { validateEnv } from "@maverickcer/env-cap";
 import { manifest } from "./generated/env.manifest.js";
 
 await validateEnv({

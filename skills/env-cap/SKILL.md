@@ -19,7 +19,7 @@ Non-negotiable. Verify any change respects these before finishing.
 
 3. **Runtime config and documentation are separate calls on the same schema object.** (ADR 0001) `createEnv(schema, options)` reads only `default`/`processor`/`validator`/`context` — that's the runtime's entire vocabulary. `documentEnv(schema, docs)` is a second, inert call over the same object; it returns `void` and exists only as an AST marker for the build system. Never put description/owner/expiresAt fields in `createEnv()`; never expect `documentEnv()` to affect runtime behavior.
 
-4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`, `./helpers`, `./eslint-plugin`, `./schema`, and `./package.json`. Import only from these entry points — never `dist/*.cjs` internals, `src/**/*.ts` paths, or unexported build internals (e.g. the dependency-graph engine).
+4. **Public API surface only.** `package.json#exports` is the complete list of entry points (the table under "Architecture Overview" names each one); anything it does not list is not public. Import only from these entry points — never `dist/*.cjs` internals, `src/**/*.ts` paths, or unexported build internals (e.g. the dependency-graph engine).
 
 5. **Runtime and build are strictly separated and mechanically enforced.** (ADR 0001, 0002) `src/build` uses `node:fs`/`node:path`/`typescript` and must never be imported from runtime/browser code. `src/runtime` has zero filesystem access and zero dependencies. Enforced by `test/helpers/tree-shaking.test.ts` and the gzip budget below — not just convention.
 
@@ -29,8 +29,8 @@ Non-negotiable. Verify any change respects these before finishing.
 
 ## Avoid
 
-- **Deep/internal imports** — `dist/*.cjs`, `src/build/dependency-graph.ts`, anything not re-exported by the three entry points.
-- **Importing `env-cap/build` into runtime or browser code** — it's Node-only, dev/CI-only.
+- **Deep/internal imports** — `dist/*.cjs`, `src/build/dependency-graph.ts`, anything not exported by a `package.json#exports` entry point.
+- **Importing `@maverickcer/env-cap/build` into runtime or browser code** — it's Node-only, dev/CI-only.
 - **Calling any `generate*()` at application startup or on a request path** — build-time only; wire it into an npm script or CI step.
 - **Dynamically constructed schemas** — `createEnv(buildSchema())`, `createEnv({ ...shared })`, re-exporting a contract from another module. AST discovery can't resolve these; write the schema as a literal directly in the call.
 - **Documentation fields inside `createEnv()`'s schema** — `EnvDefinition` only has `default`/`processor`/`validator`/`context`. `description`/`owner`/`expiresAt`/`category` belong in `documentEnv()` only.
@@ -43,7 +43,7 @@ Non-negotiable. Verify any change respects these before finishing.
 - **Fetching live values or metadata inside `env.schema.ts`** — static `expiresAt` goes in `documentEnv()`; dynamic data goes through the separate `liveExpirationDates` callback (ADR 0012), kept in its own module.
 - **Treating two capabilities declaring the same variable name as automatically wrong** — allowed and common; only provably conflicting processor/validator return types are a hard error.
 - **Trying to relax an exclusive-group violation** — always a hard error (ADR 0009), no throw/warn knob. Set the old contract's `active: false` first.
-- **Manually constructing a contract collection when a generated manifest is available** — regenerate it instead: run the project's `generate:env` script if one exists; otherwise call `generateEnvManifest({ location })` (or `generateEnvArtifacts()` for multiple artifacts) from `env-cap/build`, or run `npx env-cap --location <path>` from the CLI (see Consumer Usage below for the full call shape and options). Consume the resulting manifest — never hand-assemble the collection it produces.
+- **Manually constructing a contract collection when a generated manifest is available** — regenerate it instead: run the project's `generate:env` script if one exists; otherwise call `generateEnvManifest({ location })` (or `generateEnvArtifacts()` for multiple artifacts) from `@maverickcer/env-cap/build`, or run `npx env-cap --location <path>` from the CLI (see Consumer Usage below for the full call shape and options). Consume the resulting manifest — never hand-assemble the collection it produces.
 - **Introducing validation managers, service locators, providers, registries, or other initialization frameworks around `validateEnv()`** — call it directly from the application's existing startup path; env-cap does not need a bootstrapping layer.
 - **Treating `context` as authorization, or as something env-cap detects itself** — it's a plain, application-defined string that only gates whether `validateEnv()` processes a variable; the application always computes `activeContexts` explicitly (never `window`/`NODE_ENV` sniffed inside env-cap), and reading a resolved value is never access-controlled by its `context` (ADR 0022).
 - **Assuming `context`/`activeContexts` is a bundling or security boundary** — it isn't. A `context: "server"` variable in the same schema/manifest as `context: "client"` variables still ships its definition (and any literal `default`) to a client bundle that imports that manifest. Use separate discovery/manifests per contract (ADR 0004) when a variable must never reach client-bound code at all.
@@ -54,7 +54,7 @@ When working with env-cap:
 
 1. Read the existing `env.schema.ts` (and neighboring ones in the same project) before editing — match its processor/validator/documentation conventions.
 2. Identify or preserve capability ownership — a variable belongs in the schema owned by the feature/package that consumes it, never an unrelated one.
-3. Prefer existing `env-cap/helpers` processors/validators over hand-written logic.
+3. Prefer existing `@maverickcer/env-cap/helpers` processors/validators over hand-written logic.
 4. Keep every schema entry a statically analyzable literal.
 5. Add or update the matching `documentEnv()` entry in the same file.
 6. Regenerate dependent generated artifacts if the schema changed (manifest, docs, `.env.example`, ownership report).
@@ -75,14 +75,16 @@ When a change is under-specified, preserve in this order: architecture (Core Pri
 
 ## Architecture Overview
 
-Four independent entry points, each its own build output and `package.json` export (plus `./schema`, a static JSON Schema file, and `./package.json`):
+Independent entry points, each its own build output and `package.json` export (plus `./schema`, a static JSON Schema file, and `./package.json`); `package.json#exports` is authoritative:
 
-| Export                  | Source               | Environment           | Purpose                                                                                  |
-| ----------------------- | -------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
-| `env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract` |
-| `env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation                                             |
-| `env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                              |
-| `env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                           |
+| Export                               | Source               | Environment           | Purpose                                                                                  |
+| ------------------------------------ | -------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract` |
+| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation                                             |
+| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                              |
+| `@maverickcer/env-cap/node`          | `src/node/`          | Node-only, dev/CI     | `nodeBuildFileSystem` — the `BuildFileSystem` adapter a build script passes to `./build` |
+| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | `defineEvidenceProjection` — pure transforms over the Evidence Model                     |
+| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                           |
 
 The `env-cap` CLI (`src/cli/`) is a thin wrapper around `generateEnvArtifacts()`, restricted to the manifest and evidence artifact only (`--location`/`--evidence`/`--json`/`--check`/`--strict*` — see ADR 0046); `--json`'s envelope can never include a `docs`/`usage` key, since the CLI has no way to request either pass. `GenerateDocumentationResult.contracts` (still fully available as a library call, `generateDocumentation()`/`generateEnvArtifacts({ docs })`) is a summary (file/exportName/contractName/variableCount/active/documented); `GenerateDocumentationResult.catalog` sits alongside it with the same per-variable descriptive content (`description`/`owner`/`expiresAt`/`metadata`, ...) `renderDocs()` puts in the generated Markdown Catalog, keyed by variable name within each contract.
 
@@ -97,7 +99,7 @@ Covers the common case: adding or changing a variable in an app or package that 
 ```ts
 // features/database/env.schema.ts
 import { createEnv, documentEnv } from "@maverickcer/env-cap"
-import { processors, validators } from "env-cap/helpers"
+import { processors, validators } from "@maverickcer/env-cap/helpers"
 
 const databaseSchema = {
   DATABASE_URL: { processor: processors.url() },
@@ -132,13 +134,13 @@ Returns `{ contractCount, variableCount }`, never resolved values. Read values a
 ### Generate artifacts (build script or CI step — never application code)
 
 ```ts
-import { generateEnvArtifacts } from "env-cap/build"
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
 
 await generateEnvArtifacts({
   root,
   manifest: { location: "src/generated/env.manifest.ts" },
   docs: { location: "docs/ENVIRONMENT.md", envExample: { location: ".env.example" } },
-  usage: { report: { location: "docs/OWNERSHIP.md" } },
+  usage: { report: { location: "docs/ENV-OWNERSHIP.md" } },
   evidence: { location: "docs/env.evidence.json" },
 })
 ```
@@ -160,7 +162,7 @@ Guides for moving an existing application onto env-cap live in `specs/migrations
 To generate a manifest: check for an existing `generate:env` (or similarly named) npm script first and run that — most consuming projects already wire one up. If none exists:
 
 ```ts
-import { generateEnvManifest } from "env-cap/build"
+import { generateEnvManifest } from "@maverickcer/env-cap/build"
 
 await generateEnvManifest({ location: "src/generated/env.manifest.ts" })
 ```

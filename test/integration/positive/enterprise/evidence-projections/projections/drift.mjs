@@ -1,4 +1,4 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Drift" reference projection (plan Phase 22) -- "maps

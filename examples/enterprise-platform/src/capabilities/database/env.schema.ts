@@ -1,7 +1,7 @@
-import { createEnv, documentEnv } from "env-cap";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
- * Deliberately hand-written processors/validators, not `env-cap/helpers` --
+ * Deliberately hand-written processors/validators, not `@maverickcer/env-cap/helpers` --
  * this flagship exercises every public surface of the package except `helpers` (see
  * examples/enterprise-platform/README.md), so every capability schema writes its own.
  */

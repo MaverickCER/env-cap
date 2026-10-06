@@ -7,7 +7,7 @@ integration guidance, see [README.md](../README.md) and [GUIDE.md](../GUIDE.md).
 
 - [Purpose](#purpose)
 - [Core invariants](#core-invariants)
-- [The five entry points](#the-five-entry-points)
+- [The entry points](#the-entry-points)
 - [`runtime/` — define, validate, cache, and expose environment values](#runtime--define-validate-cache-and-expose-environment-values)
 - [`build/` — discover, analyze, link, and generate artifacts](#build--discover-analyze-link-and-generate-artifacts)
 - [`helpers/` — optional processors and validators](#helpers--optional-processors-and-validators)
@@ -68,7 +68,7 @@ file can't execute code just by being discovered. See
 `./build` never imports `node:fs` itself — every public options object requires a caller-supplied
 `BuildFileSystem` capability. The `env-cap` CLI (`src/cli/`) is the executable boundary that
 constructs the real `node:fs/promises` adapter and hands it in; a consumer running the generators
-from their own Node script imports that same adapter from `env-cap/node`. This is the
+from their own Node script imports that same adapter from `@maverickcer/env-cap/node`. This is the
 same discipline `repo-contract`'s ADR-0011 established for `spawn`/`env`: a library surface should
 not implicitly acquire a powerful ambient capability a caller did not explicitly provide. See
 [ADR 0040](decisions/0040-library-surfaces-do-not-acquire-node-fs.md).
@@ -112,16 +112,19 @@ flags only control which artifacts are additionally _written to disk_, never whe
 model is computed. See [Data flow](#data-flow) and
 [ADR 0038](decisions/0038-always-computed-evidence-model-backs-generate-check-docs.md).
 
-## The five entry points
+## The entry points
+
+`package.json` `exports` is the authoritative list (this section is the map of what each one is for, and TypeDoc generates the reference for each).
 
 ```
 
 src/
-├── runtime/        env-cap                 (runtime library)
-├── build/          env-cap/build             (Node-only build tooling)
-├── helpers/        env-cap/helpers           (optional utilities)
-├── evidence/       env-cap/evidence          (Evidence Model projections)
-└── eslint-plugin/  env-cap/eslint-plugin      (capability-owned-access lint rules)
+├── runtime/        @maverickcer/env-cap                 (runtime library)
+├── build/          @maverickcer/env-cap/build             (Node-only build tooling)
+├── helpers/        @maverickcer/env-cap/helpers           (optional utilities)
+├── evidence/       @maverickcer/env-cap/evidence          (Evidence Model projections)
+├── node/           @maverickcer/env-cap/node              (the Node-backed BuildFileSystem adapter)
+└── eslint-plugin/  @maverickcer/env-cap/eslint-plugin      (capability-owned-access lint rules)
 
 ```
 
@@ -153,7 +156,7 @@ types would.
 
 `src/cli/` (the `env-cap` bin, not a `package.json#exports` subpath) has the
 same kind of real, intentional dependency on `build` -- it imports
-`env-cap/build`'s public surface (`src/build/index.ts`)
+`@maverickcer/env-cap/build`'s public surface (`src/build/index.ts`)
 directly, never an internal `build/*.ts` file, since generating artifacts
 from the command line requires the same engine `./build` exports. It is also
 the one place `node:fs` is acquired to build the concrete `BuildFileSystem`
@@ -581,12 +584,12 @@ contract.
 
 ## Module layout
 
-The `src/` tree mirrors the five entry points described above:
+The `src/` tree mirrors the entry points described above:
 `runtime/`, `build/` (and `build/resolution/`), `helpers/`, `evidence/`,
 `eslint-plugin/`, plus `cli/` (the `env-cap` bin) and `node/` (the
-`env-cap/node` executable-context entry that ships the CLI's
+`@maverickcer/env-cap/node` executable-context entry that ships the CLI's
 concrete `BuildFileSystem` adapter as a value for a consumer's own build
-script). See [The five entry points](#the-five-entry-points) for the
+script). See [The entry points](#the-entry-points) for the
 dependency rules between them.
 
 ## Architectural decisions

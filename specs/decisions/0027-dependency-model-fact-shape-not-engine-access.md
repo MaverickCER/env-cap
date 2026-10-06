@@ -4,7 +4,7 @@
 
 Accepted. Implemented in `src/build/dependency-model.ts`
 (`buildDependencyModel()`, `DependencyModel`), exported from
-`env-cap/build`. `src/build/dependency-graph.ts`'s
+`@maverickcer/env-cap/build`. `src/build/dependency-graph.ts`'s
 `buildDependencyGraph()`, `scan-dependencies.ts`'s
 `scanFileForDependencies()`, and every other engine internal stay
 unexported, unchanged from ADR 0010.
@@ -13,7 +13,7 @@ unexported, unchanged from ADR 0010.
 
 ADR 0010 drew a boundary around the dependency-ownership engine
 (`scan-dependencies.ts`, `dependency-graph.ts`): its scanning/graph-building
-internals are not exported from `env-cap/build`, only the ownership-framed
+internals are not exported from `@maverickcer/env-cap/build`, only the ownership-framed
 result `generateUsageReport()` maps them into. That ADR's stated reason was
 that no real external use case had justified exporting the raw graph, and
 that env-cap "answers ownership/visibility questions... it doesn't ship a

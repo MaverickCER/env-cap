@@ -36,7 +36,7 @@ and different in what it's allowed to conclude:
   across files this engine doesn't already know are schema-relevant --
   scope creep with no natural stopping point, for a feature whose entire
   value proposition is that its findings are provable, not heuristic.
-- **Its internals are not exported from `env-cap/build`.** `scan-dependencies.ts`'s
+- **Its internals are not exported from `@maverickcer/env-cap/build`.** `scan-dependencies.ts`'s
   AST-access-site vocabulary (`AccessSite`, `FileScanResult`) and
   `dependency-graph.ts`'s graph-building machinery
   (`buildDependencyGraph`, `deriveOwnershipFindings`) are used only by
@@ -56,7 +56,7 @@ and different in what it's allowed to conclude:
    a contract to `abandoned` or to silently assume it's consumed.
 3. The AST-level scanning/graph-building internals
    (`scan-dependencies.ts`, `dependency-graph.ts`) are not exported from
-   `env-cap/build`. Only the ownership-framed result of
+   `@maverickcer/env-cap/build`. Only the ownership-framed result of
    `generateUsageReport()` is public.
 
 ## Consequences

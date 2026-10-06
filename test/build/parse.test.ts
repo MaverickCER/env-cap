@@ -10,7 +10,7 @@ import {
 describe("parseSchemaFile", () => {
   it("discovers an exported createEnv call with an inline schema literal", () => {
     const source = `
-      import { createEnv } from "env-cap";
+      import { createEnv } from "@maverickcer/env-cap";
       export const paymentsEnv = createEnv({ STRIPE_KEY: { processor: (v) => String(v) } }, { name: "payments" });
     `
     const result = parseSchemaFile("/repo/features/payments/env.schema.ts", source)

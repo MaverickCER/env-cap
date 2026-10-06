@@ -42,7 +42,7 @@ export type Validator<T> = (value: T, rawEnv: RawEnv) => true | string
  * function) -- it's kept because this type is public API, and collapsing it to bare `unknown`
  * would erase the one thing a reader of the generated `.d.ts` needs to learn here.
  */
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- `unknown | (() => unknown)` keeps the function form visible in the documented type
 export type DefaultValue = unknown | (() => unknown)
 
 /** Configuration for one schema entry: how to default, process, and validate a single raw environment value. */
@@ -82,7 +82,7 @@ export interface EnvDefinition<T> {
  * strict. This is the same variance workaround used by schema libraries like zod/trpc for
  * heterogeneous generic maps.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the schema's value types are inferred where it is used, so the type argument is deliberately open
 export type EnvSchema = Record<string, EnvDefinition<any>>
 
 type UnwrapDefault<D> = D extends { default: infer Def }
@@ -99,7 +99,7 @@ type UnwrapDefault<D> = D extends { default: infer Def }
  * Same documented generic-bound variance workaround as {@link EnvSchema} above --
  * `any` here is never surfaced to a consumer's inferred type.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the schema's value types are inferred where it is used, so the type argument is deliberately open
 export type InferEnvValue<D extends EnvDefinition<any>> = D extends {
   /** Narrows to the processor's return type when one is present. */
   processor: Processor<infer P>
@@ -144,7 +144,7 @@ export interface validateEnvOptions {
    * a second call returns the first call's cached result without
    * re-running anything, even if it passes a different manifest.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the manifest holds contracts of every schema, so the type argument is deliberately open
   manifest: readonly EnvContract<any>[]
   /**
    * The validation contexts active for this run (e.g. `["server",

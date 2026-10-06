@@ -17,7 +17,7 @@ import type { DynamicAccessAssertion, SourcePosition } from "./source-position.j
  * (`"indeterminate"`).
  *
  * @remarks
- * Deliberately narrower than `@maverickcer/data-cap`'s equivalent, which
+ * Deliberately narrower than `data-cap`'s equivalent, which
  * splits the unprovable case further (an unresolved *consumer* vs. an
  * indeterminate *field*). That split exists because a data-cap capability
  * exposes many fields at once, so it has a real "we resolved the consumer,

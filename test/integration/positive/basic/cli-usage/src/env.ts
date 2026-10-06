@@ -1,5 +1,5 @@
-import { createEnv, documentEnv, type RawEnv } from "env-cap";
-import { processors, validators } from "env-cap/helpers";
+import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap";
+import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
  * The same contract as `examples/application` -- deliberately, so the only

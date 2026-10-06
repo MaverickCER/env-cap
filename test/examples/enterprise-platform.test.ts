@@ -18,7 +18,7 @@ import {
  * every artifact, because it does genuine custom reporting (per-contract
  * blast radius, stale-`.env.example` warnings) the CLI doesn't produce --
  * see `generate-manifest.mjs`'s own "ADVANCED TIER" header. `check-artifacts.mjs`
- * calls `env-cap/build`'s own exported `checkEnvArtifacts()` directly (ADR
+ * calls `@maverickcer/env-cap/build`'s own exported `checkEnvArtifacts()` directly (ADR
  * 0046 -- `--docs`/`--ownership`/`--env-example` no longer exist as CLI
  * flags for it to shell out to), printing the same "All generated artifacts
  * are up to date." text the CLI's own `--check` used to, so the freshness

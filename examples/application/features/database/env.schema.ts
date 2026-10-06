@@ -6,8 +6,8 @@
 // would look like split into its own capability-owned contract, per
 // specs/migrations/from-centralized-schema.md. See examples/team-service
 // for a working multi-contract example.
-// import { createEnv, documentEnv } from "env-cap";
-// import { processors, validators } from "env-cap/helpers";
+// import { createEnv, documentEnv } from "@maverickcer/env-cap";
+// import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
  * Using the optional helpers subpath for common coercions -- entirely

@@ -3,8 +3,8 @@ import type { BuildDirent, BuildFileSystem, BuildStats } from "../build/types.js
 
 /**
  * The concrete `node:fs/promises`-backed {@link BuildFileSystem} the `env-cap`
- * CLI hands to `env-cap/build`. Also re-exported as the public
- * `env-cap/node` entry point (`src/node/index.ts`) for a
+ * CLI hands to `@maverickcer/env-cap/build`. Also re-exported as the public
+ * `@maverickcer/env-cap/node` entry point (`src/node/index.ts`) for a
  * consumer running the generators from their own Node build script.
  *
  * This is the deliberate injection boundary -- mirrors `repo-contract`'s own
@@ -48,6 +48,10 @@ function realpath(path: string): Promise<string> {
   return fs.realpath(path)
 }
 
+/**
+ * The Node-backed `BuildFileSystem`: the filesystem capability the build-time generators require.
+ * @public
+ */
 // The `{}` mutant here is a module-load-time (static) mutant: once this
 // module is imported and the const is bound, Stryker's per-mutant switch
 // can't re-run the binding, so the mutant can never actually activate --

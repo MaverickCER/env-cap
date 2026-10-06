@@ -1,4 +1,4 @@
-import { createEnv, documentEnv } from "env-cap";
+import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 function nonEmptyString(value: unknown): string {
   return String(value ?? "");

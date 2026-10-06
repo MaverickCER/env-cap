@@ -56,7 +56,7 @@ npm start
 real runtime/evidence contract, per [ADR
 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)
 -- and then `scripts/generate-docs/run.ts`, writing `docs/ENVIRONMENT.md`,
-`docs/OWNERSHIP.md`, and `.env.example` directly from `env-cap/build` -- see
+`docs/OWNERSHIP.md`, and `.env.example` directly from `@maverickcer/env-cap/build` -- see
 [that script's own README](scripts/generate-docs/README.md)) -- none of
 these are gitignored; all are committed on purpose so regenerating them
 shows up as an ordinary diff, the same way you'd review any other

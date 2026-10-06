@@ -3,7 +3,7 @@
 ## Status
 
 Accepted. Implemented in `src/eslint-plugin/`, exported as
-`env-cap/eslint-plugin`.
+`@maverickcer/env-cap/eslint-plugin`.
 
 ## Context
 
@@ -26,7 +26,7 @@ credential chain rather than reading `process.env` directly itself.
 
 ## Decision
 
-Ship the rule as `env-cap/eslint-plugin`, a new subpath export
+Ship the rule as `@maverickcer/env-cap/eslint-plugin`, a new subpath export
 on the existing package, rather than a standalone
 `@maverickcer/eslint-plugin-env-cap` package. Concretely:
 
@@ -56,7 +56,7 @@ on the existing package, rather than a standalone
 ## Consequences
 
 - A consuming project adopts the rule via
-  `import envCapPlugin from "env-cap/eslint-plugin"` in its own
+  `import envCapPlugin from "@maverickcer/env-cap/eslint-plugin"` in its own
   flat config, with no second package to install or version-match.
 - `eslint`/`typescript` are optional peer dependencies (`peerDependenciesMeta`)
   so a consumer who never touches `./eslint-plugin` is never nagged about

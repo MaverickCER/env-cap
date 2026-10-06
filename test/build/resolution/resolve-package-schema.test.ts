@@ -60,7 +60,7 @@ beforeAll(async () => {
   await writeFile("node_modules/@fixtures/simple-pkg/dist/index.js", "module.exports = {};\n")
   await writeFile(
     "node_modules/@fixtures/simple-pkg/src/env.schema.ts",
-    `import { createEnv } from "env-cap";\nexport const simpleEnv = createEnv({ A: {} }, { name: "simple" });\n`,
+    `import { createEnv } from "@maverickcer/env-cap";\nexport const simpleEnv = createEnv({ A: {} }, { name: "simple" });\n`,
   )
 
   // No "envCap" field at all.

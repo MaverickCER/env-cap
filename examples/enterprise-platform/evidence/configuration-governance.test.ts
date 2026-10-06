@@ -1,5 +1,5 @@
-import { generateEvidenceModel, getEvidenceModel } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEvidenceModel, getEvidenceModel } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";

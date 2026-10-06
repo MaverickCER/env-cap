@@ -211,7 +211,7 @@ export async function generateEvidenceModel(
     scanFiles,
     readFileCached,
     context,
-    // Stryker disable next-line ArrayDeclaration
+    // Stryker disable next-line ArrayDeclaration: the warnings reach the usage report only for fixtures with package or tsconfig problems, which the contract job does not install (they are covered by the integration-fixtures job)
     [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     scannedSurfaces,
     evidenceChanges?.dynamicAccessAcknowledgments,

@@ -1,14 +1,14 @@
-<!-- GENERATED FILE -- do not edit by hand. Run `npx env-cap` to regenerate. -->
+<!-- GENERATED FILE -- do not edit by hand. Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`. -->
 
 > Machine-generated engineering artifact assembled from statically-provable code facts and author-declared documentation. It can support a security, privacy, or compliance review. It does not itself establish compliance with any standard.
 
-> Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from.
+> Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from.
 
 # Environment Variables
 
-_Produced by `env-cap --docs`._
+_Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-09-28T04:10:39.657Z_
+_Generated 2026-10-03T05:00:22.171Z_
 
 ## Changes since last report
 
@@ -85,8 +85,8 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-02-01 (**expired 239d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
-| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-01-01 (**expired 270d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
+| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-02-01 (**expired 244d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
+| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-01-01 (**expired 275d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
 
 ## Security review
 

@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
   // Confirmed empirically: removing this line reproduces exactly that
   // failure under `next start`. `serverExternalPackages` opts a package out
   // of bundling entirely for server code, so every chunk resolves the same
-  // `require("env-cap")` through Node's own module cache instead -- a real
+  // `require("@maverickcer/env-cap")` through Node's own module cache instead -- a real
   // singleton again, the same guarantee a plain Node script already gets for
   // free.
   serverExternalPackages: ["env-cap"],

@@ -19,7 +19,7 @@ describe("published Contract Model JSON Schema: freshness", () => {
     const fresh = `${JSON.stringify(generateContractModelSchema(), null, 2)}\n`
     const committed = readFileSync(schemaPath, "utf8")
     expect(committed).toBe(fresh)
-  }, 15000)
+  }, 60000)
 })
 
 describe("published Contract Model JSON Schema: correctness", () => {

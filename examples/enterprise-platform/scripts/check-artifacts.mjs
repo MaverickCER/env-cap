@@ -6,13 +6,13 @@
 // were removed from the CLI surface (see
 // specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md);
 // this replaces the CLI-flag-based `check` script this example used to run,
-// with `env-cap/build`'s exported `checkEnvArtifacts()` called with the
+// with `@maverickcer/env-cap/build`'s exported `checkEnvArtifacts()` called with the
 // exact same options generate-manifest.mjs passes to `generateEnvArtifacts()`
 // -- one call verifies every artifact (manifest, docs, envExample, usage,
 // evidence) at once, matching this example's own existing "one call does
 // everything" style.
-import { checkEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { checkEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

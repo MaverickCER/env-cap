@@ -1,0 +1,32 @@
+{
+  "exceptions": [
+    {
+      "id": "environment:CodeRabbit:not-applicable",
+      "version": 2,
+      "justification": "CodeRabbit reviews pull requests as a GitHub App; its CLI is not run inside the CI contract job.",
+      "check": "CodeRabbit",
+      "code": "not-applicable",
+      "ruleBroken": "CodeRabbit findings must be addressed or recorded before merge.",
+      "attempted": "Running the CodeRabbit CLI in the workflow, which needs a CodeRabbit API key that is not issued to CI.",
+      "constraint": "In CI the review is the GitHub App's; the CLI only reviews uncommitted local edits.",
+      "whyPreferable": "The App's review threads are resolved on the pull request before merge, so its findings still block.",
+      "residualRisk": "A finding the App never raised is not seen; the same is true of any reviewer.",
+      "revisitWhen": "CodeRabbit ships a CI mode for the CLI, or the App is uninstalled.",
+      "expires": ""
+    },
+    {
+      "id": "environment:DocsLinks:http://versioning.md/",
+      "version": 2,
+      "justification": "The generated API site renders the file name VERSIONING.md as a link to the host versioning.md, which is not a real link target.",
+      "check": "DocsLinks",
+      "code": "http://versioning.md/",
+      "ruleBroken": "Documentation links must resolve.",
+      "attempted": "Looked for the source of the link in tracked files; it exists only in generated site output, not in any authored document.",
+      "constraint": "The link is produced by the documentation generator's autolinking of a bare file name, so it cannot be fixed in a source file.",
+      "whyPreferable": "Disabling external link checking would also stop real broken links from being reported.",
+      "residualRisk": "None for the shipped package: the text is a file name, not a reference a reader is meant to follow.",
+      "revisitWhen": "The documentation generator stops autolinking bare file names, or the file name is written inside backticks.",
+      "expires": ""
+    }
+  ]
+}

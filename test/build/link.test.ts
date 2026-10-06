@@ -47,7 +47,7 @@ describe("linkFiles", () => {
     const file = await write(
       "payments/env.schema.ts",
       `
-      import { createEnv, documentEnv } from "env-cap";
+      import { createEnv, documentEnv } from "@maverickcer/env-cap";
       const paymentsSchema = { STRIPE_KEY: { processor: (v) => String(v) } };
       export const paymentsEnv = createEnv(paymentsSchema, { name: "payments" });
       documentEnv(paymentsSchema, { variables: { STRIPE_KEY: { description: "Stripe secret key." } } });

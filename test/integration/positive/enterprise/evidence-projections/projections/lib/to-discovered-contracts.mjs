@@ -1,5 +1,5 @@
 /**
- * Used by `env-example.mjs`, which wraps `env-cap/build`'s
+ * Used by `env-example.mjs`, which wraps `@maverickcer/env-cap/build`'s
  * `renderEnvExample()` -- still `DiscoveredContract[]`-based (ADR 0038 only
  * migrated `renderDocs()`/`buildCatalog()` to Contract Model's own shape,
  * not `renderEnvExample()`). Reshapes Contract Model + Lifecycle Model back

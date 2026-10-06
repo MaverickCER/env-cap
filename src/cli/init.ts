@@ -56,7 +56,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap"
 const schema = {
   EXAMPLE_API_URL: {
     processor: (value: unknown): string => String(value ?? ""),
-    validator: (value: string) => value.startsWith("https://") || "Expected an https:// URL.",
+    validator: (value: string) => (URL.canParse(value) && new URL(value).protocol === "https:") || "Expected an https URL.",
   },
 }
 
@@ -92,7 +92,7 @@ const result = await generateEnvArtifacts({
     location: "docs/ENVIRONMENT.md",
     envExample: { location: ".env.example", onExisting: "keep-sibling" },
   },
-  usage: { report: { location: "docs/OWNERSHIP.md" } },
+  usage: { report: { location: "docs/ENV-OWNERSHIP.md" } },
 })
 
 console.log(\`Discovered \${result.manifest?.contracts.length ?? 0} contract(s).\`)

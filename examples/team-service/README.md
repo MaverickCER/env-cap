@@ -65,7 +65,7 @@ credential, and at this org, credential rotation is security-team's
 responsibility even though data-platform-team runs the database capability
 around it.
 
-`effectiveOwner()` (`env-cap/build`) is what resolves this: it
+`effectiveOwner()` (`@maverickcer/env-cap/build`) is what resolves this: it
 reads the variable's own `owner` first, falling back to the contract's only
 if the variable didn't set one. Every generated report that shows
 per-variable ownership uses it, so:
@@ -128,7 +128,7 @@ packaged `env-cap` CLI, the only two outputs with a real runtime/evidence
 contract, per [ADR 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)
 -- and then `scripts/generate-docs/run.ts`, which writes
 `docs/ENVIRONMENT.md`, `docs/OWNERSHIP.md`, and `.env.example` directly from
-`env-cap/build`'s still-exported `generateDocumentation()`/
+`@maverickcer/env-cap/build`'s still-exported `generateDocumentation()`/
 `generateUsageReport()` -- see [that script's own
 README](scripts/generate-docs/README.md)) and then boots `src/app.ts`, which
 validates the environment and prints the active configuration.
@@ -141,7 +141,7 @@ npm run check
 
 runs the packaged `env-cap` CLI binary with `--check` (ADR 0016) against the
 manifest and the persisted evidence artifact, then
-`scripts/generate-docs/check.ts` (via `env-cap/build`'s exported
+`scripts/generate-docs/check.ts` (via `@maverickcer/env-cap/build`'s exported
 `checkEnvArtifacts()`) against `docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md`/
 `.env.example` -- together, every artifact this example generates is
 recomputed in memory and compared against what's committed, without writing

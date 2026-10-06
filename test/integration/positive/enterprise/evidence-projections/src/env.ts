@@ -1,5 +1,5 @@
-import { createEnv, documentEnv, type RawEnv } from "env-cap";
-import { processors, validators } from "env-cap/helpers";
+import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap";
+import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
  * The exact same schema as examples/application/src/env.ts, deliberately --

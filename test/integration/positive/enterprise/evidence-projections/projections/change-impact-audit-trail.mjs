@@ -1,4 +1,4 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Change Impact A (--since history)" reference

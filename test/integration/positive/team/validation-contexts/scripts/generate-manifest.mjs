@@ -1,6 +1,6 @@
 // Build-time script. Run via `npm run generate:env`. Never imported by application code.
-import { generateEnvArtifacts } from "env-cap/build";
-import { nodeBuildFileSystem } from "env-cap/node";
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

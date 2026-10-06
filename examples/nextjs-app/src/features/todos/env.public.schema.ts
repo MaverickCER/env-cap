@@ -4,7 +4,7 @@
 // so nothing declared in this file may ever hold a secret -- unlike
 // env.server.schema.ts, this module carries no "server-only" import and is
 // imported directly by client components (see src/app/page.tsx).
-import { createEnv, documentEnv } from "env-cap"
+import { createEnv, documentEnv } from "@maverickcer/env-cap"
 
 const schema = {
   NEXT_PUBLIC_APP_NAME: {

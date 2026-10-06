@@ -92,11 +92,11 @@ export function defaultExclude(): string[] {
     // inspect `exclude` directly, and as defense if that hardcoding ever
     // changes) -- hand-verified: emptying both and running the full
     // `vitest run` leaves all 1243 tests passing.
-    // Stryker disable next-line StringLiteral
+    // Stryker disable StringLiteral: all three entries are redundant with the walker's hardcoded directory skips (see above), so emptying one changes nothing observable
     "**/node_modules/**",
     "**/dist/**",
-    // Stryker disable next-line StringLiteral
     "**/.git/**",
+    // Stryker restore StringLiteral
   ]
 }
 

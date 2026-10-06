@@ -1,5 +1,5 @@
-import { defineEvidenceProjection } from "env-cap/evidence";
-import { effectiveOwner } from "env-cap/build";
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
+import { effectiveOwner } from "@maverickcer/env-cap/build";
 
 /**
  * The "Joined Variable View" reference projection -- an eleventh, added after the original ten
@@ -20,15 +20,15 @@ import { effectiveOwner } from "env-cap/build";
  *
  * - identity: `file`, `exportName`, `contractName`, `key` (Contract Model)
  * - `description`, `hasDefault`, `hasProcessor`, `hasValidator` (Contract Model, as declared)
- * - `owner`: `effectiveOwner()` (`env-cap/build`, public) -- variable's own value,
+ * - `owner`: `effectiveOwner()` (`@maverickcer/env-cap/build`, public) -- variable's own value,
  *   falling back to the contract's.
  * - `sensitivity`: the same fallback, computed inline (`variable.sensitivity ??
  *   contract.sensitivity`) since -- unlike `owner` -- no `effectiveSensitivity()` is part of
- *   the public `env-cap/build` surface (only `effectiveOwner()` is; see
+ *   the public `@maverickcer/env-cap/build` surface (only `effectiveOwner()` is; see
  *   `inventory.mjs`'s own doc comment for this same asymmetry). A real consumer hitting this gap
  *   would have to do the same inline fallback this projection does.
  * - `expiresAt`: `variable.expiresAt` exactly as Contract Model stores it -- **not** a fallback to
- *   `contract.expiresAt`. No `effectiveExpiresAt()` exists anywhere in `env-cap/build`,
+ *   `contract.expiresAt`. No `effectiveExpiresAt()` exists anywhere in `@maverickcer/env-cap/build`,
  *   and nothing else in env-cap treats contract-/variable-level `expiresAt` as one falling back to
  *   the other (`docs.ts`'s own catalog/lifecycle rendering reports them as two independent facts).
  *   Inventing fallback semantics here that don't exist upstream would make this projection an

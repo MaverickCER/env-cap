@@ -1,14 +1,14 @@
-<!-- GENERATED FILE -- do not edit by hand. Run `npx env-cap` to regenerate. -->
+<!-- GENERATED FILE -- do not edit by hand. Regenerate it by re-running the script that calls `generateDocumentation()` / `generateUsageReport()` from `@maverickcer/env-cap/build`. -->
 
 > Machine-generated engineering artifact assembled from statically-provable code facts and author-declared documentation. It can support a security, privacy, or compliance review. It does not itself establish compliance with any standard.
 
-> Projected from env-cap's Evidence Model (ADR 0031/0038), the same source every other generated artifact draws from.
+> Projected from env-cap's Evidence Model (https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md), the same source every other generated artifact draws from.
 
 # Environment Variables
 
-_Produced by `env-cap --docs`._
+_Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-10-02T20:37:51.928Z_
+_Generated 2026-10-03T05:00:10.759Z_
 
 ## Changes since last report
 
@@ -123,7 +123,7 @@ One row per unique variable name; more than one location means more than one fea
 | [`LOG_LEVEL`](#app-log_level) | platform-team | -- | -- |
 | [`PAYMENT_PROVIDER`](#app-payment_provider) | platform-team | -- | -- |
 | [`PORT`](#app-port) | platform-team | -- | -- |
-| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-01 (**expired 31d ago**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
+| [`STRIPE_KEY`](#app-stripe_key) | platform-team | 2026-09-01 (**expired 32d ago**) | Rotate in the Stripe dashboard (Developers -> API keys), then redeploy. Rotate every 90 days. |
 
 ## Security review
 
