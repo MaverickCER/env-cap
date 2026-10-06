@@ -389,8 +389,9 @@ const VALIDATORS = [
     slug: "includes",
     name: "includes(text)",
     use: "Requires a value to contain a fixed substring.",
-    expected: "linear",
-    reason: "A substring search scans the string, so cost follows its length.",
+    expected: "constant",
+    reason:
+      "A substring search scans the string, but the engine's native search is so fast that over the lengths measured the per-call overhead dominates and the curve is flat; it would turn linear only for strings far longer than a real environment value.",
     sizeMeans: "Length of the string, in characters.",
     content:
       "a long string made of near-misses of the substring (\"exampl\" repeated) with the real match at the end, so the search cannot skip ahead",

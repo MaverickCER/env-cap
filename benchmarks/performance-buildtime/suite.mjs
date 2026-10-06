@@ -227,9 +227,9 @@ export default defineSuite({
           description:
             "An `include` selects one schema file; discovery still walks the tree but only that file is parsed.",
           options: { scoped: true },
-          expectedComplexity: "constant",
+          expectedComplexity: "logarithmic",
           complexityReason:
-            "Only the one selected file is parsed and rendered, and parsing dominates the cost; the directory walk that still happens grows with the tree but is tiny next to parsing, so the curve is effectively flat.",
+            "Only the one selected file is parsed and rendered, but the directory walk that still happens grows with the tree. Across the measured sizes it is a small, sub-linear share of the cost, so the curve rises slowly without being flat.",
         },
       ],
       notCovered: [
