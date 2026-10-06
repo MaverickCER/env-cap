@@ -174,6 +174,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
   // Stryker disable next-line ArithmeticOperator
   const maxPasses = argv.length * 2 + 4
   for (let i = 0; i < argv.length; i++) {
+    // Stryker disable next-line UpdateOperator: `passes` is only compared with the unreachable `maxPasses` bound, so counting down instead of up cannot change any observable result
     passes++
     // Unreachable by design for any correct `argv`, the same way the
     // `arg = argv[i] ?? ""` fallback just below is: this guard's whole

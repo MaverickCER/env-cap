@@ -270,11 +270,12 @@ export async function computeArtifacts(
   // bypassed/differently-compared ternary could produce from a genuine
   // `undefined`, since both are equally falsy. Hand-verified: mutating all
   // four lines (both variants) and running the real suite passes unchanged.
-  // Stryker disable next-line ConditionalExpression,BooleanLiteral
+  // Stryker disable ConditionalExpression,BooleanLiteral: each option is only ever truthy-checked downstream, so `false` and `undefined` are indistinguishable (see the note above)
   const manifestOptions = options.manifest === false ? undefined : options.manifest
   const docsOptions = options.docs === false ? undefined : options.docs
   const usageOptions = options.usage === false ? undefined : options.usage
   const evidenceOptions = options.evidence === false ? undefined : options.evidence
+  // Stryker restore ConditionalExpression,BooleanLiteral
 
   const pathIssues: CompatibilityIssue[] = []
 
