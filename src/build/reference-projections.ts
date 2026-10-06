@@ -279,8 +279,9 @@ export interface ExpiringSoonReport extends Record<string, unknown> {
  * which is exactly the reproducibility property the Evidence Model exists to
  * preserve.
  */
-// Stryker disable next-line ObjectLiteral,ArrowFunction: the projection is built at module load, so Stryker attributes its mutants to no single test; hand-verified that emptying `disclaimer` fails the expiringSoonReport test
+// Stryker disable next-line ObjectLiteral
 export const expiringSoonReport = defineEvidenceProjection<ExpiringSoonReport>({
+  // Stryker disable next-line ArrowFunction: the projection is built at module load, so Stryker attributes this mutant to no single test; hand-verified that emptying `disclaimer` fails the expiringSoonReport test
   disclaimer: () => evidenceDisclaimer(),
   entries: (evidence: EvidenceModel) => {
     const contracts = contractIndex(evidence.contract.contracts)

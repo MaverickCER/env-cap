@@ -169,8 +169,10 @@ export async function computeUsage(
   // `vitest run`: only the two tsc-backed json-schema freshness tests fail
   // (a type-narrowing regression, not a behavioral one), every other test
   // (1226) passes unchanged.
+  // Stryker disable OptionalChaining: the lookup cannot miss (see above); the `?.` only satisfies TypeScript's narrowing
   const ownerFor = (file: string, exportName: string): string | undefined =>
     contractByIdentity.get(`${file}#${exportName}`)?.owner
+  // Stryker restore OptionalChaining
   // A specific variable's *effective* owner (its own override, falling back
   // to the contract default) -- see ADR 0028. Used only for
   // unconsumedOwnedVariables below, the one finding type that names a
