@@ -72,16 +72,13 @@ jobs:
   # replaced. `lint`/`verify` below already tolerate that (see their own
   # `if:`), unchanged.
   benchmark-pr:
-    # Matches what the job's own steps need when they actually run (write a
-    # commit, push it, read/post/update a PR comment) -- required here
-    # because permissions for a called reusable workflow's GITHUB_TOKEN can
-    # only be reduced, never elevated, relative to what the CALLING job
-    # grants; this workflow's default `permissions: contents: read` above
-    # would otherwise cap the reusable workflow down to read-only.
+    # A caller job's own `permissions:` caps the token the reusable workflow's job runs with, so it
+    # must grant at least what that job declares. The pinned benchmark-pr.yml only reads the
+    # repository and posts or updates the PR comment (`contents: read`, `pull-requests: write`);
+    # it never commits or pushes to the PR branch.
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
-      statuses: write
     # The `suites`/`install-dirs` inputs below exist only in internal-package-contract commits that
     # include the generalized benchmark kit: bump this SHA to such a commit together with the
     # internal-package-contract devDependency pin, in the same pull request.
