@@ -215,9 +215,7 @@ export function uuid(versions: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8]): Va
     // whole guard (its condition, its block, and its message) and running
     // the real suite passes unchanged.
     const versionDigit = match[3]
-    // Stryker disable next-line ConditionalExpression, BlockStatement: a UUID whose version digit is missing cannot reach this point: the regex above already requires it
     if (versionDigit === undefined) {
-      // Stryker disable next-line StringLiteral: message of that unreachable branch
       return "Expected a valid UUID ."
     }
     const version = Number.parseInt(versionDigit, 16)

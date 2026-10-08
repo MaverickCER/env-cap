@@ -117,7 +117,6 @@ function toComparable(value: unknown): string | undefined {
   // JSON.stringify(value)` produces the identical `undefined` result either
   // way. Hand-verified: mutating this and running the real suite
   // (`vitest run test/build/evidence-snapshot.test.ts`) passes unchanged.
-  // Stryker disable next-line ConditionalExpression
   if (value === undefined) return undefined
   if (typeof value === "string") return value
   return JSON.stringify(value)
@@ -204,7 +203,6 @@ function byIdentity<T extends ContractRef & { key?: string }>(a: T, b: T): numbe
     // verified: mutating both fallbacks to a distinguishing sentinel and
     // running the real suite (this file plus
     // check-artifacts.test.ts/generate-evidence.test.ts) passes unchanged.
-    // Stryker disable next-line StringLiteral
     (a.key ?? "").localeCompare(b.key ?? "")
   )
 }
@@ -244,9 +242,7 @@ export function diffContracts(
           // they're always structurally equal for two contracts matched
           // into one updatedContracts entry. Hand-verified equivalent via
           // direct mutation + a real suite run.
-          // Stryker disable next-line StringLiteral
           "file",
-          // Stryker disable next-line StringLiteral: the same reasoning as `file` just above: the two contracts of a matched pair share the same identity, so this field can never differ between them
           "exportName",
           // Genuinely skipped AND real-tested -- see "does not report the
           // whole variables array as a changed field" below.
@@ -269,7 +265,6 @@ export function diffContracts(
     // when `previousContract` is undefined, that loop never runs regardless
     // of what garbage this Map might contain. Hand-verified: mutating this
     // and running the real suite passes unchanged.
-    // Stryker disable next-line ArrayDeclaration
     const previousVariables = new Map((previousContract?.variables ?? []).map((v) => [v.key, v]))
     const currentVariables = new Map(currentContract.variables.map((v) => [v.key, v]))
 
@@ -286,13 +281,11 @@ export function diffContracts(
       // already `continue`s past an unchanged "key" with or without this
       // skip. Hand-verified equivalent via direct mutation + a real suite
       // run (both the array and its one string element).
-      // Stryker disable ArrayDeclaration,StringLiteral
       const changes = genericFieldChanges(
         previousVariable as unknown as Record<string, unknown>,
         currentVariable as unknown as Record<string, unknown>,
         new Set(["key"]),
       )
-      // Stryker restore ArrayDeclaration,StringLiteral
       if (changes.length > 0)
         updatedVariables.push({ ...toVariableRef(currentContract, currentVariable), changes })
     }
@@ -306,7 +299,6 @@ export function diffContracts(
     // "redundant at runtime, needed for TS narrowing" class already
     // documented for `registry.ts`/`create.ts`/`check-artifacts.ts`. Hand-
     // verified: mutating this and running the real suite passes unchanged.
-    // Stryker disable next-line ConditionalExpression
     if (previousContract) {
       for (const [key, previousVariable] of previousVariables) {
         if (!currentVariables.has(key))
@@ -350,7 +342,6 @@ export async function readEvidenceSnapshot(
     // the result is immediately JSON.parse()d below, and JSON.parse()
     // coerces a Buffer (what "" would return) via .toString() identically
     // to a decoded string for any valid-UTF-8 JSON text.
-    // Stryker disable next-line StringLiteral
     text = await fs.readFile(snapshotPath, "utf8")
   } catch {
     return { status: "missing" }
@@ -383,7 +374,6 @@ export async function writeEvidenceSnapshot(
   // byte-for-byte comparison of the two written files (both encodings write
   // a string's UTF-8 bytes identically; "" is not a special "raw" mode for
   // writeFile the way it changes readFile's return type).
-  // Stryker disable next-line StringLiteral
   await fs.writeFile(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8")
 }
 
@@ -425,7 +415,6 @@ export async function writeEvidenceSnapshot(
 // (`vitest run test/build/evidence-snapshot.test.ts`) fails the "masks the
 // day count in EXPIRED/EXPIRING_SOON finding messages" test (its "15
 // day(s)" fixture was chosen specifically to distinguish both mutants).
-// Stryker disable next-line Regex
 const EXPIRY_DAY_COUNT = /\b\d+ day\(s\)/g
 
 export function normalizeEvidenceSnapshotForComparison(snapshot: EvidenceModel): EvidenceModel {
@@ -512,7 +501,6 @@ export async function computeEvidenceChanges(
   // `previous`'s own untouched initial value. Hand-verified: mutating this
   // and running the real suite (this file plus
   // check-artifacts.test.ts/generate-evidence.test.ts) passes unchanged.
-  // Stryker disable next-line ConditionalExpression
   if (read.status === "ok") {
     previous = read.snapshot
   }

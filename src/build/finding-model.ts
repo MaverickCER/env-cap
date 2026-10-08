@@ -97,7 +97,7 @@ export interface BuildFindingModelInput {
   /** From `generateUsageReport()`'s result. */
   readonly indeterminateOwnership?: readonly IndeterminateOwnershipFinding[]
   /** From `computeManifestChanges()`'s result -- every `dynamicAccess` citation that's gone `"stale"` or `"missing"` since it was last acknowledged. See ADR 0037. */
-  readonly dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[]
+  readonly dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[] | undefined
 }
 
 // None of `finding-model.ts`'s current inputs (`CompatibilityIssue`,

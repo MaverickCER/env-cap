@@ -62,7 +62,6 @@ export function toBoolean(): Processor<boolean> {
     // to the general string-parsing path gives the identical result for a
     // real boolean input either way. Hand-verified: mutating this and
     // running the real suite passes unchanged.
-    // Stryker disable next-line ConditionalExpression,StringLiteral
     if (typeof value === "boolean") return value
     const normalized = String(value).trim().toLowerCase()
     if (["true", "1", "yes", "on"].includes(normalized)) return true
@@ -136,7 +135,6 @@ export function toNumber(): Processor<number> {
     // including NaN and -0), so the ternary's two branches always produce
     // the same result. Hand-verified: mutating this and running the real
     // suite passes unchanged.
-    // Stryker disable next-line ConditionalExpression,StringLiteral
     const result = typeof value === "number" ? value : Number(value)
     if (Number.isNaN(result)) {
       throw new Error(`Expected a numeric value, received ${describe(value)}.`)
@@ -173,7 +171,6 @@ export function toString(): Processor<string> {
     // behaviorally equivalent, not a real gap: `String()` is idempotent on
     // an already-string input. Hand-verified: mutating this and running the
     // real suite passes unchanged.
-    // Stryker disable next-line ConditionalExpression,StringLiteral
     return typeof value === "string" ? value : String(value)
   }
 }
@@ -198,7 +195,6 @@ export function toURL(): Processor<URL> {
       // catch below with the same message -- there is no distinguishable
       // outcome. Hand-verified: mutating this and running the real suite
       // passes unchanged.
-      // Stryker disable next-line StringLiteral
       return new URL(String(value ?? ""))
     } catch {
       throw new Error("Expected a valid absolute URL.")

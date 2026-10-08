@@ -6,7 +6,11 @@ import fs from "node:fs/promises"
 import { generatedBanner } from "../../src/build/generated-banner.js"
 import { linkFiles } from "../../src/build/link.js"
 import type { DiscoveredContract } from "../../src/build/link.js"
-import { buildDependencyGraph, deriveOwnershipFindings } from "../../src/build/dependency-graph.js"
+import {
+  buildDependencyGraph,
+  byPosition,
+  deriveOwnershipFindings,
+} from "../../src/build/dependency-graph.js"
 import { dynamicAccessVariableIdentity } from "../../src/build/citation-verification.js"
 import type { ImportResolutionContext } from "../../src/build/resolution/resolve-import.js"
 import type { PackageSchemaResolutionResult } from "../../src/build/resolution/resolve-package-schema.js"
@@ -1267,5 +1271,19 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
       expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("escape")
     })
+  })
+})
+
+describe("byPosition", () => {
+  const at = (file: string, line: number) => ({ file, line, column: 1 })
+
+  it("orders by file first", () => {
+    expect(byPosition(at("a.ts", 9), at("b.ts", 1))).toBeLessThan(0)
+    expect(byPosition(at("b.ts", 1), at("a.ts", 9))).toBeGreaterThan(0)
+  })
+
+  it("orders positions in the same file by line, ascending", () => {
+    expect(byPosition(at("a.ts", 2), at("a.ts", 7))).toBeLessThan(0)
+    expect(byPosition(at("a.ts", 7), at("a.ts", 2))).toBeGreaterThan(0)
   })
 })

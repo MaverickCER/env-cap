@@ -205,7 +205,6 @@ export async function linkFiles(
     // by tracing every step by hand; not something a black-box test on
     // `resolveSchema`'s return value or `warnings`/`unresolvedLinks` could
     // ever distinguish.
-    // Stryker disable next-line StringLiteral,ConditionalExpression
     if (ref.kind === "unresolvable") return undefined
 
     // `inFile` is always the loop variable from `discoveredFiles` below,
@@ -257,7 +256,6 @@ export async function linkFiles(
     // }`, and returns `undefined` -- reaching this function's OWN later
     // `if (!targetAnalysis) return undefined` regardless, with no warning
     // or other side effect pushed either way.
-    // Stryker disable next-line ConditionalExpression
     if (!targetFile) return undefined
 
     const targetAnalysis = await getAnalysis(targetFile)

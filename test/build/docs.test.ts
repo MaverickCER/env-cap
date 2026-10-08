@@ -1570,3 +1570,52 @@ describe("normalizeDocsForComparison", () => {
     expect(normalizeDocsForComparison(content)).toBe(content)
   })
 })
+
+describe("normalizeDocsForComparison -- exact patterns", () => {
+  it("replaces the whole generation-timestamp line, and only a line that is exactly that", () => {
+    expect(normalizeDocsForComparison("_Generated 2026-01-02T03:04:05.000Z_")).toBe(
+      "_Generated <normalized-for-comparison>_",
+    )
+    expect(normalizeDocsForComparison("before\n_Generated 2026-01-02T03:04:05.000Z_\nafter")).toBe(
+      "before\n_Generated <normalized-for-comparison>_\nafter",
+    )
+    expect(normalizeDocsForComparison("note: _Generated 2026-01-02_")).toBe(
+      "note: _Generated 2026-01-02_",
+    )
+    expect(normalizeDocsForComparison("_Generated 2026-01-02_ trailing")).toBe(
+      "_Generated 2026-01-02_ trailing",
+    )
+  })
+
+  it("normalizes remaining-days and expired-days annotations of any digit count", () => {
+    expect(normalizeDocsForComparison("(**7d remaining**) and (**120d remaining**)")).toBe(
+      "(**Nd remaining**) and (**Nd remaining**)",
+    )
+    expect(normalizeDocsForComparison("(**expired 3d ago**) and (**expired 45d ago**)")).toBe(
+      "(**expired Nd ago**) and (**expired Nd ago**)",
+    )
+  })
+
+  it("normalizes the security-review counts on their own whole lines only", () => {
+    expect(normalizeDocsForComparison("- Already expired: 12")).toBe("- Already expired: N")
+    expect(normalizeDocsForComparison("- Expiring within 30 days: 18")).toBe(
+      "- Expiring within 30 days: N",
+    )
+    expect(
+      normalizeDocsForComparison("a\n- Already expired: 12\nb\n- Expiring within 30 days: 8\nc"),
+    ).toBe("a\n- Already expired: N\nb\n- Expiring within 30 days: N\nc")
+    expect(normalizeDocsForComparison("x - Already expired: 12")).toBe("x - Already expired: 12")
+    expect(normalizeDocsForComparison("- Already expired: 12 more")).toBe(
+      "- Already expired: 12 more",
+    )
+    expect(normalizeDocsForComparison("x - Expiring within 30 days: 8")).toBe(
+      "x - Expiring within 30 days: 8",
+    )
+    expect(normalizeDocsForComparison("- Expiring within 30 days: 8 more")).toBe(
+      "- Expiring within 30 days: 8 more",
+    )
+    expect(normalizeDocsForComparison("- Expiring within days: 8")).toBe(
+      "- Expiring within days: 8",
+    )
+  })
+})

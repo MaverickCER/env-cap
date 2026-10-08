@@ -35,7 +35,7 @@ export interface ComputeSourceFingerprintOptions {
   readonly root: string
   readonly include: readonly string[]
   readonly exclude: readonly string[]
-  readonly packages: readonly string[]
+  readonly packages?: readonly string[] | undefined
 }
 
 /**
@@ -91,7 +91,6 @@ export async function computeSourceFingerprint(
       // qualifies) a Buffer's raw bytes and its UTF-8-decoded string
       // produce byte-identical SHA-256 digests either way (verified via a
       // real `node -e` comparison, not just reasoning).
-      // Stryker disable next-line StringLiteral
       hash.update(await fs.readFile(file, "utf8"))
     } catch {
       // A file the glob walk found but can't be read by the time we hash it
@@ -118,7 +117,6 @@ export async function writeEvidenceFingerprint(
   // written content is always a sha256 hex digest plus a newline, pure
   // ASCII, which "utf8" and an invalid/empty encoding write out to
   // byte-identical files either way.
-  // Stryker disable next-line StringLiteral
   await fs.writeFile(fingerprintPathFor(evidencePath), `${fingerprint}\n`, "utf8")
 }
 
@@ -161,19 +159,6 @@ export async function getEvidenceModel(
   const root = path.resolve(options.root ?? process.cwd())
   const include = options.include ?? defaultInclude()
   const exclude = options.exclude ?? defaultExclude()
-  // Empirically confirmed equivalent even with a garbage non-empty fallback:
-  // an unresolvable package name contributes zero files to
-  // `computeSourceFingerprint`'s hash (`resolveAllowlistedPackages` never
-  // throws for one, per its own doc comment, just resolves nothing) --
-  // verified directly (`node -e ...` against a built copy) that the
-  // resulting fingerprint is byte-identical whether `packages` is `[]` or
-  // `["garbage"]`. `??` vs `&&` is equivalent too: for the common case
-  // (`options.packages` omitted, `undefined`), `&&` short-circuits to
-  // `undefined` itself rather than `[]` -- but `new Set(undefined)` is
-  // spec-defined to produce an empty Set, identical to `new Set([])`.
-  // Stryker disable next-line ArrayDeclaration,LogicalOperator
-  const packages = options.packages ?? []
-
   const evidencePath = path.resolve(root, options.location)
   const fingerprintPath = fingerprintPathFor(evidencePath)
 
@@ -183,34 +168,13 @@ export async function getEvidenceModel(
     missReason,
   })
 
-  // Genuinely hard to trigger through the public API in isolation from
-  // `recompute()`'s own `generateEvidenceModel()` call: both share the same
-  // `discoverSchemaFiles`/`resolveAllowlistedPackages` machinery, so a
-  // fault that breaks fingerprint computation (tried: a nonexistent `root`)
-  // breaks evidence generation identically, and `recompute()` itself throws
-  // uncaught before this catch's own behavior could ever be observed
-  // in isolation; `resolveAllowlistedPackages` is also explicitly documented
-  // ("never throw here") not to throw for a malformed entry. Kept as real,
-  // defensive error handling regardless -- `fs.readFile` failures inside
-  // `computeSourceFingerprint`'s per-file loop are already caught there
-  // (see the "(unreadable)" marker above), so what could still reach here
-  // is deliberately unclear/future-proofing, not a known-reachable path.
-  let currentFingerprint: string
-  // Stryker disable BlockStatement, CallExpression, StringLiteral: reachable only if hashing the source files throws mid-run, which needs a fault-injecting filesystem; the fallback is a plain recompute
-  try {
-    currentFingerprint = await computeSourceFingerprint({
-      fs: options.fs,
-      root,
-      include,
-      exclude,
-      packages,
-    })
-  } catch (error) {
-    return recompute(
-      `could not compute a source fingerprint (${error instanceof Error ? error.message : String(error)})`,
-    )
-  }
-  // Stryker restore BlockStatement, CallExpression, StringLiteral
+  const currentFingerprint = await computeSourceFingerprint({
+    fs: options.fs,
+    root,
+    include,
+    exclude,
+    packages: options.packages,
+  })
 
   let storedFingerprint: string
   try {

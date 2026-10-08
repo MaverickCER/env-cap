@@ -60,7 +60,6 @@ export async function resolveRelativeImport(
 // mutant across repeated verification runs -- bracketing the whole
 // function is what finally holds; see `check-artifacts.ts`'s
 // `readIfExists` for the identical pattern and fuller rationale.
-// Stryker disable BlockStatement
 async function fileExists(filePath: string, fs: BuildFileSystem): Promise<boolean> {
   try {
     const stat = await fs.stat(filePath)
@@ -69,7 +68,6 @@ async function fileExists(filePath: string, fs: BuildFileSystem): Promise<boolea
     return false
   }
 }
-// Stryker restore BlockStatement
 
 /** Shared inputs threaded through every call to {@link resolveImportSpecifier} for one discovery/link run. */
 export interface ImportResolutionContext {

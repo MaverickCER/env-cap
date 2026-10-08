@@ -131,7 +131,6 @@ function assertIsProject(cwd: string): void {
   }
   let parsed: unknown
   try {
-    // Stryker disable next-line StringLiteral: hand-verified equivalent --
     // `readFileSync(path, "")` (the mutant) falls back to returning a
     // `Buffer` (an empty string isn't a recognized encoding), but
     // `JSON.parse` calls `.toString()` on any non-string input, which

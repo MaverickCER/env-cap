@@ -104,7 +104,6 @@ function recordIfIdentifierTarget(expression: ts.Expression, assignedNames: Set<
   // since no candidate alias name is ever `undefined`. Hand-verified:
   // mutating this to `if (true)` and running the real suite passes
   // unchanged.
-  // Stryker disable next-line ConditionalExpression
   if (ts.isIdentifier(target)) assignedNames.add(target.text)
 }
 
@@ -128,7 +127,6 @@ function recordAssignmentTargets(node: ts.Node, assignedNames: Set<string>): voi
     // any other node the two `=== PlusPlus/MinusMinus` checks below both
     // read `undefined` and fail. Hand-verified: mutating this compound to
     // `if (true)` and running the real suite passes unchanged.
-    // Stryker disable next-line ConditionalExpression
     (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
     (node.operator === ts.SyntaxKind.PlusPlusToken ||
       node.operator === ts.SyntaxKind.MinusMinusToken)
@@ -202,7 +200,6 @@ function collectDeclarationFacts(sourceFile: ts.SourceFile): {
   // `imports.get(undefined)` misses in `resolveAliasTargets` and the entry
   // is skipped before it can reach either the valid or disqualified path.
   // Hand-verified: mutating this and running the real suite passes unchanged.
-  // Stryker disable next-line ArrayDeclaration
   const constAliasCandidates: AliasCandidate[] = []
 
   function countDeclaration(name: string): void {
@@ -395,7 +392,6 @@ export function scanFileForDependencies(filePath: string, sourceText: string): F
       // `if (true)` and running the real suite passes unchanged. The
       // block-removal mutant, by contrast, IS caught (a binding element WITH
       // a default value that references a tracked import -- see the test).
-      // Stryker disable next-line ConditionalExpression
       if (element.initializer) ts.forEachChild(element.initializer, visit)
     }
   }

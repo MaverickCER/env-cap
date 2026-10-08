@@ -39,7 +39,6 @@ export function createEnv<S extends EnvSchema>(
       // false` on every own property regardless of what was set here) --
       // kept only as the conventional default for a getter no one should
       // reconfigure, not because anything could observe the difference.
-      // Stryker disable next-line BooleanLiteral
       configurable: false,
       get(): unknown {
         const error = getContractError(internals.id)

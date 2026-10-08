@@ -59,7 +59,6 @@ export const noRawProcessEnv = createRule<[RuleOptions], "noRawProcessEnv">({
     // onto `defaultOptions` (`allow: []`) before `create()` sees them, so
     // `options.allow` is never actually `undefined` here -- see the test
     // file's own comment on the `options: [{}]` case for the same finding.
-    // Stryker disable next-line ArrayDeclaration
     const allowPatterns = [...DEFAULT_SCHEMA_ALLOWLIST, ...(options.allow ?? [])]
     if (allowPatterns.some((p) => globToRegExp(p).test(filename))) return {}
 
@@ -81,10 +80,8 @@ export const noRawProcessEnv = createRule<[RuleOptions], "noRawProcessEnv">({
           // `.type`. Tried constructing a counterexample via several exotic
           // node shapes (all of the above) before concluding there
           // genuinely isn't one for this AST position.
-          // Stryker disable next-line ConditionalExpression
           obj.object.type === AST_NODE_TYPES.Identifier &&
           obj.object.name === "process" &&
-          // Stryker disable next-line ConditionalExpression: see the note above: no AST shape reaches this position with a non-Identifier property while the object is `process`
           obj.property.type === AST_NODE_TYPES.Identifier &&
           obj.property.name === "env"
         ) {

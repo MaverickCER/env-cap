@@ -134,9 +134,7 @@ export function groupVariablesByOwner<C extends OwnerBearingContract>(
 // arrow below is hand-verified killed (mutating it to `() => undefined` and
 // running the real suite fails the matching "carries the standing
 // disclaimer" test) despite Stryker reporting it Survived.
-// Stryker disable next-line ObjectLiteral
 export const configurationReference = defineEvidenceProjection<ConfigurationReference>({
-  // Stryker disable next-line ArrowFunction: the disclaimer thunk's text is only read by the Markdown printouts; the projection tests assert the projected shape, not this sentence
   disclaimer: () => evidenceDisclaimer(),
   entries: (evidence: EvidenceModel) => {
     const entries: ConfigurationReferenceEntry[] = []
@@ -187,9 +185,7 @@ export interface OwnershipSummary extends Record<string, unknown> {
  * Ownership summary: the inverse of Ownership Model's per-contract view --
  * who owns what, rolled up per owner, plus an explicit unowned list.
  */
-// Stryker disable next-line ObjectLiteral
 export const ownershipSummary = defineEvidenceProjection<OwnershipSummary>({
-  // Stryker disable next-line ArrowFunction: same thunk as above, for the second projection
   disclaimer: () => evidenceDisclaimer(),
   owners: (evidence: EvidenceModel) => {
     const contracts = contractIndex(evidence.contract.contracts)
@@ -279,9 +275,7 @@ export interface ExpiringSoonReport extends Record<string, unknown> {
  * which is exactly the reproducibility property the Evidence Model exists to
  * preserve.
  */
-// Stryker disable next-line ObjectLiteral
 export const expiringSoonReport = defineEvidenceProjection<ExpiringSoonReport>({
-  // Stryker disable next-line ArrowFunction: the projection is built at module load, so Stryker attributes this mutant to no single test; hand-verified that emptying `disclaimer` fails the expiringSoonReport test
   disclaimer: () => evidenceDisclaimer(),
   entries: (evidence: EvidenceModel) => {
     const contracts = contractIndex(evidence.contract.contracts)
@@ -303,10 +297,8 @@ export const expiringSoonReport = defineEvidenceProjection<ExpiringSoonReport>({
       // (`vitest run test/build/reference-projections.test.ts`) passes
       // unchanged. Restructuring into an `if`/guard would only relocate the
       // same equivalence onto a different mutant, not remove it.
-      // Stryker disable ConditionalExpression
       const variable =
         entry.key === undefined ? undefined : contract?.variables.find((v) => v.key === entry.key)
-      // Stryker restore ConditionalExpression
       return {
         file: entry.file,
         exportName: entry.exportName,
@@ -327,7 +319,6 @@ export const expiringSoonReport = defineEvidenceProjection<ExpiringSoonReport>({
   // Same static covered-mutant false-Survivor as the `disclaimer` arrows
   // above -- hand-verified killed (mutating this whole arrow to `() =>
   // undefined` fails the "expiredCount" assertions in every test above).
-  // Stryker disable next-line ArrowFunction
   expiredCount: (evidence: EvidenceModel) =>
     evidence.lifecycle.expiring.filter((e) => e.daysRemaining < 0).length,
 })

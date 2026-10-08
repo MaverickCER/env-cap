@@ -46,7 +46,6 @@ export function isEnvContract(value: unknown): value is object {
   // unresolvable conflict in this repo's eslint config: `src/**` bans `!`
   // (`no-non-null-assertion`) while the sibling `non-nullable-type-
   // assertion-style` rule then demands `!` over `as` for a null-only cast.
-  // Stryker disable next-line ConditionalExpression
   if (value === null) return false
   return internalsByContract.has(value)
 }

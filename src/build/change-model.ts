@@ -70,7 +70,7 @@ function findByContractAndKey(
   refs: readonly ManifestVariableRef[],
   file: string,
   exportName: string,
-  key: string,
+  key: string | undefined,
 ): ManifestVariableRef | undefined {
   return refs.find((ref) => ref.file === file && ref.exportName === exportName && ref.key === key)
 }
@@ -96,19 +96,6 @@ export function buildChangeModel(
     const cIdentity = contractIdentity(relativeFile, contract.exportName)
 
     for (const variable of contract.variables) {
-      // Runtime-equivalent without this guard: `findByContractAndKey(...,
-      // variable.renamedFrom)` with `renamedFrom === undefined` searches for
-      // `ref.key === undefined`, which a real `ManifestVariableRef.key`
-      // (always a defined string) can never match -- `removedRef` stays
-      // `undefined`, and the `if (!addedRef || !removedRef) continue` two
-      // lines down already skips it. Load-bearing for TypeScript's own
-      // narrowing of `variable.renamedFrom` to `string` below, though --
-      // hand-verified by bypassing it and running the full `vitest run`:
-      // only the tsc-backed json-schema freshness test fails, all 1233
-      // others pass unchanged.
-      // Stryker disable next-line ConditionalExpression
-      if (!variable.renamedFrom) continue
-
       const addedRef = findByContractAndKey(
         manifest.addedVariables,
         relativeFile,

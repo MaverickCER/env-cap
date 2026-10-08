@@ -10,8 +10,8 @@ import type { DynamicAccessCitationProblem } from "./citation-verification.js"
 import { dynamicAccessVariableIdentity } from "./citation-verification.js"
 import { defaultExclude, defaultInclude } from "./generate-manifest.js"
 import { effectiveOwner } from "./link.js"
+import { mustGet } from "./map-utils.js"
 import type { DiscoveredContract } from "./link.js"
-import type { ParseWarning } from "./parse.js"
 import type { ImportResolutionContext } from "./resolution/resolve-import.js"
 import type { PackageOrigin } from "./resolution/resolve-package-schema.js"
 import { resolveWithinRoot } from "./resolution/resolve-within-root.js"
@@ -116,7 +116,8 @@ export interface GenerateUsageReportResult extends RenderUsageReportOptions {
 
 export interface UsageComputation {
   readonly graph: DependencyGraph
-  readonly result: RenderUsageReportOptions
+  /** Everything the report renders except `parseWarnings`, which the caller owns (it comes from discovery, not from this analysis). */
+  readonly result: Omit<RenderUsageReportOptions, "parseWarnings">
 }
 
 /**
@@ -140,7 +141,6 @@ export async function computeUsage(
   scanFiles: readonly string[],
   readFile: (filePath: string) => Promise<string>,
   context: ImportResolutionContext,
-  parseWarnings: readonly ParseWarning[],
   scannedSurfaces?: readonly ScannedSurface[],
   dynamicAccessAcknowledgments?: ReadonlyMap<string, readonly DynamicAccessAssertion[]>,
 ): Promise<UsageComputation> {
@@ -161,31 +161,16 @@ export async function computeUsage(
   // finding (dependencyOwnership, abandonedContracts), which has no
   // specific variable to consider a per-variable override for.
   //
-  // `file`/`exportName` here always come from `graph.contracts` (via
-  // `deriveOwnershipFindings()`), which `buildDependencyGraph()` builds 1:1
-  // from this SAME `contracts` array (same identity-key derivation) -- so
-  // the lookup can never actually miss. The `?.` only exists for TypeScript's
-  // own narrowing; hand-verified by removing it and running the full
-  // `vitest run`: only the two tsc-backed json-schema freshness tests fail
-  // (a type-narrowing regression, not a behavioral one), every other test
-  // (1226) passes unchanged.
-  // Stryker disable OptionalChaining: the lookup cannot miss (see above); the `?.` only satisfies TypeScript's narrowing
+  // `file`/`exportName` always come from `graph.contracts`, which `buildDependencyGraph()` builds 1:1
+  // from this same `contracts` array, so the lookup cannot miss.
   const ownerFor = (file: string, exportName: string): string | undefined =>
-    contractByIdentity.get(`${file}#${exportName}`)?.owner
-  // Stryker restore OptionalChaining
+    mustGet(contractByIdentity, `${file}#${exportName}`).owner
   // A specific variable's *effective* owner (its own override, falling back
   // to the contract default) -- see ADR 0028. Used only for
   // unconsumedOwnedVariables below, the one finding type that names a
   // specific variable.
   const effectiveOwnerFor = (file: string, exportName: string, key: string): string | undefined => {
-    const contract = contractByIdentity.get(`${file}#${exportName}`)
-    // Same provably-always-found identity guarantee as `ownerFor` above
-    // (`f.file`/`f.exportName` here come from `findings.unconsumedOwned`,
-    // itself derived from the same `graph.contracts`) -- hand-verified the
-    // same way: bypassing this guard only breaks the two tsc-narrowing
-    // tests, not any real behavior.
-    // Stryker disable next-line ConditionalExpression
-    if (!contract) return undefined
+    const contract = mustGet(contractByIdentity, `${file}#${exportName}`)
     const variable = contract.variables.find((v) => v.key === key)
     return variable ? effectiveOwner(contract, variable) : contract.owner
   }
@@ -226,27 +211,18 @@ export async function computeUsage(
   ): DynamicAccessCitationProblem[] => {
     const relativeFile = displayPath(root, file)
     const identity = dynamicAccessVariableIdentity(relativeFile, exportName, key)
-    const problems: DynamicAccessCitationProblem[] = []
-    for (const a of dynamicAccessAcknowledgments?.get(identity) ?? []) {
-      // Per the doc comment above: unreachable in practice from either real
-      // caller (unconsumedOwnedVariables/indeterminate below) -- both only
-      // ever call this for a finding `deriveOwnershipFindings()` already
-      // decided has NO "fresh" assertion (a "fresh"-containing variable is
-      // routed to the separate "asserted" bucket instead, using this exact
-      // same identity-keyed map). Hand-verified: forcing this to `if (false)`
-      // and running the full `vitest run` leaves all 1232 tests passing.
-      // Stryker disable next-line ConditionalExpression, StringLiteral
-      if (a.acknowledgment === "fresh") continue
-      problems.push({
+    // Only variables `deriveOwnershipFindings()` left out of `asserted` reach here, so none of their
+    // citations is "fresh".
+    return (dynamicAccessAcknowledgments?.get(identity) ?? []).map(
+      (a): DynamicAccessCitationProblem => ({
         contractName,
         file: relativeFile,
         exportName,
         key,
         position: { file: a.file, line: a.line, column: a.column },
-        acknowledgment: a.acknowledgment,
-      })
-    }
-    return problems
+        acknowledgment: a.acknowledgment as DynamicAccessCitationProblem["acknowledgment"],
+      }),
+    )
   }
 
   const unconsumedOwnedVariables: UnconsumedOwnedVariableFinding[] = findings.unconsumedOwned.map(
@@ -298,7 +274,6 @@ export async function computeUsage(
       unconsumedOwnedVariables,
       indeterminate,
       asserted,
-      parseWarnings,
       scannedSurfaces: graph.scannedSurfaces,
     },
   }
@@ -316,7 +291,6 @@ export async function writeUsageReport(
   // fs.writeFile defaults a string write to utf8 regardless of the encoding
   // arg, so "utf8" vs "" is unobservable. Same established equivalence as
   // evidence-cache.ts/evidence-fingerprint.ts/env-example.ts's own writes.
-  // Stryker disable next-line StringLiteral
   await fs.writeFile(reportPath, source, "utf8")
 }
 
@@ -340,7 +314,6 @@ export async function generateUsageReport(
   const root = path.resolve(options.root ?? process.cwd())
   const include = options.include ?? defaultInclude()
   const exclude = options.exclude ?? defaultExclude()
-  const packages = options.packages ?? []
 
   let reportPath: string | undefined
   if (options.report) {
@@ -360,7 +333,7 @@ export async function generateUsageReport(
       root,
       include,
       exclude,
-      packages,
+      packages: options.packages,
       tsconfig: options.tsconfig,
     })
 
@@ -377,11 +350,14 @@ export async function generateUsageReport(
     scanFiles,
     readFileCached,
     context,
-    [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     scannedSurfaces,
   )
+  const result = {
+    ...computed.result,
+    parseWarnings: [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
+  }
 
-  if (reportPath) await writeUsageReport(reportPath, computed.result, options.fs)
+  if (reportPath) await writeUsageReport(reportPath, result, options.fs)
 
-  return { reportPath, ...computed.result }
+  return { reportPath, ...result }
 }

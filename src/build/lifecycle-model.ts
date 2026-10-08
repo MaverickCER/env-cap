@@ -171,13 +171,8 @@ export function parseRotationPeriodDays(value: string): number | undefined {
     // A zero amount ("0 days", "0w", ...) is rejected below, alongside the ISO branch's
     // identical `total > 0` guard -- see this function's own doc comment for why.
     if (amount > 0) {
-      // `plain[2]` is TypeScript's own `string | undefined` typing for every capture group on
-      // `RegExpExecArray` (the type can't express "this particular group is mandatory") -- group 2
-      // is the pattern's second (non-`?`-quantified) capturing group, so whenever `plain` itself
-      // matched, group 2 was necessarily captured too; the `?? ""` fallback exists only to satisfy
-      // `.toLowerCase()`'s `string` parameter type and can never actually run.
-      // Stryker disable next-line StringLiteral
-      const unit = (plain[2] ?? "").toLowerCase()
+      // Group 2 is mandatory in the pattern, so it is always captured when `plain` matched.
+      const unit = String(plain[2]).toLowerCase()
       switch (unit) {
         case "day":
         case "days":
@@ -266,43 +261,25 @@ export function computeRotationStatus(
 ): RotationComplianceStatus {
   if (!hasRotationData(variable)) return "undeclared"
 
-  // `parseIsoDate()` treats `undefined` (and every other non-date string) identically -- `new
-  // Date(x).getTime()` is `NaN` either way, so `expiry` ends up `undefined` regardless, and the
-  // `if (expiry !== undefined ...)` guard just below already skips the "expired" return. Bypassing
-  // this outer guard is therefore runtime-equivalent, but still load-bearing for TypeScript's own
-  // narrowing of `variable.expiresAt` to `string` for the `parseIsoDate()` call inside -- same
-  // equivalence `docs.ts`'s `computeExpiringEntries()` already documents for its own identical
-  // pattern. Hand-verified: bypassing it and running the real whole-package suite (`vitest run`)
-  // passes unchanged.
-  // Stryker disable next-line ConditionalExpression
-  if (variable.expiresAt !== undefined) {
-    const expiry = parseIsoDate(variable.expiresAt)
-    if (expiry !== undefined && expiry.getTime() < now.getTime()) return "expired"
-  }
+  // A missing `expiresAt` reads as the text "undefined", which does not parse, so it is skipped like any invalid value.
+  const expiry = parseIsoDate(String(variable.expiresAt))
+  if (expiry !== undefined && expiry.getTime() < now.getTime()) return "expired"
 
   if (variable.rotationPeriod !== undefined) {
-    // Same equivalence as the `expiresAt` guard above: `parseIsoDate(undefined)` is `undefined`
-    // just like `parseIsoDate()` of any other unparseable string, so `lastRotated !== undefined`
-    // on the next line already catches a missing `lastRotatedAt` -- but this guard still narrows
-    // `variable.lastRotatedAt` to `string` for TypeScript. Hand-verified: bypassing it and running
-    // the real whole-package suite (`vitest run`) passes unchanged.
-    // Stryker disable next-line ConditionalExpression
-    if (variable.lastRotatedAt !== undefined) {
-      const lastRotated = parseIsoDate(variable.lastRotatedAt)
-      const periodDays = parseRotationPeriodDays(variable.rotationPeriod)
-      // `lastRotated` must be no later than `now` -- a rotation timestamped in the future hasn't
-      // actually happened yet, so trusting it here would let a bad/clock-skewed value manufacture
-      // false compliance (a due date computed from a future `lastRotated` is always further in the
-      // future, so it would otherwise always read as "compliant" no matter how implausible).
-      // Falling through treats it exactly like any other unverifiable `lastRotatedAt`: fail closed.
-      if (
-        lastRotated !== undefined &&
-        lastRotated.getTime() <= now.getTime() &&
-        periodDays !== undefined
-      ) {
-        const dueDate = lastRotated.getTime() + periodDays * MS_PER_DAY
-        return dueDate < now.getTime() ? "overdue" : "compliant"
-      }
+    const lastRotated = parseIsoDate(String(variable.lastRotatedAt))
+    const periodDays = parseRotationPeriodDays(variable.rotationPeriod)
+    // `lastRotated` must be no later than `now` -- a rotation timestamped in the future hasn't
+    // actually happened yet, so trusting it here would let a bad/clock-skewed value manufacture
+    // false compliance (a due date computed from a future `lastRotated` is always further in the
+    // future, so it would otherwise always read as "compliant" no matter how implausible).
+    // Falling through treats it exactly like any other unverifiable `lastRotatedAt`: fail closed.
+    if (
+      lastRotated !== undefined &&
+      lastRotated.getTime() <= now.getTime() &&
+      periodDays !== undefined
+    ) {
+      const dueDate = lastRotated.getTime() + periodDays * MS_PER_DAY
+      return dueDate < now.getTime() ? "overdue" : "compliant"
     }
     return "overdue"
   }

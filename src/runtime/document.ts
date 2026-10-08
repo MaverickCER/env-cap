@@ -227,7 +227,6 @@ export interface ContractDocs<S extends EnvSchema = EnvSchema> {
 // reliably attach as the block's own leading comment -- hence this unscoped
 // disable/restore pair instead; see data-cap's `core/document.ts` for the
 // same pattern and the Stryker directive-attachment mechanics behind it.)
-// Stryker disable BlockStatement
 export function documentEnv<S extends EnvSchema>(schema: S, docs: ContractDocs<S>): void {
   // Intentionally inert -- see the module doc comment above. Do not add
   // logic here; anything this function does happens at runtime, in every
@@ -241,4 +240,3 @@ export function documentEnv<S extends EnvSchema>(schema: S, docs: ContractDocs<S
   // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- documentEnv is an intentional runtime no-op marker read by static analysis; voiding the argument keeps it referenced
   void docs
 }
-// Stryker restore BlockStatement

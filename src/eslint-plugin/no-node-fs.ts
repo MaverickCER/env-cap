@@ -27,7 +27,6 @@ function fsSpecifier(source: unknown): string | undefined {
   // `node:fs`, or their `/promises` forms, so `FS_SPECIFIER.test()` already
   // rejects every one of them -- the mutant dropping this guard is
   // equivalent. Same finding as `no-raw-process-env.ts`'s narrowing checks.
-  // Stryker disable next-line ConditionalExpression
   if (typeof source !== "string") return undefined
   if (!FS_SPECIFIER.test(source)) return undefined
   return source
@@ -72,7 +71,6 @@ export const noNodeFs = createRule<[RuleOptions], "noNodeFs">({
     // `?? []` is unreachable through the public API -- `RuleCreator` always
     // deep-merges `context.options` onto `defaultOptions` first. Same
     // finding as `no-raw-process-env.ts`'s identical line.
-    // Stryker disable next-line ArrayDeclaration
     const allowPatterns = options.allow ?? []
     if (allowPatterns.some((p) => globToRegExp(p).test(filename))) return {}
 
@@ -89,7 +87,6 @@ export const noNodeFs = createRule<[RuleOptions], "noNodeFs">({
         // ...) has no `.value`, and `fsSpecifier(undefined)` is already
         // `undefined` -- so the mutant that drops it can't be killed. Same
         // finding as `no-raw-process-env.ts`'s disabled narrowing checks.
-        // Stryker disable next-line ConditionalExpression
         if (node.source.type !== AST_NODE_TYPES.Literal) return
         const specifier = fsSpecifier(node.source.value)
         if (specifier !== undefined) {
@@ -102,7 +99,6 @@ export const noNodeFs = createRule<[RuleOptions], "noNodeFs">({
           // the `.name !== "require"` clause (only an `Identifier` carries a
           // `.name`), so the mutant dropping it is equivalent -- same finding
           // as `no-raw-process-env.ts`'s disabled narrowing checks.
-          // Stryker disable next-line ConditionalExpression
           node.callee.type !== AST_NODE_TYPES.Identifier ||
           node.callee.name !== "require" ||
           node.arguments[0]?.type !== AST_NODE_TYPES.Literal

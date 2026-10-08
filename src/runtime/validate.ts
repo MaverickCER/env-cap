@@ -29,11 +29,9 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
   // for the `return`/`throw` below, though -- hand-verified by removing
   // each `&&` clause entirely and running the full `vitest run`: all 1236
   // tests still pass.
-  // Stryker disable next-line ConditionalExpression, LogicalOperator
   if (state.status === "ready" && state.result) {
     return state.result
   }
-  // Stryker disable next-line ConditionalExpression, LogicalOperator: a failed state always carries its error, so `status === "failed"` and `state.error` are interchangeable here (equivalent mutant)
   if (state.status === "failed" && state.error) {
     throw state.error
   }
@@ -51,7 +49,6 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
   // meaningful if a future version ever awaits inside `runValidation()`).
   // Hand-verified: replacing the string with "" and running the full
   // `vitest run` leaves all 1236 tests passing.
-  // Stryker disable next-line StringLiteral
   state.status = "validating"
   const run = runValidation(options, state)
   state.inFlight = run
@@ -107,7 +104,6 @@ async function runValidation(
   // entry, so it's unobservable via any real `createEnv()`/`validateEnv()`
   // consumer. Hand-verified: seeding this with a phantom entry and running
   // the full `vitest run` leaves all 1236 tests passing.
-  // Stryker disable next-line ArrayDeclaration
   const resolved: { id: symbol; values: Record<string, unknown> }[] = []
 
   for (const contract of options.manifest) {
@@ -123,7 +119,6 @@ async function runValidation(
       // assertion, forbidden in src/) satisfies the type checker without
       // hiding the possibility. Hand-verified: mutating this condition away
       // and running the real suite passes unchanged.
-      // Stryker disable next-line ConditionalExpression
       if (definition === undefined) continue
 
       // A variable whose context isn't active is skipped entirely -- no
@@ -145,7 +140,6 @@ async function runValidation(
       // default" when there wasn't one is identical to not applying it.
       // Hand-verified: replacing the whole clause with `true` and running
       // the full `vitest run` leaves all 1236 tests passing.
-      // Stryker disable next-line ConditionalExpression
       if (working === undefined && definition.default !== undefined) {
         working =
           typeof definition.default === "function"

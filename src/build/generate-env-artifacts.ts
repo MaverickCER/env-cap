@@ -153,32 +153,41 @@ export interface GenerateEnvArtifactsResult {
  */
 export interface ComputeArtifactsResult {
   readonly root: string
-  readonly manifestOptions:
-    | Omit<
-        GenerateEnvManifestOptions,
-        "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig"
-      >
+  /** Set only when a manifest pass was requested. */
+  readonly manifest:
+    | {
+        readonly options: Omit<
+          GenerateEnvManifestOptions,
+          "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig"
+        >
+        readonly outputPath: string
+        readonly computed: ManifestComputation
+      }
     | undefined
-  readonly manifestOutputPath: string | undefined
-  readonly manifestComputed: ManifestComputation | undefined
-  readonly docsOptions:
-    | Omit<
-        GenerateDocumentationOptions,
-        "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig" | "liveExpirationDates"
-      >
+  /** Set only when a docs pass was requested; `envExamplePath` only when it also asked for an example file. */
+  readonly docs:
+    | {
+        readonly options: Omit<
+          GenerateDocumentationOptions,
+          "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig" | "liveExpirationDates"
+        >
+        readonly path: string
+        readonly envExamplePath: string | undefined
+      }
     | undefined
-  readonly docsPath: string | undefined
-  readonly envExamplePath: string | undefined
   /** Always computed -- Finding Model needs it regardless of whether a `docs` pass was itself requested. See ADR 0038. */
   readonly docsComputed: DocumentationComputation
   readonly docsContracts: readonly DiscoveredContract[]
-  readonly usageOptions:
-    | Omit<
-        GenerateUsageReportOptions,
-        "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig"
-      >
+  /** Set only when a usage pass was requested; `reportPath` only when it also asked for a report file. */
+  readonly usage:
+    | {
+        readonly options: Omit<
+          GenerateUsageReportOptions,
+          "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig"
+        >
+        readonly reportPath: string | undefined
+      }
     | undefined
-  readonly usageReportPath: string | undefined
   /** Always computed -- Finding Model needs it regardless of whether a `usage` pass was itself requested. See ADR 0038. */
   readonly usageComputed: UsageComputation
   readonly evidencePath: string | undefined
@@ -239,6 +248,15 @@ export function findingFiles(finding: Finding): string[] {
 }
 
 /**
+ * A pass's options, or `undefined` when the pass is not requested: `false` skips a pass entirely,
+ * exactly as omitting it does.
+ * @internal Exported for direct unit coverage.
+ */
+export function requestedPass<T extends object>(option: T | false | undefined): T | undefined {
+  return option === false ? undefined : option
+}
+
+/**
  * Runs schema discovery, linking, and every requested pass's pure `compute*()`
  * step -- but never writes anything to disk. Throws `EnvProjectGenerationError`
  * immediately if any requested output location escapes `root` (same
@@ -259,85 +277,42 @@ export async function computeArtifacts(
   const root = path.resolve(options.root ?? process.cwd())
   const include = options.include ?? defaultInclude()
   const exclude = options.exclude ?? defaultExclude()
-  const packages = options.packages ?? []
 
-  // Every mutant on these four lines (bypassing the `=== false` check
-  // entirely, or comparing against `true` instead of `false`) is
-  // behaviorally equivalent, not a real gap: every downstream consumer of
-  // `manifestOptions`/`docsOptions`/`usageOptions`/`evidenceOptions` only
-  // ever truthy-checks it (`if (manifestOptions) {...}`, `manifestOptions ?
-  // ... : undefined`) -- it never distinguishes the literal `false` a
-  // bypassed/differently-compared ternary could produce from a genuine
-  // `undefined`, since both are equally falsy. Hand-verified: mutating all
-  // four lines (both variants) and running the real suite passes unchanged.
-  // Stryker disable ConditionalExpression,BooleanLiteral: each option is only ever truthy-checked downstream, so `false` and `undefined` are indistinguishable (see the note above)
-  const manifestOptions = options.manifest === false ? undefined : options.manifest
-  const docsOptions = options.docs === false ? undefined : options.docs
-  const usageOptions = options.usage === false ? undefined : options.usage
-  const evidenceOptions = options.evidence === false ? undefined : options.evidence
-  // Stryker restore ConditionalExpression,BooleanLiteral
+  const manifestOptions = requestedPass(options.manifest)
+  const docsOptions = requestedPass(options.docs)
+  const usageOptions = requestedPass(options.usage)
+  const evidenceOptions = requestedPass(options.evidence)
 
   const pathIssues: CompatibilityIssue[] = []
-
-  let manifestOutputPath: string | undefined
-  if (manifestOptions) {
-    const result = resolveWithinRoot(
-      root,
-      manifestOptions.location,
-      "manifest.location",
-      "generateEnvArtifacts",
-    )
-    if (result.ok) manifestOutputPath = result.resolved
-    else pathIssues.push(result.issue)
+  // A location that escapes `root` is recorded and the run throws below, before anything uses the
+  // returned value -- the raw location is only a placeholder that keeps the result a plain `string`.
+  const resolveOutput = (location: string, label: string): string => {
+    const result = resolveWithinRoot(root, location, label, "generateEnvArtifacts")
+    if (result.ok) return result.resolved
+    pathIssues.push(result.issue)
+    return location
   }
 
-  let docsPath: string | undefined
-  let envExamplePath: string | undefined
-  if (docsOptions) {
-    const result = resolveWithinRoot(
-      root,
-      docsOptions.location,
-      "docs.location",
-      "generateEnvArtifacts",
-    )
-    if (result.ok) docsPath = result.resolved
-    else pathIssues.push(result.issue)
-
-    if (docsOptions.envExample) {
-      const exampleResult = resolveWithinRoot(
-        root,
-        docsOptions.envExample.location,
-        "docs.envExample.location",
-        "generateEnvArtifacts",
-      )
-      if (exampleResult.ok) envExamplePath = exampleResult.resolved
-      else pathIssues.push(exampleResult.issue)
-    }
+  const manifestTarget = manifestOptions && {
+    options: manifestOptions,
+    outputPath: resolveOutput(manifestOptions.location, "manifest.location"),
   }
-
-  let usageReportPath: string | undefined
-  if (usageOptions?.report) {
-    const result = resolveWithinRoot(
-      root,
-      usageOptions.report.location,
-      "usage.report.location",
-      "generateEnvArtifacts",
-    )
-    if (result.ok) usageReportPath = result.resolved
-    else pathIssues.push(result.issue)
+  const docsTarget = docsOptions && {
+    options: docsOptions,
+    path: resolveOutput(docsOptions.location, "docs.location"),
+    envExamplePath: docsOptions.envExample
+      ? resolveOutput(docsOptions.envExample.location, "docs.envExample.location")
+      : undefined,
   }
-
-  let evidencePath: string | undefined
-  if (evidenceOptions) {
-    const result = resolveWithinRoot(
-      root,
-      evidenceOptions.location,
-      "evidence.location",
-      "generateEnvArtifacts",
-    )
-    if (result.ok) evidencePath = result.resolved
-    else pathIssues.push(result.issue)
+  const usageTarget = usageOptions && {
+    options: usageOptions,
+    reportPath: usageOptions.report
+      ? resolveOutput(usageOptions.report.location, "usage.report.location")
+      : undefined,
   }
+  const evidencePath = evidenceOptions
+    ? resolveOutput(evidenceOptions.location, "evidence.location")
+    : undefined
 
   // Fail fast, before any discovery/parsing work and before any file is
   // written -- same atomicity guarantee `generateEnvManifest()` etc. give
@@ -350,7 +325,7 @@ export async function computeArtifacts(
       root,
       include,
       exclude,
-      packages,
+      packages: options.packages,
       tsconfig: options.tsconfig,
     })
   const generatedAt = new Date()
@@ -363,26 +338,18 @@ export async function computeArtifacts(
   const liveExpirationContracts = options.liveExpirationDates
     ? await resolveLiveExpirationDates(linkResult.contracts, options.liveExpirationDates)
     : linkResult.contracts
-  const docsContracts = docsOptions ? liveExpirationContracts : linkResult.contracts
+  const docsContracts = docsTarget ? liveExpirationContracts : linkResult.contracts
 
   // Manifest is the one pass that still blocks (ADR 0009's provable
   // exclusive-group/compatibility errors) -- docs/ownership never do (ADR
   // 0038: a team that wants to gate CI on either reads `Finding[]` from the
   // evidence artifact and decides for itself).
   const blocking: CompatibilityIssue[] = []
-  // `computeManifest()` only ever compares this value `=== "throw"` (see its
-  // own body) -- "warn" and any other non-"throw" string (including `""`)
-  // take the identical non-throw branch, so the literal fallback text itself
-  // is unobservable; only whether the CALLER explicitly passed "throw" (the
-  // `??` vs `&&` distinction, tested separately) matters. Hand-verified:
-  // mutating "warn" -> "" and running the real suite (`vitest run`, whole
-  // package) passes unchanged.
-  // Stryker disable StringLiteral
-  const manifestComputed = manifestOptions
-    ? computeManifest(root, linkResult, manifestOptions.onIncompatibility ?? "warn")
-    : undefined
-  // Stryker restore StringLiteral
-  if (manifestComputed) blocking.push(...manifestComputed.blocking)
+  const manifest = manifestTarget && {
+    ...manifestTarget,
+    computed: computeManifest(root, linkResult, manifestTarget.options.onIncompatibility),
+  }
+  if (manifest) blocking.push(...manifest.computed.blocking)
 
   // Computed unconditionally, once each -- Finding Model (part of the
   // always-built EvidenceModel) needs both regardless of whether a `docs`/
@@ -394,7 +361,7 @@ export async function computeArtifacts(
   const docsComputed = computeDocumentation(
     root,
     { ...linkResult, contracts: liveExpirationContracts },
-    docsOptions?.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS,
+    docsTarget?.options.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS,
     generatedAt,
   )
 
@@ -423,7 +390,6 @@ export async function computeArtifacts(
     scanFiles,
     readFileCached,
     context,
-    [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     scannedSurfaces,
     evidenceChanges?.dynamicAccessAcknowledgments,
   )
@@ -431,7 +397,7 @@ export async function computeArtifacts(
   const ownership = buildOwnershipModel(linkResult.contracts, root)
   const lifecycle = buildLifecycleModel(
     liveExpirationContracts,
-    docsOptions?.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS,
+    docsTarget?.options.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS,
     generatedAt,
     root,
   )
@@ -468,7 +434,7 @@ export async function computeArtifacts(
     unresolvedConsumers: usageComputed.result.unresolvedConsumers,
     unconsumedOwnedVariables: usageComputed.result.unconsumedOwnedVariables,
     indeterminateOwnership: usageComputed.result.indeterminate,
-    dynamicAccessCitationProblems: evidenceChanges?.dynamicAccessCitationProblems ?? [],
+    dynamicAccessCitationProblems: evidenceChanges?.dynamicAccessCitationProblems,
   })
 
   // Docs/ownership findings never block by default (ADR 0038). `--strict-docs`
@@ -498,16 +464,11 @@ export async function computeArtifacts(
 
   return {
     root,
-    manifestOptions,
-    manifestOutputPath,
-    manifestComputed,
-    docsOptions,
-    docsPath,
-    envExamplePath,
+    manifest,
+    docs: docsTarget,
     docsComputed,
     docsContracts,
-    usageOptions,
-    usageReportPath,
+    usage: usageTarget,
     usageComputed,
     evidencePath,
     evidence,
@@ -544,16 +505,11 @@ export async function generateEnvArtifacts(
 ): Promise<GenerateEnvArtifactsResult> {
   const computed = await computeArtifacts(options)
   const {
-    manifestOptions,
-    manifestOutputPath,
-    manifestComputed,
-    docsOptions,
-    docsPath,
-    envExamplePath,
+    manifest,
+    docs,
     docsComputed,
     docsContracts,
-    usageOptions,
-    usageReportPath,
+    usage,
     usageComputed,
     evidencePath,
     evidence,
@@ -566,74 +522,50 @@ export async function generateEnvArtifacts(
 
   if (blocking.length > 0) throw new EnvProjectGenerationError(blocking)
 
+  const parseWarnings = [...packageWarnings, ...linkWarnings]
+
   let manifestResult: GenerateEnvManifestResult | undefined
-  // All three of these are structurally correlated, not independently
-  // reachable in every combination: `manifestComputed` is only ever set
-  // (line 353) inside `manifestOptions ? computeManifest(...) : undefined`,
-  // and `manifestOutputPath` is only ever set (line 277) inside `if
-  // (manifestOptions) {...}`, after a `resolveWithinRoot()` call whose
-  // failure pushes to `pathIssues` -- which, if non-empty, makes
-  // `computeArtifacts()` throw before this function ever runs (line 332). So
-  // by the time this line executes, `manifestOutputPath` truthy already
-  // implies both `manifestOptions` and `manifestComputed` are truthy too, and
-  // vice versa -- every mutant on this compound guard (either `&&`/`||` swap,
-  // or collapsing a clause to `true`) is behaviorally equivalent. Hand
-  // hand-verified: mutating this line (both the LogicalOperator and
-  // ConditionalExpression variants Stryker reports) and running the real
-  // suite (`vitest run`, whole package) passes unchanged -- but note the
-  // three-way `&&` is still load-bearing for TypeScript's own control-flow
-  // narrowing inside this block (`manifestComputed.activeContracts` etc.
-  // below need all three narrowed to defined), so this must stay a disable,
-  // never a restructure to `||`/a subset of the checks.
-  // Stryker disable next-line LogicalOperator,ConditionalExpression
-  if (manifestOptions && manifestComputed && manifestOutputPath) {
-    await writeManifest(manifestOutputPath, manifestComputed.activeContracts, options.fs)
+  if (manifest) {
+    await writeManifest(manifest.outputPath, manifest.computed.activeContracts, options.fs)
     manifestResult = {
-      outputPath: manifestOutputPath,
-      contracts: manifestComputed.contractSummaries,
-      warnings: manifestComputed.warnings,
-      parseWarnings: [...packageWarnings, ...linkWarnings],
+      outputPath: manifest.outputPath,
+      contracts: manifest.computed.contractSummaries,
+      warnings: manifest.computed.warnings,
+      parseWarnings,
     }
   }
 
   let docsResult: GenerateDocumentationResult | undefined
-  // Same structural correlation as the manifest guard above: `docsPath` is
-  // only ever set (line 290) inside `if (docsOptions) {...}`, past a
-  // `resolveWithinRoot()` call whose own failure would have already thrown
-  // via `pathIssues` before this function runs -- so `docsPath` truthy here
-  // already implies `docsOptions` truthy, and vice versa. Hand-verified:
-  // mutating `&&` to `||` and running the real suite (`vitest run`, whole
-  // package) passes unchanged -- kept as `&&`, not restructured, since
-  // TypeScript's narrowing of `docsOptions.expiringWithinDays` etc. below
-  // still needs both operands checked.
-  // Stryker disable next-line LogicalOperator
-  if (docsOptions && docsPath) {
+  if (docs) {
     const { envExample } = await writeDocumentation(
-      docsPath,
-      envExamplePath,
+      docs.path,
+      docs.envExamplePath,
       root,
       docsContracts,
       docsComputed.contractModelContracts,
       docsComputed.documentation,
-      docsOptions.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS,
+      docs.options.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS,
       generatedAt,
       options.fs,
-      docsOptions.envExample?.onExisting,
+      docs.options.envExample?.onExisting,
     )
     docsResult = {
-      docsPath,
+      docsPath: docs.path,
       envExample,
       contracts: docsComputed.contractSummaries,
       catalog: docsComputed.catalog,
-      parseWarnings: [...packageWarnings, ...linkWarnings],
+      parseWarnings,
       documentation: docsComputed.documentation,
     }
   }
 
   let usageResult: GenerateUsageReportResult | undefined
-  if (usageOptions) {
-    if (usageReportPath) await writeUsageReport(usageReportPath, usageComputed.result, options.fs)
-    usageResult = { reportPath: usageReportPath, ...usageComputed.result }
+  if (usage) {
+    const usageReport = { ...usageComputed.result, parseWarnings }
+    if (usage.reportPath !== undefined) {
+      await writeUsageReport(usage.reportPath, usageReport, options.fs)
+    }
+    usageResult = { reportPath: usage.reportPath, ...usageReport }
   }
 
   if (evidencePath) {
@@ -643,7 +575,7 @@ export async function generateEnvArtifacts(
       root,
       include: options.include ?? defaultInclude(),
       exclude: options.exclude ?? defaultExclude(),
-      packages: options.packages ?? [],
+      packages: options.packages,
     })
     await writeEvidenceFingerprint(evidencePath, fingerprint, options.fs)
   }

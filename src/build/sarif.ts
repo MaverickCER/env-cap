@@ -52,7 +52,6 @@ function sarifLocations(finding: Finding): readonly SarifLocation[] | undefined 
   // OTHER model already fails the `=== "change"` comparison for real, so
   // routing them to the same branch a mutated condition would pick changes
   // nothing observable there either.
-  // Stryker disable next-line ConditionalExpression,StringLiteral
   const position = location.model === "change" ? undefined : location.position
   return [
     {

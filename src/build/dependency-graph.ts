@@ -219,7 +219,6 @@ function attributeAccessSites(
   // gap: a plain string's `.kind` reads `undefined`, matching none of the
   // branches below. Hand-verified: mutating the `?? []` and running the
   // real suite passes unchanged.
-  // Stryker disable next-line ArrayDeclaration
   sites: readonly AccessSite[] = [],
 ): void {
   for (const site of sites) {
@@ -242,19 +241,10 @@ function attributeAccessSites(
   }
 }
 
-/**
- * Sorts two positions by file, then line. The `a.line - b.line` tiebreak
- * (only reached when `a.file === b.file`) is unreachable-to-differ from `+`:
- * every position for ONE variable in ONE file is pushed by a single
- * top-to-bottom AST walk of that file's source, so same-file positions are
- * always ALREADY in non-decreasing line order by construction. Hand-verified:
- * mutating `-` to `+` and running the real suite passes unchanged.
- */
-// Stryker disable ArithmeticOperator
-function byPosition(a: SourcePosition, b: SourcePosition): number {
+/** Sorts two positions by file, then line. @internal Exported for direct unit coverage. */
+export function byPosition(a: SourcePosition, b: SourcePosition): number {
   return a.file.localeCompare(b.file) || a.line - b.line
 }
-// Stryker restore ArithmeticOperator
 
 /** One variable's final access status: a proven member access is always `used`; otherwise a contract-level dynamic access or escape makes it `indeterminate`; otherwise `unconsumed`. */
 function classifyVariable(
@@ -333,15 +323,8 @@ export async function buildDependencyGraph(
   for (const scan of scanResults) {
     for (const [localName, binding] of scan.imports) {
       const resolvedFile = await resolveImportSpecifier(scan.file, binding.specifier, context)
-      // Bypassing this guard is behaviorally equivalent for any realistic
-      // fixture, not a real gap: an undefined `resolvedFile` makes the
-      // lookup key `` `undefined#${binding.importedName}` ``, which the next
-      // `if (!building) continue` guard already absorbs. Hand-verified:
-      // mutating this and running the real suite passes unchanged.
-      // Stryker disable next-line ConditionalExpression
-      if (!resolvedFile) continue // bare/package specifier or nonexistent file -- unresolvable, skip silently
-
-      const building = byIdentity.get(`${resolvedFile}#${binding.importedName}`)
+      // An unresolvable import (a bare specifier, a missing file) has no identity, so it matches no contract below.
+      const building = byIdentity.get(`${String(resolvedFile)}#${binding.importedName}`)
       if (!building) continue // handled in pass 2 if this turns out to be an ambiguous barrel forward
 
       building.imported = true
@@ -360,15 +343,7 @@ export async function buildDependencyGraph(
   for (const scan of scanResults) {
     for (const [, binding] of scan.imports) {
       const resolvedFile = await resolveImportSpecifier(scan.file, binding.specifier, context)
-      // Same equivalence as pass 1's identical guard above: `resolvedFile`
-      // undefined makes `scanByFile.get(resolvedFile)` below return
-      // `undefined` (its keys are always real scanned file paths, never
-      // "undefined"), which the very next `!targetScan?.hasWildcardReExport`
-      // guard already absorbs. Hand-verified: mutating this and running the
-      // real suite passes unchanged.
-      // Stryker disable next-line ConditionalExpression
-      if (!resolvedFile) continue
-      const targetScan = scanByFile.get(resolvedFile)
+      const targetScan = scanByFile.get(String(resolvedFile))
       if (!targetScan?.hasWildcardReExport) continue
 
       for (const building of byIdentity.values()) {

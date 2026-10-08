@@ -455,13 +455,28 @@ describe("resolvePackageSchemaFile", () => {
     )
     await fs.writeFile(path.join(packageDir, "index.js"), "module.exports = {};\n", "utf8")
     try {
+      const candidates: string[] = []
       const result = await resolvePackageSchemaFile(
         "@fixtures/rootwalk",
         rootWalkRoot,
         freshCache(),
-        nodeBuildFs,
+        fsWithOverride({
+          readFile: (file, encoding) => {
+            candidates.push(file)
+            return nodeBuildFs.readFile(file, encoding)
+          },
+        }),
       )
       expect(result).toMatchObject({ ok: false, code: "PACKAGE_NOT_FOUND" })
+
+      // The walk reads each ancestor's package.json exactly once and stops at the filesystem root;
+      // it does not keep re-reading the root until its iteration budget runs out.
+      const expected: string[] = []
+      for (let dir = await fs.realpath(packageDir); ; dir = path.dirname(dir)) {
+        expected.push(path.join(dir, "package.json"))
+        if (path.dirname(dir) === dir) break
+      }
+      expect(candidates).toEqual(expected)
     } finally {
       await fs.rm(rootWalkRoot, { recursive: true, force: true })
     }
@@ -682,6 +697,18 @@ describe("resolvePackageImport", () => {
       nodeBuildFs,
     )
     expect(file?.endsWith("simple-pkg/src/env.schema.ts")).toBe(true)
+  })
+
+  it("leaves the cache untouched for a specifier outside the allowlist", async () => {
+    const cache = freshCache()
+    await resolvePackageImport(
+      "left-pad",
+      ["@fixtures/simple-pkg"],
+      fixtureRoot,
+      cache,
+      nodeBuildFs,
+    )
+    expect(cache.size).toBe(0)
   })
 
   it("returns undefined for a bare specifier not in the allowlist -- identical no-op to resolveRelativeImport", async () => {

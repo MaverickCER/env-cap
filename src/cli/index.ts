@@ -125,7 +125,6 @@ function setHelp(a: ParsedArgs): void {
 // "Survived" for every individual entry's own body; this fixes the entries,
 // the wrapper object literal's own collapse-to-`{}` mutant is a second,
 // distinct static-attribution target that the same fix doesn't reach.
-// Stryker disable next-line ObjectLiteral
 const BOOL_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs) => void>>> = {
   "--no-tsconfig": setNoTsconfig,
   "--strict": setStrict,
@@ -171,10 +170,8 @@ export function parseArgs(argv: string[]): ParsedArgs {
   // itself (see the disable comment on the `if` below): under correct code
   // `passes` never approaches `maxPasses`, so no real test input can observe
   // a change to any of them.
-  // Stryker disable next-line ArithmeticOperator
   const maxPasses = argv.length * 2 + 4
   for (let i = 0; i < argv.length; i++) {
-    // Stryker disable next-line UpdateOperator: `passes` is only compared with the unreachable `maxPasses` bound, so counting down instead of up cannot change any observable result
     passes++
     // Unreachable by design for any correct `argv`, the same way the
     // `arg = argv[i] ?? ""` fallback just below is: this guard's whole
@@ -182,13 +179,10 @@ export function parseArgs(argv: string[]): ParsedArgs {
     // broken, so no real test input (which only ever exercises correct
     // code) can reach it. A test that reached it would itself require an
     // already-broken build to construct.
-    // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
     if (passes > maxPasses) {
-      // Stryker disable CallExpression, StringLiteral: message of an unreachable internal-invariant error (parse loop bound)
       throw new Error(
         `parseArgs: exceeded ${String(maxPasses)} iterations parsing ${String(argv.length)} argument(s) -- this should never happen for any real argv and indicates an internal parsing bug.`,
       )
-      // Stryker restore CallExpression, StringLiteral
     }
     // Provably unreachable for any real `string[]` input: the loop condition
     // `i < argv.length` guarantees `argv[i]` is in-bounds (hence defined)
@@ -199,7 +193,6 @@ export function parseArgs(argv: string[]): ParsedArgs {
     // actually occur. Hand-verified: replacing the fallback string and
     // running the real suite (`vitest run` across all of test/cli/) passes
     // unchanged.
-    // Stryker disable next-line StringLiteral
     const arg = argv[i] ?? ""
     const valueFlag = VALUE_FLAGS[arg]
     if (valueFlag) {
@@ -468,7 +461,6 @@ async function runCheckMode(args: ParsedArgs): Promise<void> {
     // this call site either. Hand-verified: mutating both together (`{}`,
     // `true`) and running the real whole-package suite (`vitest run`)
     // passes unchanged.
-    // Stryker disable ObjectLiteral,BooleanLiteral
     writeJson(
       serializeSuccess(
         { manifest: undefined, docs: undefined, usage: undefined },
@@ -480,7 +472,6 @@ async function runCheckMode(args: ParsedArgs): Promise<void> {
         requestedPasses(args),
       ),
     )
-    // Stryker restore ObjectLiteral,BooleanLiteral
   } else {
     process.stdout.write("Checking for drift (--check: nothing will be written)...\n\n")
     for (const f of checkResult.findings) {

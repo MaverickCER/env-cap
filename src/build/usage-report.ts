@@ -310,6 +310,5 @@ export function renderUsageReport(computed: RenderUsageReportOptions): string {
   // convention. Hand-verified: replacing the whole match with `""` instead
   // and running the real suite (a maximal fixture exercising every section)
   // passes unchanged either way.
-  // Stryker disable next-line StringLiteral
   return lines.join("\n").replace(/\n{3,}/g, "\n\n")
 }

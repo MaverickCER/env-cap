@@ -124,29 +124,9 @@ export async function buildDependencyModel(
         dynamicAccessAssertions: info.dynamicAccessAssertions,
       }))
       .sort((a, b) => a.key.localeCompare(b.key)),
-    // `.sort()` here (and the whole `.map(...).sort()` chain as one
-    // `MethodExpression` unit) is a defensive no-op, not a real gap:
-    // dependency-graph.ts's own `consumingFiles` is already
-    // `[...building.consumingFiles].sort()` before this projection ever
-    // sees it (see that file's own comment). Hand-verified: dropping this
-    // `.sort()` and running the real suite passes unchanged -- confirmed
-    // again 2026-09-18 against CI's own diagnostic mutation report, which
-    // flagged this exact `MethodExpression` mutant as Survived.
-    // Stryker disable next-line MethodExpression
-    consumingFiles: [...contract.consumingFiles].map((f) => displayPath(root, f)).sort(),
-    // Same reasoning as `consumingFiles` just above -- the whole
-    // `.map(...).sort()` chain is a coarser-grained `MethodExpression`
-    // mutant target than the next-line one on `.sort()` alone just below.
-    // Stryker disable next-line MethodExpression
-    ambiguousBarrelFiles: [...contract.ambiguousBarrelFiles]
-      .map((f) => displayPath(root, f))
-      // `.sort()` here is a defensive no-op, not a real gap: dependency-graph.ts's
-      // own `ambiguousBarrelFiles` is already `[...building.ambiguousBarrelFiles].sort()`
-      // before this projection ever sees it (see that file's own comment).
-      // Hand-verified: dropping this `.sort()` and running the real suite
-      // passes unchanged.
-      // Stryker disable next-line MethodExpression
-      .sort(),
+    // Already sorted by `buildDependencyGraph()`; the display paths keep that order.
+    consumingFiles: [...contract.consumingFiles].map((f) => displayPath(root, f)),
+    ambiguousBarrelFiles: [...contract.ambiguousBarrelFiles].map((f) => displayPath(root, f)),
     dynamicAccessSites: contract.dynamicAccessSites.map((p) => relativizePosition(root, p)),
   }))
   modelContracts.sort(byContractIdentity)
@@ -173,7 +153,6 @@ export async function buildDependencyModel(
   // method, same arguments, same object shape, not a semantic change at all.
   // Hand-verified: mutating to the reported replacement and running the real
   // suite passes unchanged.
-  // Stryker disable next-line MethodExpression
   const consumers: DependencyModelConsumer[] = [...byFile.entries()]
     .map(([file, refs]) => ({ file, contracts: refs }))
     .sort((a, b) => a.file.localeCompare(b.file))

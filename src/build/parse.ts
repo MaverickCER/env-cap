@@ -412,7 +412,6 @@ function extractReturnType(node: ts.Expression): string | undefined {
     // disabling (per the drive's established regex-boundary-verification
     // technique) -- contrast `normalizeSource()` below, whose OWN `+` IS
     // load-bearing, because it replaces with `" "` (a single space) instead.
-    // Stryker disable next-line Regex
     return node.type.getText().replace(/\s+/g, "")
   }
   return undefined
@@ -426,7 +425,6 @@ function normalizeSource(text: string): string {
   // there is never anything for `.trim()` to remove. Hand-verified further:
   // dropping `.trim()` here and running the real whole-package suite
   // (`vitest run`) passes unchanged.
-  // Stryker disable next-line MethodExpression
   return text.replace(/\s+/g, " ").trim()
 }
 
@@ -745,10 +743,8 @@ function extractVariableDocsMap(
       // function's call chain depend on. Hand-verified: bypassing both and
       // running the real whole-package suite (`vitest run`) only breaks
       // those two `tsc`-driven tests, no runtime-behavior assertion.
-      // Stryker disable next-line ConditionalExpression
       if (fieldName === undefined) continue
       const evaluated = evaluateLiteral(field.initializer)
-      // Stryker disable next-line ConditionalExpression: a non-literal initializer contributes nothing to the extracted docs either way, so continuing or falling through is unobservable
       if (!evaluated.ok) continue
 
       if (fieldName === "description" && typeof evaluated.value === "string")
@@ -863,7 +859,6 @@ function extractDynamicAccessCitations(
     // clause and running the real whole-package suite (`vitest run`) passes
     // unchanged, including the existing malformed-entries fixture's own
     // non-string (`123`) element.
-    // Stryker disable next-line ConditionalExpression
     if (typeof entry === "string" && parsePositionCitation(entry)) {
       citations.push(entry)
     } else {

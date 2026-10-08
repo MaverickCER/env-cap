@@ -65,6 +65,19 @@ describe("assembleProject", () => {
     expect(result.tsconfigWarnings).toEqual([])
   })
 
+  it("allow-lists no packages at all when `packages` is omitted", async () => {
+    const result = await assembleProject({
+      fs: nodeBuildFs,
+      root: fixtureRoot,
+      include: ["features/**/env.schema.ts"],
+      exclude: [],
+      tsconfig: false,
+    })
+
+    expect(result.context.packages).toEqual([])
+    expect(result.packageWarnings).toEqual([])
+  })
+
   it("links a real allow-listed package's own schema file too -- the package's contract genuinely reaches linkFiles(), not just the local ones", async () => {
     const result = await assembleProject({
       fs: nodeBuildFs,

@@ -34,27 +34,21 @@ export function globToRegExp(pattern: string): RegExp {
   // itself (see the disable comment on the `if` below): under correct code
   // `passes` never approaches `maxPasses`, so no real test input can observe
   // a change to any of them.
-  // Stryker disable next-line ArithmeticOperator
   const maxPasses = pattern.length * 2 + 4
   // Widening this bound to `<=` is a genuine no-op: on the one extra pass at
   // `i === pattern.length`, `pattern[i]` is `undefined`, and the guard below
   // already `continue`s past it before anything else in the loop body runs.
   // Hand-verified: mutating this and running the real suite passes unchanged.
-  // Stryker disable next-line EqualityOperator
   for (let i = 0; i < pattern.length; i++) {
-    // Stryker disable next-line UpdateOperator: turns a bounded loop guard into an unbounded one, which can only show up as a hang; the guard is unreachable for any real pattern
     passes++
     // Unreachable by design for any correct `pattern`, the same way the
     // `char === undefined` guard just below is: this guard's whole purpose
     // is to fail fast when a *mutated* build's loop-advance is broken, so no
     // real test input (which only ever exercises correct code) can reach it.
-    // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
     if (passes > maxPasses) {
-      // Stryker disable CallExpression, StringLiteral: message of that unreachable internal-invariant error
       throw new Error(
         `globToRegExp: exceeded ${String(maxPasses)} iterations parsing pattern ${JSON.stringify(pattern)} -- this should never happen for any real pattern and indicates an internal parsing bug.`,
       )
-      // Stryker restore CallExpression, StringLiteral
     }
     const char = pattern[i]
     // The loop bound (`i < pattern.length`) already guarantees this branch
@@ -65,7 +59,6 @@ export function globToRegExp(pattern: string): RegExp {
     // Hand-verified: mutating this condition to `false` and running the
     // real suite passes unchanged -- this branch is provably unreachable
     // within the loop bound, so no test can ever exercise it.
-    // Stryker disable next-line ConditionalExpression
     if (char === undefined) continue
     if (char === "*" && pattern[i + 1] === "*") {
       const precededBySlashOrStart = i === 0 || pattern[i - 1] === "/"
