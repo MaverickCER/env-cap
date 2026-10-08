@@ -207,18 +207,8 @@ export function uuid(versions: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8]): Va
       return "Expected a valid UUID ."
     }
 
-    // Capture group 3 is mandatory in the pattern (no `?`), so a successful
-    // match always captures it -- noUncheckedIndexedAccess can't see that
-    // invariant through RegExpExecArray's numeric index signature. A real
-    // guard (not a non-null assertion, forbidden in src/) satisfies the type
-    // checker without hiding the possibility. Hand-verified: mutating this
-    // whole guard (its condition, its block, and its message) and running
-    // the real suite passes unchanged.
-    const versionDigit = match[3]
-    if (versionDigit === undefined) {
-      return "Expected a valid UUID ."
-    }
-    const version = Number.parseInt(versionDigit, 16)
+    // Capture group 3 is mandatory in the pattern, so it is always captured when the pattern matched.
+    const version = Number.parseInt(String(match[3]), 16)
 
     if (!versions.includes(version)) {
       return `Expected UUID version ${versions.join(", ")}.`

@@ -218,25 +218,11 @@ export interface ContractDocs<S extends EnvSchema = EnvSchema> {
  * annotation loses the per-key literal type and falls back to accepting any
  * string key in `docs.variables`, same as before this generic existed.
  */
-// Deliberately a true no-op (see the doc comment above): `documentEnv` has no
-// runtime behavior at all, only a compile-time keyed-shape check and a
-// static-analysis-visible call site -- its body being empty is observably
-// identical to explicitly discarding both arguments, so there is nothing a
-// test could assert to distinguish the two. (A `next-line` disable placed
-// inside the parameter list, right before the closing paren, does not
-// reliably attach as the block's own leading comment -- hence this unscoped
-// disable/restore pair instead; see data-cap's `core/document.ts` for the
-// same pattern and the Stryker directive-attachment mechanics behind it.)
-export function documentEnv<S extends EnvSchema>(schema: S, docs: ContractDocs<S>): void {
-  // Intentionally inert -- see the module doc comment above. Do not add
-  // logic here; anything this function does happens at runtime, in every
-  // process that imports the schema file, which is exactly what this split
-  // exists to avoid. The `void`s below only satisfy `noUnusedParameters` --
-  // a bare `schema`/`docs` expression statement trips `no-unused-expressions`
-  // instead, and renaming these public parameters to `_schema`/`_docs` would
-  // leak into every consumer's editor hover.
-  // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- marks the parameter used without renaming a public parameter (see the note above)
-  void schema
-  // eslint-disable-next-line @typescript-eslint/no-meaningless-void-operator -- documentEnv is an intentional runtime no-op marker read by static analysis; voiding the argument keeps it referenced
-  void docs
+export function documentEnv<S extends EnvSchema>(schema: S, docs: ContractDocs<S>): void
+// Deliberately a true no-op (see the doc comment above): `documentEnv` has no runtime behavior at all,
+// only a compile-time keyed-shape check and a static-analysis-visible call site. The overload above
+// carries the public parameters; this implementation takes none, so nothing is left unused.
+export function documentEnv(): void {
+  // Intentionally inert: anything done here would run in every process that imports a schema file,
+  // which is exactly what the build/runtime split exists to avoid.
 }
