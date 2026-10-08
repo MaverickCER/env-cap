@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { scanFileForDependencies } from "../../src/build/scan-dependencies.js"
+import ts from "typescript"
+import {
+  collectDeclarationFacts,
+  scanFileForDependencies,
+} from "../../src/build/scan-dependencies.js"
 
 // Exercised indirectly (through buildDependencyGraph) by
 // test/build/dependency-graph.test.ts -- this file drives
@@ -571,5 +575,50 @@ describe("local dataflow: destructuring and one-level aliasing (ADR 0039)", () =
     expect(result.accessesByLocalName.get("fallbackEnv")).toEqual([
       { kind: "reference", line: 3, column: 22 },
     ])
+  })
+})
+
+describe("collectDeclarationFacts", () => {
+  // Built inside each test (not at describe scope) so mutation coverage can attribute it.
+  const factsOfSample = () =>
+    collectDeclarationFacts(
+      ts.createSourceFile(
+        "facts.ts",
+        [
+          'import { env } from "x"',
+          "const alias = env",
+          "let counter = 0",
+          "counter++",
+          "--(other)",
+          "obj.prop = 1",
+          "arr[0] += 2",
+          "paren = 3",
+          "for (loopVar of list) {}",
+          "function build(param) {}",
+        ].join("\n"),
+        ts.ScriptTarget.Latest,
+        true,
+      ),
+    )
+
+  it("counts every binding a name is introduced by, exactly", () => {
+    expect(factsOfSample().declarationCounts).toEqual(
+      new Map([
+        ["alias", 1],
+        ["counter", 1],
+        ["build", 1],
+        ["param", 1],
+      ]),
+    )
+  })
+
+  it("records only bare identifiers as assignment targets, never a member or element target", () => {
+    expect(factsOfSample().assignedNames).toEqual(new Set(["counter", "other", "paren", "loopVar"]))
+  })
+
+  it("lists exactly the plain `const name = identifier` declarations as alias candidates", () => {
+    const { constAliasCandidates } = factsOfSample()
+    expect(constAliasCandidates).toHaveLength(1)
+    expect(constAliasCandidates[0]).toMatchObject({ aliasName: "alias", baseName: "env" })
   })
 })

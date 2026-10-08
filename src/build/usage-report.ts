@@ -300,15 +300,5 @@ export function renderUsageReport(computed: RenderUsageReportOptions): string {
     ...renderAsserted(computed.asserted),
     ...renderParseWarnings(computed.parseWarnings),
   ]
-  // The `"\n\n"` replacement (or the `/\n{3,}/g` match itself) is
-  // unreachable through the current composition, not a real gap: every
-  // `render*()` helper above contributes AT MOST one trailing blank line
-  // when non-empty, and exactly zero lines when empty (`[]`, never a lone
-  // blank placeholder) -- so no composition of them can ever produce 3+
-  // consecutive newlines for this regex to collapse. Kept as a defensive
-  // safety net for a FUTURE section helper that might not follow that
-  // convention. Hand-verified: replacing the whole match with `""` instead
-  // and running the real suite (a maximal fixture exercising every section)
-  // passes unchanged either way.
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n")
+  return lines.join("\n")
 }

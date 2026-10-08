@@ -47,26 +47,15 @@ export async function resolveRelativeImport(
   return undefined
 }
 
-// `catch { return false }` below is this function's LAST statement -- an
-// empty catch body would already fall through to an identical implicit
-// `undefined` return, which every caller here treats exactly like `false`
-// (an `if (await fileExists(...))` never distinguishes the two).
-// `noImplicitReturns` still requires an explicit `return` on this path, so
-// the block can never be truly empty. Hand-verified directly (mutating the
-// source to a genuinely empty `catch {}` and running the real test suite)
-// -- every test still passes. Several narrower disable placements (on
-// `return false` itself, directly above `catch`, an unscoped pair
-// bracketing just the catch clause) did not reliably suppress this exact
-// mutant across repeated verification runs -- bracketing the whole
-// function is what finally holds; see `check-artifacts.ts`'s
-// `readIfExists` for the identical pattern and fuller rationale.
-async function fileExists(filePath: string, fs: BuildFileSystem): Promise<boolean> {
-  try {
-    const stat = await fs.stat(filePath)
-    return stat.isFile()
-  } catch {
-    return false
-  }
+/**
+ * Whether `filePath` is a regular file; a path that cannot be stat'd is simply not one.
+ * @internal Exported for direct unit coverage.
+ */
+export function fileExists(filePath: string, fs: BuildFileSystem): Promise<boolean> {
+  return fs.stat(filePath).then(
+    (stat) => stat.isFile(),
+    () => false,
+  )
 }
 
 /** Shared inputs threaded through every call to {@link resolveImportSpecifier} for one discovery/link run. */

@@ -111,15 +111,8 @@ function toVariableRef(
 
 /** Any value → its diffable string form. Non-string values (including `undefined`, which passes through) render as their JSON text, so an object/array/number/boolean field is still comparable without a per-field type list. */
 function toComparable(value: unknown): string | undefined {
-  // Bypassing this early return is behaviorally equivalent, not a real gap:
-  // `JSON.stringify(undefined) === undefined` too (verified via a real
-  // `node -e` check), so falling through to the final `return
-  // JSON.stringify(value)` produces the identical `undefined` result either
-  // way. Hand-verified: mutating this and running the real suite
-  // (`vitest run test/build/evidence-snapshot.test.ts`) passes unchanged.
-  if (value === undefined) return undefined
-  if (typeof value === "string") return value
-  return JSON.stringify(value)
+  // `JSON.stringify(undefined)` is `undefined` too, so an absent value passes through untouched.
+  return typeof value === "string" ? value : JSON.stringify(value)
 }
 
 /**
@@ -194,16 +187,7 @@ function byIdentity<T extends ContractRef & { key?: string }>(a: T, b: T): numbe
   return (
     a.file.localeCompare(b.file) ||
     a.exportName.localeCompare(b.exportName) ||
-    // The `?? ""` fallbacks themselves are unreachable through any real
-    // array this function ever sorts: a `ManifestContractRef` never carries
-    // a `key` at all, but its own array can never hold two entries sharing
-    // both file+exportName (contracts are unique by that pair) so the key
-    // term is never reached for them either way; a `ManifestVariableRef`'s
-    // `key` is always a real, non-empty string, never `undefined`. Hand-
-    // verified: mutating both fallbacks to a distinguishing sentinel and
-    // running the real suite (this file plus
-    // check-artifacts.test.ts/generate-evidence.test.ts) passes unchanged.
-    (a.key ?? "").localeCompare(b.key ?? "")
+    String(a.key).localeCompare(String(b.key))
   )
 }
 
@@ -235,37 +219,14 @@ export function diffContracts(
       const changes = genericFieldChanges(
         previousContract as unknown as Record<string, unknown>,
         currentContract as unknown as Record<string, unknown>,
-        new Set([
-          // "file"/"exportName" can never actually differ here: both
-          // contracts of a matched pair share the same Map key
-          // (`contractIdentity()`), itself derived from file+exportName, so
-          // they're always structurally equal for two contracts matched
-          // into one updatedContracts entry. Hand-verified equivalent via
-          // direct mutation + a real suite run.
-          "file",
-          "exportName",
-          // Genuinely skipped AND real-tested -- see "does not report the
-          // whole variables array as a changed field" below.
-          "variables",
-        ]),
+        // `file` and `exportName` cannot differ for a matched pair (they make up its identity).
+        new Set(["variables"]),
       )
       if (changes.length > 0) updatedContracts.push({ ...toContractRef(currentContract), changes })
     }
 
-    // This `?? []` fallback only ever fires when `previousContract` itself
-    // is undefined (a real contract's `.variables` is never undefined). In
-    // that exact case, poisoning it with a garbage element is unobservable:
-    // (a) `previousVariables.get(key)` below is only ever called with a REAL
-    // current variable's key -- `.map((v) => [v.key, v])` on a garbage
-    // STRING element reads `.key` off a string (always `undefined`), so the
-    // poisoned entry's own Map key is `undefined`, which no real variable
-    // key can ever equal; (b) the one place `previousVariables` is iterated
-    // directly (the removed-variables loop below) is already gated by `if
-    // (previousContract)`, itself proven redundant-but-narrowing above --
-    // when `previousContract` is undefined, that loop never runs regardless
-    // of what garbage this Map might contain. Hand-verified: mutating this
-    // and running the real suite passes unchanged.
-    const previousVariables = new Map((previousContract?.variables ?? []).map((v) => [v.key, v]))
+    // `new Map(undefined)` is empty: a contract with no previous counterpart has no previous variables.
+    const previousVariables = new Map(previousContract?.variables.map((v) => [v.key, v]))
     const currentVariables = new Map(currentContract.variables.map((v) => [v.key, v]))
 
     for (const [key, currentVariable] of currentVariables) {
@@ -274,36 +235,19 @@ export function diffContracts(
         addedVariables.push(toVariableRef(currentContract, currentVariable))
         continue
       }
-      // Same reasoning as the "file"/"exportName" skip above, one level
-      // down: `previousVariable` and `currentVariable` are matched via this
-      // exact same `key` (both retrieved by it), so their own `.key` fields
-      // are always structurally equal -- `deepEqual`'s own equality check
-      // already `continue`s past an unchanged "key" with or without this
-      // skip. Hand-verified equivalent via direct mutation + a real suite
-      // run (both the array and its one string element).
       const changes = genericFieldChanges(
         previousVariable as unknown as Record<string, unknown>,
         currentVariable as unknown as Record<string, unknown>,
-        new Set(["key"]),
+        new Set(),
       )
       if (changes.length > 0)
         updatedVariables.push({ ...toVariableRef(currentContract, currentVariable), changes })
     }
 
-    // Bypassing this guard is behaviorally equivalent, not a real gap:
-    // `previousVariables` (above) is ALWAYS empty whenever `previousContract`
-    // is undefined (its own `?? []` fallback), so the loop below is already
-    // a no-op in that case regardless of this guard -- the guard exists only
-    // so TypeScript narrows `previousContract` to `ContractModelContract`
-    // (not `| undefined`) for `toVariableRef`'s first argument, the same
-    // "redundant at runtime, needed for TS narrowing" class already
-    // documented for `registry.ts`/`create.ts`/`check-artifacts.ts`. Hand-
-    // verified: mutating this and running the real suite passes unchanged.
-    if (previousContract) {
-      for (const [key, previousVariable] of previousVariables) {
-        if (!currentVariables.has(key))
-          removedVariables.push(toVariableRef(previousContract, previousVariable))
-      }
+    // A matched pair shares file and exportName, so the current contract names the removed variable's contract too.
+    for (const [key, previousVariable] of previousVariables) {
+      if (!currentVariables.has(key))
+        removedVariables.push(toVariableRef(currentContract, previousVariable))
     }
   }
 
@@ -402,21 +346,6 @@ export async function writeEvidenceSnapshot(
  *   edits. Normalized to a constant so `--check` (and the golden tests) verify
  *   the substance, not the calendar. The raw `expiresAt` strings stay compared.
  */
-// A module-level `const` regex, evaluated once at module load -- the
-// documented Stryker "static" covered-mutant false-Survivor
-// (ignoreStatic + perTest can't attribute a mutant evaluated once at module
-// load, even with real, passing test coverage; see
-// [[feedback_stryker_mutation_score_formula]] and reference-projections.ts's
-// own identical pattern in both this package and data-cap). Confirmed here:
-// Stryker's own JSON report attributes both Regex mutants below to
-// test/cli/direct-run.test.ts's 3 unrelated tests, not to any test that
-// actually exercises this regex. Hand-verified killed instead: mutating
-// `\d+` to `\d` or `\D+` and running the real suite
-// (`vitest run test/build/evidence-snapshot.test.ts`) fails the "masks the
-// day count in EXPIRED/EXPIRING_SOON finding messages" test (its "15
-// day(s)" fixture was chosen specifically to distinguish both mutants).
-const EXPIRY_DAY_COUNT = /\b\d+ day\(s\)/g
-
 export function normalizeEvidenceSnapshotForComparison(snapshot: EvidenceModel): EvidenceModel {
   return {
     ...snapshot,
@@ -441,7 +370,7 @@ export function normalizeEvidenceSnapshotForComparison(snapshot: EvidenceModel):
       ...snapshot.finding,
       findings: snapshot.finding.findings.map((f) =>
         f.code === "EXPIRED" || f.code === "EXPIRING_SOON"
-          ? { ...f, message: f.message.replace(EXPIRY_DAY_COUNT, "N day(s)") }
+          ? { ...f, message: f.message.replace(/\b\d+ day\(s\)/g, "N day(s)") }
           : f,
       ),
     },
@@ -478,31 +407,22 @@ export async function computeEvidenceChanges(
   let previous: EvidenceModel | undefined
   let readWarning: ParseWarning | undefined
 
-  if (read.status === "invalid-json") {
-    readWarning = {
-      file: snapshotPath,
-      message: `Evidence snapshot could not be parsed as JSON (${read.detail}); treating this run as if no previous snapshot existed.`,
-    }
-  } else if (read.status === "unsupported-version") {
-    readWarning = {
-      file: snapshotPath,
-      message: `Evidence snapshot has schemaVersion ${JSON.stringify(read.foundVersion)}, which this version of env-cap does not understand (expected ${EVIDENCE_MODEL_SCHEMA_VERSION}); treating this run as if no previous snapshot existed.`,
-    }
-  }
-  // A separate top-level `if`, not an `else if` chained onto the block
-  // above -- deliberately, so this line's own disable comment (below)
-  // reliably attaches to it (an `else if` chained after a closing `}` does
-  // not, the same AST-leading-comment-attachment issue already documented
-  // for a `catch` clause). Bypassing this condition is behaviorally
-  // equivalent, not a real gap: by elimination, the only remaining status
-  // once the two branches above don't match is "missing", whose
-  // `EvidenceSnapshotReadResult` variant carries no `.snapshot` field at all
-  // -- `read.snapshot` reads `undefined` off it either way, identical to
-  // `previous`'s own untouched initial value. Hand-verified: mutating this
-  // and running the real suite (this file plus
-  // check-artifacts.test.ts/generate-evidence.test.ts) passes unchanged.
-  if (read.status === "ok") {
-    previous = read.snapshot
+  switch (read.status) {
+    case "ok":
+      previous = read.snapshot
+      break
+    case "invalid-json":
+      readWarning = {
+        file: snapshotPath,
+        message: `Evidence snapshot could not be parsed as JSON (${read.detail}); treating this run as if no previous snapshot existed.`,
+      }
+      break
+    case "unsupported-version":
+      readWarning = {
+        file: snapshotPath,
+        message: `Evidence snapshot has schemaVersion ${JSON.stringify(read.foundVersion)}, which this version of env-cap does not understand (expected ${EVIDENCE_MODEL_SCHEMA_VERSION}); treating this run as if no previous snapshot existed.`,
+      }
+      break
   }
 
   const dynamicAccessAcknowledgments = await buildCitationSnapshots(

@@ -194,46 +194,45 @@ export async function linkFiles(
     inFile: string,
     contextLabel: string,
   ): Promise<{ identity: string; variables: DiscoveredSchemaVariable[] } | undefined> {
-    // Equivalent even if this check is bypassed entirely: `SchemaRef`'s
-    // "unresolvable" variant carries only `kind` (no `.name`/`.node`), and
-    // every subsequent step in this function is a `Map.get(ref.name)`-style
-    // lookup (or a lookup keyed off one) -- `ref.name` on the real,
-    // no-such-field "unresolvable" object reads `undefined` at runtime, and
-    // a `Map.get(undefined)` miss safely falls through to this SAME
-    // function's own later `if (!imported) return undefined`, with no
-    // warning or other side effect pushed anywhere along the way. Confirmed
-    // by tracing every step by hand; not something a black-box test on
-    // `resolveSchema`'s return value or `warnings`/`unresolvedLinks` could
-    // ever distinguish.
-    if (ref.kind === "unresolvable") return undefined
-
     // `inFile` is always the loop variable from `discoveredFiles` below,
     // already analyzed (and cached) by the pre-pass above -- `mustGet` makes
     // that invariant explicit instead of a silent, unreachable `undefined`
     // fallback (see the identical pattern the two loops below already use).
     const inFileAnalysis = mustGet(analysisCache, inFile)
 
-    if (ref.kind === "literal") {
-      // Unique per AST node position -- an inline schema literal can never be
-      // referenced by anything else, so it can never be linked to a
-      // documentEnv() call elsewhere. That's expected, not a bug: documenting
-      // a schema requires giving it a name.
-      return {
-        identity: `${inFile}#<inline:${ref.node.pos}>`,
-        variables: extractSchemaVariables(
-          ref.node,
-          inFile,
-          contextLabel,
-          warnings,
-          inFileAnalysis.sourceFile,
-        ),
-      }
+    switch (ref.kind) {
+      case "literal":
+        // Unique per AST node position -- an inline schema literal can never be
+        // referenced by anything else, so it can never be linked to a
+        // documentEnv() call elsewhere. That's expected, not a bug: documenting
+        // a schema requires giving it a name.
+        return {
+          identity: `${inFile}#<inline:${ref.node.pos}>`,
+          variables: extractSchemaVariables(
+            ref.node,
+            inFile,
+            contextLabel,
+            warnings,
+            inFileAnalysis.sourceFile,
+          ),
+        }
+      case "identifier":
+        return resolveNamedSchema(ref.name, inFile, inFileAnalysis, contextLabel)
     }
+    // An "unresolvable" ref names nothing to look up, so it resolves to nothing.
+    return undefined
+  }
 
-    const local = inFileAnalysis.localConsts.get(ref.name)
+  async function resolveNamedSchema(
+    name: string,
+    inFile: string,
+    inFileAnalysis: FileParseResult,
+    contextLabel: string,
+  ): Promise<{ identity: string; variables: DiscoveredSchemaVariable[] } | undefined> {
+    const local = inFileAnalysis.localConsts.get(name)
     if (local) {
       return {
-        identity: `${inFile}#${ref.name}`,
+        identity: `${inFile}#${name}`,
         variables: extractSchemaVariables(
           local,
           inFile,
@@ -244,18 +243,10 @@ export async function linkFiles(
       }
     }
 
-    const imported = inFileAnalysis.imports.get(ref.name)
+    const imported = inFileAnalysis.imports.get(name)
     if (!imported) return undefined
 
     const targetFile = await resolveImportSpecifier(inFile, imported.specifier, context)
-    // Equivalent even if bypassed: `getAnalysis(undefined as unknown as
-    // string)` below misses `analysisCache` (a Map, safe for any key),
-    // attempts `readFile(undefined)`, which every real (and test-double)
-    // `readFile` implementation here rejects rather than resolves, is
-    // caught by `getAnalysis`'s own `try { ... } catch { return undefined
-    // }`, and returns `undefined` -- reaching this function's OWN later
-    // `if (!targetAnalysis) return undefined` regardless, with no warning
-    // or other side effect pushed either way.
     if (!targetFile) return undefined
 
     const targetAnalysis = await getAnalysis(targetFile)

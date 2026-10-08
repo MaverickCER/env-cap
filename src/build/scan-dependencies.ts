@@ -97,13 +97,6 @@ function isAssignmentToken(token: ts.SyntaxKind): boolean {
 /** Records `name` as an assignment target if `expression` (after unwrapping parens) is a bare identifier -- shared by the binary-assignment, increment/decrement, and bare-for-of/for-in cases below. */
 function recordIfIdentifierTarget(expression: ts.Expression, assignedNames: Set<string>): void {
   const target = unwrapParens(expression)
-  // Removing this guard is behaviorally equivalent, not a real gap: an
-  // assignment/increment target that isn't an identifier is a member or
-  // element access, neither of which has a `.text` property, so
-  // `assignedNames.add(target.text)` would add `undefined` -- harmless,
-  // since no candidate alias name is ever `undefined`. Hand-verified:
-  // mutating this to `if (true)` and running the real suite passes
-  // unchanged.
   if (ts.isIdentifier(target)) assignedNames.add(target.text)
 }
 
@@ -121,17 +114,10 @@ function recordAssignmentTargets(node: ts.Node, assignedNames: Set<string>): voi
     recordIfIdentifierTarget(node.left, assignedNames)
     return
   }
-  if (
-    // Widening this to `true` is behaviorally equivalent, not a real gap:
-    // only a prefix/postfix unary node carries an `.operator` at all, so on
-    // any other node the two `=== PlusPlus/MinusMinus` checks below both
-    // read `undefined` and fail. Hand-verified: mutating this compound to
-    // `if (true)` and running the real suite passes unchanged.
-    (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
-    (node.operator === ts.SyntaxKind.PlusPlusToken ||
-      node.operator === ts.SyntaxKind.MinusMinusToken)
-  ) {
-    recordIfIdentifierTarget(node.operand, assignedNames)
+  // Only prefix/postfix unary nodes have an `operator` that can be `++`/`--`; any other node reads `undefined`.
+  const { operator, operand } = node as ts.PrefixUnaryExpression
+  if (operator === ts.SyntaxKind.PlusPlusToken || operator === ts.SyntaxKind.MinusMinusToken) {
+    recordIfIdentifierTarget(operand, assignedNames)
     return
   }
   if (
@@ -188,18 +174,14 @@ function recordDeclarationIntroduction(
  * assigned to after their declaration, and every plain `const <name> =
  * <identifier>` declaration as a raw candidate.
  */
-function collectDeclarationFacts(sourceFile: ts.SourceFile): {
+/** @internal Exported for direct unit coverage. */
+export function collectDeclarationFacts(sourceFile: ts.SourceFile): {
   readonly declarationCounts: ReadonlyMap<string, number>
   readonly assignedNames: ReadonlySet<string>
   readonly constAliasCandidates: readonly AliasCandidate[]
 } {
   const declarationCounts = new Map<string, number>()
   const assignedNames = new Set<string>()
-  // A poisoned seed element here is behaviorally equivalent, not a real gap:
-  // it would be a plain string, whose `.baseName` reads `undefined`, so
-  // `imports.get(undefined)` misses in `resolveAliasTargets` and the entry
-  // is skipped before it can reach either the valid or disqualified path.
-  // Hand-verified: mutating this and running the real suite passes unchanged.
   const constAliasCandidates: AliasCandidate[] = []
 
   function countDeclaration(name: string): void {
@@ -386,13 +368,8 @@ export function scanFileForDependencies(filePath: string, sourceText: string): F
           ts.forEachChild(key, visit)
         }
       }
-      // The guard is a defensive micro-optimization only -- `ts.forEachChild`
-      // returns `undefined` for a nullish node without throwing, so dropping
-      // the check is behaviorally equivalent. Hand-verified: mutating this to
-      // `if (true)` and running the real suite passes unchanged. The
-      // block-removal mutant, by contrast, IS caught (a binding element WITH
-      // a default value that references a tracked import -- see the test).
-      if (element.initializer) ts.forEachChild(element.initializer, visit)
+      // `forEachChild` ignores a missing node, so an element with no default needs no check.
+      ts.forEachChild(element.initializer as ts.Node, visit)
     }
   }
 

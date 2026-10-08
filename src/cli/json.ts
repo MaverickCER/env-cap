@@ -136,6 +136,22 @@ export function serializeSuccess(
   }
 }
 
+/**
+ * The `--json` success envelope for `--check`, which writes nothing: every pass result is absent by
+ * construction, so `requested` alone says which artifacts the run checked.
+ */
+export function serializeCheckSuccess(
+  checkResult: { readonly ok: boolean; readonly stale: readonly string[] },
+  requested: JsonRequestedPasses,
+): JsonSuccessPayload {
+  return serializeSuccess(
+    { manifest: undefined, docs: undefined, usage: undefined },
+    checkResult,
+    false,
+    requested,
+  )
+}
+
 /** Wraps a thrown error in the `--json` failure envelope. */
 export function serializeFailure(error: unknown): JsonErrorPayload {
   return {

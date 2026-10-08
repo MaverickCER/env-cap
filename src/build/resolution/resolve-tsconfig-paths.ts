@@ -151,12 +151,7 @@ export async function loadTsconfigPaths(
 
   const readResult = ts.readConfigFile(configFile, (p) => ts.sys.readFile(p))
   if (readResult.error) {
-    // `readConfigFile`'s own diagnostic `messageText` is always a plain
-    // string in practice (probed) -- the chain separator arg is unreachable,
-    // kept only for the API's own `string | DiagnosticMessageChain` type.
-    // Same established equivalence as data-cap's identical
-    // `resolve-tsconfig-paths.ts`.
-    const detail = ts.flattenDiagnosticMessageText(readResult.error.messageText, "\n")
+    const detail = ts.flattenDiagnosticMessageText(readResult.error.messageText, ts.sys.newLine)
     return {
       resolution: undefined,
       warning: {

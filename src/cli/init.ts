@@ -131,15 +131,7 @@ function assertIsProject(cwd: string): void {
   }
   let parsed: unknown
   try {
-    // `readFileSync(path, "")` (the mutant) falls back to returning a
-    // `Buffer` (an empty string isn't a recognized encoding), but
-    // `JSON.parse` calls `.toString()` on any non-string input, which
-    // defaults to utf8 for a `Buffer` -- so both encodings produce an
-    // identical `JSON.parse` result for any file content this function can
-    // ever see. Confirmed directly: `JSON.parse(readFileSync(p, ""))` on a
-    // real UTF-8 JSON file parses identically to `JSON.parse(readFileSync(p,
-    // "utf8"))`.
-    parsed = JSON.parse(readFileSync(packageJsonPath, "utf8"))
+    parsed = JSON.parse(String(readFileSync(packageJsonPath)))
   } catch {
     // No binding: the SyntaxError carries only a char offset, nothing the
     // caller needs beyond "the file at this path isn't valid JSON".

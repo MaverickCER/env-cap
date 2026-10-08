@@ -18,6 +18,10 @@
  */
 
 import { defineEvidenceProjection } from "../evidence/define-projection.js"
+import type {
+  EvidenceProjectionResult,
+  EvidenceProjectionSchema,
+} from "../evidence/define-projection.js"
 import { evidenceDisclaimer } from "./generated-banner.js"
 import type { ContractModelContract } from "./contract-model.js"
 import type { EvidenceModel } from "./evidence-model.js"
@@ -124,42 +128,45 @@ export function groupVariablesByOwner<C extends OwnerBearingContract>(
  * projection can never disagree about who owns a variable -- the same reason
  * `effectiveOwner()` exists on the generator side (ADR 0028).
  */
-// Every `defineEvidenceProjection({...})` schema object below (this one and
-// the two further down) is itself a module-level `const`'s initializer --
-// the documented Stryker "static" covered-mutant false-Survivor
-// (ignoreStatic + perTest can't attribute a mutant evaluated once at module
-// load, even with real, passing test coverage; see [[feedback_stryker_mutation_score_formula]]
-// and data-cap's `reference-projections.ts` Batch 7, the identical pattern
-// in the sibling package). Every `disclaimer: () => evidenceDisclaimer()`
-// arrow below is hand-verified killed (mutating it to `() => undefined` and
-// running the real suite fails the matching "carries the standing
-// disclaimer" test) despite Stryker reporting it Survived.
-export const configurationReference = defineEvidenceProjection<ConfigurationReference>({
-  disclaimer: () => evidenceDisclaimer(),
-  entries: (evidence: EvidenceModel) => {
-    const entries: ConfigurationReferenceEntry[] = []
-    for (const contract of evidence.contract.contracts) {
-      for (const variable of contract.variables) {
-        entries.push({
-          file: contract.file,
-          exportName: contract.exportName,
-          contractName: contract.contractName,
-          key: variable.key,
-          description: variable.description,
-          owner: variable.owner ?? contract.owner,
-          sensitivity: variable.sensitivity ?? contract.sensitivity,
-          required: variable.required,
-          hasDefault: variable.hasDefault,
-          hasProcessor: variable.hasProcessor,
-          hasValidator: variable.hasValidator,
-          expiresAt: variable.expiresAt,
-          active: contract.active,
-        })
+export function configurationReference(evidence: EvidenceModel): ConfigurationReference {
+  return projectConfigurationReference(evidence).value
+}
+configurationReference.project = projectConfigurationReference
+
+function projectConfigurationReference(
+  evidence: EvidenceModel,
+): EvidenceProjectionResult<ConfigurationReference> {
+  return defineEvidenceProjection(configurationReferenceSchema()).project(evidence)
+}
+
+function configurationReferenceSchema(): EvidenceProjectionSchema<ConfigurationReference> {
+  return {
+    disclaimer: evidenceDisclaimer,
+    entries: (evidence: EvidenceModel) => {
+      const entries: ConfigurationReferenceEntry[] = []
+      for (const contract of evidence.contract.contracts) {
+        for (const variable of contract.variables) {
+          entries.push({
+            file: contract.file,
+            exportName: contract.exportName,
+            contractName: contract.contractName,
+            key: variable.key,
+            description: variable.description,
+            owner: variable.owner ?? contract.owner,
+            sensitivity: variable.sensitivity ?? contract.sensitivity,
+            required: variable.required,
+            hasDefault: variable.hasDefault,
+            hasProcessor: variable.hasProcessor,
+            hasValidator: variable.hasValidator,
+            expiresAt: variable.expiresAt,
+            active: contract.active,
+          })
+        }
       }
-    }
-    return entries.sort(byContractThenKey)
-  },
-})
+      return entries.sort(byContractThenKey)
+    },
+  }
+}
 
 /** One owner and everything attributed to them. */
 export interface OwnershipSummaryEntry {
@@ -185,51 +192,64 @@ export interface OwnershipSummary extends Record<string, unknown> {
  * Ownership summary: the inverse of Ownership Model's per-contract view --
  * who owns what, rolled up per owner, plus an explicit unowned list.
  */
-export const ownershipSummary = defineEvidenceProjection<OwnershipSummary>({
-  disclaimer: () => evidenceDisclaimer(),
-  owners: (evidence: EvidenceModel) => {
-    const contracts = contractIndex(evidence.contract.contracts)
-    const nameOf = (file: string, exportName: string): string =>
-      contracts.get(`${file}#${exportName}`)?.contractName ?? exportName
+export function ownershipSummary(evidence: EvidenceModel): OwnershipSummary {
+  return projectOwnershipSummary(evidence).value
+}
+ownershipSummary.project = projectOwnershipSummary
 
-    // Ownership Model has already resolved each variable's effective owner
-    // (ADR 0028), so `ownerOf` reads it straight off rather than re-deriving.
-    const variablesByOwner = groupVariablesByOwner(
-      evidence.ownership.contracts,
-      (_contract, variable) => variable.owner,
-    )
+function projectOwnershipSummary(
+  evidence: EvidenceModel,
+): EvidenceProjectionResult<OwnershipSummary> {
+  return defineEvidenceProjection(ownershipSummarySchema()).project(evidence)
+}
 
-    const contractsByOwner = new Map<string, string[]>()
-    for (const contract of evidence.ownership.contracts) {
-      if (contract.owner === undefined) continue
-      const list = contractsByOwner.get(contract.owner) ?? []
-      list.push(nameOf(contract.file, contract.exportName))
-      contractsByOwner.set(contract.owner, list)
-    }
+function ownershipSummarySchema(): EvidenceProjectionSchema<OwnershipSummary> {
+  return {
+    disclaimer: evidenceDisclaimer,
+    owners: (evidence: EvidenceModel) => {
+      const contracts = contractIndex(evidence.contract.contracts)
+      const nameOf = (file: string, exportName: string): string =>
+        contracts.get(`${file}#${exportName}`)?.contractName ?? exportName
 
-    const owners = new Set([...variablesByOwner.keys(), ...contractsByOwner.keys()])
-    return [...owners].sort().map((owner) => ({
-      owner,
-      variables: (variablesByOwner.get(owner) ?? [])
-        .map(
-          ({ contract, variable }) =>
-            `${nameOf(contract.file, contract.exportName)}.${variable.key}`,
-        )
-        .sort(),
-      contracts: (contractsByOwner.get(owner) ?? []).sort(),
-    }))
-  },
-  unowned: (evidence: EvidenceModel) => {
-    const contracts = contractIndex(evidence.contract.contracts)
-    return evidence.ownership.unownedVariables
-      .map((ref) => {
-        const contractName =
-          contracts.get(`${ref.file}#${ref.exportName}`)?.contractName ?? ref.exportName
-        return `${contractName}.${ref.key}`
-      })
-      .sort()
-  },
-})
+      // Ownership Model has already resolved each variable's effective owner
+      // (ADR 0028), so `ownerOf` reads it straight off rather than re-deriving.
+      const variablesByOwner = groupVariablesByOwner(
+        evidence.ownership.contracts,
+        (_contract, variable) => variable.owner,
+      )
+
+      const contractsByOwner = new Map<string, string[]>()
+      for (const contract of evidence.ownership.contracts) {
+        if (contract.owner === undefined) continue
+        const list = contractsByOwner.get(contract.owner) ?? []
+        list.push(nameOf(contract.file, contract.exportName))
+        contractsByOwner.set(contract.owner, list)
+      }
+
+      const owners = new Set([...variablesByOwner.keys(), ...contractsByOwner.keys()])
+      return [...owners].sort().map((owner) => ({
+        owner,
+        variables: (variablesByOwner.get(owner) ?? [])
+          .map(
+            ({ contract, variable }) =>
+              `${nameOf(contract.file, contract.exportName)}.${variable.key}`,
+          )
+          .sort(),
+        contracts: (contractsByOwner.get(owner) ?? []).sort(),
+      }))
+    },
+    unowned: (evidence: EvidenceModel) => {
+      const contracts = contractIndex(evidence.contract.contracts)
+      return evidence.ownership.unownedVariables
+        .map((ref) => {
+          const contractName =
+            contracts.get(`${ref.file}#${ref.exportName}`)?.contractName ?? ref.exportName
+          return `${contractName}.${ref.key}`
+        })
+        .sort()
+    },
+  }
+}
 
 /** One contract- or variable-level `expiresAt` inside the configured window. */
 export interface ExpiringSoonEntry {
@@ -275,50 +295,52 @@ export interface ExpiringSoonReport extends Record<string, unknown> {
  * which is exactly the reproducibility property the Evidence Model exists to
  * preserve.
  */
-export const expiringSoonReport = defineEvidenceProjection<ExpiringSoonReport>({
-  disclaimer: () => evidenceDisclaimer(),
-  entries: (evidence: EvidenceModel) => {
-    const contracts = contractIndex(evidence.contract.contracts)
-    const ownerByVariable = new Map<string, string | undefined>()
-    for (const contract of evidence.ownership.contracts)
-      for (const variable of contract.variables)
-        ownerByVariable.set(
-          `${contract.file}#${contract.exportName}#${variable.key}`,
-          variable.owner,
-        )
+export function expiringSoonReport(evidence: EvidenceModel): ExpiringSoonReport {
+  return projectExpiringSoonReport(evidence).value
+}
+expiringSoonReport.project = projectExpiringSoonReport
 
-    return evidence.lifecycle.expiring.map((entry): ExpiringSoonEntry => {
-      const contract = contracts.get(`${entry.file}#${entry.exportName}`)
-      // Mutating `entry.key === undefined` to `false` here is behaviorally
-      // equivalent, not a real gap: `ContractModelVariable["key"]` is always
-      // a non-empty string, so `v.key === entry.key` can never be true when
-      // `entry.key` is `undefined` -- `.find()` still returns `undefined`
-      // either way. Hand-verified: mutating this and running the real suite
-      // (`vitest run test/build/reference-projections.test.ts`) passes
-      // unchanged. Restructuring into an `if`/guard would only relocate the
-      // same equivalence onto a different mutant, not remove it.
-      const variable =
-        entry.key === undefined ? undefined : contract?.variables.find((v) => v.key === entry.key)
-      return {
-        file: entry.file,
-        exportName: entry.exportName,
-        contractName: contract?.contractName ?? entry.exportName,
-        key: entry.key,
-        expiresAt: entry.expiresAt,
-        daysRemaining: entry.daysRemaining,
-        expired: entry.daysRemaining < 0,
-        refreshInstructions: variable?.refreshInstructions,
-        owner:
-          entry.key === undefined
-            ? contract?.owner
-            : (ownerByVariable.get(`${entry.file}#${entry.exportName}#${entry.key}`) ??
-              contract?.owner),
-      }
-    })
-  },
-  // Same static covered-mutant false-Survivor as the `disclaimer` arrows
-  // above -- hand-verified killed (mutating this whole arrow to `() =>
-  // undefined` fails the "expiredCount" assertions in every test above).
-  expiredCount: (evidence: EvidenceModel) =>
-    evidence.lifecycle.expiring.filter((e) => e.daysRemaining < 0).length,
-})
+function projectExpiringSoonReport(
+  evidence: EvidenceModel,
+): EvidenceProjectionResult<ExpiringSoonReport> {
+  return defineEvidenceProjection(expiringSoonReportSchema()).project(evidence)
+}
+
+function expiringSoonReportSchema(): EvidenceProjectionSchema<ExpiringSoonReport> {
+  return {
+    disclaimer: evidenceDisclaimer,
+    entries: (evidence: EvidenceModel) => {
+      const contracts = contractIndex(evidence.contract.contracts)
+      const ownerByVariable = new Map<string, string | undefined>()
+      for (const contract of evidence.ownership.contracts)
+        for (const variable of contract.variables)
+          ownerByVariable.set(
+            `${contract.file}#${contract.exportName}#${variable.key}`,
+            variable.owner,
+          )
+
+      return evidence.lifecycle.expiring.map((entry): ExpiringSoonEntry => {
+        const contract = contracts.get(`${entry.file}#${entry.exportName}`)
+        // A contract-level entry has no key, and no variable's key is `undefined`, so it finds nothing.
+        const variable = contract?.variables.find((v) => v.key === entry.key)
+        return {
+          file: entry.file,
+          exportName: entry.exportName,
+          contractName: contract?.contractName ?? entry.exportName,
+          key: entry.key,
+          expiresAt: entry.expiresAt,
+          daysRemaining: entry.daysRemaining,
+          expired: entry.daysRemaining < 0,
+          refreshInstructions: variable?.refreshInstructions,
+          owner:
+            entry.key === undefined
+              ? contract?.owner
+              : (ownerByVariable.get(`${entry.file}#${entry.exportName}#${entry.key}`) ??
+                contract?.owner),
+        }
+      })
+    },
+    expiredCount: (evidence: EvidenceModel) =>
+      evidence.lifecycle.expiring.filter((e) => e.daysRemaining < 0).length,
+  }
+}

@@ -2,7 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { resolveRelativeImport } from "../../../src/build/resolution/resolve-import.js"
+import { fileExists, resolveRelativeImport } from "../../../src/build/resolution/resolve-import.js"
 import { nodeBuildFs } from "../../support/build-filesystem.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -170,5 +170,14 @@ describe("resolveImportSpecifier (composition)", () => {
 
     expect(result).toBe("/resolved/via/alias.ts")
     expect(resolvePackageImportMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("fileExists", () => {
+  it("is true for a regular file, and exactly false for a directory or a path that does not exist", async () => {
+    const file = await write("src/real.ts", "")
+    expect(await fileExists(file, nodeBuildFs)).toBe(true)
+    expect(await fileExists(path.dirname(file), nodeBuildFs)).toBe(false)
+    expect(await fileExists(path.join(fixtureRoot, "src/missing.ts"), nodeBuildFs)).toBe(false)
   })
 })

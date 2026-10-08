@@ -12,6 +12,7 @@
  */
 
 import type { Finding, FindingModel } from "./finding-model.js"
+import type { SourcePosition } from "./source-position.js"
 import { readToolVersion } from "./tool-version.js"
 
 /** SARIF's `level` enum -- see the SARIF 2.1.0 spec, section 3.27.10. */
@@ -45,14 +46,8 @@ function sarifLocations(finding: Finding): readonly SarifLocation[] | undefined 
   const location = finding.location
   const uri = location.model === "change" ? location.path : location.file
   if (uri === undefined) return undefined
-  // Genuinely equivalent either way this ternary's condition is mutated:
-  // `ChangeEvidenceReference` has no `position` field at all (by type --
-  // see `evidence-reference.ts`), so `location.position` is already
-  // `undefined` for a change-model location without this check; and every
-  // OTHER model already fails the `=== "change"` comparison for real, so
-  // routing them to the same branch a mutated condition would pick changes
-  // nothing observable there either.
-  const position = location.model === "change" ? undefined : location.position
+  // A change-model location (a generated artifact) has no position inside it.
+  const { position } = location as { readonly position?: SourcePosition | undefined }
   return [
     {
       physicalLocation: {
