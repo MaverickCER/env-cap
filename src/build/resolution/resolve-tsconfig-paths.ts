@@ -1,6 +1,7 @@
 import path from "node:path"
 import { ts } from "../typescript.js"
 import type TS from "typescript"
+import { assertCompilerApi } from "../compiler-api.js"
 import type { ParseWarning } from "../parse.js"
 import type { BuildFileSystem } from "../types.js"
 
@@ -150,6 +151,11 @@ export async function loadTsconfigPaths(
     }
   }
 
+  // The first use of the compiler on the scan path, so only reached once a config file exists: with
+  // none (or a missing explicit path) the compiler is never touched and the early returns above
+  // stand. Without this, `ts.readConfigFile()` below would die with a raw "is not a function" when no
+  // usable compiler resolved (the bundled TypeScript 6 stripped from an install).
+  assertCompilerApi(ts)
   const readResult = ts.readConfigFile(configFile, (p) => ts.sys.readFile(p))
   if (readResult.error) {
     const detail = ts.flattenDiagnosticMessageText(readResult.error.messageText, ts.sys.newLine)
