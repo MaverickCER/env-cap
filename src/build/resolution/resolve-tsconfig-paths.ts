@@ -1,6 +1,7 @@
 import path from "node:path"
 import { ts } from "../typescript.js"
 import type TS from "typescript"
+import { assertCompilerApi } from "../compiler-api.js"
 import type { ParseWarning } from "../parse.js"
 import type { BuildFileSystem } from "../types.js"
 
@@ -121,6 +122,11 @@ export async function loadTsconfigPaths(
   fs: BuildFileSystem,
 ): Promise<LoadTsconfigPathsResult> {
   if (tsconfigOption === false) return { resolution: undefined, warning: undefined }
+
+  // The first use of the compiler on the scan path: `ts.readConfigFile()` below would otherwise die
+  // with a raw "is not a function" when no usable compiler resolved (the bundled TypeScript 6
+  // stripped from an install), before any later guard could explain it.
+  assertCompilerApi(ts)
 
   // Everything below this point runs only after `await fileExists(...)` --
   // Stryker's perTest coverage cannot attribute a mutant that only runs in
