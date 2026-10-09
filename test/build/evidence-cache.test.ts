@@ -208,6 +208,25 @@ describe("getEvidenceModel", () => {
     expect(result.evidence).toEqual(evidence)
   })
 
+  it("misses and recomputes, naming the error, when the source walk fails the first time", async () => {
+    let calls = 0
+    const flakyFs = {
+      ...nodeBuildFs,
+      readdir: ((...args: Parameters<typeof nodeBuildFs.readdir>) => {
+        calls += 1
+        if (calls === 1) return Promise.reject(new Error("transient readdir failure"))
+        return nodeBuildFs.readdir(...args)
+      }) as typeof nodeBuildFs.readdir,
+    }
+
+    const result = await getEvidenceModel({ fs: flakyFs, root: fixtureRoot, location })
+
+    expect(result.source).toBe("miss")
+    expect(result.missReason).toBe(
+      "could not compute a source fingerprint (transient readdir failure)",
+    )
+  })
+
   it("misses and recomputes when no .fingerprint sidecar exists at all", async () => {
     const result = await getEvidenceModel({ fs: nodeBuildFs, root: fixtureRoot, location })
 

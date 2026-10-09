@@ -61,11 +61,14 @@ export const noRawProcessEnv = createRule<[RuleOptions], "noRawProcessEnv">({
     return {
       MemberExpression(node) {
         const obj = node.object
-        // `.name` exists only on an `Identifier`; any other node reads `undefined` and matches neither name.
+        // `.name` exists only on an `Identifier`; any other `object` reads `undefined` and is not `process`.
+        // `property` can also be a `PrivateIdentifier` (`process.#env`), which has a `name` too, so its
+        // type is checked.
         if (
           obj.type === AST_NODE_TYPES.MemberExpression &&
           (obj.object as TSESTree.Identifier).name === "process" &&
-          (obj.property as TSESTree.Identifier).name === "env"
+          obj.property.type === AST_NODE_TYPES.Identifier &&
+          obj.property.name === "env"
         ) {
           context.report({ node, messageId: "noRawProcessEnv" })
         }

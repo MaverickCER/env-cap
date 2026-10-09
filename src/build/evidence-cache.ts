@@ -168,13 +168,22 @@ export async function getEvidenceModel(
     missReason,
   })
 
-  const currentFingerprint = await computeSourceFingerprint({
-    fs: options.fs,
-    root,
-    include,
-    exclude,
-    packages: options.packages,
-  })
+  let currentFingerprint: string
+  try {
+    currentFingerprint = await computeSourceFingerprint({
+      fs: options.fs,
+      root,
+      include,
+      exclude,
+      packages: options.packages,
+    })
+  } catch (error) {
+    // A filesystem failure while walking the sources (possibly transient) must not fail the lookup:
+    // fall back to recomputing, which retries the walk.
+    return recompute(
+      `could not compute a source fingerprint (${error instanceof Error ? error.message : String(error)})`,
+    )
+  }
 
   let storedFingerprint: string
   try {

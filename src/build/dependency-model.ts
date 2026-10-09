@@ -124,9 +124,12 @@ export async function buildDependencyModel(
         dynamicAccessAssertions: info.dynamicAccessAssertions,
       }))
       .sort((a, b) => a.key.localeCompare(b.key)),
-    // Already sorted by `buildDependencyGraph()`; the display paths keep that order.
-    consumingFiles: [...contract.consumingFiles].map((f) => displayPath(root, f)),
-    ambiguousBarrelFiles: [...contract.ambiguousBarrelFiles].map((f) => displayPath(root, f)),
+    // Sorted after mapping to display paths: a file outside `root` (a package surface) shows as
+    // `../...`, which can order differently from its absolute path.
+    consumingFiles: [...contract.consumingFiles].map((f) => displayPath(root, f)).sort(),
+    ambiguousBarrelFiles: [...contract.ambiguousBarrelFiles]
+      .map((f) => displayPath(root, f))
+      .sort(),
     dynamicAccessSites: contract.dynamicAccessSites.map((p) => relativizePosition(root, p)),
   }))
   modelContracts.sort(byContractIdentity)
