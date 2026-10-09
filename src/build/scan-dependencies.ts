@@ -1,4 +1,5 @@
-import ts from "typescript"
+import { ts } from "./typescript.js"
+import type TS from "typescript"
 import { assertCompilerApi } from "./compiler-api.js"
 import { collectImportBindings } from "./parse.js"
 import type { ImportBinding } from "./parse.js"
@@ -47,13 +48,13 @@ export interface FileScanResult {
   readonly hasWildcardReExport: boolean
 }
 
-function unwrapParens(node: ts.Expression): ts.Expression {
+function unwrapParens(node: TS.Expression): TS.Expression {
   let current = node
   while (ts.isParenthesizedExpression(current)) current = current.expression
   return current
 }
 
-function staticElementKey(node: ts.Expression): string | undefined {
+function staticElementKey(node: TS.Expression): string | undefined {
   return ts.isStringLiteralLike(node) ? node.text : undefined
 }
 
@@ -61,7 +62,7 @@ function staticElementKey(node: ts.Expression): string | undefined {
 interface AliasCandidate {
   readonly aliasName: string
   readonly baseName: string
-  readonly declaration: ts.VariableDeclaration
+  readonly declaration: TS.VariableDeclaration
 }
 
 /**
@@ -71,7 +72,7 @@ interface AliasCandidate {
  * elsewhere in the file, so a same-named alias candidate is correctly
  * disqualified rather than silently trusted.
  */
-function forEachBindingName(name: ts.BindingName, record: (identifierName: string) => void): void {
+function forEachBindingName(name: TS.BindingName, record: (identifierName: string) => void): void {
   if (ts.isIdentifier(name)) {
     record(name.text)
     return
@@ -90,12 +91,12 @@ function forEachBindingName(name: ts.BindingName, record: (identifierName: strin
  * instead -- every assignment-operator token kind is a contiguous range
  * between them.
  */
-function isAssignmentToken(token: ts.SyntaxKind): boolean {
+function isAssignmentToken(token: TS.SyntaxKind): boolean {
   return token >= ts.SyntaxKind.FirstAssignment && token <= ts.SyntaxKind.LastAssignment
 }
 
 /** Records `name` as an assignment target if `expression` (after unwrapping parens) is a bare identifier -- shared by the binary-assignment, increment/decrement, and bare-for-of/for-in cases below. */
-function recordIfIdentifierTarget(expression: ts.Expression, assignedNames: Set<string>): void {
+function recordIfIdentifierTarget(expression: TS.Expression, assignedNames: Set<string>): void {
   const target = unwrapParens(expression)
   if (ts.isIdentifier(target)) assignedNames.add(target.text)
 }
@@ -109,13 +110,13 @@ function recordIfIdentifierTarget(expression: ts.Expression, assignedNames: Set<
  * goes untracked (its source binding degrades to an `escape` instead), never
  * the other way around.
  */
-function recordAssignmentTargets(node: ts.Node, assignedNames: Set<string>): void {
+function recordAssignmentTargets(node: TS.Node, assignedNames: Set<string>): void {
   if (ts.isBinaryExpression(node) && isAssignmentToken(node.operatorToken.kind)) {
     recordIfIdentifierTarget(node.left, assignedNames)
     return
   }
   // Only prefix/postfix unary nodes have an `operator` that can be `++`/`--`; any other node reads `undefined`.
-  const { operator, operand } = node as ts.PrefixUnaryExpression
+  const { operator, operand } = node as TS.PrefixUnaryExpression
   if (operator === ts.SyntaxKind.PlusPlusToken || operator === ts.SyntaxKind.MinusMinusToken) {
     recordIfIdentifierTarget(operand, assignedNames)
     return
@@ -138,7 +139,7 @@ function recordAssignmentTargets(node: ts.Node, assignedNames: Set<string>): voi
  * and the first branch below counts its name like any other.
  */
 function recordDeclarationIntroduction(
-  node: ts.Node,
+  node: TS.Node,
   countDeclaration: (name: string) => void,
   constAliasCandidates: AliasCandidate[],
 ): void {
@@ -175,7 +176,7 @@ function recordDeclarationIntroduction(
  * <identifier>` declaration as a raw candidate.
  */
 /** @internal Exported for direct unit coverage. */
-export function collectDeclarationFacts(sourceFile: ts.SourceFile): {
+export function collectDeclarationFacts(sourceFile: TS.SourceFile): {
   readonly declarationCounts: ReadonlyMap<string, number>
   readonly assignedNames: ReadonlySet<string>
   readonly constAliasCandidates: readonly AliasCandidate[]
@@ -188,7 +189,7 @@ export function collectDeclarationFacts(sourceFile: ts.SourceFile): {
     declarationCounts.set(name, (declarationCounts.get(name) ?? 0) + 1)
   }
 
-  function walk(node: ts.Node): void {
+  function walk(node: TS.Node): void {
     recordDeclarationIntroduction(node, countDeclaration, constAliasCandidates)
     recordAssignmentTargets(node, assignedNames)
     ts.forEachChild(node, walk)
@@ -218,11 +219,11 @@ function resolveAliasTargets(
   readonly aliasBindings: ReadonlyMap<string, ImportBinding>
   readonly disqualified: readonly AliasCandidate[]
   /** Every candidate declaration whose base is a real tracked import -- resolved or not. The main walk must not ALSO walk these as a generic bare reference (see the call site). A `const b = a` chained onto a resolved alias `a` is NOT in here: its base `a` isn't a real import, so it stays a normal walk -- correctly recording `a` as an escape, since this pass never follows the second hop. */
-  readonly handledDeclarations: ReadonlySet<ts.Node>
+  readonly handledDeclarations: ReadonlySet<TS.Node>
 } {
   const aliasBindings = new Map<string, ImportBinding>()
   const disqualified: AliasCandidate[] = []
-  const handledDeclarations = new Set<ts.Node>()
+  const handledDeclarations = new Set<TS.Node>()
 
   for (const candidate of candidates) {
     const baseBinding = imports.get(candidate.baseName)
@@ -253,10 +254,10 @@ function resolveAliasTargets(
  * `{ 5: y }`) -- the caller records an `escape` and walks that expression
  * for nested tracked references.
  */
-function bindingElementKey(element: ts.BindingElement): string | ts.Expression {
+function bindingElementKey(element: TS.BindingElement): string | TS.Expression {
   if (element.propertyName === undefined) {
     // Shorthand form (`{ X }`) -- guaranteed an Identifier by the caller's own `ts.isIdentifier(element.name)` check before reaching here for the shorthand case; a renamed shorthand-less form always sets propertyName instead.
-    return (element.name as ts.Identifier).text
+    return (element.name as TS.Identifier).text
   }
   if (ts.isIdentifier(element.propertyName) || ts.isStringLiteral(element.propertyName)) {
     return element.propertyName.text
@@ -344,7 +345,7 @@ export function scanFileForDependencies(filePath: string, sourceText: string): F
   // specific site kind. `handledDeclarations` is exactly that set (see its
   // own doc comment for why a `const b = a` chain is deliberately NOT in it).
 
-  function recordObjectBindingAccesses(pattern: ts.ObjectBindingPattern, localName: string): void {
+  function recordObjectBindingAccesses(pattern: TS.ObjectBindingPattern, localName: string): void {
     for (const element of pattern.elements) {
       if (element.dotDotDotToken) {
         record(localName, { kind: "escape", via: "rest", ...positionOf(sourceFile, element) })
@@ -369,12 +370,12 @@ export function scanFileForDependencies(filePath: string, sourceText: string): F
         }
       }
       // `forEachChild` ignores a missing node, so an element with no default needs no check.
-      ts.forEachChild(element.initializer as ts.Node, visit)
+      ts.forEachChild(element.initializer as TS.Node, visit)
     }
   }
 
   /** `x.MEMBER` / `x["MEMBER"]` / `x[expr]` on a tracked local name `x`. Returns whether a site was recorded (so `visit` stops descending). */
-  function tryRecordPropertyOrElementAccess(node: ts.Node): boolean {
+  function tryRecordPropertyOrElementAccess(node: TS.Node): boolean {
     const isProperty = ts.isPropertyAccessExpression(node)
     if (!isProperty && !ts.isElementAccessExpression(node)) return false
     const base = unwrapParens(node.expression)
@@ -394,7 +395,7 @@ export function scanFileForDependencies(filePath: string, sourceText: string): F
     return true
   }
 
-  function visit(node: ts.Node): void {
+  function visit(node: TS.Node): void {
     // Import/export declarations are already accounted for (imports /
     // wildcard-re-export); never descend into either, so an import/export
     // specifier's own identifier is never mistaken for a real usage. A

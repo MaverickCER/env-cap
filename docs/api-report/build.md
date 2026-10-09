@@ -7007,7 +7007,7 @@ but declares none of the four rotation-specific fields."
 type SchemaRef = 
   | {
   kind: "literal";
-  node: ts.ObjectLiteralExpression;
+  node: TS.ObjectLiteralExpression;
 }
   | {
   kind: "identifier";
@@ -7029,7 +7029,7 @@ this module only ever looks at one file's own AST).
 ```ts
 {
   kind: "literal";
-  node: ts.ObjectLiteralExpression;
+  node: TS.ObjectLiteralExpression;
 }
 ```
 
@@ -7044,7 +7044,7 @@ Discriminant: the schema argument is an inline object literal.
 ###### node
 
 ```ts
-readonly node: ts.ObjectLiteralExpression;
+readonly node: TS.ObjectLiteralExpression;
 ```
 
 The object literal AST node itself.
