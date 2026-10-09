@@ -63,7 +63,6 @@ export type PackageSchemaResolutionResult =
 // hand: applying any mutation here and running the real suite directly
 // always fails a real test.
 function isRecord(value: unknown): value is Record<string, unknown> {
-  // Stryker disable next-line ConditionalExpression: Stryker's coverage attribution for this async-reached helper is volatile (see above); hand-verified that forcing it true fails the string and null manifest tests
   return typeof value === "object" && value !== null
 }
 
@@ -116,7 +115,6 @@ async function locatePackageManifest(
   // hand across many different specific mutants here surviving on
   // different fresh Stryker runs, never in a way a direct hand-applied
   // mutation+real-suite-run couldn't immediately catch.
-  // Stryker disable BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral
   let dir = path.dirname(mainFile)
   for (let i = 0; i < PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT; i++) {
     const candidate = path.join(dir, "package.json")
@@ -140,7 +138,6 @@ async function locatePackageManifest(
     if (parent === dir) break // reached filesystem root
     dir = parent
   }
-  // Stryker restore BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral
   return undefined
 }
 
@@ -156,7 +153,6 @@ async function locatePackageManifest(
 // several `ObjectLiteral`/`BooleanLiteral` mutants on this function's own
 // `return { ok: ..., ... }` literals as Survived -- same class, wider
 // mutator set than previously listed here.
-// Stryker disable BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, BooleanLiteral
 async function resolveUncached(
   packageName: string,
   root: string,
@@ -181,7 +177,6 @@ async function resolveUncached(
     // (same package-manifest fixture, both encodings, byte-identical parsed
     // result). Same equivalence class already documented for evidence-cache.ts
     // and evidence-fingerprint.ts's own "utf8" args.
-    // Stryker disable next-line StringLiteral
     manifest = JSON.parse(await fs.readFile(packageJsonPath, "utf8"))
   } catch {
     return {
@@ -287,7 +282,6 @@ async function resolveUncached(
     origin: { packageName, declaredField, resolvedFile: realFile, packageDir: realPackageDir },
   }
 }
-// Stryker restore BlockStatement, StringLiteral, ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, BooleanLiteral
 
 /**
  * Resolves one allow-listed package name. Memoized in a caller-owned
@@ -312,7 +306,6 @@ export function resolvePackageSchemaFile(
   // forcing this condition to `false` and running the real suite directly
   // fails 29 tests immediately (fast, never a hang), so the test suite
   // genuinely kills this mutant every time it actually runs.
-  // Stryker disable next-line ConditionalExpression
   if (!cached) {
     cached = resolveUncached(packageName, root, fs)
     cache.set(packageName, cached)
@@ -340,7 +333,7 @@ export interface ResolvePackagesResult {
  * every other static-analysis boundary in this codebase.
  */
 export async function resolveAllowlistedPackages(
-  packages: readonly string[],
+  packages: readonly string[] | undefined,
   root: string,
   cache: Map<string, Promise<PackageSchemaResolutionResult>>,
   fs: BuildFileSystem,
@@ -366,7 +359,6 @@ export async function resolveAllowlistedPackages(
   // template as StringLiteral, `result.ok` as ConditionalExpression): each
   // one, applied by hand, fails a real test in this file's own test suite
   // immediately.
-  // Stryker disable BlockStatement, CallExpression, ConditionalExpression, ObjectLiteral, StringLiteral, TemplateLiteral
   for (const { packageName, result } of resolved) {
     if (result.ok) {
       files.push({ packageName, file: result.origin.resolvedFile })
@@ -375,7 +367,6 @@ export async function resolveAllowlistedPackages(
       warnings.push({ file: `(package) ${packageName}`, message: result.reason })
     }
   }
-  // Stryker restore BlockStatement, CallExpression, ConditionalExpression, ObjectLiteral, StringLiteral, TemplateLiteral
 
   return { files, origins, warnings }
 }
@@ -403,7 +394,6 @@ export async function resolveAllowlistedPackages(
 // 2026-09-18: CI's own diagnostic mutation report flagged `seenRealpaths
 // .add(file)` as a Survived `CallExpression`, hand-verified fails
 // "deduplicates two identical package files against each other..." directly.
-// Stryker disable ConditionalExpression, EqualityOperator, LogicalOperator, CallExpression
 export async function mergeLocalAndPackageFiles(
   localFiles: readonly string[],
   packageFiles: readonly string[],
@@ -432,7 +422,6 @@ export async function mergeLocalAndPackageFiles(
 
   return merged
 }
-// Stryker restore ConditionalExpression, EqualityOperator, LogicalOperator, CallExpression
 
 /**
  * Bare-specifier-to-allowlist matching, used by `resolve-import.ts`'s
@@ -455,11 +444,9 @@ export async function resolvePackageImport(
   // to it, consistently across repeated fresh runs -- not the usual one-off
   // flakiness. Hand-verified directly: forcing this predicate to `(pkg) =>
   // true` and running the real suite fails both of those tests immediately.
-  // Stryker disable StringLiteral: perTest coverage does not attribute this predicate's tests to it (see above); hand-verified that an always-true prefix check fails the prefix-boundary test
   const matched = allowedPackages.find(
     (pkg) => specifier === pkg || specifier.startsWith(`${pkg}/`),
   )
-  // Stryker restore StringLiteral
   // Bypassing this guard when nothing matched is behaviorally equivalent,
   // not a real gap: calling `resolvePackageSchemaFile(undefined, ...)` reaches
   // `locatePackageManifest`'s `req.resolve(undefined)`, which throws
@@ -473,7 +460,6 @@ export async function resolvePackageImport(
   // passes unchanged. A second approach -- mocking `resolvePackageSchemaFile`
   // to assert it's never called for a non-matching specifier -- isn't viable
   // either, since it's a same-module self-call `vi.mock` can't intercept.
-  // Stryker disable next-line ConditionalExpression
   if (!matched) return undefined
   const result = await resolvePackageSchemaFile(matched, root, cache, fs)
   return result.ok ? result.origin.resolvedFile : undefined

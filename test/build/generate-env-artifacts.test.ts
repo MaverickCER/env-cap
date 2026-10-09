@@ -11,6 +11,7 @@ import {
   findingFiles,
   findingSubject,
   generateEnvArtifacts,
+  requestedPass,
 } from "../../src/build/generate-env-artifacts.js"
 import type { Finding } from "../../src/build/finding-model.js"
 
@@ -898,18 +899,6 @@ describe("generateEnvArtifacts -- the persisted evidence artifact (ADR 0038)", (
     expect(call.packages).toEqual(["@fixtures/some-package"])
   })
 
-  it("defaults options.packages to an empty array at the write path's fingerprint computation, when omitted", async () => {
-    computeSourceFingerprintMock.mockClear()
-    await generateEnvArtifacts({
-      fs: nodeBuildFs,
-      root: fixtureRoot,
-      evidence: { location: "docs/env.evidence.json" },
-    })
-
-    const call = computeSourceFingerprintMock.mock.calls[0]?.[0] as { packages?: unknown }
-    expect(call.packages).toEqual([])
-  })
-
   it("--check is stable across repeated runs -- provenance.generatedAt never causes false drift", async () => {
     await generateEnvArtifacts({
       fs: nodeBuildFs,
@@ -1024,5 +1013,14 @@ documentEnv(schema, { owner: "cited-team", variables: { CITED_KEY: { evidence: {
           f.location.variable === "CITED_KEY",
       ),
     ).toBe(true)
+  })
+})
+
+describe("requestedPass", () => {
+  it("turns false into exactly undefined, and passes anything else through untouched", () => {
+    const options = { location: "docs/x.md" }
+    expect(requestedPass(false)).toBeUndefined()
+    expect(requestedPass(undefined)).toBeUndefined()
+    expect(requestedPass(options)).toBe(options)
   })
 })

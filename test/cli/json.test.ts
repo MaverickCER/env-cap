@@ -5,7 +5,12 @@ import { describe, expect, it } from "vitest"
 import type { EvidenceModel } from "../../src/build/evidence-model.js"
 import type { GenerateEnvArtifactsResult } from "../../src/build/generate-env-artifacts.js"
 import { EnvProjectGenerationError } from "../../src/build/errors.js"
-import { JSON_SCHEMA_VERSION, serializeFailure, serializeSuccess } from "../../src/cli/json.js"
+import {
+  JSON_SCHEMA_VERSION,
+  serializeCheckSuccess,
+  serializeFailure,
+  serializeSuccess,
+} from "../../src/cli/json.js"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const packageJsonPath = path.resolve(here, "../../package.json")
@@ -328,5 +333,24 @@ describe("serializeSuccess -- requested", () => {
     )
     expect(payload.requested.docs).toBe(true)
     expect(payload.checkResult).toEqual({ ok: false, stale: ["docs"] })
+  })
+})
+
+describe("serializeCheckSuccess", () => {
+  it("reports the check outcome with every pass result present-but-absent and no evidence key", () => {
+    const requested = { manifest: true, docs: false, usage: false, evidence: true }
+    const payload = serializeCheckSuccess({ ok: false, stale: ["manifest"] }, requested)
+
+    expect(payload).toStrictEqual({
+      schemaVersion: JSON_SCHEMA_VERSION,
+      kind: "env-cap-report",
+      toolVersion: payload.toolVersion,
+      ok: true,
+      requested,
+      manifest: undefined,
+      docs: undefined,
+      usage: undefined,
+      checkResult: { ok: false, stale: ["manifest"] },
+    })
   })
 })

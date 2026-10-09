@@ -71,7 +71,7 @@ describe.skipIf(distMissing)(
         expect(code).not.toContain(marker)
       }
       // sanity check: the thing we actually asked for is still present.
-      expect(code).toContain("number")
+      expect(code).toContain("Expected a numeric value")
     })
 
     it("importing only `validators` drops every `processors`-only string", async () => {

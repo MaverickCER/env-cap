@@ -101,18 +101,6 @@ export async function generateEvidenceModel(
   const root = path.resolve(options.root ?? process.cwd())
   const include = options.include ?? defaultInclude()
   const exclude = options.exclude ?? defaultExclude()
-  // `??`-vs-`||` is unobservable here: `packages?: readonly string[]` is
-  // either `undefined` or a real array, never another falsy value (`0`,
-  // `""`, `false`) the two operators would treat differently -- and even an
-  // `undefined` that slipped through both defaults, `new Set(undefined)`
-  // downstream in `resolveAllowlistedPackages`, is spec-defined to produce
-  // an empty Set, identical to `new Set([])`. A garbage non-empty fallback
-  // (`["Stryker was here"]`) is equally unobservable -- empirically
-  // confirmed (see `evidence-cache.ts`'s identical fallback) that an
-  // unresolvable package name contributes zero files to anything
-  // downstream, since `resolveAllowlistedPackages` never throws for one.
-  // Stryker disable next-line LogicalOperator,ArrayDeclaration
-  const packages = options.packages ?? []
   const expiringWithinDays = options.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS
 
   let snapshotPath: string | undefined
@@ -132,11 +120,10 @@ export async function generateEvidenceModel(
     root,
     include,
     exclude,
-    packages,
+    packages: options.packages,
     tsconfig: options.tsconfig,
   })
-  const { readFileCached, linkResult, context, origins, packageWarnings, tsconfigWarnings } =
-    assembled
+  const { readFileCached, linkResult, context, origins } = assembled
 
   const generatedAt = new Date()
   const activeContracts = linkResult.contracts.filter((c) => c.active)
@@ -197,22 +184,12 @@ export async function generateEvidenceModel(
     expiringWithinDays,
     generatedAt,
   )
-  // This array feeds `computeUsage()`'s `parseWarnings` parameter, which
-  // (checked: it's used nowhere else in `computeUsage`'s own body besides
-  // this) is pure pass-through data, echoed straight into `usageComputed
-  // .result.parseWarnings` -- a field this function never reads (only
-  // `.abandonedContracts`/`.unresolvedConsumers`/`.unconsumedOwnedVariables`
-  // /`.indeterminate` feed the returned EvidenceModel's `finding`, below).
-  // Mutating this array to `[]` changes nothing `generateEvidenceModel`
-  // itself ever returns.
   const usageComputed = await computeUsage(
     root,
     linkResult.contracts,
     scanFiles,
     readFileCached,
     context,
-    // Stryker disable next-line ArrayDeclaration: the warnings reach the usage report only for fixtures with package or tsconfig problems, which the contract job does not install (they are covered by the integration-fixtures job)
-    [...packageWarnings, ...tsconfigWarnings, ...linkResult.warnings],
     scannedSurfaces,
     evidenceChanges?.dynamicAccessAcknowledgments,
   )
@@ -226,12 +203,7 @@ export async function generateEvidenceModel(
     unresolvedConsumers: usageComputed.result.unresolvedConsumers,
     unconsumedOwnedVariables: usageComputed.result.unconsumedOwnedVariables,
     indeterminateOwnership: usageComputed.result.indeterminate,
-    // `buildFindingModel` (finding-model.ts) has its own `?? []` fallback
-    // on this exact same field, so even an `undefined` that slipped past
-    // this one (e.g. `??`-vs-`&&` on `evidenceChanges?.…`) is caught there
-    // identically -- belt-and-suspenders, not independently observable.
-    // Stryker disable next-line LogicalOperator
-    dynamicAccessCitationProblems: evidenceChanges?.dynamicAccessCitationProblems ?? [],
+    dynamicAccessCitationProblems: evidenceChanges?.dynamicAccessCitationProblems,
   })
 
   const commit = options.commit ? await options.commit() : undefined

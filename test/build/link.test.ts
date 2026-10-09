@@ -90,6 +90,29 @@ describe("linkFiles", () => {
     expect(readCounts.get(docsFile)).toBe(1)
   })
 
+  it("never reads a file for an imported schema whose specifier cannot be resolved", async () => {
+    const file = await write(
+      "payments/env.schema.ts",
+      `
+      import { externalSchema } from "not-an-installed-package";
+      export const paymentsEnv = createEnv(externalSchema, { name: "payments" });
+      `,
+    )
+
+    const readPaths: string[] = []
+    const result = await linkFiles(
+      [file],
+      async (filePath: string) => {
+        readPaths.push(filePath)
+        return readFile(filePath)
+      },
+      context,
+    )
+
+    expect(result.contracts).toEqual([])
+    expect(readPaths).toEqual([file])
+  })
+
   it("links a cross-file createEnv + documentEnv pair via a named import", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",

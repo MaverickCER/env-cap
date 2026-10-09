@@ -1,10 +1,7 @@
 import type { EnvValidationError } from "./errors.js"
 import type { validateEnvResult } from "./types.js"
 
-type CacheStatus = "uninitialized" | "validating" | "ready" | "failed"
-
 export interface CacheState {
-  status: CacheStatus
   /** ids of every contract validated as part of this initialization, so resetEnvCache() can clean up precisely. */
   contractIds: Set<symbol>
   result?: validateEnvResult
@@ -28,7 +25,7 @@ const contractValues = new Map<symbol, Readonly<Record<string, unknown>>>()
 const contractErrors = new Map<symbol, EnvValidationError>()
 
 function createState(): CacheState {
-  return { status: "uninitialized", contractIds: new Set() }
+  return { contractIds: new Set() }
 }
 
 export function getState(): CacheState {

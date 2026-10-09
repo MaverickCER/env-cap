@@ -9,7 +9,7 @@ import type {
 import { nodeBuildFileSystem } from "./filesystem.js"
 import { runInitCommand } from "./init.js"
 import type { JsonRequestedPasses } from "./json.js"
-import { serializeFailure, serializeSuccess, writeJson } from "./json.js"
+import { serializeCheckSuccess, serializeFailure, serializeSuccess, writeJson } from "./json.js"
 
 /**
  * Thin, optional CLI wrapper around `generateEnvArtifacts()`. Nothing here is
@@ -125,7 +125,6 @@ function setHelp(a: ParsedArgs): void {
 // "Survived" for every individual entry's own body; this fixes the entries,
 // the wrapper object literal's own collapse-to-`{}` mutant is a second,
 // distinct static-attribution target that the same fix doesn't reach.
-// Stryker disable next-line ObjectLiteral
 const BOOL_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs) => void>>> = {
   "--no-tsconfig": setNoTsconfig,
   "--strict": setStrict,
@@ -155,55 +154,15 @@ export function parseArgs(argv: string[]): ParsedArgs {
     help: false,
   }
 
-  // A fast-failing pass-count guard, independent of `i` itself: on any real
-  // input `i` strictly advances toward `argv.length` every pass (the loop's
-  // own `i++`, plus an extra `++i` when a value flag consumes its argument),
-  // so no correct input ever needs more passes than `argv.length`. A mutation
-  // that reverses the loop's own advance (`i++` -> `i--`) makes `i` walk
-  // *away* from `argv.length` instead -- an infinite loop that produces no
-  // observably wrong result for an assertion-based test to catch, only a hang
-  // until Stryker's own mutant timeout. This counter climbs every pass
-  // regardless of `i`'s (possibly-mutated) motion, so it still reaches its
-  // bound and throws an ordinary, fast error instead.
-  let passes = 0
-  // The guard's own arithmetic/direction/comparison below are just as
-  // unreachable/inconsequential for any correct `argv` as the guard body
-  // itself (see the disable comment on the `if` below): under correct code
-  // `passes` never approaches `maxPasses`, so no real test input can observe
-  // a change to any of them.
-  // Stryker disable next-line ArithmeticOperator
-  const maxPasses = argv.length * 2 + 4
-  for (let i = 0; i < argv.length; i++) {
-    // Stryker disable next-line UpdateOperator: `passes` is only compared with the unreachable `maxPasses` bound, so counting down instead of up cannot change any observable result
-    passes++
-    // Unreachable by design for any correct `argv`, the same way the
-    // `arg = argv[i] ?? ""` fallback just below is: this guard's whole
-    // purpose is to fail fast when a *mutated* build's loop-advance is
-    // broken, so no real test input (which only ever exercises correct
-    // code) can reach it. A test that reached it would itself require an
-    // already-broken build to construct.
-    // Stryker disable next-line BlockStatement,ConditionalExpression,EqualityOperator
-    if (passes > maxPasses) {
-      // Stryker disable CallExpression, StringLiteral: message of an unreachable internal-invariant error (parse loop bound)
-      throw new Error(
-        `parseArgs: exceeded ${String(maxPasses)} iterations parsing ${String(argv.length)} argument(s) -- this should never happen for any real argv and indicates an internal parsing bug.`,
-      )
-      // Stryker restore CallExpression, StringLiteral
-    }
-    // Provably unreachable for any real `string[]` input: the loop condition
-    // `i < argv.length` guarantees `argv[i]` is in-bounds (hence defined)
-    // every time this line runs, whether `i` just advanced by the outer
-    // `i++` or by a value flag's own `++i` above -- `noUncheckedIndexedAccess`
-    // isn't enabled, so TypeScript doesn't force this fallback either; it's
-    // pure runtime defense against an out-of-bounds access that can't
-    // actually occur. Hand-verified: replacing the fallback string and
-    // running the real suite (`vitest run` across all of test/cli/) passes
-    // unchanged.
-    // Stryker disable next-line StringLiteral
-    const arg = argv[i] ?? ""
+  // First index the loop still has to handle: a value flag consumes the argument after it. The loop
+  // walks a finite list, so it cannot run unbounded.
+  let resume = 0
+  for (const [i, arg] of argv.entries()) {
+    if (i < resume) continue
     const valueFlag = VALUE_FLAGS[arg]
     if (valueFlag) {
-      valueFlag(args, nonEmpty(argv[++i], arg))
+      valueFlag(args, nonEmpty(argv[i + 1], arg))
+      resume = i + 2
       continue
     }
     const boolFlag = BOOL_FLAGS[arg]
@@ -452,35 +411,7 @@ async function runCheckMode(args: ParsedArgs): Promise<void> {
 
   const stale = checkResult.findings.filter((f) => f.status !== "ok").map((f) => f.artifact)
   if (args.json) {
-    // Both the `{manifest,docs,usage: undefined}` object and the `false`
-    // (`includeEvidence`) argument below are equivalent at this call site:
-    // `serializeSuccess()` only ever spreads these into its return payload
-    // (`...rest`, `...(includeEvidence ? {evidence} : {})`), and `writeJson`
-    // serializes the result through `JSON.stringify`, which drops an
-    // `undefined`-valued key exactly like a MISSING key -- so `{}` (every
-    // field implicitly undefined) and `{manifest: undefined, ...}` (every
-    // field explicitly undefined) serialize identically, and
-    // `includeEvidence: true` would only add `evidence: undefined` (`result`
-    // here has no `evidence` property to destructure), equally dropped.
-    // `requested` is passed explicitly right below, so `serializeSuccess`'s
-    // own `rest.manifest !== undefined`-based default (which WOULD
-    // distinguish `{}` from explicit `undefined`s) is never reached from
-    // this call site either. Hand-verified: mutating both together (`{}`,
-    // `true`) and running the real whole-package suite (`vitest run`)
-    // passes unchanged.
-    // Stryker disable ObjectLiteral,BooleanLiteral
-    writeJson(
-      serializeSuccess(
-        { manifest: undefined, docs: undefined, usage: undefined },
-        { ok: checkResult.ok, stale },
-        false,
-        // `--check` writes nothing, so every result above is undefined by
-        // construction -- `requested` is the only thing distinguishing "this run
-        // checked the docs artifact" from "it didn't."
-        requestedPasses(args),
-      ),
-    )
-    // Stryker restore ObjectLiteral,BooleanLiteral
+    writeJson(serializeCheckSuccess({ ok: checkResult.ok, stale }, requestedPasses(args)))
   } else {
     process.stdout.write("Checking for drift (--check: nothing will be written)...\n\n")
     for (const f of checkResult.findings) {

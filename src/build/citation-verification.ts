@@ -49,22 +49,13 @@ export function dynamicAccessVariableIdentity(
 }
 
 /** Every `contentHash` a previous evidence snapshot recorded, keyed by `${variableIdentity}#${file}:${line}:${column}` -- the baseline {@link buildCitationSnapshots} compares this run's freshly-computed hashes against. */
-function previousContentHashes(previous: EvidenceModel | undefined): ReadonlyMap<string, string> {
-  const baselines = new Map<string, string>()
+function previousContentHashes(
+  previous: EvidenceModel | undefined,
+): ReadonlyMap<string, string | undefined> {
+  const baselines = new Map<string, string | undefined>()
   for (const contract of previous?.dependency.contracts ?? []) {
     for (const variable of contract.variables) {
       for (const assertion of variable.dynamicAccessAssertions) {
-        // Bypassing this guard would set `baselines.get(key)` to `undefined`
-        // explicitly instead of leaving the key absent -- but `Map.get()`
-        // on a genuinely-missing key ALSO returns `undefined`, and every
-        // consumer (`buildCitationSnapshots`'s own `!baseline || ...`
-        // check below) treats the two identically. Load-bearing for
-        // TypeScript's own narrowing of `assertion.contentHash` to
-        // `string` for the `Map<string, string>` value type. Hand-verified:
-        // bypassing this and running the full `vitest run` leaves every
-        // test but the tsc-backed json-schema one passing.
-        // Stryker disable next-line ConditionalExpression
-        if (assertion.contentHash === undefined) continue
         const identity = dynamicAccessVariableIdentity(
           contract.file,
           contract.exportName,
@@ -101,22 +92,8 @@ export async function buildCitationSnapshots(
   for (const contract of activeContracts) {
     const file = displayPath(root, contract.file)
     for (const variable of contract.variables) {
-      // Neither this fallback's own content, nor the early-`continue` two
-      // lines down, is observable: a variable with no real citations to
-      // report on ends up with `result` either lacking an entry for its
-      // identity (with the `continue`) or holding one mapped to `[]`
-      // (without it) -- and every consumer (`verifyDynamicAccessCitations`'s
-      // own `acknowledgments.get(identity) ?? []`, and this module's only
-      // production caller, `evidence-snapshot.ts`, which always re-derives
-      // `acknowledgments` from these SAME `activeContracts` right before
-      // verifying them) treats "key absent" and "key present but empty"
-      // identically. Hand-verified: bypassing both (a poisoned fallback
-      // array AND the `continue`) and running the full `vitest run` leaves
-      // every test passing.
-      // Stryker disable next-line ArrayDeclaration
-      const citations = variable.evidence?.dynamicAccess ?? []
-      // Stryker disable next-line ConditionalExpression: looping over zero citations does nothing, so this early continue is an optimization with no observable effect (equivalent mutant)
-      if (citations.length === 0) continue
+      const citations = variable.evidence?.dynamicAccess
+      if (citations === undefined) continue
 
       const identity = dynamicAccessVariableIdentity(file, contract.exportName, variable.key)
       const assertions: DynamicAccessAssertion[] = []
@@ -183,7 +160,6 @@ export function verifyDynamicAccessCitations(
       // poisoned single-string array (the exact shape Stryker's own
       // `ArrayDeclaration` mutant produces) and running the full
       // `vitest run` leaves every test passing.
-      // Stryker disable next-line ArrayDeclaration
       for (const assertion of acknowledgments.get(identity) ?? []) {
         if (assertion.acknowledgment === "fresh") continue
         problems.push({

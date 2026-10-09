@@ -124,6 +124,73 @@ describe("buildDependencyModel", () => {
     expect(model.contracts[0]?.consumingFiles).toEqual(["a-consumer.ts", "z-consumer.ts"])
   })
 
+  it("sorts consumingFiles by display path even when a file outside the root reorders them", async () => {
+    const schemaFile = await write(
+      "payments/env.schema.ts",
+      `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
+    )
+    // Inside the root this displays as "-inside.ts"; a file outside the root displays as its absolute
+    // path. By absolute path the outside file sorts first, by display path the inside one does.
+    const inside = await write(
+      "-inside.ts",
+      `import { paymentsEnv } from "./payments/env.schema.js";\npaymentsEnv.STRIPE_KEY;\n`,
+    )
+    const outsideDir = `${fixtureRoot}-outside`
+    await fs.mkdir(outsideDir, { recursive: true })
+    const outside = path.join(outsideDir, "a-outside.ts")
+    await fs.writeFile(
+      outside,
+      `import { paymentsEnv } from "../${path.basename(fixtureRoot)}/payments/env.schema.js";\npaymentsEnv.STRIPE_KEY;\n`,
+      "utf8",
+    )
+    try {
+      const contracts = await discover([schemaFile])
+      const model = await buildDependencyModel(
+        contracts,
+        [schemaFile, outside, inside],
+        readFile,
+        context,
+        fixtureRoot,
+      )
+      expect(model.contracts[0]?.consumingFiles).toEqual(["-inside.ts", outside])
+    } finally {
+      await fs.rm(outsideDir, { recursive: true, force: true })
+    }
+  })
+
+  it("sorts ambiguousBarrelFiles by display path even when a file outside the root reorders them", async () => {
+    const schemaFile = await write(
+      "payments/env.schema.ts",
+      `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
+    )
+    const barrelFile = await write("payments/index.ts", `export * from "./env.schema.js";`)
+    const inside = await write(
+      "-inside.ts",
+      `import { paymentsEnv } from "./payments/index.js";\npaymentsEnv.STRIPE_KEY;\n`,
+    )
+    const outsideDir = `${fixtureRoot}-outside`
+    await fs.mkdir(outsideDir, { recursive: true })
+    const outside = path.join(outsideDir, "a-outside.ts")
+    await fs.writeFile(
+      outside,
+      `import { paymentsEnv } from "../${path.basename(fixtureRoot)}/payments/index.js";\npaymentsEnv.STRIPE_KEY;\n`,
+      "utf8",
+    )
+    try {
+      const contracts = await discover([schemaFile])
+      const model = await buildDependencyModel(
+        contracts,
+        [schemaFile, barrelFile, outside, inside],
+        readFile,
+        context,
+        fixtureRoot,
+      )
+      expect(model.contracts[0]?.ambiguousBarrelFiles).toEqual(["-inside.ts", outside])
+    } finally {
+      await fs.rm(outsideDir, { recursive: true, force: true })
+    }
+  })
+
   it("threads per-access-site file:line:column positions through into the variable's model entry", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",

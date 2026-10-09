@@ -512,6 +512,10 @@ describe("extractCommentedVariables", () => {
   it("requires the identifier to start at the very beginning of the (hash-stripped) content -- a 'KEY=' pattern appearing later does not count", () => {
     expect(extractCommentedVariables("# 123 NOT_AT_START=value\n")).toEqual([])
   })
+
+  it("accepts a hash with no space after it, and ignores a '# KEY=' that only appears after a live assignment", () => {
+    expect(extractCommentedVariables("#NO_SPACE=1\nLIVE=1 # LATE=2\n")).toEqual(["NO_SPACE"])
+  })
 })
 
 describe("computeReconciliation", () => {

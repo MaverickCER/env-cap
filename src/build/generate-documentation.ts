@@ -4,12 +4,7 @@ import { buildContractModel } from "./contract-model.js"
 import { displayPath } from "./display-path.js"
 import type { ContractModelContract } from "./contract-model.js"
 import { buildCatalog, computeExpiringEntries, renderDocs } from "./docs.js"
-import type {
-  CatalogContract,
-  ExpiringEntry,
-  UndocumentedContractRef,
-  UndocumentedVariableRef,
-} from "./docs.js"
+import type { CatalogContract, ExpiringEntry, UndocumentedContractRef } from "./docs.js"
 import { writeEnvExample } from "./env-example.js"
 import type { EnvExampleOnExisting, EnvExampleResult } from "./env-example.js"
 import { EnvDocumentationGenerationError } from "./errors.js"
@@ -123,6 +118,12 @@ export interface GenerateDocumentationResult {
 /** Default value for {@link GenerateDocumentationOptions.expiringWithinDays}. */
 export const DEFAULT_EXPIRING_WITHIN_DAYS = 30
 
+// The vocabulary lives in a function that both the exported set and the checks below call, so the
+// checks read it at call time instead of from a value frozen when the module loaded.
+function standardSensitivityLevels(): string[] {
+  return ["secret", "credential", "pii", "config"]
+}
+
 /**
  * The sensitivity vocabulary env-cap's own docs, examples, and `.env.example`
  * comments are written around. Purely advisory: `sensitivity` is an open
@@ -133,27 +134,7 @@ export const DEFAULT_EXPIRING_WITHIN_DAYS = 30
  * its own vocabulary sees one advisory line rather than silent data loss --
  * and a team that meant to write `"secret"` and typo'd `"secrets"` finds out.
  */
-// A module-load `const` referenced directly by `documentation-generate.test.ts`
-// (which iterates its exact members) is the documented covered-static
-// false-Survived class: Stryker's dry-run coverage analysis marks a mutant
-// here `static: true`, runs it anyway, and reports "Survived" even with
-// real, passing test coverage -- `ignoreStatic` only ignores a static
-// mutant with ZERO coverage. Can't fix with the usual "inline into its one
-// consumer" move here (this is consumed across a module boundary, by both
-// this file's own `findNonstandardSensitivityLevels()` AND the test file's
-// own enumeration of "every standard level") -- same "shared public
-// sentinel" class as data-cap's `UNOWNED`/`FIELD_MARKER`. Hand-verified:
-// corrupting each individual string (one at a time) and running
-// `vitest run test/build/documentation-generate.test.ts` directly fails a
-// real test every time, proving genuine coverage.
-// Stryker disable ArrayDeclaration, StringLiteral
-export const STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string> = new Set([
-  "secret",
-  "credential",
-  "pii",
-  "config",
-])
-// Stryker restore ArrayDeclaration, StringLiteral
+export const STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string> = new Set(standardSensitivityLevels())
 
 /** One contract- or variable-level `sensitivity` declaring a level outside {@link STANDARD_SENSITIVITY_LEVELS}. */
 export interface NonstandardSensitivityEntry {
@@ -185,7 +166,7 @@ export function findNonstandardSensitivityLevels(
   for (const contract of contracts) {
     if (
       contract.sensitivity !== undefined &&
-      !STANDARD_SENSITIVITY_LEVELS.has(contract.sensitivity)
+      !standardSensitivityLevels().includes(contract.sensitivity)
     )
       entries.push({
         file: contract.file,
@@ -195,7 +176,7 @@ export function findNonstandardSensitivityLevels(
       })
     for (const variable of [...contract.variables].sort((a, b) => a.key.localeCompare(b.key))) {
       if (variable.sensitivity === undefined) continue
-      if (STANDARD_SENSITIVITY_LEVELS.has(variable.sensitivity)) continue
+      if (standardSensitivityLevels().includes(variable.sensitivity)) continue
       entries.push({
         file: contract.file,
         exportName: contract.exportName,
@@ -277,42 +258,21 @@ export async function writeDocumentation(
     undocumentedContracts: documentation.undocumentedContracts.map((ref): UndocumentedContractRef =>
       relativizeRef(root, ref),
     ),
-    // `RenderDocsOptions.undocumentedVariables` is consumed by `renderDocs()`
-    // ONLY via `.length` (the security-review counter) -- never by content
-    // or identity, unlike its `undocumentedContracts` sibling above (matched
-    // by identity against the catalog for the "Undocumented." marker).
-    // `.map()` always preserves length regardless of what each element
-    // transforms to, so this specific `relativizeRef()` call's own output is
-    // unobservable through this call site. Hand-verified: mapping every
-    // entry to `undefined` instead and running the full `vitest run` leaves
-    // all tests passing.
-    // Stryker disable next-line ArrowFunction
-    undocumentedVariables: documentation.undocumentedVariables.map((ref): UndocumentedVariableRef =>
-      relativizeRef(root, ref),
-    ),
+    undocumentedVariables: documentation.undocumentedVariables,
     generatedAt,
     previousContent,
   })
   await fs.mkdir(path.dirname(docsPath), { recursive: true })
-  // `docsSource` is always a plain string -- fs.writeFile defaults a string
-  // write to utf8 regardless of the encoding arg, so "utf8" vs "" is
-  // unobservable. Same established equivalence as this drive's other
-  // writeX() functions.
-  // Stryker disable next-line StringLiteral
   await fs.writeFile(docsPath, docsSource, "utf8")
 
   const envExample = envExamplePath
-    ? // exactOptionalPropertyTypes: omit the key rather than set it to
-      // `undefined` when the caller didn't supply one. writeEnvExample
-      // itself does `options.onExisting ?? "keep-sibling"`, so passing
-      // `onExisting: undefined` explicitly (what always-spreading here
-      // would do) is behaviorally identical to omitting the key.
-      // Hand-verified: forcing this guard to `true` and running the real
-      // suite passes unchanged.
-      await writeEnvExample(contracts, envExamplePath, fs, {
-        // Stryker disable next-line ConditionalExpression: passing `onExisting: undefined` and omitting the key are the same to the callee, which reads it with a default (equivalent mutant)
-        ...(envExampleOnExisting === undefined ? {} : { onExisting: envExampleOnExisting }),
-      })
+    ? // `exactOptionalPropertyTypes` rejects an explicit `undefined`, so the key is omitted when unset.
+      await writeEnvExample(
+        contracts,
+        envExamplePath,
+        fs,
+        envExampleOnExisting && { onExisting: envExampleOnExisting },
+      )
     : undefined
   return { envExample }
 }
@@ -336,7 +296,6 @@ export async function generateDocumentation(
   const root = path.resolve(options.root ?? process.cwd())
   const include = options.include ?? defaultInclude()
   const exclude = options.exclude ?? defaultExclude()
-  const packages = options.packages ?? []
   const expiringWithinDays = options.expiringWithinDays ?? DEFAULT_EXPIRING_WITHIN_DAYS
 
   const docsLocationResult = resolveWithinRoot(
@@ -365,7 +324,7 @@ export async function generateDocumentation(
     root,
     include,
     exclude,
-    packages,
+    packages: options.packages,
     tsconfig: options.tsconfig,
   })
   const docsContracts = await resolveLiveExpirationDates(

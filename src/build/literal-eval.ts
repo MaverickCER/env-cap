@@ -4,7 +4,7 @@ import ts from "typescript"
  * The result of a literal evaluation: either a real JS value, or `{ ok: false }` when the AST
  * expression wasn't a literal (or contained a non-literal element/property).
  */
-export type LiteralEvalResult = { ok: true; value: unknown } | { ok: false }
+export type LiteralEvalResult = { ok: true; value: unknown } | { ok: false; value?: undefined }
 
 /**
  * Structurally evaluates a *literal* AST expression (strings, numbers, booleans, null, arrays,

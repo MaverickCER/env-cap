@@ -92,11 +92,9 @@ export function defaultExclude(): string[] {
     // inspect `exclude` directly, and as defense if that hardcoding ever
     // changes) -- hand-verified: emptying both and running the full
     // `vitest run` leaves all 1243 tests passing.
-    // Stryker disable StringLiteral: all three entries are redundant with the walker's hardcoded directory skips (see above), so emptying one changes nothing observable
     "**/node_modules/**",
     "**/dist/**",
     "**/.git/**",
-    // Stryker restore StringLiteral
   ]
 }
 
@@ -118,7 +116,7 @@ export interface ManifestComputation {
 export function computeManifest(
   root: string,
   linkResult: LinkResult,
-  onIncompatibility: "warn" | "throw",
+  onIncompatibility: "warn" | "throw" | undefined,
 ): ManifestComputation {
   const { contracts } = linkResult
   const activeContracts = contracts.filter((contract) => contract.active)
@@ -157,7 +155,6 @@ export async function writeManifest(
   // string write to utf8 regardless of the encoding arg, so "utf8" vs "" is
   // unobservable. Same established equivalence as generate-usage.ts's own
   // `writeUsageReport()`/evidence-cache.ts/env-example.ts's writes.
-  // Stryker disable next-line StringLiteral
   await fs.writeFile(outputPath, manifestSource, "utf8")
 }
 
@@ -181,27 +178,6 @@ export async function generateEnvManifest(
   const root = path.resolve(options.root ?? process.cwd())
   const include = options.include ?? defaultInclude()
   const exclude = options.exclude ?? defaultExclude()
-  // `assembleProject()` threads this straight into
-  // `resolveAllowlistedPackages()`, whose very first line is
-  // `[...new Set(packages)]` -- `new Set(undefined)` is spec-defined as an
-  // EMPTY set, identical to `new Set([])`, so `undefined` and `[]` are
-  // observably identical all the way down this call chain: `&&` (giving
-  // `undefined` when `options.packages` is omitted) behaves exactly like
-  // `??` (giving `[]`). Hand-verified: mutating to `&&` and running the
-  // full `vitest run` leaves all 1241 other tests passing (only the
-  // unrelated tsc-backed json-schema test fails, a pure type-narrowing
-  // regression -- `AssembleProjectOptions.packages` isn't typed optional).
-  // Stryker disable next-line LogicalOperator
-  const packages = options.packages ?? []
-  // `onIncompatibility` is only ever compared via `=== "throw"` inside
-  // `computeManifest()` -- any non-"throw" string (including "" here)
-  // behaves identically to "warn". The `??` itself is real and already
-  // tested (an explicit "throw" must survive, not fall back) -- only the
-  // fallback's own literal text is unobservable. Hand-verified: replacing
-  // it with "" and running the full `vitest run` leaves all 1240 tests
-  // passing (only the unrelated tsc-backed json-schema test fails).
-  // Stryker disable next-line StringLiteral
-  const onIncompatibility = options.onIncompatibility ?? "warn"
 
   // Fail fast, before any discovery/parsing work and before any file is
   // written -- generation is atomic, same as a compatibility-issue failure.
@@ -219,11 +195,11 @@ export async function generateEnvManifest(
     root,
     include,
     exclude,
-    packages,
+    packages: options.packages,
     tsconfig: options.tsconfig,
   })
 
-  const computed = computeManifest(root, linkResult, onIncompatibility)
+  const computed = computeManifest(root, linkResult, options.onIncompatibility)
   if (computed.blocking.length > 0) throw new EnvManifestGenerationError(computed.blocking)
 
   await writeManifest(outputPath, computed.activeContracts, options.fs)
