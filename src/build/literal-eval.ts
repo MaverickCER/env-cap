@@ -1,4 +1,5 @@
-import ts from "typescript"
+import { ts } from "./typescript.js"
+import type TS from "typescript"
 
 /**
  * The result of a literal evaluation: either a real JS value, or `{ ok: false }` when the AST
@@ -14,7 +15,7 @@ export type LiteralEvalResult = { ok: true; value: unknown } | { ok: false; valu
  * Anything that isn't a literal (identifiers, calls, imports, template expressions with
  * interpolation) resolves to `{ ok: false }` rather than being guessed at.
  */
-export function evaluateLiteral(node: ts.Expression): LiteralEvalResult {
+export function evaluateLiteral(node: TS.Expression): LiteralEvalResult {
   if (ts.isStringLiteralLike(node)) return { ok: true, value: node.text }
   if (ts.isNumericLiteral(node)) return { ok: true, value: Number(node.text) }
   if (node.kind === ts.SyntaxKind.TrueKeyword) return { ok: true, value: true }
@@ -61,7 +62,7 @@ export function evaluateLiteral(node: ts.Expression): LiteralEvalResult {
 }
 
 /** Reads a property name statically (identifier, string literal, or numeric literal) -- a computed key (e.g. `[expr]`) resolves to `undefined` rather than being guessed at. */
-export function getStaticPropertyName(name: ts.PropertyName): string | undefined {
+export function getStaticPropertyName(name: TS.PropertyName): string | undefined {
   if (ts.isIdentifier(name)) return name.text
   if (ts.isStringLiteralLike(name)) return name.text
   if (ts.isNumericLiteral(name)) return name.text

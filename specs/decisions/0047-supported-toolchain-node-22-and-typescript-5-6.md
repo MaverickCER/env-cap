@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted.
+Accepted. The TypeScript 7 paragraph is superseded by
+[ADR 0049](0049-typescript-7-scanner-uses-a-bundled-typescript-6.md).
 
 ## Context
 

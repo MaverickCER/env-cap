@@ -57,9 +57,12 @@ major version bump (once the package reaches 1.0 -- see
   while the package is 0.x, `@v1` from 1.0.0) moves only within a major version.
 - **Supported toolchain**: Node.js `>=22`, `moduleResolution` `node16`/`nodenext`/`bundler` (not the legacy
   `node10`, which cannot resolve subpath exports), and the TypeScript versions named in the
-  `typescript` peer range. The build-time scanner needs TypeScript's classic compiler API; a
-  TypeScript major that removes it is unsupported until a release says otherwise, and the CLI says
-  so instead of failing with an import error.
+  `typescript` peer range (`^5 || ^6 || ^7`). The build-time scanner needs TypeScript's classic
+  compiler API, which TypeScript 7 does not ship, so it uses the consumer's `typescript` when that has
+  the API and otherwise the bundled `@typescript/typescript6` dependency -- no configuration, and `tsc`
+  stays TypeScript 7 ([ADR 0049](specs/decisions/0049-typescript-7-scanner-uses-a-bundled-typescript-6.md)).
+  Under TypeScript 7 the `./build` and `./evidence` declarations need `skipLibCheck`; the runtime,
+  helpers and node entry points type-check strictly.
 
 All promoted from Experimental per [ADR 0045](specs/decisions/0045-promote-experimental-surfaces-to-stable.md)
 -- see that ADR for why each one had already cleared this tier's own

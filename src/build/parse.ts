@@ -1,4 +1,5 @@
-import ts from "typescript"
+import { ts } from "./typescript.js"
+import type TS from "typescript"
 import { assertCompilerApi } from "./compiler-api.js"
 import type { EnvGovernanceFields } from "./governance-fields.js"
 import { evaluateLiteral, getStaticPropertyName } from "./literal-eval.js"
@@ -38,7 +39,7 @@ export type SchemaRef =
       /** Discriminant: the schema argument is an inline object literal. */
       readonly kind: "literal"
       /** The object literal AST node itself. */
-      readonly node: ts.ObjectLiteralExpression
+      readonly node: TS.ObjectLiteralExpression
     }
   | {
       /** Discriminant: the schema argument is a bare identifier referencing a local `const`. */
@@ -58,9 +59,9 @@ interface RawCreateEnvCall {
   /** How the first (schema) argument resolves within this file. */
   readonly schemaRef: SchemaRef
   /** The second (options) argument expression, if the call passes one. */
-  readonly optionsArg: ts.Expression | undefined
+  readonly optionsArg: TS.Expression | undefined
   /** The full call expression AST node. */
-  readonly node: ts.CallExpression
+  readonly node: TS.CallExpression
 }
 
 /** One `documentEnv(...)` call site, as found by {@link parseSchemaFile}, before cross-file linking. */
@@ -68,9 +69,9 @@ interface RawDocumentEnvCall {
   /** How the first (schema) argument resolves within this file. */
   readonly schemaRef: SchemaRef
   /** The second (docs) argument expression, if the call passes one. */
-  readonly docsArg: ts.Expression | undefined
+  readonly docsArg: TS.Expression | undefined
   /** The full call expression AST node. */
-  readonly node: ts.CallExpression
+  readonly node: TS.CallExpression
 }
 
 /** One named import binding, tracked only for relative specifiers (see {@link FileParseResult.imports}). */
@@ -86,9 +87,9 @@ export interface FileParseResult {
   /** Absolute path of the parsed file. */
   readonly file: string
   /** The TypeScript AST for this file, reused by callers that need to inspect it further. */
-  readonly sourceFile: ts.SourceFile
+  readonly sourceFile: TS.SourceFile
   /** Top-level `const NAME = {...}` object-literal declarations, whether exported or not. */
-  readonly localConsts: ReadonlyMap<string, ts.ObjectLiteralExpression>
+  readonly localConsts: ReadonlyMap<string, TS.ObjectLiteralExpression>
   /** Names of top-level `const` declarations that are exported (a subset of {@link localConsts}'s keys, plus non-object-literal exports). */
   readonly exportedConstNames: ReadonlySet<string>
   /** Local binding name -> where it came from. Only named imports of a relative specifier are tracked (namespace/default/bare-package imports are irrelevant to schema linking). */
@@ -123,7 +124,7 @@ export function parseSchemaFile(filePath: string, sourceText: string): FileParse
   )
   const warnings: ParseWarning[] = []
 
-  const localConsts = new Map<string, ts.ObjectLiteralExpression>()
+  const localConsts = new Map<string, TS.ObjectLiteralExpression>()
   const exportedConstNames = new Set<string>()
   const imports = new Map<string, ImportBinding>()
   const createEnvCalls: RawCreateEnvCall[] = []
@@ -200,7 +201,7 @@ export function parseSchemaFile(filePath: string, sourceText: string): FileParse
   }
 }
 
-function resolveSchemaRef(node: ts.Expression | undefined): SchemaRef {
+function resolveSchemaRef(node: TS.Expression | undefined): SchemaRef {
   if (!node) return { kind: "unresolvable" }
   if (ts.isObjectLiteralExpression(node)) return { kind: "literal", node }
   if (ts.isIdentifier(node)) return { kind: "identifier", name: node.text }
@@ -219,7 +220,7 @@ function resolveSchemaRef(node: ts.Expression | undefined): SchemaRef {
  * @param imports - Mutated in place; a binding re-collected under the same local name overwrites the previous entry.
  */
 export function collectImportBindings(
-  statement: ts.ImportDeclaration,
+  statement: TS.ImportDeclaration,
   imports: Map<string, ImportBinding>,
 ): void {
   if (!ts.isStringLiteralLike(statement.moduleSpecifier)) return
@@ -234,7 +235,7 @@ export function collectImportBindings(
   }
 }
 
-function isCallToName(call: ts.CallExpression, name: string): boolean {
+function isCallToName(call: TS.CallExpression, name: string): boolean {
   const expr = call.expression
   if (ts.isIdentifier(expr)) return expr.text === name
   if (ts.isPropertyAccessExpression(expr)) return expr.name.text === name
@@ -293,11 +294,11 @@ export interface DiscoveredSchemaVariable {
  * @param warnings - Mutated in place: one entry is pushed per skipped (non-static, invalid-key, or non-literal) property.
  */
 export function extractSchemaVariables(
-  schemaLiteral: ts.ObjectLiteralExpression,
+  schemaLiteral: TS.ObjectLiteralExpression,
   filePath: string,
   contextLabel: string,
   warnings: ParseWarning[],
-  sourceFile: ts.SourceFile,
+  sourceFile: TS.SourceFile,
 ): DiscoveredSchemaVariable[] {
   const variables: DiscoveredSchemaVariable[] = []
 
@@ -339,7 +340,7 @@ export function extractSchemaVariables(
 
 function extractSchemaVariable(
   key: string,
-  definition: ts.ObjectLiteralExpression,
+  definition: TS.ObjectLiteralExpression,
   filePath: string,
   contextLabel: string,
   warnings: ParseWarning[],
@@ -401,7 +402,7 @@ function extractSchemaVariable(
   }
 }
 
-function extractReturnType(node: ts.Expression): string | undefined {
+function extractReturnType(node: TS.Expression): string | undefined {
   if ((ts.isArrowFunction(node) || ts.isFunctionExpression(node)) && node.type) {
     return node.type.getText().replace(/\s/g, "")
   }
@@ -480,7 +481,7 @@ export interface DiscoveredContractDocs extends EnvGovernanceFields {
  * @param warnings - Mutated in place: one entry is pushed per unresolvable field.
  */
 export function extractContractDocs(
-  docsArg: ts.Expression | undefined,
+  docsArg: TS.Expression | undefined,
   filePath: string,
   contextLabel: string,
   warnings: ParseWarning[],
@@ -671,7 +672,7 @@ export function extractContractDocs(
 }
 
 function extractVariableDocsMap(
-  variablesLiteral: ts.ObjectLiteralExpression,
+  variablesLiteral: TS.ObjectLiteralExpression,
   filePath: string,
   contextLabel: string,
   warnings: ParseWarning[],
@@ -831,7 +832,7 @@ function extractDynamicAccessCitations(
 
 /** Reads `createEnv`'s second argument (the {@link runtime.CreateEnvOptions} shape) for just `name`, if it's a statically-resolvable string literal. Used only for the docs fallback chain (`documentEnv`'s `name` wins if set); `source` is runtime-only and never read here. */
 export function extractCreateEnvOptionsName(
-  optionsArg: ts.Expression | undefined,
+  optionsArg: TS.Expression | undefined,
 ): string | undefined {
   if (!optionsArg || !ts.isObjectLiteralExpression(optionsArg)) return undefined
   for (const prop of optionsArg.properties) {
