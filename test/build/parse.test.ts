@@ -768,6 +768,22 @@ describe("extractContractDocs", () => {
     expect(warnings.every((w) => w.message.includes('"evidence.dynamicAccess"'))).toBe(true)
   })
 
+  it("rejects a citation wrapped in an array, even though the array would stringify to a valid citation", async () => {
+    const warnings: { file: string; message: string }[] = []
+    const docs = extractContractDocs(
+      objectLiteral(`{
+        variables: {
+          DATABASE_URL: { evidence: { dynamicAccess: [["scripts/migrate.sh:12:4"]] } },
+        },
+      }`),
+      "/repo/x.ts",
+      "postgres",
+      warnings,
+    )
+    expect(docs.variables.get("DATABASE_URL")?.evidence?.dynamicAccess).toEqual([])
+    expect(warnings).toHaveLength(1)
+  })
+
   it("leaves evidence undefined when the declaration has no evidence key at all", async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(

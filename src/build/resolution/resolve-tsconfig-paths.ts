@@ -135,7 +135,6 @@ export async function loadTsconfigPaths(
   // `BlockStatement` was flagged in data-cap's copy. Applied by hand, each fails real tests
   // in this file's suite immediately (three tests for the first, "warns on malformed JSON"
   // for the second) -- same class, wider mutator set than previously listed here.
-  // Stryker disable ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, StringLiteral, BooleanLiteral, BlockStatement
   const isExplicit = tsconfigOption !== undefined
   const configFile = path.resolve(root, tsconfigOption ?? "tsconfig.json")
 
@@ -152,13 +151,7 @@ export async function loadTsconfigPaths(
 
   const readResult = ts.readConfigFile(configFile, (p) => ts.sys.readFile(p))
   if (readResult.error) {
-    // `readConfigFile`'s own diagnostic `messageText` is always a plain
-    // string in practice (probed) -- the chain separator arg is unreachable,
-    // kept only for the API's own `string | DiagnosticMessageChain` type.
-    // Same established equivalence as data-cap's identical
-    // `resolve-tsconfig-paths.ts`.
-    // Stryker disable next-line StringLiteral
-    const detail = ts.flattenDiagnosticMessageText(readResult.error.messageText, "\n")
+    const detail = ts.flattenDiagnosticMessageText(readResult.error.messageText, ts.sys.newLine)
     return {
       resolution: undefined,
       warning: {
@@ -177,7 +170,6 @@ export async function loadTsconfigPaths(
   }
 
   return { resolution: { compilerOptions: parsed.options, configFile }, warning: undefined }
-  // Stryker restore ConditionalExpression, EqualityOperator, LogicalOperator, ObjectLiteral, StringLiteral, BooleanLiteral, BlockStatement
 }
 
 /**

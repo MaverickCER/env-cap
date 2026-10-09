@@ -54,7 +54,7 @@ export interface RenderDocsOptions {
   readonly expiringWithinDays: number
   /** Contracts with no linked `documentEnv()` call at all. `file` must be root-relative, POSIX-separated -- matching `contracts`' own `ContractModel` convention, since this is matched against it by identity. */
   readonly undocumentedContracts: readonly UndocumentedContractRef[]
-  /** Schema variables with no matching entry in their contract's linked documentation. `file` must be root-relative, POSIX-separated -- see `undocumentedContracts`. */
+  /** Schema variables with no matching entry in their contract's linked documentation. Only how many there are is rendered (the security-review counter), so `file` is not matched against anything. */
   readonly undocumentedVariables: readonly UndocumentedVariableRef[]
   /** Timestamp rendered into the header and used for expiry/days-remaining math. */
   readonly generatedAt: Date
@@ -73,6 +73,17 @@ export interface RenderDocsOptions {
 export function parseIsoDate(value: string): Date | undefined {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? undefined : date
+}
+
+/**
+ * An `expiresAt` that is set and parses as a date, together with that date. A missing value reads as
+ * the text "undefined", which does not parse, so it is skipped exactly like any other invalid value
+ * and needs no separate check.
+ */
+function parseExpiry(expiresAt: string | undefined): { raw: string; date: Date } | undefined {
+  const raw = String(expiresAt)
+  const date = parseIsoDate(raw)
+  return date && { raw, date }
 }
 
 const MS_PER_DAY = 86_400_000
@@ -101,54 +112,29 @@ export function computeExpiringEntries(
   const entries: ExpiringEntry[] = []
 
   for (const contract of contracts) {
-    // `parseIsoDate()` treats every falsy string input (`undefined` or `""`,
-    // the only two falsy values `expiresAt: string | undefined` can hold)
-    // identically -- `new Date(x).getTime()` is `NaN` either way, so `date`
-    // ends up `undefined` regardless, and the `if (date)` guard just below
-    // already skips pushing an entry. Bypassing this outer guard is
-    // therefore runtime-equivalent, but still load-bearing for TypeScript's
-    // own narrowing of `contract.expiresAt` to `string` for the
-    // `parseIsoDate()` call inside (see the identical `tsc`-narrowing
-    // dependency already documented for `parse.ts`/`generate-env-artifacts.ts`
-    // this same drive). Hand-verified: bypassing it and running the real
-    // whole-package suite (`vitest run`) only breaks the two `tsc`-backed
-    // json-schema freshness tests, no runtime-behavior assertion.
-    // Stryker disable next-line ConditionalExpression
-    if (contract.expiresAt) {
-      const date = parseIsoDate(contract.expiresAt)
-      if (date) {
-        const daysRemaining = daysRemainingFrom(date, now)
-        if (daysRemaining <= expiringWithinDays) {
-          entries.push({
-            file: contract.file,
-            exportName: contract.exportName,
-            key: undefined,
-            expiresAt: contract.expiresAt,
-            daysRemaining,
-          })
-        }
+    const contractExpiry = parseExpiry(contract.expiresAt)
+    if (contractExpiry) {
+      const daysRemaining = daysRemainingFrom(contractExpiry.date, now)
+      if (daysRemaining <= expiringWithinDays) {
+        entries.push({
+          file: contract.file,
+          exportName: contract.exportName,
+          key: undefined,
+          expiresAt: contractExpiry.raw,
+          daysRemaining,
+        })
       }
     }
     for (const variable of contract.variables) {
-      // Same equivalence as the contract-level guard above: `parseIsoDate()`
-      // treats every falsy string identically, and the very next `if
-      // (!date) continue` already catches the result -- but this bypass
-      // still relies on TypeScript's own narrowing of `variable.expiresAt`
-      // to `string` for the `parseIsoDate()` call on the next line.
-      // Hand-verified: bypassing it and running the real whole-package suite
-      // (`vitest run`) only breaks the two `tsc`-backed json-schema
-      // freshness tests, no runtime-behavior assertion.
-      // Stryker disable next-line ConditionalExpression
-      if (!variable.expiresAt) continue
-      const date = parseIsoDate(variable.expiresAt)
-      if (!date) continue
-      const daysRemaining = daysRemainingFrom(date, now)
+      const expiry = parseExpiry(variable.expiresAt)
+      if (!expiry) continue
+      const daysRemaining = daysRemainingFrom(expiry.date, now)
       if (daysRemaining <= expiringWithinDays) {
         entries.push({
           file: contract.file,
           exportName: contract.exportName,
           key: variable.key,
-          expiresAt: variable.expiresAt,
+          expiresAt: expiry.raw,
           daysRemaining,
         })
       }
@@ -252,14 +238,8 @@ export function buildCatalog(contracts: readonly ContractModelContract[]): Catal
 export function extractPreviouslyDocumentedKeys(previousContent: string): Set<string> {
   const keys = new Set<string>()
   for (const match of previousContent.matchAll(/^### `([A-Za-z_][A-Za-z0-9_]*)`$/gm)) {
-    // The pattern's own capture group (`[A-Za-z_][A-Za-z0-9_]*`) requires at
-    // least one character, so `match[1]` can never be empty/falsy on a real
-    // match -- this is a pure `string | undefined` -> `string` type guard,
-    // not a real runtime branch. Hand-verified: bypassing it (`match[1]!`)
-    // and running the real whole-package suite (`vitest run`) passes
-    // unchanged.
-    // Stryker disable next-line ConditionalExpression
-    if (match[1]) keys.add(match[1])
+    // Group 1 is mandatory in the pattern, so it is always captured.
+    keys.add(String(match[1]))
   }
   return keys
 }
@@ -352,23 +332,14 @@ function computeChangeSummary(
 }
 
 function slugify(text: string): string {
-  // The `+` quantifiers on the SECOND `.replace()` below are unobservable:
-  // the FIRST replace's own `+` already collapses every run of
-  // non-identifier characters (dashes included, since a literal `-` isn't in
-  // `[a-z0-9_]` either) into a single `-`, so the second regex can never
-  // actually see 2+ consecutive dashes at either end to strip -- there is
-  // always at most one. Hand-verified: dropping both `+`s and running the
-  // real whole-package suite (`vitest run`) passes unchanged. Unscoped
-  // disable/restore (not `next-line`) because this is one multi-line
-  // statement -- `next-line` didn't reliably attach here.
-  // Stryker disable Regex
+  // The first replace folds every run of non-identifier characters (dashes included) into a single
+  // `-`, so at most one dash can sit at either end for the second to strip.
   return (
     text
       .toLowerCase()
       .replace(/[^a-z0-9_]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "section"
+      .replace(/^-|-$/g, "") || "section"
   )
-  // Stryker restore Regex
 }
 
 /** Assigns each heading a stable, collision-free anchor -- duplicate variable names across contracts (a supported feature) would otherwise collide on a heading-derived anchor. */
@@ -386,10 +357,21 @@ class AnchorRegistry {
     this.assigned.set(target, anchor)
     return anchor
   }
+
+  /** The anchor an earlier {@link anchorFor} call assigned to `target`; throws if there was none. */
+  anchorOf(target: object): string {
+    return mustGet(this.assigned, target)
+  }
 }
 
 function mdLink(text: string, anchor: string): string {
   return `[${text}](#${anchor})`
+}
+
+/** `items` ordered by `key` in plain string order. Keys are unique within a contract, so ordering the keys orders the items. */
+function sortedByKey<T extends { readonly key: string }>(items: readonly T[]): T[] {
+  const byKey = new Map(items.map((item) => [item.key, item]))
+  return [...byKey.keys()].sort().map((key) => mustGet(byKey, key))
 }
 
 function sortedContracts(contracts: readonly ContractModelContract[]): ContractModelContract[] {
@@ -483,16 +465,7 @@ function renderCatalog(
   }
 
   for (const contract of sortedContracts(contracts)) {
-    // `anchorFor()` caches by TARGET OBJECT (`this.assigned.get(target)`),
-    // and `renderHeader()`'s own TOC loop already calls
-    // `anchorFor(contract, ...)` with this exact same baseText for every
-    // contract, always BEFORE renderCatalog() runs (see renderDocs()'s call
-    // order) -- so this call's own `baseText` argument can never actually
-    // matter; the cached anchor from the TOC call always wins. Hand-verified:
-    // replacing the baseText argument here with `` `` `` (empty) and running
-    // the real whole-package suite (`vitest run`) passes unchanged.
-    // Stryker disable next-line StringLiteral
-    lines.push(`<a id="${anchors.anchorFor(contract, `contract-${contract.contractName}`)}"></a>`)
+    lines.push(`<a id="${anchors.anchorOf(contract)}"></a>`)
     lines.push(`## ${contract.contractName}`, "", `Source: \`${contract.file}\``)
     if (undocumentedByIdentity.has(`${contract.file}#${contract.exportName}`)) {
       lines.push("", "> ⚠️ **Undocumented.** No `documentEnv()` call is linked to this contract.")
@@ -518,41 +491,10 @@ function renderCatalog(
     }
     lines.push("")
 
-    // Two-way compare: `variable.key` is a schema object-literal property
-    // name, always unique within one contract, so `a.key === b.key` can
-    // never happen here -- `<` vs `<=` is therefore unobservable (the tie
-    // branch this would otherwise distinguish is unreachable). Hand-verified:
-    // switching to `<=` and running the real whole-package suite
-    // (`vitest run`) passes unchanged.
-    // Stryker disable next-line EqualityOperator
-    for (const variable of [...contract.variables].sort((a, b) => (a.key < b.key ? -1 : 1))) {
-      // Same equivalence as the contract anchor above: `renderDependencyGraph()`
-      // (called before `renderCatalog()` in `renderDocs()`) already calls
-      // `anchorFor(variable, ...)` with this exact same baseText for EVERY
-      // variable (it lists all of them, not just owned ones), so this call's
-      // own baseText can never matter -- the cache always wins. Hand-verified:
-      // replacing it with `` `` `` and running the real whole-package suite
-      // (`vitest run`) passes unchanged.
-      // Stryker disable StringLiteral
-      lines.push(
-        `<a id="${anchors.anchorFor(variable, `${contract.contractName}-${variable.key}`)}"></a>`,
-      )
-      // Stryker restore StringLiteral
+    for (const variable of sortedByKey(contract.variables)) {
+      lines.push(`<a id="${anchors.anchorOf(variable)}"></a>`)
       lines.push(`### \`${variable.key}\``, "")
 
-      // Bypassing this guard when `variable.description` is undefined would
-      // push `undefined` (joined as "" by `.join("\n")`, same as the real
-      // `""` beside it) -- the resulting extra blank-ish line only ever
-      // shows up as 3+ consecutive newlines in the final joined document,
-      // which `renderDocs()`'s own trailing `.replace(/\n{3,}/g, "\n\n")`
-      // always collapses back down regardless (same reasoning already
-      // established for `usage-report.ts`'s identical cleanup regex this
-      // drive). Still load-bearing for TypeScript's own narrowing of
-      // `variable.description` to `string` for the `lines.push()` call.
-      // Hand-verified: bypassing it and running the real whole-package suite
-      // (`vitest run`) only breaks the two `tsc`-backed json-schema
-      // freshness tests, no runtime-behavior assertion.
-      // Stryker disable next-line ConditionalExpression
       if (variable.description) lines.push(variable.description, "")
       if (!variable.documented) lines.push("> ⚠️ **Undocumented.**", "")
 
@@ -712,29 +654,19 @@ function renderLifecycleReport(
         variable.refreshInstructions === undefined
       )
         continue
-      const expiresAt = variable.expiresAt
-      const expiry = expiresAt ? parseIsoDate(expiresAt) : undefined
-      let expiresCell = expiresAt ?? "--"
-      if (expiry && expiresAt) {
-        const daysRemaining = daysRemainingFrom(expiry, now)
+      const expiry = parseExpiry(variable.expiresAt)
+      let expiresCell = variable.expiresAt ?? "--"
+      if (expiry) {
+        const daysRemaining = daysRemainingFrom(expiry.date, now)
         if (daysRemaining < 0)
-          expiresCell = `${expiresAt} (**expired ${Math.abs(daysRemaining)}d ago**)`
+          expiresCell = `${expiry.raw} (**expired ${Math.abs(daysRemaining)}d ago**)`
         else if (daysRemaining <= expiringWithinDays)
-          expiresCell = `${expiresAt} (**${daysRemaining}d remaining**)`
+          expiresCell = `${expiry.raw} (**${daysRemaining}d remaining**)`
       }
 
-      // Same anchor-cache equivalence as renderCatalog's own two anchor
-      // calls above: `renderDependencyGraph()` (called before
-      // `renderLifecycleReport()` in `renderDocs()`) already calls
-      // `anchorFor(variable, ...)` with this exact same baseText for every
-      // variable, so this call's own baseText can never matter. Hand-verified:
-      // replacing it with `` `` `` and running the real whole-package suite
-      // (`vitest run`) passes unchanged.
-      // Stryker disable StringLiteral
       rows.push(
-        `| ${mdLink(`\`${variable.key}\``, anchors.anchorFor(variable, `${contract.contractName}-${variable.key}`))} | ${owner ?? "--"} | ${expiresCell} | ${variable.refreshInstructions ?? "--"} |`,
+        `| ${mdLink(`\`${variable.key}\``, anchors.anchorOf(variable))} | ${owner ?? "--"} | ${expiresCell} | ${variable.refreshInstructions ?? "--"} |`,
       )
-      // Stryker restore StringLiteral
     }
   }
   if (rows.length === 0) return { lines: [], hasLifecycle: false }
@@ -921,9 +853,14 @@ export function renderDocs(
   const catalog = renderCatalog(sorted, anchors, options.undocumentedContracts)
   const security = renderSecurityReview(sorted, options, options.generatedAt)
 
-  return [...header, ...catalog, ...ownership, ...dependencyLines, ...lifecycleLines, ...security]
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
+  return [
+    ...header,
+    ...catalog,
+    ...ownership,
+    ...dependencyLines,
+    ...lifecycleLines,
+    ...security,
+  ].join("\n")
 }
 
 /**

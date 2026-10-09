@@ -132,7 +132,6 @@ describe("generateUsageReport", () => {
       scanFiles,
       (f) => fs.readFile(f, "utf8"),
       context,
-      linkResult.warnings,
     )
     expect(computed.result.dependencyOwnership.length).toBeGreaterThan(0)
 
@@ -355,7 +354,6 @@ describe("generateUsageReport", () => {
         scanFiles,
         (f) => fs.readFile(f, "utf8"),
         context,
-        linkResult.warnings,
         undefined,
         acknowledgments,
       )

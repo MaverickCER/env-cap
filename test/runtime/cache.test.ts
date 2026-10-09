@@ -16,16 +16,18 @@ beforeEach(() => {
 describe("getState", () => {
   it("starts uninitialized with no tracked contracts", () => {
     const state = getState()
-    expect(state.status).toBe("uninitialized")
+    expect(state.result).toBeUndefined()
+    expect(state.error).toBeUndefined()
+    expect(state.inFlight).toBeUndefined()
     expect(state.contractIds.size).toBe(0)
   })
 
   it("returns the same state object across calls (single global state, not per-call)", () => {
     const first = getState()
-    first.status = "ready"
+    first.result = { contractCount: 1, variableCount: 2 }
     const second = getState()
     expect(second).toBe(first)
-    expect(second.status).toBe("ready")
+    expect(second.result).toEqual({ contractCount: 1, variableCount: 2 })
   })
 })
 
@@ -55,12 +57,12 @@ describe("resetCache", () => {
     const id = Symbol("cache-test-reset-contract")
     state.contractIds.add(id)
     setContractValues(id, Object.freeze({ A: 1 }))
-    state.status = "ready"
+    state.result = { contractCount: 1, variableCount: 1 }
 
     resetCache()
 
     expect(getContractValues(id)).toBeUndefined()
-    expect(getState().status).toBe("uninitialized")
+    expect(getState().result).toBeUndefined()
   })
 
   it("is a no-op (does not throw) when nothing has been tracked yet", () => {

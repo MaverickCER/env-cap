@@ -222,23 +222,9 @@ function variableShape(variable: DiscoveredVariable): VariableShape {
 }
 
 function shapesMatch(a: VariableShape, b: VariableShape): boolean {
-  // Mutating `||` to `&&`, or either `"unknown"` to a non-matching literal,
-  // is behaviorally equivalent here, not a real gap: whenever exactly one
-  // side is "unknown" and the other genuinely isn't, the structural
-  // `a.valueType === b.valueType` check below already returns false on its
-  // own (an "unknown" string can never equal a real type string) -- and
-  // whenever BOTH sides are "unknown", every mutant variant here still
-  // triggers this same early return (both `||` and `&&` are satisfied when
-  // both operands are true). The only case this guard is load-bearing for
-  // -- both sides "unknown" with matching hasProcessor/hasValidator, which
-  // would otherwise wrongly report a match via the structural check alone
-  // -- is real-tested by 'never flags an "unknown" shape...' below, and
-  // that test DOES fail without this whole `if`. Hand-verified each mutant
-  // variant individually (this `||`, and each `"unknown"` string) against
-  // the real suite; all pass unchanged.
-  // Stryker disable next-line LogicalOperator,StringLiteral,ConditionalExpression
-  if (a.valueType === "unknown" || b.valueType === "unknown") return false
+  // An "unknown" shape never matches anything, including another "unknown".
   return (
+    a.valueType !== "unknown" &&
     a.valueType === b.valueType &&
     a.hasProcessor === b.hasProcessor &&
     a.hasValidator === b.hasValidator

@@ -101,13 +101,15 @@ interface KeyedDeclaration {
   readonly variable: DiscoveredVariable
 }
 
-function groupByKey(contracts: readonly DiscoveredContract[]): Map<string, KeyedDeclaration[]> {
-  const byKey = new Map<string, KeyedDeclaration[]>()
+function groupByKey(
+  contracts: readonly DiscoveredContract[],
+): Map<string, [KeyedDeclaration, ...KeyedDeclaration[]]> {
+  const byKey = new Map<string, [KeyedDeclaration, ...KeyedDeclaration[]]>()
   for (const contract of contracts) {
     for (const variable of contract.variables) {
-      const list = byKey.get(variable.key) ?? []
-      list.push({ contract, variable })
-      byKey.set(variable.key, list)
+      const existing = byKey.get(variable.key)
+      if (existing === undefined) byKey.set(variable.key, [{ contract, variable }])
+      else existing.push({ contract, variable })
     }
   }
   return byKey
@@ -129,18 +131,6 @@ export function renderEnvExample(
 ): string {
   const sorted = [...contracts].sort((a, b) => a.file.localeCompare(b.file))
   const active = sorted.filter((c) => c.active)
-  // Bypassing this filter (including active contracts in `inactive` too) is
-  // behaviorally equivalent, not a real gap: the render loop below's own
-  // `if (activeByKey.has(key)) continue` guard already skips any key an
-  // active contract declares, whether or not it was ALSO wrongly grouped
-  // into `inactiveByKey` here -- a key genuinely unique to an active
-  // contract can never gain a spurious `inactiveByKey` entry either, since
-  // `groupByKey` only ever pushes declarations that a contract in the
-  // (possibly-widened) list actually has. Hand-verified: mutating this and
-  // running the real suite passes unchanged.
-  // Stryker disable next-line MethodExpression
-  const inactive = sorted.filter((c) => !c.active)
-
   const lines: string[] = [
     "# AUTO-GENERATED EXAMPLE FILE.",
     "# Copy to .env and fill in real values. Do not commit .env.",
@@ -155,25 +145,12 @@ export function renderEnvExample(
       "# still written to this file regardless of its context.",
     )
   }
-  // Bypassing this guard is behaviorally equivalent, not a real gap:
-  // `lines.push(...[])` (an empty `reconciliationHeader`) is already a
-  // no-op, so the length check adds nothing observable. Hand-verified:
-  // mutating this and running the real suite passes unchanged.
-  // Stryker disable next-line ConditionalExpression,EqualityOperator
-  if (reconciliationHeader.length > 0) lines.push(...reconciliationHeader)
+  lines.push(...reconciliationHeader)
   lines.push("")
 
   const activeByKey = groupByKey(active)
   for (const key of [...activeByKey.keys()].sort()) {
     const [first, ...rest] = mustGet(activeByKey, key)
-    // groupByKey() only ever creates a key alongside its first pushed entry,
-    // so every group it returns is non-empty by construction --
-    // noUncheckedIndexedAccess can't see that invariant through mustGet()'s
-    // own return type, only that array destructuring is *generally* unsafe.
-    // Hand-verified: mutating this guard to `if (false)` and running the
-    // real suite passes unchanged -- the `continue` is never reached.
-    // Stryker disable next-line ConditionalExpression
-    if (first === undefined) continue
     lines.push(...renderVariableLines(first.variable))
     for (const dup of rest) {
       lines.push(
@@ -185,13 +162,11 @@ export function renderEnvExample(
     }
   }
 
-  const inactiveByKey = groupByKey(inactive)
+  // Active contracts are grouped too, but their keys are skipped below: an active declaration claims the key.
+  const inactiveByKey = groupByKey(sorted)
   for (const key of [...inactiveByKey.keys()].sort()) {
     if (activeByKey.has(key)) continue // claimed by an active contract -- not unique to the disabled feature.
     const [first] = mustGet(inactiveByKey, key)
-    // Same groupByKey() non-empty-by-construction invariant as above.
-    // Stryker disable next-line ConditionalExpression
-    if (first === undefined) continue
     lines.push(
       ...renderVariableLines(first.variable, {
         commented: true,
@@ -200,15 +175,8 @@ export function renderEnvExample(
     )
   }
 
-  // `+` vs no `+` here is unreachable-to-differ: `lines` is built so its own
-  // trailing element is always exactly ONE "" (every section -- the initial
-  // blank, and each `renderVariableLines()` call -- appends exactly one
-  // trailing blank, never two in a row), so `.join("\n")` can never actually
-  // produce more than one trailing newline for this regex to collapse.
-  // Hand-verified: mutating `+` away and running the real suite passes
-  // unchanged.
-  // Stryker disable next-line Regex
-  return lines.join("\n").replace(/\n+$/, "\n")
+  // Every section ends with exactly one blank line, so the join already ends with a single newline.
+  return lines.join("\n")
 }
 
 /** Parses `KEY=value` lines out of an existing `.env`-style file, ignoring comments and blank lines. */
@@ -216,16 +184,6 @@ export function extractDeclaredVariables(source: string): string[] {
   const names: string[] = []
   for (const line of source.split("\n")) {
     const trimmed = line.trim()
-    // Bypassing this early exit is behaviorally equivalent, not a real gap:
-    // both a blank line (trimmed === "") and one starting with "#" can never
-    // match the identifier-must-start-with-letter/underscore regex below
-    // either way, so `continue`ing early here versus falling through to a
-    // guaranteed-failing `.exec()` produces the identical result. Kept as a
-    // documented fast-path (skips the regex entirely for the common case)
-    // rather than removed. Hand-verified: mutating the whole condition to
-    // `false` and running the real suite passes unchanged.
-    // Stryker disable next-line ConditionalExpression,LogicalOperator,MethodExpression
-    if (!trimmed || trimmed.startsWith("#")) continue
     const match = /^([A-Za-z_][A-Za-z0-9_]*)=/.exec(trimmed)
     if (match?.[1]) names.push(match[1])
   }
@@ -237,15 +195,7 @@ export function extractCommentedVariables(source: string): string[] {
   const names: string[] = []
   for (const line of source.split("\n")) {
     const trimmed = line.trim()
-    if (!trimmed.startsWith("#")) continue
-    // Removing the `^` anchor is behaviorally equivalent, not a real gap:
-    // the guard just above guarantees `trimmed` always starts with "#", so
-    // the leftmost match an unanchored regex would find is already at
-    // position 0 -- identical to the anchored version. Hand-verified:
-    // mutating this and running the real suite passes unchanged.
-    // Stryker disable next-line Regex
-    const withoutHash = trimmed.replace(/^#+\s*/, "")
-    const match = /^([A-Za-z_][A-Za-z0-9_]*)=/.exec(withoutHash)
+    const match = /^#+\s*([A-Za-z_][A-Za-z0-9_]*)=/.exec(trimmed)
     if (match?.[1]) names.push(match[1])
   }
   return names
@@ -344,7 +294,6 @@ export async function writeEnvExample(
     // resolve-package-schema.ts): both write a string's UTF-8 bytes
     // identically. Hand-verified via a real byte-comparison-equivalent test
     // run.
-    // Stryker disable next-line StringLiteral
     await fs.writeFile(location, content, "utf8")
     return {
       writtenPath: location,
@@ -379,7 +328,6 @@ export async function writeEnvExample(
 
   await fs.mkdir(path.dirname(writtenPath), { recursive: true })
   // Same "utf8" vs "" equivalence as the fresh-file write above.
-  // Stryker disable next-line StringLiteral
   await fs.writeFile(writtenPath, content, "utf8")
 
   return { writtenPath, skippedExistingPath, staleVariables, variablesToComment, variablesToAdd }

@@ -71,15 +71,7 @@ export async function discoverSchemaFiles(options: DiscoverOptions): Promise<str
     )
   }
 
-  // Two-way compare only -- every entry is a distinct file's absolute path,
-  // so `a === b` can never happen here (unlike a comparator keyed by a
-  // free-form label, where an "equal" case is a real, reachable outcome).
-  // `<=` vs `<` only changes tie-breaking when `a === b` -- impossible here:
-  // `included` comes from a single directory walk that visits each real file
-  // exactly once, so no two entries can ever be the same path. Hand-verified:
-  // mutating this to `<=` and running the real suite passes unchanged.
-  // Stryker disable next-line EqualityOperator
-  return included.map((file) => path.normalize(file)).sort((a, b) => (a < b ? -1 : 1))
+  return included.map((file) => path.normalize(file)).sort()
 }
 
 async function walkDirectory(

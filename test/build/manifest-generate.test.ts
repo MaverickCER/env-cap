@@ -7,7 +7,11 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { EnvManifestGenerationError } from "../../src/build/errors.js"
 import { generateEnvArtifacts } from "../../src/build/generate-env-artifacts.js"
-import { computeManifest, generateEnvManifest } from "../../src/build/generate-manifest.js"
+import {
+  computeManifest,
+  defaultExclude,
+  generateEnvManifest,
+} from "../../src/build/generate-manifest.js"
 import type { DiscoveredContract, DiscoveredVariable, LinkResult } from "../../src/build/link.js"
 import { validateEnv } from "../../src/runtime/validate.js"
 
@@ -196,6 +200,10 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
     } finally {
       cwdSpy.mockRestore()
     }
+  })
+
+  it("excludes exactly node_modules, dist and .git by default", () => {
+    expect(defaultExclude()).toEqual(["**/node_modules/**", "**/dist/**", "**/.git/**"])
   })
 
   it("prunes node_modules/dist/.git by default, even though `exclude` is entirely omitted", async () => {

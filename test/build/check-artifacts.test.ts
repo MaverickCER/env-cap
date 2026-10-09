@@ -510,4 +510,34 @@ documentEnv(schema, { exclusiveGroup: "database", active: true });
     })
     await expect(fs.access(path.resolve(fixtureRoot, ".env.example"))).rejects.toThrow()
   })
+
+  it("checks no envExample artifact at all when docs are requested without an envExample", async () => {
+    const result = await checkEnvArtifacts({
+      fs: nodeBuildFs,
+      root: fixtureRoot,
+      docs: { location: "docs/ENVIRONMENT.md" },
+    })
+
+    expect(result.findings.map((f) => f.artifact)).toEqual(["docs"])
+  })
+
+  it("reproduces a link-time parse warning in the usage report, so a freshly generated report checks as ok", async () => {
+    await write(
+      "features/unresolvable/env.schema.ts",
+      `export const dynamicEnv = createEnv(someFactory(), { name: "dynamic" });`,
+    )
+    const options = {
+      fs: nodeBuildFs,
+      root: fixtureRoot,
+      include: ["features/payments/**/env.schema.ts", "features/unresolvable/**/env.schema.ts"],
+      usage: { report: { location: "docs/OWNERSHIP.md" } },
+    }
+    await generateEnvArtifacts(options)
+    const report = await fs.readFile(path.resolve(fixtureRoot, "docs/OWNERSHIP.md"), "utf8")
+    expect(report).toContain("does not pass an inline object literal")
+
+    const result = await checkEnvArtifacts(options)
+
+    expect(result.findings.find((f) => f.artifact === "usage")?.status).toBe("ok")
+  })
 })

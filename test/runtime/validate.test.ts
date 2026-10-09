@@ -321,7 +321,7 @@ describe("validateEnv idempotency", () => {
 
   it("returns the shared in-flight run's result instead of starting a new one, when a run is already underway", async () => {
     // `runValidation()` has no internal `await`, so under any REAL caller
-    // its whole body (including settling `state.status`) completes
+    // its whole body (including settling `state.result`) completes
     // synchronously before another call could ever observe `inFlight` as
     // the relevant branch -- this manufactures the state directly (as
     // `runtime/cache.ts`'s own exported `getState()` is meant to allow) to
@@ -331,7 +331,6 @@ describe("validateEnv idempotency", () => {
     // actually reaches this branch either).
     const fakeResult = { contractCount: 999, variableCount: 999 }
     const state = getState()
-    state.status = "validating"
     state.inFlight = Promise.resolve(fakeResult)
 
     const result = await validateEnv({ values: {}, manifest: [] })

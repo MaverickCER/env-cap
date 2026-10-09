@@ -24,7 +24,7 @@ export interface AssembleProjectOptions {
   readonly root: string
   readonly include: readonly string[]
   readonly exclude: readonly string[]
-  readonly packages: readonly string[]
+  readonly packages?: readonly string[] | undefined
   readonly tsconfig: string | false | undefined
 }
 
@@ -60,7 +60,7 @@ export interface AssembledProject {
  * assembly too.
  */
 export async function assembleProject(options: AssembleProjectOptions): Promise<AssembledProject> {
-  const { fs, root, include, exclude, packages, tsconfig } = options
+  const { fs, root, include, exclude, packages = [], tsconfig } = options
 
   const fileCache = new Map<string, Promise<string>>()
   const readFileCached = (filePath: string): Promise<string> => {

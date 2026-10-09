@@ -403,31 +403,13 @@ function extractSchemaVariable(
 
 function extractReturnType(node: ts.Expression): string | undefined {
   if ((ts.isArrowFunction(node) || ts.isFunctionExpression(node)) && node.type) {
-    // Replacing with `""` (removal, not collapse-to-one-space) makes the `+`
-    // quantifier unobservable: `"a  b".replace(/\s+/g,"")` and
-    // `"a  b".replace(/\s/g,"")` both remove every whitespace char either
-    // way, one match at a time or grouped -- the final string is identical
-    // regardless of how many consecutive whitespace characters existed.
-    // Empirically confirmed via a throwaway `node -e` comparison before
-    // disabling (per the drive's established regex-boundary-verification
-    // technique) -- contrast `normalizeSource()` below, whose OWN `+` IS
-    // load-bearing, because it replaces with `" "` (a single space) instead.
-    // Stryker disable next-line Regex
-    return node.type.getText().replace(/\s+/g, "")
+    return node.type.getText().replace(/\s/g, "")
   }
   return undefined
 }
 
 function normalizeSource(text: string): string {
-  // `.trim()` is redundant given both call sites pass `node.getText()`
-  // directly -- `ts.Node.getText()` returns exactly the node's own source
-  // span, never with surrounding whitespace/trivia (hand-verified via a
-  // throwaway `node -e` check against the real `typescript` package), so
-  // there is never anything for `.trim()` to remove. Hand-verified further:
-  // dropping `.trim()` here and running the real whole-package suite
-  // (`vitest run`) passes unchanged.
-  // Stryker disable next-line MethodExpression
-  return text.replace(/\s+/g, " ").trim()
+  return text.replace(/\s+/g, " ")
 }
 
 /** One variable's statically-extracted `documentEnv()` documentation, as declared in that call's `variables` entry for this key -- governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`, resolved from static literals. */
@@ -733,23 +715,7 @@ function extractVariableDocsMap(
     for (const field of prop.initializer.properties) {
       if (!ts.isPropertyAssignment(field)) continue
       const fieldName = getStaticPropertyName(field.name)
-      // Both guards below are runtime-equivalent when bypassed -- `fieldName
-      // === undefined`/`!evaluated.ok` never equal any of the string
-      // literals/`.value` typeof checks the long else-if chain below
-      // compares against (`undefined !== "description"`, etc., and an
-      // ok:false result's `.value` is itself `undefined`, matching no
-      // `typeof === T` check either) -- but they're still load-bearing for
-      // TypeScript's own narrowing (`fieldName: string | undefined` ->
-      // `string`, `evaluated: {ok:false} | {ok:true,value}` -> the ok:true
-      // arm), which the real `tsc`-backed json-schema tests below this
-      // function's call chain depend on. Hand-verified: bypassing both and
-      // running the real whole-package suite (`vitest run`) only breaks
-      // those two `tsc`-driven tests, no runtime-behavior assertion.
-      // Stryker disable next-line ConditionalExpression
-      if (fieldName === undefined) continue
       const evaluated = evaluateLiteral(field.initializer)
-      // Stryker disable next-line ConditionalExpression: a non-literal initializer contributes nothing to the extracted docs either way, so continuing or falling through is unobservable
-      if (!evaluated.ok) continue
 
       if (fieldName === "description" && typeof evaluated.value === "string")
         description = evaluated.value
@@ -851,19 +817,6 @@ function extractDynamicAccessCitations(
   if (!Array.isArray(value)) return undefined
   const citations: string[] = []
   for (const entry of value) {
-    // `parsePositionCitation()`'s own `RegExp.prototype.exec()` coerces its
-    // argument to a string internally (the language spec's `ToString`, not
-    // an explicit cast here) -- so bypassing this `typeof entry === "string"`
-    // check doesn't skip validation, it just lets a non-string `entry` (a
-    // number/boolean/null/array/object, the only shapes a JSON-safe literal
-    // array element from `evaluateLiteral()` can produce) reach the SAME
-    // regex, coerced to a string that can never plausibly match
-    // `/^(.+):(\d+):(\d+)$/` (no realistic literal value stringifies to a
-    // "path:line:column"-shaped triple). Hand-verified: bypassing this
-    // clause and running the real whole-package suite (`vitest run`) passes
-    // unchanged, including the existing malformed-entries fixture's own
-    // non-string (`123`) element.
-    // Stryker disable next-line ConditionalExpression
     if (typeof entry === "string" && parsePositionCitation(entry)) {
       citations.push(entry)
     } else {
