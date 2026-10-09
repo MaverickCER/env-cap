@@ -118,6 +118,12 @@ export interface GenerateDocumentationResult {
 /** Default value for {@link GenerateDocumentationOptions.expiringWithinDays}. */
 export const DEFAULT_EXPIRING_WITHIN_DAYS = 30
 
+// The vocabulary lives in a function that both the exported set and the checks below call, so the
+// checks read it at call time instead of from a value frozen when the module loaded.
+function standardSensitivityLevels(): string[] {
+  return ["secret", "credential", "pii", "config"]
+}
+
 /**
  * The sensitivity vocabulary env-cap's own docs, examples, and `.env.example`
  * comments are written around. Purely advisory: `sensitivity` is an open
@@ -128,12 +134,6 @@ export const DEFAULT_EXPIRING_WITHIN_DAYS = 30
  * its own vocabulary sees one advisory line rather than silent data loss --
  * and a team that meant to write `"secret"` and typo'd `"secrets"` finds out.
  */
-// The vocabulary lives in a function that both the exported set and the checks below call, so the
-// checks read it at call time instead of from a value frozen when the module loaded.
-function standardSensitivityLevels(): string[] {
-  return ["secret", "credential", "pii", "config"]
-}
-
 export const STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string> = new Set(standardSensitivityLevels())
 
 /** One contract- or variable-level `sensitivity` declaring a level outside {@link STANDARD_SENSITIVITY_LEVELS}. */

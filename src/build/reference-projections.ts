@@ -131,6 +131,7 @@ export function groupVariablesByOwner<C extends OwnerBearingContract>(
 export function configurationReference(evidence: EvidenceModel): ConfigurationReference {
   return projectConfigurationReference(evidence).value
 }
+/** Same computation as calling `configurationReference` directly, plus which `EvidenceModel` field paths fed each output key. */
 configurationReference.project = projectConfigurationReference
 
 function projectConfigurationReference(
@@ -195,6 +196,7 @@ export interface OwnershipSummary extends Record<string, unknown> {
 export function ownershipSummary(evidence: EvidenceModel): OwnershipSummary {
   return projectOwnershipSummary(evidence).value
 }
+/** Same computation as calling `ownershipSummary` directly, plus which `EvidenceModel` field paths fed each output key. */
 ownershipSummary.project = projectOwnershipSummary
 
 function projectOwnershipSummary(
@@ -298,6 +300,7 @@ export interface ExpiringSoonReport extends Record<string, unknown> {
 export function expiringSoonReport(evidence: EvidenceModel): ExpiringSoonReport {
   return projectExpiringSoonReport(evidence).value
 }
+/** Same computation as calling `expiringSoonReport` directly, plus which `EvidenceModel` field paths fed each output key. */
 expiringSoonReport.project = projectExpiringSoonReport
 
 function projectExpiringSoonReport(

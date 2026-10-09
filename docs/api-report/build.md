@@ -1445,10 +1445,10 @@ The filesystem capability -- `./build` never imports `node:fs` (ADR 0040).
 readonly include: readonly string[];
 ```
 
-##### packages
+##### packages?
 
 ```ts
-readonly packages: readonly string[];
+readonly optional packages?: readonly string[];
 ```
 
 ##### root
@@ -6391,7 +6391,7 @@ Contracts with no linked `documentEnv()` call at all. `file` must be root-relati
 readonly undocumentedVariables: readonly UndocumentedVariableRef[];
 ```
 
-Schema variables with no matching entry in their contract's linked documentation. `file` must be root-relative, POSIX-separated -- see `undocumentedContracts`.
+Schema variables with no matching entry in their contract's linked documentation. Only how many there are is rendered (the security-review counter), so `file` is not matched against anything.
 
 ***
 
@@ -7136,24 +7136,6 @@ Bump only when a reader could misinterpret the new shape -- same discipline ever
 
 ***
 
-### configurationReference
-
-```ts
-const configurationReference: EvidenceProjection<ConfigurationReference>;
-```
-
-Configuration Reference: every declared variable, with its effective owner
-and sensitivity already resolved, in one flat, sorted list.
-
-#### Remarks
-
-Resolution (variable's own value falling back to its contract's) happens
-here rather than being left to each consumer, so two readers of this
-projection can never disagree about who owns a variable -- the same reason
-`effectiveOwner()` exists on the generator side (ADR 0028).
-
-***
-
 ### CONTRACT\_MODEL\_SCHEMA\_VERSION
 
 ```ts
@@ -7189,27 +7171,6 @@ versioned independently) -- same rule every other canonical model follows.
 
 ***
 
-### expiringSoonReport
-
-```ts
-const expiringSoonReport: EvidenceProjection<ExpiringSoonReport>;
-```
-
-Expiring-Soon report: Lifecycle Model's `expiring` view, joined with
-ownership and refresh instructions so a reader can act on a row without
-cross-referencing three other models by hand.
-
-#### Remarks
-
-The window itself was applied upstream, when Lifecycle Model was built --
-this projection deliberately does not re-filter by a date of its own.
-Recomputing "soon" here would make the projection's answer depend on when
-it happened to be *read* rather than when the evidence was *generated*,
-which is exactly the reproducibility property the Evidence Model exists to
-preserve.
-
-***
-
 ### FINDING\_MODEL\_SCHEMA\_VERSION
 
 ```ts
@@ -7237,17 +7198,6 @@ const OWNERSHIP_MODEL_SCHEMA_VERSION: 1 = 1;
 ```
 
 Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows.
-
-***
-
-### ownershipSummary
-
-```ts
-const ownershipSummary: EvidenceProjection<OwnershipSummary>;
-```
-
-Ownership summary: the inverse of Ownership Model's per-contract view --
-who owns what, rolled up per owner, plus an explicit unowned list.
 
 ***
 
@@ -7739,6 +7689,34 @@ invalidates a cached evidence artifact.
 
 ***
 
+### configurationReference()
+
+```ts
+function configurationReference(evidence): ConfigurationReference;
+```
+
+Configuration Reference: every declared variable, with its effective owner
+and sensitivity already resolved, in one flat, sorted list.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `evidence` | [`EvidenceModel`](#evidencemodel) |
+
+#### Returns
+
+[`ConfigurationReference`](#configurationreference)
+
+#### Remarks
+
+Resolution (variable's own value falling back to its contract's) happens
+here rather than being left to each consumer, so two readers of this
+projection can never disagree about who owns a variable -- the same reason
+`effectiveOwner()` exists on the generator side (ADR 0028).
+
+***
+
 ### deepFreeze()
 
 ```ts
@@ -7987,6 +7965,37 @@ Structurally typed (not pinned to `DiscoveredContract`/`DiscoveredVariable`)
 so the same one resolution rule also serves `ContractModelContract`/
 `ContractModelVariable` (`contract-model.ts`) -- both shapes carry the same
 field, and this rule must never have two independent implementations.
+
+***
+
+### expiringSoonReport()
+
+```ts
+function expiringSoonReport(evidence): ExpiringSoonReport;
+```
+
+Expiring-Soon report: Lifecycle Model's `expiring` view, joined with
+ownership and refresh instructions so a reader can act on a row without
+cross-referencing three other models by hand.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `evidence` | [`EvidenceModel`](#evidencemodel) |
+
+#### Returns
+
+[`ExpiringSoonReport`](#expiringsoonreport)
+
+#### Remarks
+
+The window itself was applied upstream, when Lifecycle Model was built --
+this projection deliberately does not re-filter by a date of its own.
+Recomputing "soon" here would make the projection's answer depend on when
+it happened to be *read* rather than when the evidence was *generated*,
+which is exactly the reproducibility property the Evidence Model exists to
+preserve.
 
 ***
 
@@ -8433,6 +8442,27 @@ boundary in this codebase.
 contract whose `file` matches a package-resolved path with that package's
 origin -- purely a lookup; `discoveredFiles` must already include those
 files (merged in by the caller via `mergeLocalAndPackageFiles()`).
+
+***
+
+### ownershipSummary()
+
+```ts
+function ownershipSummary(evidence): OwnershipSummary;
+```
+
+Ownership summary: the inverse of Ownership Model's per-contract view --
+who owns what, rolled up per owner, plus an explicit unowned list.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `evidence` | [`EvidenceModel`](#evidencemodel) |
+
+#### Returns
+
+[`OwnershipSummary`](#ownershipsummary)
 
 ***
 
