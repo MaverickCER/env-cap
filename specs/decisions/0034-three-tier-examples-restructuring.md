@@ -46,12 +46,14 @@ through as an adoption sample. Those had been conflated into one directory.
   `isInstalled`/`runScript`/`runStart`/`compareGoldenArtifacts` helpers) moves to
   `test/support/example-runner.ts`, with every helper's implicit `examplesRoot` replaced by an
   explicit directory argument each caller resolves itself — `test/integration/flagships/` and
-  `test/integration/{positive,negative}/` both consume the one module. `test/examples/` no longer
-  exists.
+  `test/integration/{positive,negative}/` both consume the one module. _Amended: the flagship
+  tests were never moved. They remain in `test/examples/` (`application.test.ts`,
+  `enterprise-platform.test.ts`, `support.ts`), and only the twelve relocated fixtures live under
+  `test/integration/{positive,negative}/`; there is no `test/integration/flagships/`._
 - **`.github/workflows/ci.yml`'s single `examples` job splits into two**: `examples` (the three
   flagships) and `integration-fixtures` (the twelve relocated fixtures), each installing and
   typechecking only what it's responsible for, each running its own `vitest run` scope
-  (`test/integration/flagships/` vs. `test/integration/positive/ test/integration/negative/`).
+  (`test/examples/` vs. `test/integration/positive/ test/integration/negative/`).
 
 ## Consequences
 
