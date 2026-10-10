@@ -7,7 +7,7 @@ review, and a CI gate that fails a PR when generated artifacts drift.
 
 Four capabilities, two real teams:
 
-```
+```text
 features/
   postgres/env.schema.ts   <- DATABASE_URL                (active by default, data-platform-team)
   mongodb/env.schema.ts    <- DATABASE_URL, MONGODB_REPLICA_SET (shipped dormant, data-platform-team)
@@ -168,7 +168,7 @@ Now try flipping mongodb to `active: true` *without* touching postgres:
 npm run docs
 ```
 
-```
+```text
 Exclusive group "database"
 --------------------------
 [error] "mongodb" and "postgres" are both active and both declare

@@ -14,6 +14,16 @@
     "MD004": false, // unordered-list marker style -- preference, not correctness
     "MD036": false, // emphasis-as-heading -- false-positives on legitimate lead-in bold
   },
+  // Hand-authored Markdown the DocsMarkdown check would otherwise never see: the ADRs, specs and
+  // migration guides, the agent skill, and the example and benchmark READMEs. The generated outputs
+  // inside examples/ and test/ (their docs/ folders) are golden files, not prose, so they stay out.
+  "globs": [
+    "specs/**/*.md",
+    "skills/**/*.md",
+    "examples/README.md",
+    "examples/*/README.md",
+    "benchmarks/*.md",
+  ],
   // `docs/api-report/` and `docs/api/` are machine-generated verbatim by
   // `npm run docs:api`/`docs:api:report` (TypeDoc + typedoc-plugin-markdown)
   // from JSDoc content -- never hand-authored, fully regenerated on every
@@ -25,6 +35,7 @@
   // findings nobody can fix without hand-patching output the next build
   // discards -- so it is excluded here rather than hand-edited.
   "ignores": [
+    "**/node_modules/**",
     "docs/api-report/**",
     "docs/api/**",
     "benchmarks/performance-runtime/BENCHMARKS.md",

@@ -116,7 +116,7 @@ model is computed. See [Data flow](#data-flow) and
 
 `package.json` `exports` is the authoritative list (this section is the map of what each one is for, and TypeDoc generates the reference for each).
 
-```
+```text
 
 src/
 ├── runtime/        @maverickcer/env-cap                 (runtime library)
@@ -497,7 +497,7 @@ to gate on in its own CI step if it wants that enforced. The GitHub Action wraps
 
 A feature owner creates an environment schema:
 
-```
+```text
 
 features/payments/env.schema.ts
 

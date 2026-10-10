@@ -40,7 +40,7 @@ Audit of env-cap:
 
 ### The invariant
 
-```
+```text
 Library entrypoints (., ./helpers, ./build, ./evidence)
     → MUST NOT acquire node:fs -- the capability is always supplied by the caller
 

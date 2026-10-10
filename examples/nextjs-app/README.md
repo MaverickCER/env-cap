@@ -14,7 +14,7 @@ static generation, server startup, per-request handling) make "validate once,
 read anywhere" meaningfully harder to get right than in a single-process Node
 script.
 
-```
+```text
 src/
   env.ts                        <- the one explicit module: await validateEnv(...)
   instrumentation.ts            <- Next.js's official startup hook, imports env.ts

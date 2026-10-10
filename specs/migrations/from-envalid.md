@@ -41,7 +41,7 @@ env.STRIPE_SECRET_KEY
 This works well for small applications. As applications grow, the environment
 configuration becomes a shared ownership boundary:
 
-```
+```text
 src/
 ├── env.ts
 ├── payments/
@@ -66,7 +66,7 @@ it.
 
 Example:
 
-```
+```text
 src/
 ├── database/
 │   └── env.schema.ts
@@ -134,13 +134,13 @@ The import relationship becomes the ownership relationship.
 
 ---
 
-# Migration strategy
+## Migration strategy
 
 The migration can happen incrementally.
 
 You do not need to convert every environment variable at once.
 
-## Step 1: Keep your existing environment loading
+### Step 1: Keep your existing environment loading
 
 `env-cap` does not replace dotenv, deployment secrets, or your existing
 environment provider.
@@ -161,7 +161,7 @@ The package only validates and exposes configuration.
 
 ---
 
-## Step 2: Identify capability ownership
+### Step 2: Identify capability ownership
 
 Start by grouping existing variables by the code that consumes them.
 
@@ -177,7 +177,7 @@ SMTP_HOST
 
 Move toward:
 
-```
+```text
 database/
   DATABASE_URL
 
@@ -200,12 +200,12 @@ The goal is clear ownership.
 
 ---
 
-## Step 3: Convert validators
+### Step 3: Convert validators
 
 Most `envalid` validators map directly to `env-cap` processors and
 validators.
 
-### String validation
+#### String validation
 
 Before:
 
@@ -227,7 +227,7 @@ STRIPE_SECRET_KEY: {
 
 ---
 
-### Number conversion
+#### Number conversion
 
 Before:
 
@@ -256,7 +256,7 @@ The runtime contract defines how the capability consumes the value.
 
 ---
 
-### Default values
+#### Default values
 
 Before:
 
@@ -279,7 +279,7 @@ PORT: {
 
 ---
 
-## Step 4: Add documentation metadata
+### Step 4: Add documentation metadata
 
 `envalid` validates configuration, but it does not create an ownership model.
 
@@ -304,7 +304,7 @@ configuration.
 
 ---
 
-## Step 5: Replace centralized imports gradually
+### Step 5: Replace centralized imports gradually
 
 Before:
 
@@ -331,9 +331,9 @@ is no longer needed.
 
 ---
 
-# Differences from envalid
+## Differences from envalid
 
-## Environment validation
+### Environment validation
 
 Both packages support:
 
@@ -356,7 +356,7 @@ The difference is the ownership model.
 
 ---
 
-## Multiple consumers with different requirements
+### Multiple consumers with different requirements
 
 A centralized environment object often requires choosing one representation:
 
@@ -417,7 +417,7 @@ that one interpretation is universally correct.
 
 ---
 
-# What stays the same
+## What stays the same
 
 Migrating from envalid does not require changing:
 
@@ -434,7 +434,7 @@ The change is where configuration ownership and validation logic live.
 
 ---
 
-# When not to migrate
+## When not to migrate
 
 `envalid` may be the better choice when:
 
@@ -455,7 +455,7 @@ becomes a scaling concern:
 
 ---
 
-# Related approaches
+## Related approaches
 
 `env-cap` is designed as a modular complement to validation libraries, not
 as a replacement for every environment solution.

@@ -32,7 +32,7 @@ legal case-management application."
 
 ## Six capabilities, each demonstrating something specific
 
-```
+```text
 src/capabilities/
   database/env.schema.ts       <- MONGODB_URI, AUDIT_LOG_RETENTION_DAYS       (data-platform-team)
   auth/env.schema.ts           <- SESSION_SECRET                              (security-team)
@@ -44,7 +44,7 @@ src/capabilities/
 ```
 
 | Capability | What it actually demonstrates |
-|---|---|
+| --- | --- |
 | `database` (mongoose) | A real embedded Mongo via `mongodb-memory-server` -- every getter/mutator genuinely exercised in CI, not mocked. |
 | `auth` (bcryptjs + jose) | Hand-rolled sessions -- pure local crypto, no external dependency, fully real in CI. |
 | `oauth-github` (plain `fetch`, no SDK) | **Multiple interdependent secrets that must be classified and rotated together** -- a pattern the single-secret capabilities can't show. Redirect-URL construction and the login page's conditional rendering are real-tested; the actual GitHub handshake is not (no local GitHub emulator exists) -- stated here, not hidden. |
@@ -141,7 +141,7 @@ today, not just in theory.
 
 ## Running it
 
-```
+```text
 npm install
 npm run generate:env     # manifest, docs, .env.example, ownership report, evidence
 npm run verify:env       # CI-gate: --check, fails on any drift from committed artifacts

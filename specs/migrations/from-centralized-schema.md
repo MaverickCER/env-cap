@@ -38,7 +38,7 @@ You can continue using Zod, Valibot, Joi, custom validators, or simple functions
 
 The migration goal is:
 
-```
+```text
 centralized configuration
           |
           v
@@ -106,7 +106,7 @@ Do not move every variable into `env-cap` immediately.
 
 A gradual migration works best:
 
-```
+```text
 Before:
 
 src/
@@ -132,7 +132,7 @@ The application can temporarily support both approaches.
 
 ---
 
-# Step 1: Identify ownership
+## Step 1: Identify ownership
 
 For each variable, determine which capability requires it.
 
@@ -164,13 +164,13 @@ It belongs to the capability that defines how it is consumed.
 
 ---
 
-# Step 2: Create capability schemas
+## Step 2: Create capability schemas
 
 Create a schema next to the capability.
 
 Example:
 
-```
+```text
 features/
 └── payments/
     ├── env.schema.ts
@@ -203,7 +203,7 @@ The capability now owns its configuration.
 
 ---
 
-# Step 3: Replace global imports
+## Step 3: Replace global imports
 
 Before:
 
@@ -223,7 +223,7 @@ stripe.configure(paymentsEnv.STRIPE_SECRET_KEY)
 
 The dependency becomes explicit:
 
-```
+```text
 payment code
       |
       v
@@ -237,13 +237,13 @@ The capability no longer depends on a global configuration object.
 
 ---
 
-# Step 4: Preserve existing validators
+## Step 4: Preserve existing validators
 
 `env-cap` does not require replacing your validation library.
 
 Existing logic can be moved directly.
 
-## Zod example
+### Zod example
 
 Before:
 
@@ -285,7 +285,7 @@ It is not intended to replace schema validation libraries.
 
 ---
 
-# Step 5: Generate project visibility
+## Step 5: Generate project visibility
 
 A centralized schema gave visibility because everything existed in one file.
 
@@ -313,7 +313,7 @@ The platform view remains centralized.
 
 ---
 
-# Handling shared variables
+## Handling shared variables
 
 A common migration concern is:
 
@@ -323,7 +323,7 @@ The answer depends on whether the value has the same meaning.
 
 If multiple capabilities consume the same value with identical requirements, create a shared ownership module:
 
-```
+```text
 features/
 └── database/
     └── env.schema.ts
@@ -357,11 +357,11 @@ Capability contracts allow each consumer to define its own validated view.
 
 ---
 
-# Removing the centralized schema
+## Removing the centralized schema
 
 After migration:
 
-```
+```text
 src/
 ├── env.ts                 remove
 ├── payments/
@@ -384,13 +384,13 @@ The application runtime no longer depends on a global environment object.
 
 ---
 
-# Common migration mistakes
+## Common migration mistakes
 
-## Moving variables by technical category
+### Moving variables by technical category
 
 Avoid:
 
-```
+```text
 config/
 ├── database.env.ts
 ├── payments.env.ts
@@ -401,7 +401,7 @@ These recreate centralized ownership.
 
 Prefer:
 
-```
+```text
 features/
 ├── checkout/
 │   └── env.schema.ts
@@ -415,7 +415,7 @@ Configuration should follow capability ownership.
 
 ---
 
-## Creating a new global wrapper
+### Creating a new global wrapper
 
 Avoid recreating:
 
@@ -436,11 +436,11 @@ The capability import itself should define the dependency.
 
 ---
 
-## Migrating documentation separately
+### Migrating documentation separately
 
 Avoid creating:
 
-```
+```text
 docs/
 └── environment.md
 ```
@@ -461,7 +461,7 @@ so tooling can verify documentation coverage.
 
 ---
 
-# When not to migrate
+## When not to migrate
 
 `env-cap` may not provide significant value for:
 
@@ -475,7 +475,7 @@ The value appears when configuration ownership becomes difficult to maintain.
 
 ---
 
-# Migration complete
+## Migration complete
 
 After migration:
 
@@ -490,13 +490,13 @@ After migration:
 
 The application moves from:
 
-```
+```text
 one configuration object shared everywhere
 ```
 
 to:
 
-```
+```text
 many owned contracts with a generated system view
 ```
 
