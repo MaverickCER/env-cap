@@ -45,7 +45,7 @@ through as an adoption sample. Those had been conflated into one directory.
 - **Test infrastructure is shared, not forked.** `test/examples/support.ts` (the shared
   `isInstalled`/`runScript`/`runStart`/`compareGoldenArtifacts` helpers) moves to
   `test/support/example-runner.ts`, with every helper's implicit `examplesRoot` replaced by an
-  explicit directory argument each caller resolves itself — `test/integration/flagships/` and
+  explicit directory argument each caller resolves itself — `test/examples/` and
   `test/integration/{positive,negative}/` both consume the one module. _Amended: the flagship
   tests were never moved. They remain in `test/examples/` (`application.test.ts`,
   `enterprise-platform.test.ts`, `support.ts`), and only the twelve relocated fixtures live under
