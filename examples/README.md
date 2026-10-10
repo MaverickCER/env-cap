@@ -23,7 +23,7 @@ assumes the concepts the previous one already covered:
 
 Every flagship's own README documents exactly how to run it. All three are validated in CI (see
 `.github/workflows/ci.yml`'s `examples` job and
-[`test/integration/flagships/`](../test/integration/flagships/)) against the real,
+[`test/examples/`](../test/examples/)) against the real,
 currently-built `env-cap` package, so they stay in sync with the API rather than
 drifting silently.
 

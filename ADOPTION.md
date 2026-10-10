@@ -3,7 +3,7 @@
 This document exists for one purpose: to let a Principal/Staff engineer,
 architect, or security reviewer evaluate `env-cap` for adoption at
 organizational scale without having to reconstruct the picture from
-`SECURITY.md`, `specs/architecture.md`, twenty-plus ADRs, and six migration
+`SECURITY.md`, `specs/architecture.md`, the ADRs in `specs/decisions/`, and six migration
 guides scattered across the repository tree. Everything here links back to
 the primary source it summarizes — nothing here is a new claim.
 

@@ -32,7 +32,7 @@ and aggregated at build time. There is no global `env` object.
    Never put `description`/`owner`/`expiresAt` fields inside `createEnv()`; never expect
    `documentEnv()` to affect runtime behavior.
 4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`,
-   `./helpers`, `./evidence`, `./eslint-plugin`, `./schema`, `./schema/*` (one JSON Schema
+   `./helpers`, `./evidence`, `./node`, `./eslint-plugin`, `./schema`, `./schema/*` (one JSON Schema
    per canonical fact model, e.g. `./schema/contract-model`), and `./package.json`. Import
    only from these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported
    build internal (e.g. the dependency-graph engine).
@@ -111,14 +111,14 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
 
 ## Public API map
 
-| Export                               | Source               | Environment           | Purpose                                                                                                                                                                                |
-| ------------------------------------ | -------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                                               |
-| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation (see `VERSIONING.md` — only the four `generate*()` orchestrators are Stable; the lower-level primitives it also exports are Experimental) |
-| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                                                                                                                            |
-| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | `defineEvidenceProjection` — pure transforms over the Evidence Model (Experimental, see `VERSIONING.md`)                                                                               |
-| `@maverickcer/env-cap/node`          | `src/node/`          | Node-only, dev/CI     | `nodeBuildFileSystem` — the ready-made `BuildFileSystem` adapter a build script hands to `./build`                                                                                     |
-| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                                                                                                                         |
+| Export                               | Source               | Environment           | Purpose                                                                                                                                                           |
+| ------------------------------------ | -------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                          |
+| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation (see `VERSIONING.md` — the four `generate*()` orchestrators and the lower-level primitives are all Stable, ADR 0045) |
+| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                                                                                                       |
+| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | `defineEvidenceProjection` — pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)                                                                |
+| `@maverickcer/env-cap/node`          | `src/node/`          | Node-only, dev/CI     | `nodeBuildFileSystem` — the ready-made `BuildFileSystem` adapter a build script hands to `./build`                                                                |
+| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                                                                                                    |
 
 ## Before finishing a change
 

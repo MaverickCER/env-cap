@@ -515,7 +515,7 @@ See [`test/integration/positive/enterprise/paypal-addon`](test/integration/posit
 
 Discovery still never walks `node_modules` during its general file-discovery pass (`generateEnvManifest()`'s `include`/`exclude` globs), and that guarantee is unconditional.
 
-Making a package-shipped contract discoverable is a opt-in mechanism (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)):
+Making a package-shipped contract discoverable is an opt-in mechanism (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)):
 
 ```ts
 // consuming app's build script
@@ -820,6 +820,27 @@ Common uses include:
 - detecting undocumented or stale configuration changes
 - producing machine-readable reports for automation
 
+### Options
+
+At least one of `--location` or `--evidence` is required. Run `npx env-cap --help` for the same list.
+
+| Flag                 | Meaning                                                                                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--root <path>`      | Directory that globs resolve from (default: the current directory).                                                                                                  |
+| `--location <path>`  | Output path for the generated manifest.                                                                                                                              |
+| `--include <glob>`   | Schema-discovery glob. Repeatable. Default: `**/env.schema.ts`.                                                                                                      |
+| `--exclude <glob>`   | Glob to exclude from discovery. Repeatable.                                                                                                                          |
+| `--package <name>`   | Installed package to also discover a schema from, through its `envCap.schema` `package.json` field. Repeatable.                                                      |
+| `--tsconfig <path>`  | `tsconfig.json` (relative to root) whose `paths` and `baseUrl` resolve aliased imports during static analysis. Default: the `tsconfig.json` found at the root.       |
+| `--no-tsconfig`      | Turn path-alias resolution off entirely.                                                                                                                             |
+| `--evidence <path>`  | Also write the persisted evidence artifact and its `.fingerprint` sidecar, for example `docs/env.evidence.json`.                                                     |
+| `--strict`           | Escalate every warning-severity finding to a hard error: compatibility, documentation and ownership. Nothing is written when it fires. Info findings never escalate. |
+| `--strict-docs`      | Escalate only documentation warnings (undocumented, stale or expiring entries, unresolvable `documentEnv()` links), independent of `--strict`.                       |
+| `--strict-ownership` | Escalate only ownership warnings (abandoned contracts, unresolved consumers, unconsumed owned variables, indeterminate ownership), independent of `--strict`.        |
+| `--json`             | Emit a machine-readable report instead of formatted text (see below).                                                                                                |
+| `--check`            | Verify generated artifacts are up to date without writing anything. Exits `1` if any is stale or missing.                                                            |
+| `--help`, `-h`       | Show the help text.                                                                                                                                                  |
+
 ### `--json`
 
 Add `--json` to emit a machine-readable report instead of formatted terminal output.
@@ -839,7 +860,7 @@ Example:
 {
   "schemaVersion": 1,
   "kind": "env-cap-report",
-  "toolVersion": "0.1.0",
+  "toolVersion": "<installed env-cap version>",
   "ok": true,
   "manifest": {
     "outputPath": "...",
@@ -1030,11 +1051,11 @@ See [ADR 0018](specs/decisions/0018-rotation-alert-issue-on-non-pr-runs.md).
 
 It flags direct `process.env` access outside approved contract definitions, making configuration ownership enforceable through tooling rather than relying only on team conventions.
 
-```bash id="2x8x4q"
+```bash
 npm install -D eslint
 ```
 
-```js id="f7m2s9"
+```js
 // eslint.config.js
 
 import envCapPlugin from "@maverickcer/env-cap/eslint-plugin"
@@ -1058,13 +1079,13 @@ Other files must access validated contracts instead of reading environment varia
 
 For example:
 
-```ts id="y5j4ka"
+```ts
 process.env.STRIPE_KEY
 ```
 
 becomes:
 
-```ts id="6f2r0m"
+```ts
 paymentsEnv.STRIPE_KEY
 ```
 
@@ -1072,7 +1093,7 @@ The rule does not prevent legitimate infrastructure or build-time code from acce
 
 For approved exceptions, provide an explicit allow list:
 
-```js id="3f7v9n"
+```js
 rules: {
   "env-cap/no-raw-process-env": [
     "error",
@@ -1085,7 +1106,7 @@ rules: {
 
 One-off exceptions can also use the standard ESLint disable comment:
 
-```ts id="x0k6ps"
+```ts
 // eslint-disable-next-line env-cap/no-raw-process-env
 process.env.BOOTSTRAP_TOKEN
 ```
@@ -1098,7 +1119,7 @@ See [ADR 0017](specs/decisions/0017-eslint-plugin-entry-point.md).
 
 The plugin also ships `no-node-fs`, the filesystem analogue of `no-raw-process-env`. It flags any `import`, `require`, or dynamic `import()` of `node:fs` (or `fs`, and their `/promises` subpaths) so a module accepts a filesystem capability from its caller instead of acquiring one implicitly — the discipline `env-cap`'s own `./build` surface follows (see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)).
 
-```js id="n0d3fs"
+```js
 rules: {
   "env-cap/no-node-fs": [
     "error",
