@@ -30,8 +30,24 @@ describe("derivable facts in documentation", () => {
     expect(documents.length).toBeGreaterThan(20)
   })
 
-  it("never types how many ADRs exist; the directory is the count", () => {
-    expect(offending(/\b(\d+|[a-z]+-plus)\s+(Architecture Decision Records|ADRs)\b/i)).toEqual([])
+  it("never types how many ADRs exist, in digits or words; the directory is the count", () => {
+    const words =
+      "(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+    const spelled = `${words}(?:[- ]${words})*`
+    const pattern = new RegExp(
+      `\\b(\\d+|[a-z]+-plus|${spelled})\\s+(Architecture Decision Records|ADRs)\\b`,
+      "i",
+    )
+    expect(offending(pattern)).toEqual([])
+    for (const typed of [
+      "twenty ADRs",
+      "Twenty-three Architecture Decision Records",
+      "fifty-plus ADRs",
+      "48 ADRs",
+    ]) {
+      expect(pattern.test(typed), typed).toBe(true)
+    }
+    expect(pattern.test("the ADRs")).toBe(false)
   })
 
   it("never shows a literal tool version in a sample report", () => {

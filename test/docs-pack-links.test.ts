@@ -21,8 +21,18 @@ function publishedFiles(): string[] {
     encoding: "utf8",
     shell: process.platform === "win32",
     stdio: ["ignore", "pipe", "ignore"],
+    // npm colours its JSON when the runner forces colour on, which is not parseable.
+    env: {
+      ...process.env,
+      NO_COLOR: "1",
+      FORCE_COLOR: "0",
+      npm_config_color: "false",
+      npm_config_ignore_scripts: "true",
+    },
   })
-  const [result] = JSON.parse(output) as PackResult[]
+  // Whatever else printed first (a lifecycle script, a notice), the report is the last JSON array.
+  const start = output.lastIndexOf("\n[\n")
+  const [result] = JSON.parse(start === -1 ? output : output.slice(start + 1)) as PackResult[]
   return (result?.files ?? []).map((file) => file.path)
 }
 
@@ -60,7 +70,9 @@ describe("published documentation links", () => {
     const unexpected = documents.filter(
       (file) =>
         !file.startsWith("node_modules/") &&
-        !/^(?:[^/]+\.md|(?:specs|skills|benchmarks|examples|docs\/api-report)\/.+\.md)$/.test(file),
+        !/^(?:[^/]+\.md|(?:specs|skills|benchmarks|docs\/api-report)\/.+\.md|examples\/README\.md)$/.test(
+          file,
+        ),
     )
     expect(
       unexpected,
