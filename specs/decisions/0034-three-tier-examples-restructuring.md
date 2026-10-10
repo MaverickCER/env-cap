@@ -20,8 +20,8 @@ through as an adoption sample. Those had been conflated into one directory.
 ## Decision
 
 - **`examples/` holds exactly three flagships**, each answering a different question, in reading
-  order: [`application/`](../../examples/application/) ("how does this make my code better?",
-  evolved in place from the old `basic-node/`), [`team-service/`](../../examples/team-service/)
+  order: [`application/`](https://github.com/MaverickCER/env-cap/tree/main/examples/application) ("how does this make my code better?",
+  evolved in place from the old `basic-node/`), [`team-service/`](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service)
   ("how does this help my team?", evolved from `composable-boilerplates/` with real
   multi-team ownership and a `classification`-tagged secret added, not a plain rename — see
   below), and `enterprise-platform/` ("how does this help my organization?", a new build).

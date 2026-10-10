@@ -3,7 +3,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/maverickcer/env-cap/ci.yml?branch=main&label=CI)](https://github.com/maverickcer/env-cap/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
 [![Socket Badge](https://badge.socket.dev/npm/package/@maverickcer/env-cap/latest)](https://socket.dev/npm/package/@maverickcer/env-cap)
-[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/coverage-badge.json)](vitest.config.ts)
+[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/coverage-badge.json)](https://github.com/MaverickCER/env-cap/blob/main/vitest.config.ts)
 [![Bundle size](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/size-badge.json)](specs/decisions/0008-gzip-size-budget.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178c6)](#quick-start)
 
@@ -73,7 +73,7 @@ $ npx tsx scripts/generate-docs/run.ts
   - STRIPE_KEY in app
 ```
 
-This is real output from [`examples/application`](examples/application)'s own `npm run docs` and `npm run docs:reports` scripts, not a mockup. The age (`Nd`) is counted from the day you run it, so it is shown as `N` here instead of a number that would rot.
+This is real output from [`examples/application`](https://github.com/MaverickCER/env-cap/tree/main/examples/application)'s own `npm run docs` and `npm run docs:reports` scripts, not a mockup. The age (`Nd`) is counted from the day you run it, so it is shown as `N` here instead of a number that would rot.
 
 The important part is what the analysis can establish:
 
@@ -220,7 +220,7 @@ organization-wide configuration ownership
 
 A capability contract records what a variable is for, who owns it, how sensitive it is, when it expires, and whether the codebase still consumes it. Start with a single centralized schema and move toward capability- or package-owned contracts only as ownership boundaries start to matter — `generateEnvManifest()` produces one project-wide manifest regardless of how many contracts contribute to it, so validation, documentation, and ownership reporting never depend on how the schema is organized.
 
-The [`examples/`](examples/) directory has three runnable stages of that model — [`examples/application`](examples/application), [`examples/team-service`](examples/team-service), and [`examples/enterprise-platform`](examples/enterprise-platform) — and the [Guide](GUIDE.md#capability-owned-contracts) covers the full walkthrough.
+The [`examples/`](examples/) directory has three runnable stages of that model — [`examples/application`](https://github.com/MaverickCER/env-cap/tree/main/examples/application), [`examples/team-service`](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service), and [`examples/enterprise-platform`](https://github.com/MaverickCER/env-cap/tree/main/examples/enterprise-platform) — and the [Guide](GUIDE.md#capability-owned-contracts) covers the full walkthrough.
 
 ## You probably don't need it when
 

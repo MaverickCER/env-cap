@@ -190,7 +190,7 @@ export const databaseEnv = createEnv(
 ```
 
 Available helpers include common processors and validators with composition utilities. They can be
-found at [src/helpers/index.ts](./src/helpers/index.ts)
+found at [src/helpers/index.ts](https://github.com/MaverickCER/env-cap/blob/main/src/helpers/index.ts)
 
 When possible, prefer validation rules that communicate domain intent directly alongside the capability contract. These may be custom `Processor<T>` and `Validator<T>` functions or existing validators from your application's validation stack.
 
@@ -489,7 +489,7 @@ await validateEnv({ manifest, values: process.env, activeContexts })
 This is every context the manifest has — a convenient starting point, not a pre-scoped default. Importing it
 unmodified into every process defeats the point of scoping contexts per deployment target in the first place;
 narrow it (or import it under another name and filter it) the same way `src/server.ts`/`src/client.ts` in
-[`test/integration/positive/team/validation-contexts`](test/integration/positive/team/validation-contexts)
+[`test/integration/positive/team/validation-contexts`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/team/validation-contexts)
 each hand-write their own narrowed `activeContexts: ["server"]` / `["client"]` instead of using this
 export directly.
 
@@ -511,7 +511,7 @@ A configuration contract can ship as its own installable package instead of livi
 
 This works for both centralized application schemas and capability-owned contracts. A reusable package can expose the environment requirements it owns, allowing consuming applications to validate and generate visibility artifacts without manually copying configuration definitions.
 
-See [`test/integration/positive/enterprise/paypal-addon`](test/integration/positive/enterprise/paypal-addon)/[`test/integration/positive/enterprise/paypal-consumer`](test/integration/positive/enterprise/paypal-consumer) for a complete, runnable example (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](test/integration/) for every other runnable scenario).
+See [`test/integration/positive/enterprise/paypal-addon`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-addon)/[`test/integration/positive/enterprise/paypal-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-consumer) for a complete, runnable example (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](https://github.com/MaverickCER/env-cap/tree/main/test/integration) for every other runnable scenario).
 
 Discovery still never walks `node_modules` during its general file-discovery pass (`generateEnvManifest()`'s `include`/`exclude` globs), and that guarantee is unconditional.
 
@@ -558,7 +558,7 @@ paymentsEnv.STRIPE_KEY
 
 Without this, a contract only ever imported through an alias would be misreported as `abandoned` in the Dependency & Ownership Report, or its `documentEnv()` call left unlinked — the same class of false positive [ADR 0010](specs/decisions/0010-dependency-ownership-engine-scope-boundary.md)'s ownership engine exists to avoid.
 
-See [`test/integration/positive/enterprise/tsconfig-aliases`](test/integration/positive/enterprise/tsconfig-aliases) for a complete, runnable example, and [`test/integration/positive/enterprise/tsconfig-aliases-consumer`](test/integration/positive/enterprise/tsconfig-aliases-consumer) for the same producer/consumer pairing [Reusable packages](#reusable-packages) uses — proving this composes correctly with cross-package discovery (ADR 0014) in one real install (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](test/integration/) for every other runnable scenario).
+See [`test/integration/positive/enterprise/tsconfig-aliases`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/tsconfig-aliases) for a complete, runnable example, and [`test/integration/positive/enterprise/tsconfig-aliases-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/tsconfig-aliases-consumer) for the same producer/consumer pairing [Reusable packages](#reusable-packages) uses — proving this composes correctly with cross-package discovery (ADR 0014) in one real install (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](https://github.com/MaverickCER/env-cap/tree/main/test/integration) for every other runnable scenario).
 
 Unlike [Reusable packages](#reusable-packages) above, this is on by default (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)): a project's own `tsconfig.json` never crosses a trust/versioning boundary the way an installed package does, so there's no safety reason to require opt-in. `env-cap` auto-detects `tsconfig.json` at `root`, exactly (no upward directory search, unlike bare `tsc`). Pass `tsconfig: "<path>"` to point at a different file (useful in monorepos where the relevant config isn't at `root`), or `tsconfig: false` to disable alias resolution entirely:
 

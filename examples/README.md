@@ -3,12 +3,12 @@
 Three flagship examples, each answering a different question — read them in order, since each
 assumes the concepts the previous one already covered:
 
-1. **[application](application/)** — *"How does this make my code better?"* The simplest
+1. **[application](https://github.com/MaverickCER/env-cap/tree/main/examples/application)** — *"How does this make my code better?"* The simplest
    possible starting point: one centralized `createEnv()` contract for a whole small app, still
    getting fail-fast startup validation, generated docs, a generated `.env.example`, and an
    ownership report. For an individual developer adopting `env-cap` in their own project.
 
-2. **[team-service](team-service/)** — *"How does this help my team?"* Multiple
+2. **[team-service](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service)** — *"How does this help my team?"* Multiple
    capability-owned contracts spanning two real teams (`data-platform-team`, `security-team`),
    including two mutually-exclusive database alternatives (`postgres`/`mongodb`) gated by
    `exclusiveGroup`, a `classification: "secret"` variable that gives the generated security
@@ -16,20 +16,20 @@ assumes the concepts the previous one already covered:
    CI-gate pattern (see [ADR 0016](../specs/decisions/0016-check-mode-compute-before-compare-never-partial-write.md))
    a real PR check would run.
 
-3. **[enterprise-platform](enterprise-platform/)** — *"How does this help my organization?"* A
+3. **[enterprise-platform](https://github.com/MaverickCER/env-cap/tree/main/examples/enterprise-platform)** — *"How does this help my organization?"* A
    real, running application — reports, manifests, evidence generation, and a configuration-governance
    evidence document built with `defineEvidenceProjection()` — showing what `env-cap` deliberately
    doesn't own (a database, auth, external services) alongside what it does.
 
 Every flagship's own README documents exactly how to run it. All three are validated in CI (see
 `.github/workflows/ci.yml`'s `examples` job and
-[`test/examples/`](../test/examples/)) against the real,
+[`test/examples/`](https://github.com/MaverickCER/env-cap/tree/main/test/examples)) against the real,
 currently-built `env-cap` package, so they stay in sync with the API rather than
 drifting silently.
 
 ## Framework integration
 
-[**nextjs-app**](nextjs-app/) — a deliberately minimal Next.js todo app, not a fourth flagship in
+[**nextjs-app**](https://github.com/MaverickCER/env-cap/tree/main/examples/nextjs-app) — a deliberately minimal Next.js todo app, not a fourth flagship in
 the above progression. Where the three flagships above grow one plain Node/TypeScript app from an
 individual developer's project to an organization's, this one proves the fail-fast contract
 mechanism inside a real framework's build/request lifecycle — a real `NEXT_PUBLIC_*` (client) vs.
@@ -43,7 +43,7 @@ The three flagships above are for humans exploring `env-cap` for the first time 
 meant to be an exhaustive catalog of every scenario the library handles. Every other behavior
 (the packaged CLI binary, cross-package schema discovery, tsconfig path-alias resolution, the
 `liveExpirationDates` callback, per-variable validation contexts, and more) is still fully tested,
-just relocated to [`test/integration/`](../test/integration/) as a behavioral fixture rather than
+just relocated to [`test/integration/`](https://github.com/MaverickCER/env-cap/tree/main/test/integration) as a behavioral fixture rather than
 presented as a fourteenth (or fifteenth) example to read through. Each fixture directory still
 has its own runnable `package.json`, the same as a flagship does — see its own `package.json`
 `description` field for what it proves, or the corresponding test file under
