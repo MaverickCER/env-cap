@@ -2,8 +2,8 @@
 
 Guidance for AI coding agents (Codex, Cursor, Copilot, Continue, and others reading this
 convention) working in `env-cap`'s own source, or in an application that consumes
-`env-cap`. Claude Code reads the fuller, more detailed version of this same
-guidance from [`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md) — read that file
+`env-cap`. Agents whose tooling loads skill files get the fuller, more detailed version of
+this same guidance from [`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md) — read that file
 instead if your tooling supports it; this file is a self-contained distillation for
 agents that don't.
 
