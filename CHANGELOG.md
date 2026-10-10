@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- b3fd866: TypeScript 7 is supported. `npm i typescript@7 @maverickcer/env-cap` no longer fails with `ERESOLVE` (the optional `typescript` peer is now `^5 || ^6 || ^7`), and the `./build` scanner works under a TypeScript 7 root with no configuration: TypeScript 7 ships no programmatic compiler API, so the scanner uses your `typescript` when it has one (5 and 6, unchanged) and otherwise a bundled `@typescript/typescript6` (ADR 0049). Your `tsc` stays TypeScript 7.
+
+  - The compiler is bundled inside the package (`bundleDependencies`, about 5 MB packed / 26 MB installed) and used only by the build entry; the runtime, helpers, evidence and node entry points can never reach it (checked in CI by `verify:compiler-isolation`). Bundling also keeps your own `tsc` yours: installing the package does not change `node_modules/.bin/tsc`.
+  - With TypeScript 7, the `./build` and `./evidence` declarations name AST types TypeScript 7 does not export, so those two entry points need `skipLibCheck`; the runtime, helpers and node entry points type-check strictly. TypeScript 5 and 6 are unaffected.
+  - If the bundled compiler is stripped from an install, the scanner fails before writing anything, with a message that shows the alias to install.
+  - CI now installs the packed tarball beside TypeScript 5, 6 and 7 and runs the scanner from both the ESM and CJS entry points.
+
+- 931e0d6: Audit fixes ahead of 1.0.
+
+  - Breaking (pre-1.0 minor): Node.js `>=22` (Node 20 is end-of-life) and an optional `typescript` peer of `^5 || ^6`, so `npm i typescript@6 @maverickcer/env-cap` no longer fails with `ERESOLVE`. With TypeScript 7 the build step now says so instead of failing with `ts.createSourceFile is not a function` (ADR 0047).
+  - Breaking (pre-1.0 minor): `@maverickcer/env-cap/eslint-plugin` no longer vendors `@typescript-eslint/utils`; it is an optional peer (ADR 0048). The entry shrinks from ~400 KB to ~7 KB per format.
+  - Breaking (pre-1.0 minor): `init` scaffolds `docs/ENV-OWNERSHIP.md` so it can no longer collide with data-cap's `docs/OWNERSHIP.md`.
+  - Generated Markdown reports now tell the reader how they are really produced and regenerated (the script that calls `generateDocumentation()` / `generateUsageReport()`), not `npx env-cap --docs`; internal ADR numbers are gone from them.
+  - The composite GitHub Action passes every input through environment variables, uses the project's own install, and requires `version` otherwise instead of running an unpinned `latest`.
+  - Source maps no longer embed `sourcesContent` (about 60% of the unpacked package).
+  - Every documented import now uses the published `@maverickcer/env-cap` name; `./node` is documented as Stable and in the API reference; `--help` links are absolute URLs.
+  - Landing page: keyboard-focusable code blocks, a high-contrast theme toggle, forced-colors support.
+  - Every `Stryker disable` now says why, 79 mutation exception records are gone, and mutation runs the full suite; `init` scaffolds an https check with `URL` instead of a string prefix.
+
+### Patch Changes
+
+- fix: do not mistake a broken typescript install for an absent one
+- fix: run the compiler guard only when a tsconfig file exists
+- fix(build): support TypeScript 6 and test both TypeScript lines (#55)
+- fix(build): keep the sort after path mapping, the fingerprint fallback and the private-field check
+- 3d743bc: With a `tsconfig.json` present and no usable compiler (the bundled TypeScript 6 stripped from an install), the build step now says so instead of failing with a raw "is not a function": the compiler check runs before the tsconfig is read. `tsconfig: false` is unchanged.
+
 ## 0.5.3
 
 ### Patch Changes
