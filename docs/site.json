@@ -1,0 +1,244 @@
+{
+  "siteUrl": "https://maverickcer.github.io/env-cap/",
+  "repoUrl": "https://github.com/maverickcer/env-cap",
+  "title": "env-cap — capability-owned environment contracts",
+  "description": "Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env — and sits next to your existing validation, not instead of it.",
+  "ogImage": "assets/og-image.png",
+  "maturity": "env-cap is pre-1.0. Per [VERSIONING.md](https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md), a minor release may still include a breaking change to the Stable tier before 1.0, so pin accordingly and read the changelog on every minor upgrade.",
+  "hero": {
+    "eyebrow": "Configuration, owned",
+    "heading": "Every environment variable has an owner, a reason to exist, and a lifecycle you can query.",
+    "lede": "A secret manager decides where a value lives. A validator decides whether it is well-formed. Neither says who owns it, why it exists, or when it expires.",
+    "support": "env-cap treats configuration as a capability-owned contract: each part of your code declares the variables it owns, and a build step turns those declarations into a project-wide ownership and lifecycle report.",
+    "outcome": "Give every team a clear owner and expiry date for each environment variable, alongside the validator and secret manager you already use."
+  },
+  "install": {
+    "label": "Quick start",
+    "commands": [
+      "npm install @maverickcer/env-cap",
+      "npx env-cap init"
+    ],
+    "note": "The runtime validates your variables at startup. The build step produces the ownership report. Nothing replaces `dotenv`, Zod, `envalid`, `t3-env` or your secret manager."
+  },
+  "cta": {
+    "primary": {
+      "label": "Read the README",
+      "url": "https://github.com/maverickcer/env-cap#readme"
+    },
+    "secondary": {
+      "label": "Run the examples",
+      "url": "https://github.com/maverickcer/env-cap/tree/main/examples"
+    }
+  },
+  "problem": {
+    "eyebrow": "Why it exists",
+    "heading": "Secret managers and validators answer different questions.",
+    "lede": "A secret manager decides where a value lives. A validator decides whether a value is well-formed. Neither answers why a variable exists and which capability depends on it, who owns it and who to page when it must rotate, or whether it is still needed.",
+    "listLabel": "Where the answers live today",
+    "items": [
+      "a wiki page",
+      "a Slack thread",
+      "someone's memory",
+      "a leftover from a feature that moved on"
+    ],
+    "conclusion": "no executable source of truth",
+    "closing": "env-cap makes the answer part of the code: each capability declares the environment it owns, and a build-time pass turns every declaration into a project-wide ownership and lifecycle view."
+  },
+  "model": {
+    "eyebrow": "How it works",
+    "heading": "Runtime and build-time stay separate on purpose.",
+    "lede": "Runtime receives only what the application requires: no dependencies and no filesystem access. Build tooling creates the visibility needed to understand and maintain dependencies, as an explicit development or CI step, never at startup.",
+    "flow": [
+      "Capability schema file",
+      "→ Runtime path: `createEnv()` · `validateEnv()` · typed, capability-scoped access",
+      "→ Build path: `documentEnv()` · static AST analysis, never imported or executed · generated manifest, docs and ownership report"
+    ],
+    "flowDescription": "A capability's schema file branches into a runtime path for validated application access and a build path for generated documentation and visibility artifacts.",
+    "note": "The build package parses schema files as TypeScript ASTs and never imports or executes them. That static-analysis boundary stops unfamiliar code from running as a side effect of generating documentation, manifests and dependency insight."
+  },
+  "demo": {
+    "eyebrow": "See it",
+    "heading": "Not a mockup: real output from this repository.",
+    "intro": "Run against [examples/application](https://github.com/maverickcer/env-cap/tree/main/examples/application) in this repo:",
+    "command": "npx env-cap --location ... --evidence ...",
+    "output": "Wrote manifest: src/generated/env.manifest.ts\nDiscovered 1 contract(s).\nWrote evidence: docs/env.evidence.json\n\n[generate-docs] wrote docs/ENVIRONMENT.md (1 contract(s)), .env.example, and docs/OWNERSHIP.md (0 abandoned, 2 unconsumed owned variable(s)).\n\n1 variable(s)/contract(s) expiring soon or already expired:\n- STRIPE_KEY in env: 2026-09-01 (expired Nd ago)\n\n2 unconsumed owned variable(s):\n- DATABASE_URL in app\n- STRIPE_KEY in app",
+    "source": {
+      "label": "examples/application",
+      "url": "https://github.com/maverickcer/env-cap/tree/main/examples/application"
+    },
+    "explanation": "Not \"CI failed\": a rotation deadline that already passed, and two variables a capability declares owning but nothing in the codebase reads. Both are real, provable facts about this fixture. N is the number of days since 2026-09-01, counted from the day you run it."
+  },
+  "guarantees": {
+    "eyebrow": "Guarantees",
+    "heading": "What is guaranteed, and where it stops.",
+    "lede": "Each claim states its scope and links to the document that defines it, so you can check the boundary before you rely on it.",
+    "items": [
+      {
+        "claim": "The runtime has no dependencies and no filesystem access.",
+        "scope": "True of the runtime entry points, which are held to a size budget in CI. The build entry is separate: it bundles a TypeScript 6 compiler (about 24 MB unpacked), runs only in development and CI, and a build step fails if a runtime entry can reach it.",
+        "linkLabel": "Read the adoption guide",
+        "url": "https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md"
+      },
+      {
+        "claim": "The build tool never executes your schema files.",
+        "scope": "Schema files are parsed as TypeScript ASTs and never imported or evaluated; only literal values are resolved, and anything dynamic is reported as unresolved. It does not sandbox the rest of your build or your own code.",
+        "linkLabel": "Read the security model",
+        "url": "https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
+      },
+      {
+        "claim": "The runtime never persists, retrieves, rotates or logs secrets.",
+        "scope": "Values live in memory and contracts redact themselves when logged or serialized. Storing, rotating and auditing secrets stay your infrastructure's job, and it cannot stop a validator you write from logging.",
+        "linkLabel": "Read the security model",
+        "url": "https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
+      }
+    ]
+  },
+  "comparison": {
+    "eyebrow": "Why not just dotenv, Zod, envalid, or t3-env?",
+    "heading": "You keep all of them.",
+    "lede": "env-cap doesn't replace your loader or your validator. It adds the layer none of them cover. Plug an existing `Validator<T>` or `Processor<T>` function straight into a contract, or use env-cap's lightweight helpers when a validation library is more than the variable needs.",
+    "caption": "Where common approaches stop and env-cap begins",
+    "columns": [
+      "Tool",
+      "What it solves",
+      "What it doesn't"
+    ],
+    "rows": [
+      [
+        "dotenv",
+        "Loads values from a `.env` file into `process.env`",
+        "Says nothing about who owns a value, whether it's still used, or when it expires"
+      ],
+      [
+        "Zod / envalid / t3-env",
+        "Validates that a value has the right shape",
+        "Same gap: a well-typed variable can still be an orphaned, unowned, or expired one"
+      ],
+      [
+        "A secret manager",
+        "Decides where a value physically lives and how it's rotated",
+        "Says nothing about which capability in your code actually depends on it"
+      ]
+    ]
+  },
+  "adoption": {
+    "eyebrow": "Adoption",
+    "heading": "From one schema to capability-owned contracts.",
+    "lede": "Most applications start with a single, centralized schema, and that is a fine place to stay if it's working. As ownership boundaries start to matter, contracts move closer to the capability that consumes them, with no change to the runtime model.",
+    "calloutTitle": "A progressive path, not a rewrite",
+    "steps": [
+      "Start with one centralized schema and run `npx env-cap init`.",
+      "Generate the manifest, documentation and ownership report in CI.",
+      "As ownership boundaries matter, move each contract next to the capability that consumes it. The runtime model does not change."
+    ],
+    "notFor": {
+      "title": "You probably don't need it when",
+      "text": "Your application is small, one team owns every configuration decision, environment variables are few and stable, and you already have enough visibility into your dependencies. A validation library alone, or plain `dotenv`, may be all you need."
+    }
+  },
+  "brief": {
+    "heading": "A one-page brief for your manager",
+    "oneLine": "env-cap gives every configuration setting an owner, a reason to exist and an expiry date, and shows what is unused or overdue.",
+    "problem": "As an application grows, nobody can say who owns a setting, whether it is still used, or when a secret expires. That knowledge sits in wikis, chat threads and people's memory.",
+    "whatItDoes": "Each part of the application declares the settings it owns. A build step turns those declarations into a report of owners, unused settings and approaching expiry dates, and the application checks its settings when it starts.",
+    "whyItMatters": [
+      "Overdue secret rotations and orphaned settings are found by a report, not by an outage.",
+      "It works alongside the validator and secret manager a team already has, so nothing is replaced.",
+      "The part that runs in your application adds no dependencies to it."
+    ],
+    "whatItCosts": "Adopting it in one application means adding the package and declaring the settings each part of the code owns. It is free, open source software under the MIT licence, and it replaces no existing tool.",
+    "whatCouldGoWrong": [
+      "Its reports are only as accurate as the declarations a team writes, and it cannot see settings read from outside the code it scans.",
+      "Security fixes target the latest 0.x release only, and there is no backport branch before 1.0.",
+      "The install includes a bundled compiler, about 24 MB unpacked, used only for the build-time reports."
+    ],
+    "whatWeAsk": "Agree that one application trials it for a few weeks, then judge from its ownership report whether to spread it."
+  },
+  "resources": {
+    "eyebrow": "Go deeper",
+    "heading": "Read past the pitch.",
+    "lede": "The output above comes from a real fixture in this repository, not a mockup. These are the documents behind it: the full workflow, the architecture invariants, the security model, and the generated API surface.",
+    "items": [
+      {
+        "title": "Guide",
+        "description": "The full generate/validate workflow, validation contexts, reusable packages, and the CLI.",
+        "label": "Read the Guide",
+        "url": "https://github.com/maverickcer/env-cap/blob/main/GUIDE.md"
+      },
+      {
+        "title": "Architecture",
+        "description": "The core invariants — runtime/build-time separation, self-redacting contracts, and why the build tool never acquires a filesystem capability itself.",
+        "label": "Read architecture.md",
+        "url": "https://github.com/maverickcer/env-cap/blob/main/specs/architecture.md"
+      },
+      {
+        "title": "Security model",
+        "description": "Zero runtime dependencies, self-redacting contracts, and what stays an application responsibility.",
+        "label": "Read the security model",
+        "url": "https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
+      },
+      {
+        "title": "Adoption guide",
+        "description": "A decision-maker summary: security posture, bundle size, and versioning/LTS stance.",
+        "label": "Read ADOPTION.md",
+        "url": "https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md"
+      },
+      {
+        "title": "API reference",
+        "description": "Every exported symbol, generated from source so it cannot drift.",
+        "label": "Read the API reference",
+        "url": "api/"
+      },
+      {
+        "title": "Benchmarks",
+        "description": "Runtime and build-time cost as project size scales, measured on every PR and charted over time.",
+        "label": "See the benchmarks",
+        "url": "benchmarks/"
+      }
+    ]
+  },
+  "fit": {
+    "eyebrow": "Try it",
+    "heading": "Trial it on one application.",
+    "lede": "Read the README for a first contract, or run an example to see the report it produces.",
+    "links": [
+      {
+        "label": "API reference",
+        "url": "api/"
+      },
+      {
+        "label": "Benchmarks",
+        "url": "benchmarks/"
+      },
+      {
+        "label": "View on GitHub",
+        "url": "https://github.com/maverickcer/env-cap"
+      }
+    ]
+  },
+  "footer": {
+    "links": [
+      {
+        "label": "API reference",
+        "url": "api/"
+      },
+      {
+        "label": "Benchmarks",
+        "url": "benchmarks/"
+      },
+      {
+        "label": "GitHub ↗",
+        "url": "https://github.com/maverickcer/env-cap"
+      },
+      {
+        "label": "Issues ↗",
+        "url": "https://github.com/maverickcer/env-cap/issues"
+      }
+    ],
+    "license": {
+      "label": "MIT License",
+      "url": "https://github.com/maverickcer/env-cap/blob/main/LICENSE"
+    },
+    "copyright": "env-cap contributors"
+  }
+}
