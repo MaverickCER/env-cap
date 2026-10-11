@@ -50,6 +50,17 @@ describe("derivable facts in documentation", () => {
     expect(pattern.test("the ADRs")).toBe(false)
   })
 
+  it("never says the package has no dependencies key or pulls nothing in, while package.json has dependencies", () => {
+    const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as {
+      dependencies?: Record<string, string>
+    }
+    expect(
+      Object.keys(pkg.dependencies ?? {}).length,
+      "this guard only applies while there are dependencies",
+    ).toBeGreaterThan(0)
+    expect(offending(/no `dependencies` key|nothing is pulled transitively/i)).toEqual([])
+  })
+
   it("never shows a literal tool version in a sample report", () => {
     expect(offending(/"toolVersion":\s*"\d/)).toEqual([])
   })

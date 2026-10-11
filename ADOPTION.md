@@ -27,8 +27,12 @@ when _not_ to switch.
 Full detail: [`SECURITY.md`](SECURITY.md). The summary a security reviewer
 needs:
 
-- **Zero runtime dependencies.** `package.json` has no `dependencies` key.
-  Nothing is pulled transitively into a consumer's production `node_modules`.
+- **The runtime has no dependencies.** The runtime entry points (`.` and `./helpers`) import
+  nothing, so nothing is added to your application's production bundle. `package.json` has one
+  `dependencies` entry: a bundled TypeScript 6 compiler (about 5 MB to download, about 24 MB unpacked in your
+  `node_modules`), used only by the build entry so that TypeScript 7 projects can run the scanner
+  ([ADR 0049](specs/decisions/0049-typescript-7-scanner-uses-a-bundled-typescript-6.md)).
+  `scripts/verify-compiler-isolation.mjs` fails the build if any runtime entry can reach it.
 - **The runtime never persists, retrieves, rotates, or logs secrets**, and
   never inserts raw or processed values into a thrown error — only variable
   names, contract names, and the _developer's own_ validator/processor
