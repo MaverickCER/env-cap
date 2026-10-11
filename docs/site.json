@@ -14,10 +14,7 @@
   },
   "install": {
     "label": "Quick start",
-    "commands": [
-      "npm install @maverickcer/env-cap",
-      "npx env-cap init"
-    ],
+    "commands": ["npm install @maverickcer/env-cap", "npx env-cap init"],
     "note": "The runtime validates your variables at startup. The build step produces the ownership report. Nothing replaces `dotenv`, Zod, `envalid`, `t3-env` or your secret manager."
   },
   "cta": {
@@ -98,11 +95,7 @@
     "heading": "You keep all of them.",
     "lede": "env-cap doesn't replace your loader or your validator. It adds the layer none of them cover. Plug an existing `Validator<T>` or `Processor<T>` function straight into a contract, or use env-cap's lightweight helpers when a validation library is more than the variable needs.",
     "caption": "Where common approaches stop and env-cap begins",
-    "columns": [
-      "Tool",
-      "What it solves",
-      "What it doesn't"
-    ],
+    "columns": ["Tool", "What it solves", "What it doesn't"],
     "rows": [
       [
         "dotenv",
