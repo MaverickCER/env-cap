@@ -3,6 +3,8 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/maverickcer/env-cap/ci.yml?branch=main&label=CI)](https://github.com/maverickcer/env-cap/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
 [![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/coverage-badge.json)](https://github.com/MaverickCER/env-cap/blob/main/vitest.config.ts)
+[![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/mutation-badge.json)](https://github.com/MaverickCER/env-cap/blob/main/stryker.config.mjs)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/MaverickCER/env-cap/badge)](https://scorecard.dev/viewer/?uri=github.com/MaverickCER/env-cap)
 [![Bundle size](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/size-badge.json)](specs/decisions/0008-gzip-size-budget.md)
 [![Socket Badge](https://badge.socket.dev/npm/package/@maverickcer/env-cap/latest)](https://socket.dev/npm/package/@maverickcer/env-cap)
 [![Node](https://img.shields.io/node/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
