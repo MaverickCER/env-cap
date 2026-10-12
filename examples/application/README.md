@@ -12,7 +12,7 @@ generated documentation, a generated `.env.example`, and an ownership/blast-radi
 report -- the same benefits capability-owned adoption gets, just applied to
 one contract instead of many.
 
-```
+```text
 src/
   env.ts                   <- one centralized schema/contract for the whole app
   generated/

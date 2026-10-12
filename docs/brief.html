@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@maverickcer/env-cap: a one-page brief</title>
+    <meta
+      name="description"
+      content="env-cap gives every configuration setting an owner, a reason to exist and an expiry date, and shows what is unused or overdue."
+    />
+    <link rel="canonical" href="https://maverickcer.github.io/env-cap/brief.html" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="brief-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <main id="main" class="brief">
+      <p class="brief-back"><a href="index.html">&larr; @maverickcer/env-cap</a></p>
+      <h1>@maverickcer/env-cap: a one-page brief</h1>
+      <p class="brief-oneline">
+        env-cap gives every configuration setting an owner, a reason to exist and an expiry date,
+        and shows what is unused or overdue.
+      </p>
+      <section class="brief-block">
+        <h2>The problem</h2>
+        <p>
+          As an application grows, nobody can say who owns a setting, whether it is still used, or
+          when a secret expires. That knowledge sits in wikis, chat threads and people&#39;s memory.
+        </p>
+      </section>
+      <section class="brief-block">
+        <h2>What it does</h2>
+        <p>
+          Each part of the application declares the settings it owns. A build step turns those
+          declarations into a report of owners, unused settings and approaching expiry dates, and
+          the application checks its settings when it starts.
+        </p>
+      </section>
+      <section class="brief-block">
+        <h2>Why it matters</h2>
+        <ul>
+          <li>
+            Overdue secret rotations and orphaned settings are found by a report, not by an outage.
+          </li>
+          <li>
+            It works alongside the validator and secret manager a team already has, so nothing is
+            replaced.
+          </li>
+          <li>The part that runs in your application adds no dependencies to it.</li>
+        </ul>
+      </section>
+      <section class="brief-block">
+        <h2>What it costs</h2>
+        <p>
+          Adopting it in one application means adding the package and declaring the settings each
+          part of the code owns. It is free, open source software under the MIT licence, and it
+          replaces no existing tool.
+        </p>
+      </section>
+      <section class="brief-block">
+        <h2>What could go wrong</h2>
+        <ul>
+          <li>
+            env-cap is pre-1.0. Per
+            <a href="https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md"
+              >VERSIONING.md</a
+            >, a minor release may still include a breaking change to the Stable tier before 1.0, so
+            pin accordingly and read the changelog on every minor upgrade.
+          </li>
+          <li>
+            Its reports are only as accurate as the declarations a team writes, and it cannot see
+            settings read from outside the code it scans.
+          </li>
+          <li>
+            Security fixes target the latest 0.x release only, and there is no backport branch
+            before 1.0.
+          </li>
+          <li>
+            The install includes a bundled compiler, about 24 MB unpacked, used only for the
+            build-time reports.
+          </li>
+        </ul>
+      </section>
+      <section class="brief-block">
+        <h2>What we are asking for</h2>
+        <p>
+          Agree that one application trials it for a few weeks, then judge from its ownership report
+          whether to spread it.
+        </p>
+      </section>
+      <p class="brief-next">
+        To judge it yourself:
+        <a href="https://github.com/maverickcer/env-cap#readme">Read the README</a> ·
+        <a href="https://github.com/maverickcer/env-cap/tree/main/examples">Run the examples</a>
+      </p>
+      <p class="brief-print">Print this page or save it as a PDF to share.</p>
+    </main>
+  </body>
+</html>

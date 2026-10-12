@@ -13,9 +13,9 @@ duplicate-documentation warning it depends on is implemented in
 `generateEnvManifest()` has never had any memory of a previous run. `docs.ts`
 already solves an adjacent problem for the Markdown docs artifact -- it
 re-reads its own previously-written file before overwriting it, and diffs the
-`### \`KEY\`` headings it finds against the current run to report an
+``### `KEY` `` headings it finds against the current run to report an
 added/removed/commented key summary (`computeChangeSummary()`,
-`renderHeader()`). The manifest has nothing equivalent to read back: its `.ts`output is deliberately metadata-free by design -- sorted imports plus a`contracts`array, "no timestamps, no randomness" per`manifest.ts`'s own
+`renderHeader()`). The manifest has nothing equivalent to read back: its `.ts` output is deliberately metadata-free by design -- sorted imports plus a `contracts` array, "no timestamps, no randomness" per `manifest.ts`'s own
 docstring. There is no `description`/`owner`/`expiresAt`/etc. in it at all,
 so there is nothing in a previously-generated `manifest.ts` for a later run
 to parse back out.

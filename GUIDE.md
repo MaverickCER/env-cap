@@ -190,7 +190,7 @@ export const databaseEnv = createEnv(
 ```
 
 Available helpers include common processors and validators with composition utilities. They can be
-found at [src/helpers/index.ts](./src/helpers/index.ts)
+found at [src/helpers/index.ts](https://github.com/MaverickCER/env-cap/blob/main/src/helpers/index.ts)
 
 When possible, prefer validation rules that communicate domain intent directly alongside the capability contract. These may be custom `Processor<T>` and `Validator<T>` functions or existing validators from your application's validation stack.
 
@@ -417,6 +417,10 @@ Without it, a second `validateEnv()` call with different `values` silently retur
 
 The runtime (`.` and `./helpers`) has zero dependencies, never touches the filesystem, and never imports Node-specific APIs — see [`specs/architecture.md`](specs/architecture.md). `./build` is Node-only developer tooling (uses `node:path` and the TypeScript compiler API — never `node:fs`, see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)) meant for CI/npm-script use, never for shipping to a browser. Both ESM and CommonJS builds are published for every entry point (`package.json#exports`).
 
+### Requirements
+
+Node.js `>=22`. TypeScript 5, 6 or 7 is only required for build-time manifest generation: a bundled TypeScript 6 parses the schemas when yours is 7, is bundled inside the package and used only by the build entry, and adds about 24 MB unpacked to the install. The runtime works in plain JavaScript. TypeScript consumers need `moduleResolution` set to `node16`, `nodenext` or `bundler` to resolve the subpath exports (`./build`, `./helpers`, ...); the legacy `node10` resolver is not supported. `@maverickcer/env-cap/eslint-plugin` also needs `@typescript-eslint/utils` installed (an optional peer).
+
 ## Validation contexts
 
 A schema entry may declare which **validation context** it belongs to. `validateEnv()` accepts the validation
@@ -489,7 +493,7 @@ await validateEnv({ manifest, values: process.env, activeContexts })
 This is every context the manifest has — a convenient starting point, not a pre-scoped default. Importing it
 unmodified into every process defeats the point of scoping contexts per deployment target in the first place;
 narrow it (or import it under another name and filter it) the same way `src/server.ts`/`src/client.ts` in
-[`test/integration/positive/team/validation-contexts`](test/integration/positive/team/validation-contexts)
+[`test/integration/positive/team/validation-contexts`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/team/validation-contexts)
 each hand-write their own narrowed `activeContexts: ["server"]` / `["client"]` instead of using this
 export directly.
 
@@ -511,11 +515,11 @@ A configuration contract can ship as its own installable package instead of livi
 
 This works for both centralized application schemas and capability-owned contracts. A reusable package can expose the environment requirements it owns, allowing consuming applications to validate and generate visibility artifacts without manually copying configuration definitions.
 
-See [`test/integration/positive/enterprise/paypal-addon`](test/integration/positive/enterprise/paypal-addon)/[`test/integration/positive/enterprise/paypal-consumer`](test/integration/positive/enterprise/paypal-consumer) for a complete, runnable example (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](test/integration/) for every other runnable scenario).
+See [`test/integration/positive/enterprise/paypal-addon`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-addon)/[`test/integration/positive/enterprise/paypal-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-consumer) for a complete, runnable example (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](https://github.com/MaverickCER/env-cap/tree/main/test/integration) for every other runnable scenario).
 
 Discovery still never walks `node_modules` during its general file-discovery pass (`generateEnvManifest()`'s `include`/`exclude` globs), and that guarantee is unconditional.
 
-Making a package-shipped contract discoverable is a opt-in mechanism (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)):
+Making a package-shipped contract discoverable is an opt-in mechanism (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)):
 
 ```ts
 // consuming app's build script
@@ -558,7 +562,7 @@ paymentsEnv.STRIPE_KEY
 
 Without this, a contract only ever imported through an alias would be misreported as `abandoned` in the Dependency & Ownership Report, or its `documentEnv()` call left unlinked — the same class of false positive [ADR 0010](specs/decisions/0010-dependency-ownership-engine-scope-boundary.md)'s ownership engine exists to avoid.
 
-See [`test/integration/positive/enterprise/tsconfig-aliases`](test/integration/positive/enterprise/tsconfig-aliases) for a complete, runnable example, and [`test/integration/positive/enterprise/tsconfig-aliases-consumer`](test/integration/positive/enterprise/tsconfig-aliases-consumer) for the same producer/consumer pairing [Reusable packages](#reusable-packages) uses — proving this composes correctly with cross-package discovery (ADR 0014) in one real install (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](test/integration/) for every other runnable scenario).
+See [`test/integration/positive/enterprise/tsconfig-aliases`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/tsconfig-aliases) for a complete, runnable example, and [`test/integration/positive/enterprise/tsconfig-aliases-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/tsconfig-aliases-consumer) for the same producer/consumer pairing [Reusable packages](#reusable-packages) uses — proving this composes correctly with cross-package discovery (ADR 0014) in one real install (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](https://github.com/MaverickCER/env-cap/tree/main/test/integration) for every other runnable scenario).
 
 Unlike [Reusable packages](#reusable-packages) above, this is on by default (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)): a project's own `tsconfig.json` never crosses a trust/versioning boundary the way an installed package does, so there's no safety reason to require opt-in. `env-cap` auto-detects `tsconfig.json` at `root`, exactly (no upward directory search, unlike bare `tsc`). Pass `tsconfig: "<path>"` to point at a different file (useful in monorepos where the relevant config isn't at `root`), or `tsconfig: false` to disable alias resolution entirely:
 
@@ -820,6 +824,27 @@ Common uses include:
 - detecting undocumented or stale configuration changes
 - producing machine-readable reports for automation
 
+### Options
+
+At least one of `--location` or `--evidence` is required. Run `npx env-cap --help` for the same list.
+
+| Flag                 | Meaning                                                                                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--root <path>`      | Directory that globs resolve from (default: the current directory).                                                                                                  |
+| `--location <path>`  | Output path for the generated manifest.                                                                                                                              |
+| `--include <glob>`   | Schema-discovery glob. Repeatable. Default: `**/env.schema.ts`.                                                                                                      |
+| `--exclude <glob>`   | Glob to exclude from discovery. Repeatable.                                                                                                                          |
+| `--package <name>`   | Installed package to also discover a schema from, through its `envCap.schema` `package.json` field. Repeatable.                                                      |
+| `--tsconfig <path>`  | `tsconfig.json` (relative to root) whose `paths` and `baseUrl` resolve aliased imports during static analysis. Default: the `tsconfig.json` found at the root.       |
+| `--no-tsconfig`      | Turn path-alias resolution off entirely.                                                                                                                             |
+| `--evidence <path>`  | Also write the persisted evidence artifact and its `.fingerprint` sidecar, for example `docs/env.evidence.json`.                                                     |
+| `--strict`           | Escalate every warning-severity finding to a hard error: compatibility, documentation and ownership. Nothing is written when it fires. Info findings never escalate. |
+| `--strict-docs`      | Escalate only documentation warnings (undocumented, stale or expiring entries, unresolvable `documentEnv()` links), independent of `--strict`.                       |
+| `--strict-ownership` | Escalate only ownership warnings (abandoned contracts, unresolved consumers, unconsumed owned variables, indeterminate ownership), independent of `--strict`.        |
+| `--json`             | Emit a machine-readable report instead of formatted text (see below).                                                                                                |
+| `--check`            | Verify generated artifacts are up to date without writing anything. Exits `1` if any is stale or missing.                                                            |
+| `--help`, `-h`       | Show the help text.                                                                                                                                                  |
+
 ### `--json`
 
 Add `--json` to emit a machine-readable report instead of formatted terminal output.
@@ -839,7 +864,7 @@ Example:
 {
   "schemaVersion": 1,
   "kind": "env-cap-report",
-  "toolVersion": "0.1.0",
+  "toolVersion": "<installed env-cap version>",
   "ok": true,
   "manifest": {
     "outputPath": "...",
@@ -1030,11 +1055,11 @@ See [ADR 0018](specs/decisions/0018-rotation-alert-issue-on-non-pr-runs.md).
 
 It flags direct `process.env` access outside approved contract definitions, making configuration ownership enforceable through tooling rather than relying only on team conventions.
 
-```bash id="2x8x4q"
+```bash
 npm install -D eslint
 ```
 
-```js id="f7m2s9"
+```js
 // eslint.config.js
 
 import envCapPlugin from "@maverickcer/env-cap/eslint-plugin"
@@ -1058,13 +1083,13 @@ Other files must access validated contracts instead of reading environment varia
 
 For example:
 
-```ts id="y5j4ka"
+```ts
 process.env.STRIPE_KEY
 ```
 
 becomes:
 
-```ts id="6f2r0m"
+```ts
 paymentsEnv.STRIPE_KEY
 ```
 
@@ -1072,7 +1097,7 @@ The rule does not prevent legitimate infrastructure or build-time code from acce
 
 For approved exceptions, provide an explicit allow list:
 
-```js id="3f7v9n"
+```js
 rules: {
   "env-cap/no-raw-process-env": [
     "error",
@@ -1085,7 +1110,7 @@ rules: {
 
 One-off exceptions can also use the standard ESLint disable comment:
 
-```ts id="x0k6ps"
+```ts
 // eslint-disable-next-line env-cap/no-raw-process-env
 process.env.BOOTSTRAP_TOKEN
 ```
@@ -1098,7 +1123,7 @@ See [ADR 0017](specs/decisions/0017-eslint-plugin-entry-point.md).
 
 The plugin also ships `no-node-fs`, the filesystem analogue of `no-raw-process-env`. It flags any `import`, `require`, or dynamic `import()` of `node:fs` (or `fs`, and their `/promises` subpaths) so a module accepts a filesystem capability from its caller instead of acquiring one implicitly — the discipline `env-cap`'s own `./build` surface follows (see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)).
 
-```js id="n0d3fs"
+```js
 rules: {
   "env-cap/no-node-fs": [
     "error",

@@ -20,8 +20,8 @@ through as an adoption sample. Those had been conflated into one directory.
 ## Decision
 
 - **`examples/` holds exactly three flagships**, each answering a different question, in reading
-  order: [`application/`](../../examples/application/) ("how does this make my code better?",
-  evolved in place from the old `basic-node/`), [`team-service/`](../../examples/team-service/)
+  order: [`application/`](https://github.com/MaverickCER/env-cap/tree/main/examples/application) ("how does this make my code better?",
+  evolved in place from the old `basic-node/`), [`team-service/`](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service)
   ("how does this help my team?", evolved from `composable-boilerplates/` with real
   multi-team ownership and a `classification`-tagged secret added, not a plain rename — see
   below), and `enterprise-platform/` ("how does this help my organization?", a new build).
@@ -45,13 +45,15 @@ through as an adoption sample. Those had been conflated into one directory.
 - **Test infrastructure is shared, not forked.** `test/examples/support.ts` (the shared
   `isInstalled`/`runScript`/`runStart`/`compareGoldenArtifacts` helpers) moves to
   `test/support/example-runner.ts`, with every helper's implicit `examplesRoot` replaced by an
-  explicit directory argument each caller resolves itself — `test/integration/flagships/` and
-  `test/integration/{positive,negative}/` both consume the one module. `test/examples/` no longer
-  exists.
+  explicit directory argument each caller resolves itself — `test/examples/` and
+  `test/integration/{positive,negative}/` both consume the one module. _Amended: the flagship
+  tests were never moved. They remain in `test/examples/` (`application.test.ts`,
+  `enterprise-platform.test.ts`, `support.ts`), and only the twelve relocated fixtures live under
+  `test/integration/{positive,negative}/`; there is no `test/integration/flagships/`._
 - **`.github/workflows/ci.yml`'s single `examples` job splits into two**: `examples` (the three
   flagships) and `integration-fixtures` (the twelve relocated fixtures), each installing and
   typechecking only what it's responsible for, each running its own `vitest run` scope
-  (`test/integration/flagships/` vs. `test/integration/positive/ test/integration/negative/`).
+  (`test/examples/` vs. `test/integration/positive/ test/integration/negative/`).
 
 ## Consequences
 
