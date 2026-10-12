@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.1
+
+### Patch Changes
+
+- fix(site): readable inline code in the hero; record the brief link that goes live on deploy
+- fix(security): commit the Socket registry in the form the check writes it
+- fix(security): record the Socket alerts that only appear once a version is published
+- feat(ci): publish the mutation badge and the OpenSSF Scorecard result
+- fix(security): give every v2 Socket record an explicit expires
+
 ## 0.6.0
 
 ### Minor Changes
