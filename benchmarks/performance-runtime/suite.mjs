@@ -197,9 +197,9 @@ const PROCESSORS = [
     slug: "to-big-int",
     name: "toBigInt()",
     use: "Parses a very large integer (a numeric identifier, a counter) without losing precision.",
-    expected: "linear",
+    expected: "quadratic",
     reason:
-      "Parsing reads each decimal digit once to build the integer, so cost follows the number of digits.",
+      "Each decimal digit multiplies the integer built so far, which grows with the digits already read, so the cost grows faster than the digit count; CI measured an exponent near 1.6, and quadratic is the nearest class.",
     sizeMeans: "Number of decimal digits.",
     content: "a string of the digit 1",
     build: (n) => [processors.toBigInt(), "1".repeat(n)],

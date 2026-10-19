@@ -69,7 +69,7 @@ Every function the package exposes is measured on its own across the full size l
 | `processors.parseJSON()` | variable | O(n) | O(n) | ✅ matches | 80.1 µs | 1.65 ms |
 | `processors.split(",")` | variable | O(n) | O(n) | ✅ matches | 12.2 µs | 202 µs |
 | `processors.toArray(",", [trim()])` | variable | O(n) | O(n) | ✅ matches | 60.2 µs | 693 µs |
-| `processors.toBigInt()` | variable | O(n) | O(n log n) | 🟡 close (neighbouring class) | 1.86 µs | 146 µs |
+| `processors.toBigInt()` | variable | O(n²) | O(n log n) | 🟡 close (neighbouring class) | 1.86 µs | 146 µs |
 | `processors.toBoolean()` | variable | O(1) | O(1) | ✅ matches | 0.102 µs | 0.102 µs |
 | `processors.toDate()` | variable | O(1) | O(1) | ✅ matches | 0.319 µs | 0.312 µs |
 | `processors.toInteger()` | variable | O(1) | O(1) | ✅ matches | 0.0869 µs | 0.0827 µs |
@@ -379,7 +379,7 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **What poor performance would mean.** Startup and cold-start time grow with every variable that uses processors.toBigInt(), and with the size of the values it handles (a large secret, certificate or list). On serverless platforms that delay is billed on every scale-from-zero event, and a regression here is paid by every service that adopts the helper.
 
-**Expected growth: O(n).** Parsing reads each decimal digit once to build the integer, so cost follows the number of digits.
+**Expected growth: O(n²).** Each decimal digit multiplies the integer built so far, which grows with the digits already read, so the cost grows faster than the digit count; CI measured an exponent near 1.6, and quadratic is the nearest class.
 
 **Variables that could change its cost**
 

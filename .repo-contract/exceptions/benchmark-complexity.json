@@ -14,6 +14,21 @@
       "residualRisk": "At very large contract counts the sort's share of the build time grows; at the ladder's largest size, 5,120 variables, the local run measured an exponent of 1.14.",
       "revisitWhen": "A single project routinely declares more than 100,000 variables, or the next release measures an exponent above 1.3.",
       "expires": ""
+    },
+    {
+      "id": "benchmark-complexity:performance-runtime:fn:processor-to-array:linearithmic",
+      "version": 2,
+      "justification": "processors.toArray is unchanged by this change: it splits the string once and runs the element processor on each field, linear by construction. CI's pull-request run measured an exponent of 1.20 (linearithmic) where the last release measured 0.86 (linear), on a shared GitHub-hosted runner; accepted as run-to-run noise by the maintainer's decision to release.",
+      "suite": "performance-runtime",
+      "group": "fn:processor-to-array",
+      "to": "linearithmic",
+      "ruleBroken": "A benchmark's growth class must not get worse than at the last release without a person's acceptance.",
+      "attempted": "Checked that src/helpers and src/runtime are unchanged against main, so no code in this change can have altered toArray's cost.",
+      "constraint": "Growth classes are fitted on one CI run on a shared runner, where a near-boundary exponent can cross a class line between runs.",
+      "whyPreferable": "Rewriting a linear split to chase one run's fit would change nothing real; the next measured run either confirms linear or keeps this record honest.",
+      "residualRisk": "A real regression in toArray would be hidden for as long as this record stands.",
+      "revisitWhen": "The post-merge benchmark run measures toArray again; remove this record if it is linear there.",
+      "expires": "2026-12-01"
     }
   ]
 }

@@ -19634,8 +19634,8 @@
         "variable": "variable",
         "notation": "O(n log n)",
         "points": 10,
-        "expected": "linear",
-        "expectedNotation": "O(n)",
+        "expected": "quadratic",
+        "expectedNotation": "O(n²)",
         "agreement": "close"
       },
       "fn:processor-to-boolean": {
