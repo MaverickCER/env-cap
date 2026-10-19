@@ -203,7 +203,7 @@ validator(value: string) {
 
 A named validation rule explains why the dependency exists and gives future maintainers context that a generic helper cannot always provide.
 
-The helper package is optional and has no impact on the core runtime when unused. When all runtime features are included, `env-cap` remains within its 3 KB gzip budget. `createEnv()` and `validateEnv()` remain the core APIs and provide the foundation for capability-owned configuration, while helpers provide convenient building blocks for common processor and validator patterns.
+The helper package is optional and has no impact on the core runtime when unused. When all runtime features are included, the runtime entry point remains within its 3 KB gzip budget and `./helpers` within its 4 KB one. `createEnv()` and `validateEnv()` remain the core APIs and provide the foundation for capability-owned configuration, while helpers provide convenient building blocks for common processor and validator patterns.
 
 ## Core workflow
 
@@ -410,12 +410,14 @@ Without it, a second `validateEnv()` call with different `values` silently retur
 | Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
 | -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
 | Node.js 22+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
-| Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅          | ❌ not applicable — build-only, never bundle this into an app |
-| Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅          | ❌ not applicable                                             |
+| Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅ ¹        | ❌ not applicable — build-only, never bundle this into an app |
+| Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅ ¹        | ❌ not applicable                                             |
 | Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
 | Deno                                                           | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
 
-The runtime (`.` and `./helpers`) has zero dependencies, never touches the filesystem, and never imports Node-specific APIs — see [`specs/architecture.md`](specs/architecture.md). `./build` is Node-only developer tooling (uses `node:path` and the TypeScript compiler API — never `node:fs`, see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)) meant for CI/npm-script use, never for shipping to a browser. Both ESM and CommonJS builds are published for every entry point (`package.json#exports`).
+¹ Except `processors.base64()`, which returns a Node `Buffer`: use it only where `Buffer` exists, or decode with your own processor elsewhere.
+
+The runtime (`.` and `./helpers`) has zero dependencies, never touches the filesystem, and never imports a Node module (the one Node global it uses is the `Buffer` that `processors.base64()` returns) — see [`specs/architecture.md`](specs/architecture.md). `./build` is Node-only developer tooling (uses `node:path` and the TypeScript compiler API — never `node:fs`, see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)) meant for CI/npm-script use, never for shipping to a browser. Both ESM and CommonJS builds are published for every entry point (`package.json#exports`).
 
 ### Requirements
 
@@ -544,6 +546,28 @@ resolves to the same contract discovered during build-time analysis.
 Resolution never calls `readdir` on `node_modules` — it reads exactly one `package.json` per allow-listed package to find the declared field, then exactly one declared file, validated (path, extension, symlink target, size) before it is parsed.
 
 See `SECURITY.md`'s "Avoids unnecessary traversal of dependency directories" section for the exact bounds.
+
+### Documenting a variable a package already explains
+
+A variable can be declared in the package's contract and again in the application that consumes it. The application
+does not repeat the explanation: it names the variable with only what is its own, and every field it leaves unset is
+filled from the package's declaration.
+
+```ts
+const credentials = { PAYPAL_CLIENT_SECRET: { default: "", validator: () => true } }
+export const credentialsEnv = createEnv(credentials, { name: "credentials" })
+
+documentEnv(credentials, {
+  variables: { PAYPAL_CLIENT_SECRET: { expiresAt: "2027-01-01", owner: "payments" } },
+})
+```
+
+Both declarations then report the package's `description`, `sensitivity` and `refreshInstructions` together with the
+application's `expiresAt` and `owner`. A field the application sets itself is never replaced, and a field both set to
+different values is reported as `DUPLICATE_VARIABLE_DOCUMENTATION`. Two of the application's own contracts never fill
+each other (a service that can run on either of two databases documents each one's variable for itself); a field
+both set differently is still reported. See
+[ADR 0050](specs/decisions/0050-a-variable-declared-twice-is-documented-once.md).
 
 ## TypeScript path aliases (paths/baseUrl)
 

@@ -39,7 +39,7 @@ additive glue over working infrastructure, not new plumbing.
   maintainer to mute after the first false alarm. A third-party
   notification integration (Slack webhook, email API) was rejected as a
   new, undeclared dependency that breaks the Action's dependency-free
-  design (`scripts/check-size.mjs`'s header comment states this convention
+  design (`ci/size-budgets.mjs`'s header comment states this convention
   for the CLI/build tooling; the Action follows the same principle by only
   ever calling the preinstalled `gh` CLI).
 - **Gated on "no PR available to comment on," not a `schedule`-specific

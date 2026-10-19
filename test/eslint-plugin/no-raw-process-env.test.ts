@@ -30,6 +30,12 @@ ruleTester.run("no-raw-process-env", noRawProcessEnv as unknown as Rule.RuleModu
       filename: "scripts/bootstrap-secrets.ts",
       options: [{ allow: ["**/bootstrap-secrets.ts"] }],
     },
+    // ESLint passes an absolute path; a pattern written relative to the working directory still matches it.
+    {
+      code: "const t = process.env.VAULT_TOKEN;",
+      filename: `${process.cwd()}/scripts/bootstrap-secrets.ts`,
+      options: [{ allow: ["scripts/**"] }],
+    },
     { code: "// eslint-disable-next-line\nconst x = process.env.FOO;", filename: "src/app.ts" },
     // Not a process.env access at all -- some other object's .env property.
     { code: "const x = config.env.FOO;", filename: "src/app.ts" },

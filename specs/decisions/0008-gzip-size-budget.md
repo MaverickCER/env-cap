@@ -1,10 +1,18 @@
-# 0008: A fixed 3KB gzip budget on the runtime and helpers entry points
+# 0008: A fixed gzip budget on the runtime and helpers entry points
 
 ## Status
 
-Accepted. Implemented in `scripts/check-size.mjs`, run via `npm run size` and
+Accepted. Implemented in `ci/size-budgets.mjs`, run via `npm run size` and
 wired into `prepublishOnly`, so it is enforced at publish time rather than
 being an optional CI check a maintainer can ignore.
+
+## Amendment
+
+The helpers budget is now **4096 bytes (4KB)**; the runtime's stays at 3KB. The budget was calibrated on
+minified output, and the standard now forbids minified output (internal-package-contract's `NoMinify`
+check), under which the same helpers gzip to about 3.2KB. This was a one-time recalibration to the new
+baseline, recorded in `ci/size-budgets.mjs`, and not a loosening for growth. Where this record says both
+entry points share the 3KB ceiling, read it as the original decision.
 
 ## Context
 
@@ -27,14 +35,14 @@ output and compare it to a number nobody had written down, which is to say:
 nobody would notice until a consumer complained about bundle size, by which
 point the growth would already be load-bearing and hard to revert.
 
-`scripts/check-size.mjs` exists to make "the runtime stays small" a build
+`ci/size-budgets.mjs` exists to make "the runtime stays small" a build
 failure instead of a promise. The remaining question this decision addresses
 is what the number should be, and specifically why it's 3KB gzipped rather
 than something looser (5KB) or stricter (1KB).
 
 ## Decision
 
-`scripts/check-size.mjs` gzips `dist/index.js` (the `.` entry point —
+`ci/size-budgets.mjs` gzips `dist/index.js` (the `.` entry point —
 `createEnv`, `validateEnv`, error types, contract redaction) and
 `dist/helpers.js` (the `./helpers` entry point — `processors`, `validators`)
 and fails the build if either exceeds **3072 bytes (3KB) gzipped**. At the
@@ -116,7 +124,7 @@ trivial to read and hard to quietly special-case.
   point crosses 3072 bytes gzipped, turning the Consequences section of
   0001 from a claim into an enforced property of every published release.
 
-- **The check is self-explanatory.** `scripts/check-size.mjs` prints the
+- **The check is self-explanatory.** `ci/size-budgets.mjs` prints the
   measured gzip size against the fixed budget for both entry points, so a
   contributor who trips it sees exactly how much they added and against
   what limit, without needing to consult this document to understand what

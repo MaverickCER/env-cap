@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.59.3",
+    "toolVersion": "7.59.4",
     "schemaVersion": 1011,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -191,7 +191,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!noNodeFs:var",
-          "docComment": "/**\n * Flags any `import`/`require`/dynamic `import()` of `node:fs` in library\n * code, so a library surface acquires its filesystem capability from the\n * caller instead of reaching for `node:fs` itself (the same discipline\n * `repo-contract`'s ADR-0011 established for `child_process`/`process.env`).\n * See ADR 0040.\n *\n * @remarks\n *\n * Nothing is exempt by default. env-cap's own config allows `src/cli/**`\n * (the executable capability boundary that builds the `node:fs/promises`\n * adapter); a consuming project sets its own `allow` for its own entry\n * points.\n */\n",
+          "docComment": "/**\n * Flags any `import`/`require`/dynamic `import()` of `node:fs` in library code, so a library surface acquires\n * its filesystem capability from the caller instead of reaching for `node:fs` itself.\n *\n * @remarks\n *\n * Nothing is exempt by default. A package's own config allows its CLI folder (for example `src/cli/**`),\n * which builds the `node:fs/promises` adapter, and a consuming project sets the `allow` option for its own CLI\n * or script entry points. The rule itself lives in `../_ipc/no-node-fs.ts`, a managed copy of\n * internal-package-contract's `runtime/no-node-fs.ts`; this supplies env-cap's documentation link and the decision\n * record the message cites.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -208,7 +208,7 @@
             },
             {
               "kind": "Content",
-              "text": "<\"noNodeFs\", ["
+              "text": "<\"noNodeFs\", [import(\"../_ipc/no-node-fs.js\")."
             },
             {
               "kind": "Reference",
@@ -291,7 +291,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!plugin:var",
-          "docComment": "/**\n * `env-cap/eslint-plugin` -- a flat-config-shaped plugin object\n * ({ rules: { ... } }), consumed as:\n *\n * import envCapPlugin from \"env-cap/eslint-plugin\";\n *  export default [{ plugins: { \"env-cap\": envCapPlugin }, rules: { \"env-cap/no-raw-process-env\": \"error\" } }];\n *\n * A 4th public entry point alongside `.`, `./build`, `./helpers` -- see ADR 0017.\n */\n",
+          "docComment": "/**\n * `@maverickcer/env-cap/eslint-plugin` -- a flat-config-shaped plugin object\n * ({ rules: { ... } }), consumed as:\n *\n * import envCapPlugin from \"@maverickcer/env-cap/eslint-plugin\";\n *  export default [{ plugins: { \"env-cap\": envCapPlugin }, rules: { \"env-cap/no-raw-process-env\": \"error\" } }];\n *\n * A 4th public entry point alongside `.`, `./build`, `./helpers` -- see ADR 0017.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -335,7 +335,7 @@
             },
             {
               "kind": "Content",
-              "text": "<\"noNodeFs\", [import(\"./no-node-fs.js\")."
+              "text": "<\"noNodeFs\", [import(\"../_ipc/no-node-fs.js\")."
             },
             {
               "kind": "Reference",

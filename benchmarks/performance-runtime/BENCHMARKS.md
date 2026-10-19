@@ -4,9 +4,9 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **187 µs** per operation compared with a bare-minimum baseline (250%), about **$0.00039 – $0.0082 per million operations** of compute. Overall, it grows O(n) with workload size (measured exponent 0.73).
+For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **187 µs** per operation compared with a bare-minimum baseline (**250% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 0.76). At list prices that is on the order of **~$0.001 – $0.01 per million operations** of compute.
 
-> Dollar figures are **estimates** from published list prices (see _Cost model_ below) and are for comparing orders of magnitude, not for budgeting to the cent.
+> The relative figure and the growth class are the steadier ones: both come from the same run, so they depend far less on the machine than a time does, though runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
 
 | Cost | Typical (640 variables) | Largest (10240 variables) |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ For a typical workload of **640 variables** per operation, routing the work thro
 | Added latency, relative to baseline | 250% | 39% |
 | Added CPU time per operation | 726 µs | 1.00 µs |
 | Added memory per operation (heap delta) | 330.4 KiB | 359.2 KiB |
-| Estimated compute cost per 1M operations | $0.00039 – $0.0082 | $0.000011 – $0.0011 |
+| Compute cost per 1M operations (order of magnitude) | ~$0.001 – $0.01 | ~$0.00001 – $0.001 |
 | Single-core throughput ceiling of the overhead alone | 5,346 ops/s | 1,833 ops/s |
 | Shipped code parsed at every cold start (gzip) | 5.6 KiB | 5.6 KiB |
 
@@ -53,69 +53,72 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 | 5120 | 623 µs | 965 µs | 342 µs | 55% | 836 µs | $0.00071 – $0.0094 |
 | 10240 | 1.38 ms | 1.93 ms | 545 µs | 39% | 1.00 µs | $0.000011 – $0.0011 |
 
-**How the total grows:** O(n) (linear), exponent 0.73 over 10 sizes.
+**How the total grows:** O(n) (linear), exponent 0.76 over 10 sizes.
 
 ## 2. Function by function
 
 Every function the package exposes is measured on its own across the full size ladder, then its measured growth rate is compared with the big-O we documented for it. A function whose measured class **differs** from its documented one is the most useful thing in this report: either the documentation or the code is wrong.
 
-| Function | Documented | Measured | Agreement | At 640 | At 10240 |
-| --- | --- | --- | --- | --- | --- |
-| `process start with n variables declared (cold start)` | O(n) | O(log n) | 🟡 close (neighbouring class) | 45.2 ms | 232 ms |
-| `createEnv (declare a contract)` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 185 µs | 4.32 ms |
-| `validateEnv (validate n values)` | O(n) | O(n) | ✅ matches | 281 µs | 2.07 ms |
-| `processors.base64()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.468 µs | 1.34 µs |
-| `processors.parseJSON()` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 80.1 µs | 1.65 ms |
-| `processors.split(",")` | O(n) | O(n) | ✅ matches | 12.2 µs | 202 µs |
-| `processors.toArray(",", [trim()])` | O(n) | O(n) | ✅ matches | 60.2 µs | 693 µs |
-| `processors.toBigInt()` | O(n) | O(n log n) | 🟡 close (neighbouring class) | 1.86 µs | 146 µs |
-| `processors.toBoolean()` | O(1) | O(1) | ✅ matches | 0.102 µs | 0.102 µs |
-| `processors.toDate()` | O(1) | O(1) | ✅ matches | 0.319 µs | 0.312 µs |
-| `processors.toInteger()` | O(1) | O(1) | ✅ matches | 0.0869 µs | 0.0827 µs |
-| `processors.toLowerCase()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.177 µs | 1.20 µs |
-| `processors.toNumber()` | O(1) | O(1) | ✅ matches | 0.0817 µs | 0.0818 µs |
-| `processors.toRegExp()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.998 µs | 8.50 µs |
-| `processors.toString()` | O(1) | O(1) | ✅ matches | 0.0862 µs | 0.0813 µs |
-| `processors.toURL()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.794 µs | 4.26 µs |
-| `processors.toUpperCase()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.182 µs | 1.38 µs |
-| `processors.trim()` | O(n) | O(n) | ✅ matches | 1.04 µs | 12.5 µs |
-| `validators.after(date)` | O(1) | O(1) | ✅ matches | 0.186 µs | 0.182 µs |
-| `validators.all(...validators)` | O(n) | O(n) | ✅ matches | 1.39 µs | 20.9 µs |
-| `validators.any(...validators)` | O(n) | O(n) | ✅ matches | 8.81 µs | 138 µs |
-| `validators.before(date)` | O(1) | O(1) | ✅ matches | 0.181 µs | 0.189 µs |
-| `validators.custom(fn)` | O(1) | O(1) | ✅ matches | 0.0655 µs | 0.0660 µs |
-| `validators.email()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.941 µs | 6.24 µs |
-| `validators.endsWith(suffix)` | O(1) | O(1) | ✅ matches | 0.0886 µs | 0.0951 µs |
-| `validators.finite()` | O(1) | O(1) | ✅ matches | 0.0694 µs | 0.0710 µs |
-| `validators.future()` | O(1) | O(1) | ✅ matches | 0.272 µs | 0.272 µs |
-| `validators.includes(text)` | O(n) | O(1) | ⚠️ differs | 0.0951 µs | 0.146 µs |
-| `validators.integer()` | O(1) | O(1) | ✅ matches | 0.0698 µs | 0.0720 µs |
-| `validators.length(n)` | O(1) | O(1) | ✅ matches | 0.0702 µs | 0.0706 µs |
-| `validators.matches(regex)` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.498 µs | 3.76 µs |
-| `validators.max(limit)` | O(1) | O(1) | ✅ matches | 0.0703 µs | 0.0707 µs |
-| `validators.maxItems(limit)` | O(1) | O(1) | ✅ matches | 0.0709 µs | 0.0699 µs |
-| `validators.maxLength(limit)` | O(1) | O(1) | ✅ matches | 0.0699 µs | 0.0702 µs |
-| `validators.min(limit)` | O(1) | O(1) | ✅ matches | 0.0701 µs | 0.0699 µs |
-| `validators.minItems(limit)` | O(1) | O(1) | ✅ matches | 0.0709 µs | 0.0695 µs |
-| `validators.minLength(limit)` | O(1) | O(1) | ✅ matches | 0.0698 µs | 0.0715 µs |
-| `validators.negative()` | O(1) | O(1) | ✅ matches | 0.0705 µs | 0.0702 µs |
-| `validators.not(validator)` | O(1) | O(1) | ✅ matches | 0.0850 µs | 0.0707 µs |
-| `validators.oneOf(options)` | O(n) | O(n) | ✅ matches | 1.45 µs | 10.2 µs |
-| `validators.optional(validator)` | O(1) | O(1) | ✅ matches | 0.0705 µs | 0.0709 µs |
-| `validators.past()` | O(1) | O(1) | ✅ matches | 0.274 µs | 0.275 µs |
-| `validators.positive()` | O(1) | O(1) | ✅ matches | 0.0708 µs | 0.0722 µs |
-| `validators.range(min, max)` | O(1) | O(1) | ✅ matches | 0.0706 µs | 0.0707 µs |
-| `validators.refine(validator, message)` | O(1) | O(1) | ✅ matches | 0.0722 µs | 0.0706 µs |
-| `validators.required()` | O(1) | O(1) | ✅ matches | 0.0712 µs | 0.0719 µs |
-| `validators.safeInteger()` | O(1) | O(1) | ✅ matches | 0.0707 µs | 0.0702 µs |
-| `validators.unique()` | O(n) | O(n) | ✅ matches | 11.0 µs | 396 µs |
-| `validators.url()` | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.733 µs | 3.91 µs |
-| `validators.uuid()` | O(1) | O(1) | ✅ matches | 0.243 µs | 0.247 µs |
-| `validators.uuidVersion(v)` | O(1) | O(1) | ✅ matches | 0.243 µs | 0.242 µs |
+| Function | Varies | Documented | Measured | Agreement | At 640 | At 10240 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `process start with n variables declared (cold start)` | variable | O(n) | O(log n) | 🟡 close (neighbouring class) | 45.2 ms | 232 ms |
+| `createEnv (declare a contract)` | variable | O(n) | n/a | ❔ not enough data | 185 µs | 4.32 ms |
+| `validateEnv (validate n values)` | variable | O(n) | O(n) | ✅ matches | 281 µs | 2.07 ms |
+| `validateEnv (validate n values)` | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `processors.base64()` | variable | O(n) | n/a | ❔ not enough data | 0.468 µs | 1.34 µs |
+| `processors.parseJSON()` | variable | O(n) | O(n) | ✅ matches | 80.1 µs | 1.65 ms |
+| `processors.split(",")` | variable | O(n) | O(n) | ✅ matches | 12.2 µs | 202 µs |
+| `processors.toArray(",", [trim()])` | variable | O(n) | O(n) | ✅ matches | 60.2 µs | 693 µs |
+| `processors.toBigInt()` | variable | O(n) | O(n log n) | 🟡 close (neighbouring class) | 1.86 µs | 146 µs |
+| `processors.toBoolean()` | variable | O(1) | O(1) | ✅ matches | 0.102 µs | 0.102 µs |
+| `processors.toDate()` | variable | O(1) | O(1) | ✅ matches | 0.319 µs | 0.312 µs |
+| `processors.toInteger()` | variable | O(1) | O(1) | ✅ matches | 0.0869 µs | 0.0827 µs |
+| `processors.toLowerCase()` | variable | O(n) | O(n) | ✅ matches | 0.177 µs | 1.20 µs |
+| `processors.toNumber()` | variable | O(1) | O(1) | ✅ matches | 0.0817 µs | 0.0818 µs |
+| `processors.toRegExp()` | variable | O(n) | O(n) | ✅ matches | 0.998 µs | 8.50 µs |
+| `processors.toString()` | variable | O(1) | O(1) | ✅ matches | 0.0862 µs | 0.0813 µs |
+| `processors.toURL()` | variable | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.794 µs | 4.26 µs |
+| `processors.toUpperCase()` | variable | O(n) | O(n) | ✅ matches | 0.182 µs | 1.38 µs |
+| `processors.trim()` | variable | O(n) | O(n) | ✅ matches | 1.04 µs | 12.5 µs |
+| `validators.after(date)` | variable | O(1) | O(1) | ✅ matches | 0.186 µs | 0.182 µs |
+| `validators.all(...validators)` | variable | O(n) | O(n) | ✅ matches | 1.39 µs | 20.9 µs |
+| `validators.any(...validators)` | variable | O(n) | O(n) | ✅ matches | 8.81 µs | 138 µs |
+| `validators.before(date)` | variable | O(1) | O(1) | ✅ matches | 0.181 µs | 0.189 µs |
+| `validators.custom(fn)` | variable | O(1) | O(1) | ✅ matches | 0.0655 µs | 0.0660 µs |
+| `validators.email()` | variable | O(n) | O(n) | ✅ matches | 0.941 µs | 6.24 µs |
+| `validators.endsWith(suffix)` | variable | O(1) | O(1) | ✅ matches | 0.0886 µs | 0.0951 µs |
+| `validators.finite()` | variable | O(1) | O(1) | ✅ matches | 0.0694 µs | 0.0710 µs |
+| `validators.future()` | variable | O(1) | O(1) | ✅ matches | 0.272 µs | 0.272 µs |
+| `validators.includes(text)` | variable | O(1) | O(1) | ✅ matches | 0.0951 µs | 0.146 µs |
+| `validators.integer()` | variable | O(1) | O(1) | ✅ matches | 0.0698 µs | 0.0720 µs |
+| `validators.length(n)` | variable | O(1) | O(1) | ✅ matches | 0.0702 µs | 0.0706 µs |
+| `validators.matches(regex)` | variable | O(n) | O(n) | ✅ matches | 0.498 µs | 3.76 µs |
+| `validators.max(limit)` | variable | O(1) | O(1) | ✅ matches | 0.0703 µs | 0.0707 µs |
+| `validators.maxItems(limit)` | variable | O(1) | O(1) | ✅ matches | 0.0709 µs | 0.0699 µs |
+| `validators.maxLength(limit)` | variable | O(1) | O(1) | ✅ matches | 0.0699 µs | 0.0702 µs |
+| `validators.min(limit)` | variable | O(1) | O(1) | ✅ matches | 0.0701 µs | 0.0699 µs |
+| `validators.minItems(limit)` | variable | O(1) | O(1) | ✅ matches | 0.0709 µs | 0.0695 µs |
+| `validators.minLength(limit)` | variable | O(1) | n/a | ❔ not enough data | 0.0698 µs | 0.0715 µs |
+| `validators.negative()` | variable | O(1) | O(1) | ✅ matches | 0.0705 µs | 0.0702 µs |
+| `validators.not(validator)` | variable | O(1) | O(1) | ✅ matches | 0.0850 µs | 0.0707 µs |
+| `validators.oneOf(options)` | variable | O(n) | O(n) | ✅ matches | 1.45 µs | 10.2 µs |
+| `validators.optional(validator)` | variable | O(1) | O(1) | ✅ matches | 0.0705 µs | 0.0709 µs |
+| `validators.past()` | variable | O(1) | O(1) | ✅ matches | 0.274 µs | 0.275 µs |
+| `validators.positive()` | variable | O(1) | O(1) | ✅ matches | 0.0708 µs | 0.0722 µs |
+| `validators.range(min, max)` | variable | O(1) | O(1) | ✅ matches | 0.0706 µs | 0.0707 µs |
+| `validators.refine(validator, message)` | variable | O(1) | O(1) | ✅ matches | 0.0722 µs | 0.0706 µs |
+| `validators.required()` | variable | O(1) | O(1) | ✅ matches | 0.0712 µs | 0.0719 µs |
+| `validators.safeInteger()` | variable | O(1) | O(1) | ✅ matches | 0.0707 µs | 0.0702 µs |
+| `validators.unique()` | variable | O(n) | O(n log n) | 🟡 close (neighbouring class) | 11.0 µs | 396 µs |
+| `validators.url()` | variable | O(n) | O(log n) | 🟡 close (neighbouring class) | 0.733 µs | 3.91 µs |
+| `validators.uuid()` | variable | O(1) | O(1) | ✅ matches | 0.243 µs | 0.247 µs |
+| `validators.uuidVersion(v)` | variable | O(1) | O(1) | ✅ matches | 0.243 µs | 0.242 µs |
 
-> **Needs attention.** These functions grow at a different rate than documented. Either the code regressed or the documentation is wrong -- decide which, then fix it:
+> **Could not be determined.** The big-O of these could not be measured, so they are not checked against their documentation:
 >
-> - `validator-includes`: documented O(n), measured O(1) (exponent 0.07)
+> - `create-env` (varying variable): over the largest 10 variable sizes the timings do not follow one growth rate (R² 0.68, and a fit below 0.8 is not trusted; fitted exponent 0.96). The cost probably changes regime between sizes (a cache, a threshold, a batch size) or run-to-run noise outweighs the growth
+> - `processor-base64` (varying variable): over the largest 10 variable sizes the timings do not follow one growth rate (R² 0.70, and a fit below 0.8 is not trusted; fitted exponent 0.33). The cost probably changes regime between sizes (a cache, a threshold, a batch size) or run-to-run noise outweighs the growth
+> - `validator-min-length` (varying variable): over the largest 10 variable sizes the timings do not follow one growth rate (R² 0.10, and a fit below 0.8 is not trusted; fitted exponent -0.07). The cost probably changes regime between sizes (a cache, a threshold, a batch size) or run-to-run noise outweighs the growth
 
 ### `process start with n variables declared (cold start)`
 
@@ -140,7 +143,7 @@ Every function the package exposes is measured on its own across the full size l
 - **warm module cache** -- A fresh process has no warm cache by definition.
 - **bundled loading** -- Measured through Node's native ESM loader; bundlers change module-evaluation cost and are application-specific.
 
-**Measured: O(log n)** (exponent 0.30, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.59, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -172,8 +175,6 @@ Every function the package exposes is measured on its own across the full size l
 | contract naming | fixed at "unique name per call" | Each call registers a new contract name; reusing a name takes a different (error) path. |
 | runtime | fixed at "Node (V8)" | Measured on Node only; Bun, Deno and edge runtimes are not covered. |
 
-**Measured: O(n log n)** (exponent 1.24, 10 sizes) -- 🟡 close (neighbouring class).
-
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
 | 20 | 5.55 µs | 6.00 µs | 21.7 µs | 7.7 KiB | 180,047 |
@@ -200,6 +201,7 @@ Every function the package exposes is measured on its own across the full size l
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | variables | swept | The tier axis: how many environment variables are declared and validated. |
+| variables-per-contract | swept | How many variables each contract declares (ten in the main sweep). With the total fixed, a few large contracts or many small ones cost differently: per-contract work against per-variable work. |
 | variable declaration | fixed at "identity processor, no validator" | Variables use the cheapest possible processor so the measurement is env-cap's own machinery; processor and validator cost is measured per helper below. |
 | value source | fixed at "an in-memory object of short strings" | Real environments read process.env, which behaves like an object of strings; reading it is not env-cap's cost. |
 | validation cache | fixed at "reset before every sample" | `validateEnv` is idempotent for the life of a process, so a repeat call is a free cache hit; each sample starts from an empty cache to measure the real validation. |
@@ -208,7 +210,7 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** This is the end-to-end operation itself.
 
-**Measured: O(n)** (exponent 0.74, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.77, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -222,6 +224,12 @@ Every function the package exposes is measured on its own across the full size l
 | 2560 | 475 µs | 637 µs | 1.18 ms | 398.7 KiB | 2,105 |
 | 5120 | 1.06 ms | 1.42 ms | 1.96 ms | 691.3 KiB | 944 |
 | 10240 | 2.07 ms | 3.01 ms | 2.85 ms | 1.3 MiB | 483 |
+
+##### Varying `variables-per-contract`
+
+How many variables each contract declares (ten in the main sweep). With the total fixed, a few large contracts or many small ones cost differently: per-contract work against per-variable work.
+
+**Expected: O(1).** The same total number of variables is validated however they are split across contracts; each contract adds one lookup, a share that shrinks as contracts grow.
 
 ### `processors.base64()`
 
@@ -243,8 +251,6 @@ Every function the package exposes is measured on its own across the full size l
 **Deliberately not covered**
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
-
-**Measured: O(log n)** (exponent 0.17, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -280,7 +286,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n log n)** (exponent 1.11, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 1.10, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -316,7 +322,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.93, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.95, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -352,7 +358,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 1.00, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.86, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -388,7 +394,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n log n)** (exponent 1.11, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.60, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -424,7 +430,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.04, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -496,7 +502,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.02, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -532,7 +538,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.40, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 0.69, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -604,7 +610,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.61, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 0.77, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -640,7 +646,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.02, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -676,7 +682,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.32, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.61, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -712,7 +718,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.42, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 0.75, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -748,7 +754,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.72, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.89, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -784,7 +790,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.04, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -820,7 +826,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.85, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.97, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -856,7 +862,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.96, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.99, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -892,7 +898,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -964,7 +970,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.46, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 0.68, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1000,7 +1006,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.02, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1036,7 +1042,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1072,7 +1078,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1091,16 +1097,16 @@ Every function the package exposes is measured on its own across the full size l
 
 **Why we benchmark it.** Requires a value to contain a fixed substring. It runs once for every variable that declares it, at startup, on every process and every deploy, so its per-value cost is multiplied by the number of variables using it.
 
-**What poor performance would mean.** Startup and cold-start time grow with every variable that uses validators.includes(text), and with the size of the values it handles (a large secret, certificate or list). On serverless platforms that delay is billed on every scale-from-zero event, and a regression here is paid by every service that adopts the helper.
+**What poor performance would mean.** Startup and cold-start time grow with every variable that uses validators.includes(text). On serverless platforms that delay is billed on every scale-from-zero event, and a regression here is paid by every service that adopts the helper.
 
-**Expected growth: O(n).** A substring search scans the string, so cost follows its length.
+**Expected growth: O(1).** A substring search scans the string, but the engine's native search is so fast that over the lengths measured the per-call overhead dominates and the curve is flat; it would turn linear only for strings far longer than a real environment value.
 
 **Variables that could change its cost**
 
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | input size | swept | Length of the string, in characters. |
-| input content | fixed at "a long string that contains the substring at the end" | A valid value of the expected kind; the failure path (an invalid value) is cheaper because it exits early and is not what startup normally does. |
+| input content | fixed at "a long string made of near-misses of the substring (\"exampl\" repeated) with the real match at the end, so the search cannot skip ahead" | A valid value of the expected kind; the failure path (an invalid value) is cheaper because it exits early and is not what startup normally does. |
 | composition | fixed at "used alone" | Wrapping in `all`, `any`, `optional` or `not` adds a constant per wrapper and is measured in the combinator entries. |
 | runtime | fixed at "Node (V8)" | Measured on Node only; Bun, Deno and edge runtimes are not covered. |
 
@@ -1108,7 +1114,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.07, 10 sizes) -- ⚠️ differs.
+**Measured: O(1)** (exponent 0.15, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1144,7 +1150,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1180,7 +1186,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1216,7 +1222,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.50, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 0.71, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1288,7 +1294,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1324,7 +1330,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1360,7 +1366,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1396,7 +1402,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1432,8 +1438,6 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
-
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
 | 20 | 0.0715 µs | 0.0921 µs | 0.0756 µs | 305 B | 13,976,955 |
@@ -1468,7 +1472,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1504,7 +1508,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.05, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1540,7 +1544,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.76, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.82, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1576,7 +1580,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1612,7 +1616,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1648,7 +1652,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1684,7 +1688,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1720,7 +1724,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1792,7 +1796,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1828,7 +1832,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 1.02, 10 sizes) -- ✅ matches.
+**Measured: O(n log n)** (exponent 1.32, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1864,7 +1868,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.36, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.62, 10 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1900,7 +1904,7 @@ Every function the package exposes is measured on its own across the full size l
 
 - **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.04, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.04, 10 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1951,23 +1955,23 @@ Every function the package exposes is measured on its own across the full size l
 | 5120 | 0.244 µs | 0.272 µs | 0.247 µs | 585 B | 4,104,449 |
 | 10240 | 0.242 µs | 0.298 µs | 0.247 µs | 585 B | 4,137,732 |
 
-## 3. What makes up the end-to-end overhead
+## 3. What makes up one end-to-end operation
 
-Each function's measured cost is multiplied by how many times one end-to-end operation calls it, then compared with the total overhead from section 1. This shows where the cost actually lives, so effort goes to the function that matters. Shares are estimates: they can sum to slightly more or less than 100% because the two measurements were taken separately (the remainder is shown as _unattributed_).
+Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls, so where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time): every moment of the operation belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly -- not against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-**At 640 variables** (total added: 187 µs)
+**At 640 variables** (whole operation: 262 µs)
 
-| Function | Calls / operation | Estimated time | Share of added time | Share of operation |
+| Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `validate-env` | 1 | 281 µs | 150% | 107% |
-| _unattributed_ |  | 0 | 0.0% |  |
+| `validate-env` | 1 | 281 µs | 281 µs | 107% |
+| _unattributed_ |  |  | 0 | 0.0% |
 
-**At 10240 variables** (total added: 545 µs)
+**At 10240 variables** (whole operation: 1.93 ms)
 
-| Function | Calls / operation | Estimated time | Share of added time | Share of operation |
+| Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `validate-env` | 1 | 2.07 ms | 379% | 107% |
-| _unattributed_ |  | 0 | 0.0% |  |
+| `validate-env` | 1 | 2.07 ms | 2.07 ms | 107% |
+| _unattributed_ |  |  | 0 | 0.0% |
 
 ## Cost model
 

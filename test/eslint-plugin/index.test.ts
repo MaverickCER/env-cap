@@ -39,7 +39,7 @@ describe.skipIf(distMissing)(
     // break a `require("@maverickcer/env-cap/eslint-plugin")` consumer
     // (e.g. an `eslint.config.cjs`) expecting the plugin object itself, the
     // same way `import envCapPlugin from "..."` already resolves it for ESM
-    // consumers. See scripts/fix-eslint-plugin-cjs-interop.mjs.
+    // consumers. See internal-package-contract tool cjs-interop.
     it("require() resolves directly to the plugin object, not { default: plugin }", () => {
       const require = createRequire(import.meta.url)
       const required = require(cjsDist) as typeof envCapPlugin & {

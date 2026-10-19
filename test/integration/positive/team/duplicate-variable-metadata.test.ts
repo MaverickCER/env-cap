@@ -56,10 +56,9 @@ describe(EXAMPLE, () => {
       expect(stdout).toContain("WEBHOOK_URL")
       expect(stdout).toContain("audit-log")
       expect(stdout).toContain("notifications")
-      expect(stdout).toContain("description")
-      expect(stdout).toContain("owner")
-      expect(stdout).toContain("expiresAt")
-      expect(stdout).toContain("required")
+      // Only the fields both contracts set can disagree: one sets `required` and the other `expiresAt`, so each
+      // fills the other's gap (see the merge in specs/decisions/0050) and neither is a divergence.
+      expect(stdout).toContain("disagree on: description, owner.")
 
       await compareGoldenArtifacts(EXAMPLE_DIR, ARTIFACTS)
     },

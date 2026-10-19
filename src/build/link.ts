@@ -15,6 +15,7 @@ import type {
 } from "./parse.js"
 import type { EnvGovernanceFields } from "./governance-fields.js"
 import { mustGet } from "./map-utils.js"
+import { mergeSharedDocumentation } from "./merge-documentation.js"
 import { resolveImportSpecifier } from "./resolution/resolve-import.js"
 import type { ImportResolutionContext } from "./resolution/resolve-import.js"
 import type { PackageOrigin } from "./resolution/resolve-package-schema.js"
@@ -337,7 +338,6 @@ export async function linkFiles(
 
   const contracts: DiscoveredContract[] = []
   const undocumentedContracts: LinkResult["undocumentedContracts"][number][] = []
-  const undocumentedVariables: LinkResult["undocumentedVariables"][number][] = []
   const staleDocEntries: LinkResult["staleDocEntries"][number][] = []
 
   for (const entry of createEnvEntries) {
@@ -351,10 +351,6 @@ export async function linkFiles(
     const schemaKeys = new Set(entry.variables.map((v) => v.key))
     const docsVariables = docs?.variables ?? new Map<string, DiscoveredVariableDocs>()
 
-    for (const key of schemaKeys) {
-      if (!docsVariables.has(key))
-        undocumentedVariables.push({ file: entry.file, exportName: entry.exportName, key })
-    }
     for (const key of docsVariables.keys()) {
       if (!schemaKeys.has(key))
         staleDocEntries.push({ file: entry.file, exportName: entry.exportName, key })
@@ -420,12 +416,19 @@ export async function linkFiles(
     warnings.push(...analysis.warnings)
   }
 
+  const merged = mergeSharedDocumentation(contracts)
   return {
-    contracts,
+    contracts: merged,
     warnings,
     unresolvedLinks,
+    // Judged after the merge: a variable a package's contract documents is documented for the application that
+    // declares it again.
+    undocumentedVariables: merged.flatMap(({ file, exportName, variables }) =>
+      variables
+        .filter(({ documented }) => !documented)
+        .map(({ key }) => ({ file, exportName, key })),
+    ),
     undocumentedContracts,
-    undocumentedVariables,
     staleDocEntries,
   }
 }

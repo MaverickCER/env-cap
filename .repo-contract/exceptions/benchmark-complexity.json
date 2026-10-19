@@ -1,0 +1,19 @@
+{
+  "exceptions": [
+    {
+      "id": "benchmark-complexity:performance-buildtime:fn:generate-manifest@all-contracts:linearithmic",
+      "version": 2,
+      "justification": "generateEnvManifest sorts every variable and declaration by key so the manifest and the compatibility findings are byte-stable between runs; that sort makes the whole-project run grow as n log n. The last release's committed results measured it close to linear (exponent 0.89); a local run of this change measured 1.14 (linearithmic).",
+      "suite": "performance-buildtime",
+      "group": "fn:generate-manifest@all-contracts",
+      "to": "linearithmic",
+      "ruleBroken": "Manifest generation grows linearly with the number of variables.",
+      "attempted": "Looked for a way to keep deterministic output without the sort; the keys arrive in discovery order, which depends on the file system, so a stable order needs one.",
+      "constraint": "The manifest and the compatibility findings must be identical for the same sources on every machine, and the file system does not promise an order.",
+      "whyPreferable": "A linear pass over unsorted data would make the generated manifest differ between machines and between runs, which would break reproducible builds and cause noisy diffs, for a gain of a logarithmic factor.",
+      "residualRisk": "At very large contract counts the sort's share of the build time grows; at the ladder's largest size, 5,120 variables, the local run measured an exponent of 1.14.",
+      "revisitWhen": "A single project routinely declares more than 100,000 variables, or the next release measures an exponent above 1.3.",
+      "expires": ""
+    }
+  ]
+}

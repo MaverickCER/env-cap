@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import type TS from 'typescript';
 
 /** A contract never imported anywhere in the scanned repository. */
 export declare interface AbandonedContractFinding {
@@ -107,7 +107,7 @@ export declare function buildContractModel(contracts: readonly DiscoveredContrac
  */
 export declare function buildDependencyModel(contracts: readonly DiscoveredContract[], scanFiles: readonly string[], readFile: (filePath: string) => Promise<string>, context: ImportResolutionContext, root: string, scannedSurfaces?: readonly ScannedSurface[], dynamicAccessAcknowledgments?: ReadonlyMap<string, readonly DynamicAccessAssertion[]>): Promise<DependencyModel>;
 
-/** One directory entry from {@link BuildFileSystem.readdir} -- the subset of Node's `Dirent` `src/build/**` reads. */
+/** One directory entry from {@link BuildFileSystem.readdir} -- the subset of Node's `Dirent` the build code reads. */
 export declare interface BuildDirent {
     readonly name: string;
     /** Same contract as Node's `Dirent.isDirectory()`. */
@@ -117,15 +117,12 @@ export declare interface BuildDirent {
 }
 
 /**
- * The filesystem capability `env-cap/build` requires from its caller.
+ * The filesystem capability a package's `./build` entry requires from its caller.
  *
  * `./build` is a **library surface**: it must not acquire filesystem access
- * implicitly (no `node:fs` import anywhere under `src/` outside `src/cli/`).
- * Every public options object in `build/index.ts` carries a required `fs`
- * field of this type, and the caller supplies a concrete adapter -- the
- * `env-cap` CLI builds one over `node:fs/promises` (`src/cli/filesystem.ts`);
- * a test builds either that same real adapter or an in-memory fake. See ADR
- * 0040.
+ * implicitly (no `node:fs` import outside the package's CLI). Every public options object carries a required
+ * `fs` field of this type, and the caller supplies a concrete adapter: the CLI builds one over
+ * `node:fs/promises`; a test builds either that same adapter or an in-memory fake.
  *
  * "Ambient-fs-free" means specifically: `./build` never reaches for
  * `node:fs` itself. It still performs real filesystem operations -- the
@@ -136,7 +133,7 @@ export declare interface BuildDirent {
  * ({@link BuildDirent}/{@link BuildStats}) rather than Node's `Dirent`/
  * `Stats` -- the capability boundary shouldn't leak Node's type surface just
  * because the concrete adapter happens to be Node-backed. Only the
- * operations `src/build/**` actually calls are here.
+ * operations the build code actually calls are here.
  */
 export declare interface BuildFileSystem {
     /** Read a UTF-8 text file. Rejects if the path doesn't exist or isn't readable. */
@@ -192,7 +189,7 @@ export declare interface BuildFindingModelInput {
     /** From `generateUsageReport()`'s result. */
     readonly indeterminateOwnership?: readonly IndeterminateOwnershipFinding[];
     /** From `computeManifestChanges()`'s result -- every `dynamicAccess` citation that's gone `"stale"` or `"missing"` since it was last acknowledged. See ADR 0037. */
-    readonly dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[];
+    readonly dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[] | undefined;
 }
 
 /**
@@ -222,7 +219,7 @@ export declare function buildOwnershipModel(contracts: readonly DiscoveredContra
  */
 export declare function buildSarifLog(findingModel: FindingModel): SarifLog;
 
-/** A path's stat info from {@link BuildFileSystem.stat} -- the subset of Node's `Stats` `src/build/**` reads. */
+/** A path's stat info from {@link BuildFileSystem.stat} -- the subset of Node's `Stats` the build code reads. */
 export declare interface BuildStats {
     /** Same contract as Node's `Stats.isFile()`. */
     readonly isFile: () => boolean;
@@ -466,7 +463,7 @@ export declare interface ComputeSourceFingerprintOptions {
     readonly root: string;
     readonly include: readonly string[];
     readonly exclude: readonly string[];
-    readonly packages: readonly string[];
+    readonly packages?: readonly string[] | undefined;
 }
 
 /** The Configuration Reference projection's output shape. */
@@ -487,26 +484,12 @@ export declare interface ConfigurationReference extends Record<string, unknown> 
  * projection can never disagree about who owns a variable -- the same reason
  * `effectiveOwner()` exists on the generator side (ADR 0028).
  */
-export declare const configurationReference: EvidenceProjection<ConfigurationReference>;
+export declare function configurationReference(evidence: EvidenceModel): ConfigurationReference;
 
-/**
- * env-cap's own built-in reference projections, declared through the exact
- * same public `defineEvidenceProjection()` a consumer would use (ADR
- * 0031/0032) -- no privileged internal path, no second way of reading the
- * Evidence Model.
- *
- * This is deliberate dogfooding, not a convenience layer: `renderDocs()`'s
- * Catalog/ownership/lifecycle sections and `renderUsageReport()`'s ownership
- * table now source their underlying data through these projections, so the
- * extensibility API is exercised by env-cap's own generated output on every
- * single run. If a projector here can't express something, that's a real gap
- * in the public API -- discovered by env-cap itself rather than by a consumer
- * reporting it.
- *
- * Every projection is pure and derives *only* from `EvidenceModel`. None
- * reads the filesystem, and none reaches back into `DiscoveredContract` --
- * that would defeat the point, since a consumer only ever has the model.
- */
+export declare namespace configurationReference {
+    var project: typeof projectConfigurationReference;
+}
+
 /** One variable, flattened across Contract/Ownership/Lifecycle Model into the row a Configuration Reference renders. */
 export declare interface ConfigurationReferenceEntry {
     /** Root-relative, POSIX-separated path of the declaring contract. */
@@ -976,28 +959,22 @@ declare interface DiscoverOptions {
 export declare function discoverSchemaFiles(options: DiscoverOptions): Promise<string[]>;
 
 /**
- * Renders an absolute path for a human-facing generated artifact
- * (`ENVIRONMENT.md`/`OWNERSHIP.md`) or a root-relative canonical model field,
- * root-relative when possible. The one place this conversion lives -- every
- * model builder and renderer that needs "the path as a reader should see it"
- * goes through this, so two of them can never disagree about the form of the
- * same file's path (which would silently break every `${file}#${exportName}`
- * lookup that crosses between them).
+ * Renders `filePath` relative to `root`, POSIX-separated whatever the platform.
  *
- * A `DiscoveredContract.file` keeps its own absolute path untouched -- that's
- * the correct, unambiguous fact, and what stays sane when discovery spans
- * multiple roots (a `packages`-discovered file living outside `root`
- * entirely, ADR 0014).
+ * Two deliberate non-conversions:
+ *
+ * - An already-relative `filePath` is returned as given (POSIX-normalized). That makes the function
+ *   idempotent, which matters because a model's `file` is relativized once and then passed through render
+ *   helpers that call this again. Resolving a relative path against `process.cwd()` first, which is what
+ *   `path.relative` does on its own, silently gives a wrong answer whenever the working directory is not `root`.
+ * - An absolute path that would need to climb outside `root` is returned unchanged, never rewritten into a
+ *   `../` escape: a file discovered in another package legitimately lives outside `root`, and its absolute path
+ *   is the only unambiguous thing to say about it.
+ * @param root - The directory paths are published relative to.
+ * @param filePath - An absolute path, or one already relative to `root`.
+ * @returns The path to publish.
  */
-/**
- * Renders `absolutePath` relative to `root`, POSIX-separated regardless of
- * platform (matching every other rendered path in this package's Markdown and
- * JSON output). Falls back to `absolutePath` itself, unchanged, whenever the
- * result would need to climb outside `root` (a `packages`-discovered file, or
- * any other path not under root) -- never manufactures a `../` escape, which
- * reads as a real relative path to a consumer and resolves to nothing useful.
- */
-export declare function displayPath(root: string, absolutePath: string): string;
+export declare function displayPath(root: string, filePath: string): string;
 
 /** Everything {@link generateDocumentation} found that isn't fully documented or up to date -- never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the "documentation" family) from the persisted evidence artifact and decides for itself. See ADR 0038. */
 export declare interface DocumentationFindings {
@@ -1257,7 +1234,7 @@ export declare const EVIDENCE_MODEL_SCHEMA_VERSION = 1;
 /**
  * The seventh canonical fact model (ADR 0024): the assembled union of the
  * other six, plus provenance, the immutable input every
- * `defineEvidenceProjection()` projector runs over (`env-cap/evidence`,
+ * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,
  * ADR 0031).
  *
  * @remarks
@@ -1268,7 +1245,7 @@ export declare const EVIDENCE_MODEL_SCHEMA_VERSION = 1;
  * `specs/architecture.md`. `src/evidence/` never imports a *value* from
  * here, only this shape, so it stays isomorphic and Node-free. An actual
  * `EvidenceModel` instance is produced by {@link generateEvidenceModel}
- * (`env-cap/build`, Node-only), which runs discovery once,
+ * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,
  * builds all six sub-models, and `deepFreeze()`s the result.
  */
 export declare interface EvidenceModel {
@@ -1280,17 +1257,6 @@ export declare interface EvidenceModel {
     readonly lifecycle: LifecycleModel;
     readonly finding: FindingModel;
     readonly change: ChangeModel;
-}
-
-/**
- * The function `defineEvidenceProjection()` returns. Callable directly for
- * the common case (`projection(evidence)` -> `T`); `.project()` returns the
- * same value alongside automatic provenance -- see ADR 0032.
- */
-declare interface EvidenceProjection<T extends Record<string, unknown>> {
-    (evidence: EvidenceModel): T;
-    /** Same computation as calling the projection directly, plus which `EvidenceModel` field paths fed each output key -- see {@link EvidenceProjectionResult}. */
-    project(evidence: EvidenceModel): EvidenceProjectionResult<T>;
 }
 
 /** `project()`'s return shape: the computed output, plus which `EvidenceModel` field paths fed each output key. */
@@ -1383,7 +1349,11 @@ export declare interface ExpiringSoonReport extends Record<string, unknown> {
  * which is exactly the reproducibility property the Evidence Model exists to
  * preserve.
  */
-export declare const expiringSoonReport: EvidenceProjection<ExpiringSoonReport>;
+export declare function expiringSoonReport(evidence: EvidenceModel): ExpiringSoonReport;
+
+export declare namespace expiringSoonReport {
+    var project: typeof projectExpiringSoonReport;
+}
 
 /** The minimal shape {@link computeExpiringEntries} needs -- structural, not pinned to `DiscoveredContract`, so the exact same rule serves both `LinkResult`'s absolute-path contracts (`generate-documentation.ts`'s `documentation.expiringSoon`, Stable tier) and `ContractModel`'s root-relative ones, whichever a caller already has on hand. */
 declare interface ExpiryBearingContract {
@@ -1409,7 +1379,7 @@ export declare function extractCommentedVariables(source: string): string[];
  * @param contextLabel - Used only to build human-readable warning messages.
  * @param warnings - Mutated in place: one entry is pushed per unresolvable field.
  */
-export declare function extractContractDocs(docsArg: ts.Expression | undefined, filePath: string, contextLabel: string, warnings: ParseWarning[]): DiscoveredContractDocs;
+export declare function extractContractDocs(docsArg: TS.Expression | undefined, filePath: string, contextLabel: string, warnings: ParseWarning[]): DiscoveredContractDocs;
 
 /** Parses `KEY=value` lines out of an existing `.env`-style file, ignoring comments and blank lines. */
 export declare function extractDeclaredVariables(source: string): string[];
@@ -1424,16 +1394,16 @@ export declare function extractPreviouslyDocumentedKeys(previousContent: string)
  * @param contextLabel - Used only to build human-readable warning messages (e.g. the contract's export name).
  * @param warnings - Mutated in place: one entry is pushed per skipped (non-static, invalid-key, or non-literal) property.
  */
-export declare function extractSchemaVariables(schemaLiteral: ts.ObjectLiteralExpression, filePath: string, contextLabel: string, warnings: ParseWarning[], sourceFile: ts.SourceFile): DiscoveredSchemaVariable[];
+export declare function extractSchemaVariables(schemaLiteral: TS.ObjectLiteralExpression, filePath: string, contextLabel: string, warnings: ParseWarning[], sourceFile: TS.SourceFile): DiscoveredSchemaVariable[];
 
 /** The raw, single-file facts extracted by {@link parseSchemaFile}. */
 export declare interface FileParseResult {
     /** Absolute path of the parsed file. */
     readonly file: string;
     /** The TypeScript AST for this file, reused by callers that need to inspect it further. */
-    readonly sourceFile: ts.SourceFile;
+    readonly sourceFile: TS.SourceFile;
     /** Top-level `const NAME = {...}` object-literal declarations, whether exported or not. */
-    readonly localConsts: ReadonlyMap<string, ts.ObjectLiteralExpression>;
+    readonly localConsts: ReadonlyMap<string, TS.ObjectLiteralExpression>;
     /** Names of top-level `const` declarations that are exported (a subset of {@link localConsts}'s keys, plus non-object-literal exports). */
     readonly exportedConstNames: ReadonlySet<string>;
     /** Local binding name -> where it came from. Only named imports of a relative specifier are tracked (namespace/default/bare-package imports are irrelevant to schema linking). */
@@ -2271,7 +2241,11 @@ export declare interface OwnershipSummary extends Record<string, unknown> {
  * Ownership summary: the inverse of Ownership Model's per-contract view --
  * who owns what, rolled up per owner, plus an explicit unowned list.
  */
-export declare const ownershipSummary: EvidenceProjection<OwnershipSummary>;
+export declare function ownershipSummary(evidence: EvidenceModel): OwnershipSummary;
+
+export declare namespace ownershipSummary {
+    var project: typeof projectOwnershipSummary;
+}
 
 /** One owner and everything attributed to them. */
 export declare interface OwnershipSummaryEntry {
@@ -2364,6 +2338,12 @@ export declare interface ParseWarning {
     readonly message: string;
 }
 
+declare function projectConfigurationReference(evidence: EvidenceModel): EvidenceProjectionResult<ConfigurationReference>;
+
+declare function projectExpiringSoonReport(evidence: EvidenceModel): EvidenceProjectionResult<ExpiringSoonReport>;
+
+declare function projectOwnershipSummary(evidence: EvidenceModel): EvidenceProjectionResult<OwnershipSummary>;
+
 /** One `createEnv(...)` call site, as found by {@link parseSchemaFile}, before cross-file linking. */
 declare interface RawCreateEnvCall {
     /** The binding name the call result is assigned to (must be exported to be usable -- see {@link parseSchemaFile}). */
@@ -2371,9 +2351,9 @@ declare interface RawCreateEnvCall {
     /** How the first (schema) argument resolves within this file. */
     readonly schemaRef: SchemaRef;
     /** The second (options) argument expression, if the call passes one. */
-    readonly optionsArg: ts.Expression | undefined;
+    readonly optionsArg: TS.Expression | undefined;
     /** The full call expression AST node. */
-    readonly node: ts.CallExpression;
+    readonly node: TS.CallExpression;
 }
 
 /** One `documentEnv(...)` call site, as found by {@link parseSchemaFile}, before cross-file linking. */
@@ -2381,9 +2361,9 @@ declare interface RawDocumentEnvCall {
     /** How the first (schema) argument resolves within this file. */
     readonly schemaRef: SchemaRef;
     /** The second (docs) argument expression, if the call passes one. */
-    readonly docsArg: ts.Expression | undefined;
+    readonly docsArg: TS.Expression | undefined;
     /** The full call expression AST node. */
-    readonly node: ts.CallExpression;
+    readonly node: TS.CallExpression;
 }
 
 /**
@@ -2440,7 +2420,7 @@ export declare interface RenderDocsOptions {
     readonly expiringWithinDays: number;
     /** Contracts with no linked `documentEnv()` call at all. `file` must be root-relative, POSIX-separated -- matching `contracts`' own `ContractModel` convention, since this is matched against it by identity. */
     readonly undocumentedContracts: readonly UndocumentedContractRef[];
-    /** Schema variables with no matching entry in their contract's linked documentation. `file` must be root-relative, POSIX-separated -- see `undocumentedContracts`. */
+    /** Schema variables with no matching entry in their contract's linked documentation. Only how many there are is rendered (the security-review counter), so `file` is not matched against anything. */
     readonly undocumentedVariables: readonly UndocumentedVariableRef[];
     /** Timestamp rendered into the header and used for expiry/days-remaining math. */
     readonly generatedAt: Date;
@@ -2628,7 +2608,7 @@ export declare type SchemaRef = {
     /** Discriminant: the schema argument is an inline object literal. */
     readonly kind: "literal";
     /** The object literal AST node itself. */
-    readonly node: ts.ObjectLiteralExpression;
+    readonly node: TS.ObjectLiteralExpression;
 } | {
     /** Discriminant: the schema argument is a bare identifier referencing a local `const`. */
     readonly kind: "identifier";
@@ -2683,28 +2663,10 @@ export declare interface SourcePosition {
  */
 export declare const STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string>;
 
-/**
- * TypeScript path-alias resolution (ADR 0023).
- *
- * Resolves a bare import specifier (`"@/lib/env.schema.js"`) against a project's own
- * `tsconfig.json` `compilerOptions.paths`/`baseUrl`, so a schema or consumer reached only
- * through an alias isn't misreported by `link.ts`/`dependency-graph.ts` as unresolved or
- * abandoned. Unlike `resolve-package-schema.ts` (ADR 0014), this never crosses a
- * trust/versioning boundary -- every resolved file is already local, already-trusted
- * project source -- so it is on by default (auto-detecting `root/tsconfig.json`) rather
- * than requiring an explicit allowlist.
- *
- * The actual `paths`/`baseUrl` matching algorithm (longest-prefix matching, `*` wildcard
- * substitution, multiple fallback targets, `extends`-chain merging, JSONC parsing) is
- * delegated entirely to the TypeScript compiler via `ts.resolveModuleName()` and
- * `ts.parseJsonConfigFileContent()` -- the same functions `tsc`/`tsserver` themselves use --
- * rather than reimplemented here. This module's own logic is limited to loading the config,
- * caching resolutions, and enforcing the `node_modules` safety boundary below.
- */
 /** Parsed `tsconfig.json` `paths`/`baseUrl` configuration, immutable for the life of one generate*() run. See {@link loadTsconfigPaths}. */
 declare interface TsconfigPathsResolution {
     /** The subset of `compilerOptions` `ts.resolveModuleName()` needs -- at minimum `paths` and/or `baseUrl`. */
-    readonly compilerOptions: ts.CompilerOptions;
+    readonly compilerOptions: TS.CompilerOptions;
     /** Absolute path of the tsconfig.json this was loaded from, for diagnostics. */
     readonly configFile: string;
 }
@@ -2774,7 +2736,7 @@ export declare interface UnresolvedLink {
  * (`"indeterminate"`).
  *
  * @remarks
- * Deliberately narrower than `@maverickcer/data-cap`'s equivalent, which
+ * Deliberately narrower than `data-cap`'s equivalent, which
  * splits the unprovable case further (an unresolved *consumer* vs. an
  * indeterminate *field*). That split exists because a data-cap capability
  * exposes many fields at once, so it has a real "we resolved the consumer,

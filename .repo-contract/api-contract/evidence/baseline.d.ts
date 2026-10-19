@@ -282,7 +282,7 @@ declare const EVIDENCE_MODEL_SCHEMA_VERSION = 1;
 /**
  * The seventh canonical fact model (ADR 0024): the assembled union of the
  * other six, plus provenance, the immutable input every
- * `defineEvidenceProjection()` projector runs over (`env-cap/evidence`,
+ * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,
  * ADR 0031).
  *
  * @remarks
@@ -293,7 +293,7 @@ declare const EVIDENCE_MODEL_SCHEMA_VERSION = 1;
  * `specs/architecture.md`. `src/evidence/` never imports a *value* from
  * here, only this shape, so it stays isomorphic and Node-free. An actual
  * `EvidenceModel` instance is produced by {@link generateEvidenceModel}
- * (`env-cap/build`, Node-only), which runs discovery once,
+ * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,
  * builds all six sub-models, and `deepFreeze()`s the result.
  */
 export declare interface EvidenceModel {
@@ -700,7 +700,7 @@ declare interface SourcePosition {
  * (`"indeterminate"`).
  *
  * @remarks
- * Deliberately narrower than `@maverickcer/data-cap`'s equivalent, which
+ * Deliberately narrower than `data-cap`'s equivalent, which
  * splits the unprovable case further (an unresolved *consumer* vs. an
  * indeterminate *field*). That split exists because a data-cap capability
  * exposes many fields at once, so it has a real "we resolved the consumer,

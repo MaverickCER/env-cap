@@ -26,7 +26,7 @@ describe.skipIf(distMissing)(
   () => {
     // Unlike src/eslint-plugin/index.ts (ADR 0017), this entry point has
     // only named exports, so it needs none of
-    // scripts/fix-eslint-plugin-cjs-interop.mjs's postprocessing -- esbuild's
+    // internal-package-contract tool cjs-interop's postprocessing -- esbuild's
     // ordinary CJS output already resolves named exports correctly.
     it("require() resolves defineEvidenceProjection directly", () => {
       const require = createRequire(import.meta.url)

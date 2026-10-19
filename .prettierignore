@@ -7,7 +7,7 @@ docs/size-badge.json
 
 # Generated verbatim by `typedoc --options typedoc.markdown.json` and
 # drift-checked against that exact output -- reformatting it would make the
-# check flap. See scripts/check-api-report.mjs.
+# check flap. See internal-package-contract tool api-report.
 docs/api-report
 docs/api
 
@@ -63,3 +63,15 @@ benchmarks/performance-runtime/results.json
 benchmarks/performance-runtime/BENCHMARKS.md
 benchmarks/performance-buildtime/results.json
 benchmarks/performance-buildtime/BENCHMARKS.md
+
+# A local benchmark run (never committed).
+.benchmark-local/
+
+# Published figures, and the files beside them that say what each figure is: generated in CI, never committed.
+/docs/coverage.json
+/docs/mutation.json
+/docs/size.json
+/docs/*-badge.json
+
+# Written by `internal-package-contract skill` and checked against what it would write, so reformatting it would only make that check fail.
+/skills/

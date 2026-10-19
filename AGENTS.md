@@ -111,14 +111,19 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
 
 ## Public API map
 
-| Export                               | Source               | Environment           | Purpose                                                                                                                                                           |
-| ------------------------------------ | -------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                          |
-| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | discovery, AST analysis, artifact generation (see `VERSIONING.md` — the four `generate*()` orchestrators and the lower-level primitives are all Stable, ADR 0045) |
-| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | `processors` / `validators`                                                                                                                                       |
-| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | `defineEvidenceProjection` — pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)                                                                |
-| `@maverickcer/env-cap/node`          | `src/node/`          | Node-only, dev/CI     | `nodeBuildFileSystem` — the ready-made `BuildFileSystem` adapter a build script hands to `./build`                                                                |
-| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | `no-raw-process-env` lint rule                                                                                                                                    |
+<!-- ipc:begin entry-points -->
+
+| Export                               | Source               | Environment           | Tier   | Purpose                                                                                                                                                           |
+| ------------------------------------ | -------------------- | --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | Stable | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                          |
+| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | Stable | discovery, AST analysis, artifact generation (see `VERSIONING.md` — the four `generate*()` orchestrators and the lower-level primitives are all Stable, ADR 0045) |
+| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | Stable | `processors` / `validators`                                                                                                                                       |
+| `@maverickcer/env-cap/node`          | `src/node/`          | Node-only, dev/CI     | Stable | `nodeBuildFileSystem` — the ready-made `BuildFileSystem` adapter a build script hands to `./build`                                                                |
+| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | Stable | `defineEvidenceProjection` — pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)                                                                |
+| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | Stable | `no-raw-process-env` and `no-node-fs` lint rules                                                                                                                  |
+| `@maverickcer/env-cap/schema`        | `schemas/`           | static JSON           | Stable | The published JSON Schema for `env-cap --json` output (`env-cap-report.schema.json`), plus the model schemas under `./schema/*`                                   |
+
+<!-- ipc:end entry-points -->
 
 ## Before finishing a change
 

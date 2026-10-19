@@ -144,7 +144,7 @@ export default tseslint.config(
     // adapter) may import `node:fs`. The published `env-cap/
     // eslint-plugin` ships `no-node-fs` for a consumer to enforce the same
     // discipline; this `no-restricted-imports` block is env-cap's own, needing
-    // no plugin build. `scripts/verify-no-ambient-fs.mjs` is the
+    // no plugin build. the `AmbientCapabilities` check is the
     // release-blocking backstop that checks the actual tarball.
     files: ["src/**/*.ts"],
     ignores: ["src/cli/**"],

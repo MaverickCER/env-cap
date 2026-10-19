@@ -2,17 +2,15 @@ import { RuleListener } from '@typescript-eslint/utils/ts-eslint';
 import { RuleModule } from '@typescript-eslint/utils/ts-eslint';
 
 /**
- * Flags any `import`/`require`/dynamic `import()` of `node:fs` in library
- * code, so a library surface acquires its filesystem capability from the
- * caller instead of reaching for `node:fs` itself (the same discipline
- * `repo-contract`'s ADR-0011 established for `child_process`/`process.env`).
- * See ADR 0040.
+ * Flags any `import`/`require`/dynamic `import()` of `node:fs` in library code, so a library surface acquires
+ * its filesystem capability from the caller instead of reaching for `node:fs` itself.
  *
  * @remarks
- * Nothing is exempt by default. env-cap's own config allows `src/cli/**`
- * (the executable capability boundary that builds the `node:fs/promises`
- * adapter); a consuming project sets its own `allow` for its own entry
- * points.
+ * Nothing is exempt by default. A package's own config allows its CLI folder (for example `src/cli/**`),
+ * which builds the `node:fs/promises` adapter, and a consuming project sets the `allow` option for its own CLI
+ * or script entry points. The rule itself lives in `../_ipc/no-node-fs.ts`, a managed copy of
+ * internal-package-contract's `runtime/no-node-fs.ts`; this supplies env-cap's documentation link and the decision
+ * record the message cites.
  */
 export declare const noNodeFs: RuleModule<"noNodeFs", [RuleOptions_2], unknown, RuleListener> & {
     name: string;
@@ -32,10 +30,10 @@ export declare const noRawProcessEnv: RuleModule<"noRawProcessEnv", [RuleOptions
 };
 
 /**
- * `env-cap/eslint-plugin` -- a flat-config-shaped plugin object
+ * `@maverickcer/env-cap/eslint-plugin` -- a flat-config-shaped plugin object
  * ({ rules: { ... } }), consumed as:
  *
- *   import envCapPlugin from "env-cap/eslint-plugin";
+ *   import envCapPlugin from "@maverickcer/env-cap/eslint-plugin";
  *   export default [{ plugins: { "env-cap": envCapPlugin }, rules: { "env-cap/no-raw-process-env": "error" } }];
  *
  * A 4th public entry point alongside `.`, `./build`, `./helpers` -- see ADR 0017.

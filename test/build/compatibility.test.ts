@@ -4,6 +4,7 @@ import {
   detectDuplicateVariableShapes,
 } from "../../src/build/compatibility.js"
 import type { DiscoveredContract, DiscoveredVariable } from "../../src/build/link.js"
+import { mergeSharedDocumentation } from "../../src/build/merge-documentation.js"
 
 function makeVariable(
   overrides: Partial<DiscoveredVariable> & { key: string },
@@ -273,9 +274,86 @@ describe("detectCompatibilityIssues", () => {
       ])
       expect(issues[0]?.reason).toBe(
         '"notificationsEnv" and "auditLogEnv" both document this variable, but disagree on: ' +
-          "description, owner, expiresAt, required. Confirm they're still meant to be the same " +
+          "description, owner. Confirm they're still meant to be the same " +
           "variable and align the documentation, or document them separately if they're not.",
       )
+    })
+
+    it("compares every documentation field, lists and objects by what they hold", () => {
+      const doc = (overrides: object) =>
+        makeContract("/repo/x/env.schema.ts", "xEnv", [
+          makeVariable({ key: "SHARED", documented: true, ...overrides }),
+        ])
+      const reasonFor = (a: object, b: object) =>
+        detectCompatibilityIssues([doc(a), doc(b)]).map((issue) => issue.reason)
+      expect(
+        reasonFor(
+          { dataResidency: ["eu"], rotationTriggerEvents: ["breach"], retention: "1y" },
+          { dataResidency: ["eu"], rotationTriggerEvents: ["breach"], retention: "1y" },
+        ),
+      ).toEqual([])
+      const differing = reasonFor(
+        { dataResidency: ["eu"], legalBasis: "contract", retention: "1y", auditRequired: true },
+        { dataResidency: ["us"], legalBasis: "consent", retention: "2y", auditRequired: false },
+      )
+      expect(differing).toHaveLength(1)
+      expect(differing[0]).toContain(
+        "disagree on: legalBasis, retention, dataResidency, auditRequired.",
+      )
+      expect(
+        reasonFor(
+          { rotationTriggerEvents: ["breach"] },
+          { rotationTriggerEvents: ["breach", "exit"] },
+        ),
+      ).toHaveLength(1)
+    })
+
+    it("does not flag a field only one declaration sets: the other leaves it to the first", () => {
+      const a = makeContract("/repo/a/env.schema.ts", "aEnv", [
+        makeVariable({
+          key: "SHARED",
+          documented: true,
+          description: "Said once",
+          required: true,
+          metadata: { team: "platform" },
+        }),
+      ])
+      const b = makeContract("/repo/b/env.schema.ts", "bEnv", [
+        makeVariable({
+          key: "SHARED",
+          documented: true,
+          expiresAt: "2027-01-01",
+          metadata: { rotation: "90 days" },
+        }),
+      ])
+
+      expect(detectCompatibilityIssues([a, b])).toEqual([])
+      expect(detectCompatibilityIssues([b, a])).toEqual([])
+    })
+
+    it("still flags a field both set to different values, and names only that field", () => {
+      const a = makeContract("/repo/a/env.schema.ts", "aEnv", [
+        makeVariable({
+          key: "SHARED",
+          documented: true,
+          description: "Same",
+          owner: "one",
+          metadata: { team: "platform", tier: 1 },
+        }),
+      ])
+      const b = makeContract("/repo/b/env.schema.ts", "bEnv", [
+        makeVariable({
+          key: "SHARED",
+          documented: true,
+          description: "Same",
+          owner: "two",
+          metadata: { team: "platform", tier: 2 },
+        }),
+      ])
+
+      const issues = detectCompatibilityIssues([a, b])
+      expect(issues).toHaveLength(1)
+      expect(issues[0]?.reason).toContain("disagree on: owner, metadata.tier.")
     })
 
     it("flags diverging sensitivity between two documented declarations of the same variable", () => {
@@ -363,6 +441,45 @@ describe("detectCompatibilityIssues", () => {
       expect(
         issues.filter((issue) => issue.code === "DUPLICATE_VARIABLE_DOCUMENTATION"),
       ).toHaveLength(0)
+    })
+
+    it("never reports a value a declaration was only given by the documentation merge", () => {
+      const origin = { packageName: "shared", packageDir: "/repo/node_modules/shared" } as never
+      const first = makeContract(
+        "/repo/node_modules/shared/a.ts",
+        "first",
+        [makeVariable({ key: "X", documented: true, description: "A", metadata: { team: "a" } })],
+        { packageOrigin: origin },
+      )
+      const second = makeContract(
+        "/repo/node_modules/shared/b.ts",
+        "second",
+        [makeVariable({ key: "X", documented: true, description: "B", metadata: { team: "b" } })],
+        { packageOrigin: origin },
+      )
+      const app = makeContract("/repo/app/env.schema.ts", "app", [
+        makeVariable({ key: "X", documented: true }),
+      ])
+      const duplicates = detectCompatibilityIssues(
+        mergeSharedDocumentation([first, second, app]),
+      ).filter((issue) => issue.code === "DUPLICATE_VARIABLE_DOCUMENTATION")
+      // The two packages disagree on what each wrote; the application, given the first one's, disagrees with nobody.
+      expect(duplicates.map((issue) => issue.files)).toEqual([
+        ["/repo/node_modules/shared/a.ts", "/repo/node_modules/shared/b.ts"],
+      ])
+      expect(duplicates[0]?.reason).toContain("description")
+      expect(duplicates[0]?.reason).toContain("metadata.team")
+    })
+
+    it("never compares evidence: each contract cites its own code", () => {
+      const a = makeContract("/repo/a/env.schema.ts", "aEnv", [
+        makeVariable({ key: "SHARED", documented: true, evidence: { verifiedAt: "a" } as never }),
+      ])
+      const b = makeContract("/repo/b/env.schema.ts", "bEnv", [
+        makeVariable({ key: "SHARED", documented: true, evidence: { verifiedAt: "b" } as never }),
+      ])
+
+      expect(detectCompatibilityIssues([a, b])).toHaveLength(0)
     })
   })
 })

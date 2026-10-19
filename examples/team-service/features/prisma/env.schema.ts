@@ -9,7 +9,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 const prismaSchema = {
   DATABASE_PROVIDER: {
     validator: (value: string) =>
-      ["postgresql", "mongodb"].includes(value) || `Unsupported provider "${value}".`,
+      ["postgresql", "mongodb"].includes(value) || "Unsupported provider.",
   },
 };
 

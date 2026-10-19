@@ -18,7 +18,7 @@ import path from "node:path"
  *
  * `src/cli/**` is the sanctioned place for direct `node:fs` use (ADR 0040) --
  * this file is bundled into the `bin` target, exempt from the
- * `verify-no-ambient-fs` tarball guard exactly as `src/cli/index.ts` is.
+ * the `AmbientCapabilities` check tarball guard exactly as `src/cli/index.ts` is.
  */
 
 // USAGE/SCHEMA_TEMPLATE/GENERATOR_TEMPLATE are functions, not module-level

@@ -4,9 +4,9 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **139 ms** per operation compared with a bare-minimum baseline (20× baseline), about **$0.290 – $3.68 per million operations** of compute. Overall, it grows O(n) with workload size (measured exponent 0.75).
+For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **139 ms** per operation compared with a bare-minimum baseline (**20× the baseline**). Overall, it grows O(n) with workload size (measured exponent 0.90). At list prices that is on the order of **~$0.1 – $10 per million operations** of compute.
 
-> Dollar figures are **estimates** from published list prices (see _Cost model_ below) and are for comparing orders of magnitude, not for budgeting to the cent.
+> The relative figure and the growth class are the steadier ones: both come from the same run, so they depend far less on the machine than a time does, though runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
 
 | Cost | Typical (640 variables) | Largest (5120 variables) |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ For a typical workload of **640 variables** per operation, routing the work thro
 | Added latency, relative to baseline | 20× baseline | 19× baseline |
 | Added CPU time per operation | 328 ms | 1.50 s |
 | Added memory per operation (heap delta) | 9.4 MiB | 95.4 MiB |
-| Estimated compute cost per 1M operations | $0.290 – $3.68 | $2.26 – $16.83 |
+| Compute cost per 1M operations (order of magnitude) | ~$0.1 – $10 | ~$1 – $10 |
 | Single-core throughput ceiling of the overhead alone | 7 ops/s | 1 ops/s |
 | Shipped code parsed at every cold start (gzip) | 42.4 KiB | 42.4 KiB |
 
@@ -52,23 +52,55 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 | 2560 | 31.2 ms | 513 ms | 482 ms | 16× baseline | 801 ms | $1.00 – $9.00 |
 | 5120 | 61.5 ms | 1.14 s | 1.08 s | 19× baseline | 1.50 s | $2.26 – $16.83 |
 
-**How the total grows:** O(n) (linear), exponent 0.75 over 9 sizes.
+**How the total grows:** O(n) (linear), exponent 0.90 over 9 sizes.
 
 ## 2. Function by function
 
 Every function the package exposes is measured on its own across the full size ladder, then its measured growth rate is compared with the big-O we documented for it. A function whose measured class **differs** from its documented one is the most useful thing in this report: either the documentation or the code is wrong.
 
-| Function | Documented | Measured | Agreement | At 640 | At 5120 |
-| --- | --- | --- | --- | --- | --- |
-| `discoverSchemaFiles` | O(n) | O(n) | ✅ matches | 3.00 ms | 20.7 ms |
-| `generateEnvManifest` (all-contracts) | O(n) | O(n) | ✅ matches | 79.0 ms | 533 ms |
-| `generateEnvManifest` (one-contract-scoped) | O(1) | O(log n) | 🟡 close (neighbouring class) | 5.84 ms | 23.6 ms |
-| `generateDocumentation` (minimal-docs) | O(n) | O(n) | ✅ matches | 84.1 ms | 377 ms |
-| `generateDocumentation` (heavy-docs) | O(n) | O(n) | ✅ matches | 87.3 ms | 454 ms |
-| `generateUsageReport` | O(n) | O(n) | ✅ matches | 108 ms | 534 ms |
-| `generateEnvArtifacts` | O(n) | O(n) | ✅ matches | 149 ms | 1.10 s |
-| `generateEvidenceModel` | O(n) | O(n) | ✅ matches | 141 ms | 767 ms |
-| `defineEvidenceProjection (project)` | O(n) | O(n) | ✅ matches | 12.2 ms | 124 ms |
+| Function | Varies | Documented | Measured | Agreement | At 640 | At 5120 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `discoverSchemaFiles` | variable | O(n) | O(n) | ✅ matches | 3.00 ms | 20.7 ms |
+| `discoverSchemaFiles` | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `generateEnvManifest` (all-contracts) | variable | O(n log n) | O(n) | 🟡 close (neighbouring class) | 79.0 ms | 533 ms |
+| `generateEnvManifest` (all-contracts) | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `generateEnvManifest` (one-contract-scoped) | variable | O(log n) | O(log n) | ✅ matches | 5.84 ms | 23.6 ms |
+| `generateEnvManifest` (one-contract-scoped) | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `generateDocumentation` (minimal-docs) | variable | O(n) | O(n) | ✅ matches | 84.1 ms | 377 ms |
+| `generateDocumentation` (minimal-docs) | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `generateDocumentation` (heavy-docs) | variable | O(n) | O(n) | ✅ matches | 87.3 ms | 454 ms |
+| `generateDocumentation` (heavy-docs) | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `generateUsageReport` | variable | O(n) | O(n) | ✅ matches | 108 ms | 534 ms |
+| `generateUsageReport` | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `generateEnvArtifacts` | variable | O(n) | O(n) | ✅ matches | 149 ms | 1.10 s |
+| `generateEnvArtifacts` | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `checkEnvArtifacts` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `checkEnvArtifacts` | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `computeSourceFingerprint` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `computeSourceFingerprint` | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `generateEvidenceModel` | variable | O(n) | O(n) | ✅ matches | 141 ms | 767 ms |
+| `generateEvidenceModel` | variables-per-contract | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `getEvidenceModel` (cache-hit) | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `getEvidenceModel` (cache-miss) | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `parseSchemaFile` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `linkFiles` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `buildContractModel` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `buildOwnershipModel` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `buildLifecycleModel` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `computeExpiringEntries` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `computeSecurityReviewCounters` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `renderDocs` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `renderManifest` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `computeReconciliation` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `renderEnvExample` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `groupVariablesByOwner` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `applyLiveExpirationOverrides` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `resolveLiveExpirationDates` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `configurationReference` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `expiringSoonReport` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `ownershipSummary` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `buildSarifLog` | variable | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `defineEvidenceProjection (project)` | variable | O(n) | O(n) | ✅ matches | 12.2 ms | 124 ms |
 
 ### `discoverSchemaFiles`
 
@@ -83,6 +115,7 @@ Every function the package exposes is measured on its own across the full size l
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
 | filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
 | directory depth | fixed at "one level of contract folders" | Deeper trees add a directory read per level. |
 | unrelated files | fixed at "none" | Real repositories hold many non-schema files that must also be walked; a pure schema tree is the best case. |
@@ -90,7 +123,7 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** Once at the start of every artifact generation.
 
-**Measured: O(n)** (exponent 0.77, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.88, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -103,6 +136,12 @@ Every function the package exposes is measured on its own across the full size l
 | 1280 | 5.65 ms | 6.00 ms | 9.33 ms | 2.3 MiB | 177 |
 | 2560 | 10.6 ms | 11.6 ms | 15.1 ms | 4.6 MiB | 95 |
 | 5120 | 20.7 ms | 22.3 ms | 25.4 ms | 9.2 MiB | 48 |
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The walk visits the same total number of schema files and folders however the variables are split across them, so the split does not change the cost.
 
 ### `generateEnvManifest`
 
@@ -117,6 +156,7 @@ Every function the package exposes is measured on its own across the full size l
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
 | schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
 | filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
 | scope | variant | All contracts versus a single contract selected with `include`. |
@@ -130,7 +170,9 @@ Every function the package exposes is measured on its own across the full size l
 
 The manifest covers every schema file in the project.
 
-**Measured: O(n)** (exponent 0.84, 9 sizes) -- ✅ matches.
+**Expected for this variant: O(n log n).** Parsing and rendering are linear in the source text, but the model sorts every variable and declaration by key (contract-model.ts, compatibility.ts) so the manifest and the compatibility findings are stable, and that sort adds an n log n term that shows once the whole project is covered.
+
+**Measured: O(n)** (exponent 0.89, 9 sizes) -- 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -144,13 +186,19 @@ The manifest covers every schema file in the project.
 | 2560 | 236 ms | 247 ms | 475 ms | 37.7 MiB | 4 |
 | 5120 | 533 ms | 544 ms | 879 ms | 73.8 MiB | 2 |
 
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is parsed and rendered however they are split across files, so the split changes only the small per-file share of the work.
+
 #### Variant `one-contract-scoped`
 
 An `include` selects one schema file; discovery still walks the tree but only that file is parsed.
 
-**Expected for this variant: O(1).** Only the one selected file is parsed and rendered, and parsing dominates the cost; the directory walk that still happens grows with the tree but is tiny next to parsing, so the curve is effectively flat.
+**Expected for this variant: O(log n).** Only the one selected file is parsed and rendered, but the directory walk that still happens grows with the tree. Across the measured sizes it is a small, sub-linear share of the cost, so the curve rises slowly without being flat.
 
-**Measured: O(log n)** (exponent 0.37, 9 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.62, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -163,6 +211,12 @@ An `include` selects one schema file; discovery still walks the tree but only th
 | 1280 | 7.69 ms | 9.93 ms | 11.9 ms | 2.4 MiB | 130 |
 | 2560 | 13.7 ms | 14.9 ms | 24.9 ms | 4.2 MiB | 73 |
 | 5120 | 23.6 ms | 25.4 ms | 41.8 ms | 7.9 MiB | 42 |
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is parsed and rendered however they are split across files, so the split changes only the small per-file share of the work.
 
 ### `generateDocumentation`
 
@@ -177,18 +231,19 @@ An `include` selects one schema file; discovery still walks the tree but only th
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
 | schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
 | filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
 | documentation volume | variant | One-line descriptions versus long multi-section runbook text per variable. |
 | runtime | fixed at "Node (V8)" | Measured on Node only. |
 
-**In the end-to-end run:** Once per artifact run, rendering from the shared parse.
+**In the end-to-end run:** Not called by the end-to-end operation: generateEnvArtifacts renders the catalog from its shared parse, while this standalone generator parses again.
 
 #### Variant `minimal-docs`
 
 One short description per variable.
 
-**Measured: O(n)** (exponent 0.77, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.73, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -201,6 +256,12 @@ One short description per variable.
 | 1280 | 129 ms | 133 ms | 302 ms | 30.3 MiB | 8 |
 | 2560 | 212 ms | 221 ms | 433 ms | 50.6 MiB | 5 |
 | 5120 | 377 ms | 386 ms | 706 ms | 97.5 MiB | 3 |
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is rendered however they are split across files; each file adds one heading and a small table header, a share that shrinks as files grow.
 
 #### Variant `heavy-docs`
 
@@ -220,6 +281,12 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | 2560 | 251 ms | 252 ms | 507 ms | 66.5 MiB | 4 |
 | 5120 | 454 ms | 466 ms | 800 ms | 140.6 MiB | 2 |
 
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is rendered however they are split across files; each file adds one heading and a small table header, a share that shrinks as files grow.
+
 ### `generateUsageReport`
 
 **Why we benchmark it.** Shows which owners and files consume which variables; it runs in compliance and ownership reviews and in pipelines that enforce them.
@@ -233,14 +300,15 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
 | schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
 | filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
 | consuming files | fixed at "none beyond the schemas" | Real projects scan application code for usages; the fixtures contain only schema files, so this is the cheapest case. |
 | runtime | fixed at "Node (V8)" | Measured on Node only. |
 
-**In the end-to-end run:** Once per artifact run.
+**In the end-to-end run:** Not called by the end-to-end operation: generateEnvArtifacts builds the usage report from its shared parse, while this standalone generator parses again.
 
-**Measured: O(n)** (exponent 0.74, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.80, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -253,6 +321,12 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | 1280 | 176 ms | 186 ms | 394 ms | 21.0 MiB | 6 |
 | 2560 | 296 ms | 300 ms | 564 ms | 42.7 MiB | 3 |
 | 5120 | 534 ms | 558 ms | 957 ms | 76.2 MiB | 2 |
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is reported however they are split across files; only the small per-file share of the work changes.
 
 ### `generateEnvArtifacts`
 
@@ -267,6 +341,7 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
 | schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
 | filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
 | artifacts requested | fixed at "manifest + docs + usage report" | All three; fewer cost less. |
@@ -274,7 +349,7 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 
 **In the end-to-end run:** This is the end-to-end operation itself.
 
-**Measured: O(n)** (exponent 0.77, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.87, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -287,6 +362,65 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | 1280 | 268 ms | 278 ms | 521 ms | 27.0 MiB | 4 |
 | 2560 | 509 ms | 523 ms | 857 ms | 19.6 MiB | 2 |
 | 5120 | 1.10 s | 1.13 s | 1.52 s | 104.2 MiB | 1 |
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is parsed and rendered three times over however they are split across files; only the small per-file share changes.
+
+### `checkEnvArtifacts`
+
+**Why we benchmark it.** The CI gate that fails when a committed manifest, document or report is stale: it regenerates every requested artifact in memory and compares it with the file on disk.
+
+**What poor performance would mean.** A slower gate on every pull request, which is the most frequent place build-time cost is paid.
+
+**Expected growth: O(n).** It runs one shared discovery, parse and link, renders each requested artifact once and compares each with its file, so cost is proportional to the amount of configuration.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
+| artifact state | fixed at "every artifact is current" | A stale artifact adds a finding to report and no more parsing. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** A CI gate, not part of generating the artifacts.
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is rendered and compared however they are split across files; only the small per-file share changes.
+
+### `computeSourceFingerprint`
+
+**Why we benchmark it.** It decides whether a cached evidence model is still current, so it runs before every cached read and must cost far less than the recompute it avoids.
+
+**What poor performance would mean.** A cache that costs nearly as much as the recompute it saves, which makes every cached read pointless.
+
+**Expected growth: O(n).** It walks the schema files and hashes each one's text once, with no parsing or linking, so cost is proportional to the bytes of source.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Run before a cached read, not while generating.
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total bytes of source are hashed however they are split across files; only the per-file read overhead changes.
 
 ### `generateEvidenceModel`
 
@@ -301,11 +435,12 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | Variable | How it is handled | What it is |
 | --- | --- | --- |
 | declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| variables-per-contract | swept | How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work. |
 | schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
 | filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
 | runtime | fixed at "Node (V8)" | Measured on Node only. |
 
-**Measured: O(n)** (exponent 0.81, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.77, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -318,6 +453,371 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | 1280 | 228 ms | 234 ms | 440 ms | 30.1 MiB | 4 |
 | 2560 | 406 ms | 411 ms | 731 ms | 43.7 MiB | 2 |
 | 5120 | 767 ms | 770 ms | 1.22 s | 87.6 MiB | 1 |
+
+##### Varying `variables-per-contract`
+
+How many variables each schema file declares (ten in the main sweep). With the total fixed, few large contracts or many small ones cost differently: per-file work (open, parse, link) against per-variable work.
+
+**Expected: O(1).** The same total number of variables is modelled however they are split across files; only the small per-file share changes.
+
+### `getEvidenceModel`
+
+**Why we benchmark it.** The cached way to read the evidence model: it trusts a committed artifact only while the source fingerprint matches, and recomputes otherwise.
+
+**What poor performance would mean.** A miss that costs more than a plain recompute, or a hit that costs nearly as much as one, would make the cache worse than not having it.
+
+**Expected growth: O(n).** A hit fingerprints the source and reads one file; a miss does that and then rebuilds the model, so both grow with the amount of configuration.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
+| cache state | variant | A committed artifact whose fingerprint matches, or none. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** A cached read, not part of generating the artifacts.
+
+#### Variant `cache-hit`
+
+The committed artifact is current: read from disk, no recompute.
+
+**Expected for this variant: O(n).** The source is fingerprinted and the artifact read once, both proportional to the amount of configuration, with no parsing.
+
+#### Variant `cache-miss`
+
+No artifact exists: the model is rebuilt.
+
+### `parseSchemaFile`
+
+**Why we benchmark it.** Every generator parses each schema file with the TypeScript parser, which is the largest single cost of a build-time run.
+
+**What poor performance would mean.** Every build-time command slows in proportion to the source it parses, and a super-linear parse would punish the largest schema files first.
+
+**Expected growth: O(n).** The text is parsed once by the TypeScript parser and the variables read from one syntax tree, so cost is proportional to the length of the source.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many variables the one schema file declares. |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Run once per schema file inside every generator; measured here on one file.
+
+### `linkFiles`
+
+**Why we benchmark it.** It turns parsed schema files into linked contracts, following the imports between them, and runs once in every generator.
+
+**What poor performance would mean.** Every build-time command slows in proportion to the number of schema files and the imports between them.
+
+**Expected growth: O(n).** Each file is read and parsed once and each import resolved once, so cost is proportional to the number of files.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| filesystem | fixed at "local SSD through the Node adapter" | A network or virtual filesystem adds latency per file; not covered. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**Deliberately not covered**
+
+- **aliased and package imports** -- Following a tsconfig alias or an allowlisted package adds a resolution per import; the fixtures import nothing.
+
+**In the end-to-end run:** Run once inside every generator; measured on its own.
+
+### `buildContractModel`
+
+**Why we benchmark it.** It derives the contract fact model (every contract, its variables and their documentation) that the other models and every projection build on.
+
+**What poor performance would mean.** Every evidence build slows in proportion to the number of variables.
+
+**Expected growth: O(n).** One entry is built for each contract and each variable, once, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `buildOwnershipModel`
+
+**Why we benchmark it.** It derives who owns each contract and variable, the model ownership reviews and the usage report read.
+
+**What poor performance would mean.** Every evidence build slows in proportion to the number of variables.
+
+**Expected growth: O(n).** Each variable's owner is resolved once from its own documentation and its contract's, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `buildLifecycleModel`
+
+**Why we benchmark it.** It derives the lifecycle fact model: what expires, what is due for rotation and what is deprecated, which the rotation reminders read.
+
+**What poor performance would mean.** Every evidence build and every scheduled rotation check slows in proportion to the number of variables.
+
+**Expected growth: O(n).** Each variable's dates are read and compared once, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `computeExpiringEntries`
+
+**Why we benchmark it.** It lists what expires within a window, once for every reminder and every report that shows expiries.
+
+**What poor performance would mean.** A slower expiry reminder in proportion to the number of variables.
+
+**Expected growth: O(n).** Each variable's expiry date is compared with the window once, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `computeSecurityReviewCounters`
+
+**Why we benchmark it.** It counts what a security review looks at (secrets, owners, expiries, undocumented variables), once per documentation render.
+
+**What poor performance would mean.** Slower documentation in proportion to the number of variables.
+
+**Expected growth: O(n).** Each variable is classified once into the counters, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `renderDocs`
+
+**Why we benchmark it.** It turns the contract model into the Markdown reference, the largest text env-cap renders.
+
+**What poor performance would mean.** Documentation builds slow in proportion to the number of variables and the prose each carries.
+
+**Expected growth: O(n).** One section is rendered for each contract and variable, once, so cost is proportional to the amount of documentation.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `renderManifest`
+
+**Why we benchmark it.** It renders the TypeScript manifest the application imports, in every build that ships the application.
+
+**What poor performance would mean.** Slower builds in proportion to the number of variables.
+
+**Expected growth: O(n).** One manifest entry is rendered for each variable, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `computeReconciliation`
+
+**Why we benchmark it.** It compares the variables the schemas declare with those in an existing `.env.example`, to say what to add and what is stale.
+
+**What poor performance would mean.** A slower `.env.example` update in proportion to the number of variables and the size of the file.
+
+**Expected growth: O(n).** The existing lines are indexed once and each declared variable looked up once, so cost is proportional to both.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `renderEnvExample`
+
+**Why we benchmark it.** It renders the `.env.example` file developers copy, from the same contracts as everything else.
+
+**What poor performance would mean.** A slower `.env.example` update in proportion to the number of variables.
+
+**Expected growth: O(n).** One line is rendered for each variable, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `groupVariablesByOwner`
+
+**Why we benchmark it.** It groups every variable under its owner, which the ownership summary and the usage report both print.
+
+**What poor performance would mean.** A slower ownership report in proportion to the number of variables.
+
+**Expected growth: O(n).** Each variable is placed in its owner's group once, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `applyLiveExpirationOverrides`
+
+**Why we benchmark it.** It replaces schema expiry dates with live ones (read from a secrets manager), once per run that uses a live source.
+
+**What poor performance would mean.** A slower run for every project that tracks expiry in a live source, in proportion to the number of variables.
+
+**Expected growth: O(n).** Each variable is looked up once in the map of overrides, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `resolveLiveExpirationDates`
+
+**Why we benchmark it.** It asks the caller's live source for the expiry of every variable once, then applies the answers.
+
+**What poor performance would mean.** A slower run for every project that uses a live source, in proportion to the number of variables, on top of the lookup the caller pays for.
+
+**Expected growth: O(n).** The variable names are collected once, handed to the caller's function once and the answers applied once, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `configurationReference`
+
+**Why we benchmark it.** It projects the evidence model into the flat configuration reference an operations team reads.
+
+**What poor performance would mean.** A slower projection in proportion to the evidence model, which grows with the number of variables.
+
+**Expected growth: O(n).** It reads the models once and builds one entry per variable, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `expiringSoonReport`
+
+**Why we benchmark it.** It projects the evidence model into the report of what expires soon, which the rotation reminders send.
+
+**What poor performance would mean.** A slower reminder in proportion to the evidence model.
+
+**Expected growth: O(n).** It reads the lifecycle and contract models once, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `ownershipSummary`
+
+**Why we benchmark it.** It projects the evidence model into the per-owner summary a review reads.
+
+**What poor performance would mean.** A slower summary in proportion to the evidence model.
+
+**Expected growth: O(n).** It groups every variable by owner once, so cost is proportional to the number of variables.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis: how many environment variables are declared across the project (ten per schema file, so the file count grows with it). |
+| schema content | fixed at "realistic generated TypeScript: JSON-credential processors, validators and documentEnv calls" | Parsing cost depends on source-text volume and variety; the fixtures are literal TypeScript source, never executed by the tooling. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
+
+### `buildSarifLog`
+
+**Why we benchmark it.** It converts the finding model into SARIF for code-scanning dashboards, in every pipeline that uploads findings.
+
+**What poor performance would mean.** A slower upload step in proportion to the number of findings.
+
+**Expected growth: O(n).** One SARIF result is built for each finding, so cost is proportional to the number of findings.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| declared variables | swept | The tier axis here is findings, one for each of this many variables with a problem. |
+| finding mix | fixed at "one error, one warning and one info in turn" | Severity only picks the SARIF level. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which calls the generators; measured on its own.
 
 ### `defineEvidenceProjection (project)`
 
@@ -336,7 +836,7 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | projection shape | fixed at "five derived fields across all six fact models" | A projection that reads fewer fields still pays the clone; one that computes more adds proportional work. |
 | runtime | fixed at "Node (V8)" | Measured on Node only. |
 
-**Measured: O(n)** (exponent 0.94, 9 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 1.07, 9 sizes) -- ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -350,29 +850,29 @@ Long descriptions and extra documentation fields per variable (a heavily documen
 | 2560 | 53.2 ms | 55.9 ms | 62.6 ms | 9.8 MiB | 19 |
 | 5120 | 124 ms | 129 ms | 170 ms | 41.8 MiB | 8 |
 
-## 3. What makes up the end-to-end overhead
+## 3. What makes up one end-to-end operation
 
-Each function's measured cost is multiplied by how many times one end-to-end operation calls it, then compared with the total overhead from section 1. This shows where the cost actually lives, so effort goes to the function that matters. Shares are estimates: they can sum to slightly more or less than 100% because the two measurements were taken separately (the remainder is shown as _unattributed_).
+Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls, so where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time): every moment of the operation belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly -- not against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-**At 640 variables** (total added: 139 ms)
+**At 640 variables** (whole operation: 147 ms)
 
-| Function | Calls / operation | Estimated time | Share of added time | Share of operation |
+| Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `generate-artifacts` | 1 | 149 ms | 107% | 101% |
-| `generate-usage-report` | 1 | 108 ms | 77% | 73% |
-| `generate-documentation` | 1 | 84.1 ms | 60% | 57% |
-| `discover-schema-files` | 1 | 3.00 ms | 2.2% | 2.0% |
-| _unattributed_ |  | 0 | 0.0% |  |
+| `generate-artifacts` | 1 | 149 ms | 146 ms | 99% |
+| `discover-schema-files` | 1 | 3.00 ms | 3.00 ms | 2.0% |
+| `generate-documentation` | 0 | 0 | 0 | 0.0% |
+| `generate-usage-report` | 0 | 0 | 0 | 0.0% |
+| _unattributed_ |  |  | 0 | 0.0% |
 
-**At 5120 variables** (total added: 1.08 s)
+**At 5120 variables** (whole operation: 1.14 s)
 
-| Function | Calls / operation | Estimated time | Share of added time | Share of operation |
+| Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `generate-artifacts` | 1 | 1.10 s | 101% | 96% |
-| `generate-usage-report` | 1 | 534 ms | 49% | 47% |
-| `generate-documentation` | 1 | 377 ms | 35% | 33% |
-| `discover-schema-files` | 1 | 20.7 ms | 1.9% | 1.8% |
-| _unattributed_ |  | 0 | 0.0% |  |
+| `generate-artifacts` | 1 | 1.10 s | 1.08 s | 94% |
+| `discover-schema-files` | 1 | 20.7 ms | 20.7 ms | 1.8% |
+| `generate-documentation` | 0 | 0 | 0 | 0.0% |
+| `generate-usage-report` | 0 | 0 | 0 | 0.0% |
+| _unattributed_ |  |  | 47.9 ms | 4.2% |
 
 ## Cost model
 

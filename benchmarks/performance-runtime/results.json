@@ -19532,19 +19532,25 @@
     "complexity": {
       "end-to-end:baseline": {
         "class": "linearithmic",
-        "exponent": 1.2142283384135437,
+        "exponent": 1.1286913371904261,
+        "rSquared": 0.963966350046415,
+        "variable": "variable",
         "notation": "O(n log n)",
         "points": 10
       },
       "end-to-end:with-package": {
         "class": "linear",
-        "exponent": 0.7311441422061852,
+        "exponent": 0.76283512045855,
+        "rSquared": 0.9284133528499416,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10
       },
       "fn:cold-start": {
         "class": "logarithmic",
-        "exponent": 0.3031154491201597,
+        "exponent": 0.5863027244192651,
+        "rSquared": 0.9857388394772355,
+        "variable": "variable",
         "notation": "O(log n)",
         "points": 10,
         "expected": "linear",
@@ -19552,17 +19558,23 @@
         "agreement": "close"
       },
       "fn:create-env": {
-        "class": "linearithmic",
-        "exponent": 1.2412246714648518,
-        "notation": "O(n log n)",
+        "class": null,
+        "exponent": 0.9584711948793544,
+        "rSquared": 0.6822507722911818,
+        "reason": "poor-fit",
+        "variable": "variable",
+        "minRSquared": 0.8,
+        "notation": null,
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "unknown"
       },
       "fn:validate-env": {
         "class": "linear",
-        "exponent": 0.7360397523581259,
+        "exponent": 0.7673878607948971,
+        "rSquared": 0.9246434697368969,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -19570,26 +19582,34 @@
         "agreement": "matches"
       },
       "fn:processor-base64": {
-        "class": "logarithmic",
-        "exponent": 0.17078949937153512,
-        "notation": "O(log n)",
+        "class": null,
+        "exponent": 0.33287912940011516,
+        "rSquared": 0.704625914867112,
+        "reason": "poor-fit",
+        "variable": "variable",
+        "minRSquared": 0.8,
+        "notation": null,
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "unknown"
       },
       "fn:processor-parse-json": {
-        "class": "linearithmic",
-        "exponent": 1.1109316273155845,
-        "notation": "O(n log n)",
+        "class": "linear",
+        "exponent": 1.0950722030760174,
+        "rSquared": 0.9996203987695536,
+        "variable": "variable",
+        "notation": "O(n)",
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "matches"
       },
       "fn:processor-split": {
         "class": "linear",
-        "exponent": 0.9266950775407422,
+        "exponent": 0.9465333140757561,
+        "rSquared": 0.9734058670947429,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -19598,7 +19618,9 @@
       },
       "fn:processor-to-array": {
         "class": "linear",
-        "exponent": 1.002712758935818,
+        "exponent": 0.8570320779986486,
+        "rSquared": 0.9899564557333899,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -19607,7 +19629,9 @@
       },
       "fn:processor-to-big-int": {
         "class": "linearithmic",
-        "exponent": 1.113598795161599,
+        "exponent": 1.599321618260992,
+        "rSquared": 0.9956290944049081,
+        "variable": "variable",
         "notation": "O(n log n)",
         "points": 10,
         "expected": "linear",
@@ -19616,7 +19640,9 @@
       },
       "fn:processor-to-boolean": {
         "class": "constant",
-        "exponent": -0.0380405553353888,
+        "exponent": -0.007903895537234742,
+        "rSquared": 0.08653889467325082,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19625,7 +19651,9 @@
       },
       "fn:processor-to-date": {
         "class": "constant",
-        "exponent": -0.0031923345494452556,
+        "exponent": -0.00470249093678355,
+        "rSquared": 0.1359733237637698,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19634,7 +19662,9 @@
       },
       "fn:processor-to-integer": {
         "class": "constant",
-        "exponent": -0.007057519596563954,
+        "exponent": -0.020157563293025215,
+        "rSquared": 0.7935312915673256,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19642,17 +19672,21 @@
         "agreement": "matches"
       },
       "fn:processor-to-lower-case": {
-        "class": "logarithmic",
-        "exponent": 0.397997972890192,
-        "notation": "O(log n)",
+        "class": "linear",
+        "exponent": 0.6891353376016447,
+        "rSquared": 0.9941408539062946,
+        "variable": "variable",
+        "notation": "O(n)",
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "matches"
       },
       "fn:processor-to-number": {
         "class": "constant",
-        "exponent": 0.0037289688562356384,
+        "exponent": 0.0017180557146019983,
+        "rSquared": 0.05966069816235653,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19660,17 +19694,21 @@
         "agreement": "matches"
       },
       "fn:processor-to-reg-exp": {
-        "class": "logarithmic",
-        "exponent": 0.6114862842470604,
-        "notation": "O(log n)",
+        "class": "linear",
+        "exponent": 0.7698380976907071,
+        "rSquared": 0.994959064938669,
+        "variable": "variable",
+        "notation": "O(n)",
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "matches"
       },
       "fn:processor-to-string": {
         "class": "constant",
-        "exponent": -0.00006019534656044176,
+        "exponent": -0.019835054596355754,
+        "rSquared": 0.7864513684789227,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19679,7 +19717,9 @@
       },
       "fn:processor-to-url": {
         "class": "logarithmic",
-        "exponent": 0.3217828029289275,
+        "exponent": 0.6051335117944157,
+        "rSquared": 0.9888404404234317,
+        "variable": "variable",
         "notation": "O(log n)",
         "points": 10,
         "expected": "linear",
@@ -19687,17 +19727,21 @@
         "agreement": "close"
       },
       "fn:processor-to-upper-case": {
-        "class": "logarithmic",
-        "exponent": 0.4152202311397099,
-        "notation": "O(log n)",
+        "class": "linear",
+        "exponent": 0.7461189115686732,
+        "rSquared": 0.9963511748010161,
+        "variable": "variable",
+        "notation": "O(n)",
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "matches"
       },
       "fn:processor-trim": {
         "class": "linear",
-        "exponent": 0.7232075974866233,
+        "exponent": 0.8878703305123097,
+        "rSquared": 0.9988692469922628,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -19706,7 +19750,9 @@
       },
       "fn:validator-after": {
         "class": "constant",
-        "exponent": -0.03870144596545436,
+        "exponent": -0.013105936707569146,
+        "rSquared": 0.3029398120834722,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19715,7 +19761,9 @@
       },
       "fn:validator-all": {
         "class": "linear",
-        "exponent": 0.8547960414442123,
+        "exponent": 0.9738220543152543,
+        "rSquared": 0.9998768675397944,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -19724,7 +19772,9 @@
       },
       "fn:validator-any": {
         "class": "linear",
-        "exponent": 0.9632252148532209,
+        "exponent": 0.9890257642862066,
+        "rSquared": 0.9996928345297709,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -19733,7 +19783,9 @@
       },
       "fn:validator-before": {
         "class": "constant",
-        "exponent": -0.0039085009277940504,
+        "exponent": 0.012307430720649342,
+        "rSquared": 0.5465400079707561,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19742,7 +19794,9 @@
       },
       "fn:validator-custom": {
         "class": "constant",
-        "exponent": 0.0011928526192744916,
+        "exponent": 0.0006338627661736533,
+        "rSquared": 0.000803987200880707,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19750,17 +19804,21 @@
         "agreement": "matches"
       },
       "fn:validator-email": {
-        "class": "logarithmic",
-        "exponent": 0.4552967854463057,
-        "notation": "O(log n)",
+        "class": "linear",
+        "exponent": 0.6771880761979548,
+        "rSquared": 0.9776520992625891,
+        "variable": "variable",
+        "notation": "O(n)",
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "matches"
       },
       "fn:validator-ends-with": {
         "class": "constant",
-        "exponent": 0.006137326729755073,
+        "exponent": 0.018792902907489965,
+        "rSquared": 0.5135181679123393,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19769,7 +19827,9 @@
       },
       "fn:validator-finite": {
         "class": "constant",
-        "exponent": -0.006546032386791806,
+        "exponent": 0.00552779563919636,
+        "rSquared": 0.3347494765579849,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19778,7 +19838,9 @@
       },
       "fn:validator-future": {
         "class": "constant",
-        "exponent": -0.000230709709501863,
+        "exponent": 0.0000715737195217063,
+        "rSquared": 0.00022788865026968086,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19787,16 +19849,20 @@
       },
       "fn:validator-includes": {
         "class": "constant",
-        "exponent": 0.07003430634204644,
+        "exponent": 0.14671172084382444,
+        "rSquared": 0.9445621149281648,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
-        "expected": "linear",
-        "expectedNotation": "O(n)",
-        "agreement": "differs"
+        "expected": "constant",
+        "expectedNotation": "O(1)",
+        "agreement": "matches"
       },
       "fn:validator-integer": {
         "class": "constant",
-        "exponent": -0.0003764218173940046,
+        "exponent": 0.004703229783750097,
+        "rSquared": 0.10254130666049543,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19805,7 +19871,9 @@
       },
       "fn:validator-length": {
         "class": "constant",
-        "exponent": 0.0002963265672834382,
+        "exponent": -0.005932035819059466,
+        "rSquared": 0.07810785178211865,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19813,17 +19881,21 @@
         "agreement": "matches"
       },
       "fn:validator-matches": {
-        "class": "logarithmic",
-        "exponent": 0.49760384643254274,
-        "notation": "O(log n)",
+        "class": "linear",
+        "exponent": 0.707800913065454,
+        "rSquared": 0.9949327570994412,
+        "variable": "variable",
+        "notation": "O(n)",
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "close"
+        "agreement": "matches"
       },
       "fn:validator-max": {
         "class": "constant",
-        "exponent": 0.002576355657480794,
+        "exponent": 0.00318692881422872,
+        "rSquared": 0.1968082192005688,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19832,7 +19904,9 @@
       },
       "fn:validator-max-items": {
         "class": "constant",
-        "exponent": 0.00010616615709869926,
+        "exponent": -0.00442600369878642,
+        "rSquared": 0.47724178495714165,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19841,7 +19915,9 @@
       },
       "fn:validator-max-length": {
         "class": "constant",
-        "exponent": -0.00088054086451105,
+        "exponent": 0.002978980923263077,
+        "rSquared": 0.3878228316882263,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19850,7 +19926,9 @@
       },
       "fn:validator-min": {
         "class": "constant",
-        "exponent": 0.000925233274377825,
+        "exponent": -0.00043496964679555196,
+        "rSquared": 0.01709352867204683,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19859,7 +19937,9 @@
       },
       "fn:validator-min-items": {
         "class": "constant",
-        "exponent": -0.00036633756722495564,
+        "exponent": -0.014470381712005277,
+        "rSquared": 0.4685275745779244,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19867,17 +19947,23 @@
         "agreement": "matches"
       },
       "fn:validator-min-length": {
-        "class": "constant",
-        "exponent": 0.010687373219308238,
-        "notation": "O(1)",
+        "class": null,
+        "exponent": -0.0671023662016977,
+        "rSquared": 0.09843243881184693,
+        "reason": "poor-fit",
+        "variable": "variable",
+        "minRSquared": 0.8,
+        "notation": null,
         "points": 10,
         "expected": "constant",
         "expectedNotation": "O(1)",
-        "agreement": "matches"
+        "agreement": "unknown"
       },
       "fn:validator-negative": {
         "class": "constant",
-        "exponent": 0.0021874428810616953,
+        "exponent": -0.0019604049014787625,
+        "rSquared": 0.19416479021930666,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19886,7 +19972,9 @@
       },
       "fn:validator-not": {
         "class": "constant",
-        "exponent": 0.0006302774615756788,
+        "exponent": -0.05422028476795462,
+        "rSquared": 0.5406565088795949,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19895,7 +19983,9 @@
       },
       "fn:validator-one-of": {
         "class": "linear",
-        "exponent": 0.7624596345597394,
+        "exponent": 0.8162247436564123,
+        "rSquared": 0.924680852293978,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -19904,7 +19994,9 @@
       },
       "fn:validator-optional": {
         "class": "constant",
-        "exponent": 0.0002164955056703875,
+        "exponent": -0.0023632665611506027,
+        "rSquared": 0.03555592458438184,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19913,7 +20005,9 @@
       },
       "fn:validator-past": {
         "class": "constant",
-        "exponent": -0.0011873967108042196,
+        "exponent": 0.0015058711814987594,
+        "rSquared": 0.04281307450676464,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19922,7 +20016,9 @@
       },
       "fn:validator-positive": {
         "class": "constant",
-        "exponent": 0.0023436826506695956,
+        "exponent": 0.005703277469973084,
+        "rSquared": 0.372900838142609,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19931,7 +20027,9 @@
       },
       "fn:validator-range": {
         "class": "constant",
-        "exponent": -0.0030316621936721058,
+        "exponent": 0.0005834699518422373,
+        "rSquared": 0.05615825159352594,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19940,7 +20038,9 @@
       },
       "fn:validator-refine": {
         "class": "constant",
-        "exponent": -0.000031965354910170896,
+        "exponent": -0.0062294649514570075,
+        "rSquared": 0.6858138017323082,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19949,7 +20049,9 @@
       },
       "fn:validator-required": {
         "class": "constant",
-        "exponent": 0.0002539107953112278,
+        "exponent": 0.002152198713292207,
+        "rSquared": 0.3324188016372971,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19958,7 +20060,9 @@
       },
       "fn:validator-safe-integer": {
         "class": "constant",
-        "exponent": -0.008602971932864922,
+        "exponent": -0.0016622780191389668,
+        "rSquared": 0.10019470681457354,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19966,17 +20070,21 @@
         "agreement": "matches"
       },
       "fn:validator-unique": {
-        "class": "linear",
-        "exponent": 1.0233470392382034,
-        "notation": "O(n)",
+        "class": "linearithmic",
+        "exponent": 1.3233495912845903,
+        "rSquared": 0.9876810158193661,
+        "variable": "variable",
+        "notation": "O(n log n)",
         "points": 10,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "matches"
+        "agreement": "close"
       },
       "fn:validator-url": {
         "class": "logarithmic",
-        "exponent": 0.3568803150825265,
+        "exponent": 0.6153013405298314,
+        "rSquared": 0.9938342342856689,
+        "variable": "variable",
         "notation": "O(log n)",
         "points": 10,
         "expected": "linear",
@@ -19985,7 +20093,9 @@
       },
       "fn:validator-uuid": {
         "class": "constant",
-        "exponent": -0.04252041066014159,
+        "exponent": 0.03707091430050231,
+        "rSquared": 0.1572099863420876,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -19994,7 +20104,9 @@
       },
       "fn:validator-uuid-version": {
         "class": "constant",
-        "exponent": -0.0014440870790754614,
+        "exponent": -0.001731013493052431,
+        "rSquared": 0.039757534991142984,
+        "variable": "variable",
         "notation": "O(1)",
         "points": 10,
         "expected": "constant",
@@ -20154,70 +20266,70 @@
             "n": 20,
             "calls": 1,
             "estimatedMs": 0.020801000000574277,
-            "shareOfOverhead": 1.0959430980283351,
+            "exclusiveMs": 0.020801000000574277,
             "shareOfTotal": 1.052202944032468
           },
           {
             "n": 40,
             "calls": 1,
             "estimatedMs": 0.027490999998917687,
-            "shareOfOverhead": 1.1335032646631729,
+            "exclusiveMs": 0.027490999998917687,
             "shareOfTotal": 1.0615105413087589
           },
           {
             "n": 80,
             "calls": 1,
             "estimatedMs": 0.04048099999999977,
-            "shareOfOverhead": 1.1428564619414843,
+            "exclusiveMs": 0.04048099999999977,
             "shareOfTotal": 1.0444553382550017
           },
           {
             "n": 160,
             "calls": 1,
             "estimatedMs": 0.06971499999963271,
-            "shareOfOverhead": 1.172952711207771,
+            "exclusiveMs": 0.06971499999963271,
             "shareOfTotal": 1.0402273981974262
           },
           {
             "n": 320,
             "calls": 1,
             "estimatedMs": 0.13675599999987753,
-            "shareOfOverhead": 1.2597485002612205,
+            "exclusiveMs": 0.13675599999987753,
             "shareOfTotal": 1.0385795437278493
           },
           {
             "n": 640,
             "calls": 1,
             "estimatedMs": 0.2812340000000404,
-            "shareOfOverhead": 1.5034151899609385,
+            "exclusiveMs": 0.2812340000000404,
             "shareOfTotal": 1.0739902008345297
           },
           {
             "n": 1280,
             "calls": 1,
             "estimatedMs": 0.2810329999992973,
-            "shareOfOverhead": 1.5709206973808783,
+            "exclusiveMs": 0.2810329999992973,
             "shareOfTotal": 1.0648133764235281
           },
           {
             "n": 2560,
             "calls": 1,
             "estimatedMs": 0.47515500000008615,
-            "shareOfOverhead": 2.408449633359689,
+            "exclusiveMs": 0.47515500000008615,
             "shareOfTotal": 1.0509232943551254
           },
           {
             "n": 5120,
             "calls": 1,
             "estimatedMs": 1.0592449999985547,
-            "shareOfOverhead": 3.10107941786509,
+            "exclusiveMs": 1.0592449999985547,
             "shareOfTotal": 1.0982185810011074
           },
           {
             "n": 10240,
             "calls": 1,
             "estimatedMs": 2.070056000000477,
-            "shareOfOverhead": 3.7948003475735166,
+            "exclusiveMs": 2.070056000000477,
             "shareOfTotal": 1.0743486224059482
           }
         ]
@@ -20252,6 +20364,33 @@
           "highUsdPerMillion": 0.0011364564395749009,
           "opsPerSecondPerCore": 1833.1872894127705
         }
+      }
+    },
+    "coverage": {
+      "benchmarks": [
+        {
+          "id": "create-env",
+          "covers": {
+            "createEnv": {
+              "schema": "swept",
+              "options.name": "fixed: a unique name per call, which is what every real contract has",
+              "options.source": "fixed: this module's own URL, one string recorded with the contract"
+            }
+          }
+        },
+        {
+          "id": "validate-env",
+          "covers": {
+            "validateEnv": {
+              "options.activeContexts": "not covered: it only filters variables that declare a `context`, and the fixtures declare none",
+              "options.manifest": "sweep:variables-per-contract",
+              "options.values": "swept"
+            }
+          }
+        }
+      ],
+      "notBenchmarked": {
+        "documentEnv": "A deliberate no-op at runtime: it exists so build tooling can read the call site and so the compiler checks the documentation's shape, and it does nothing with its arguments, so it costs the same whatever they hold."
       }
     }
   }

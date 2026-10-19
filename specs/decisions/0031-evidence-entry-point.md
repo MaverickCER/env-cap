@@ -44,7 +44,7 @@ projection against it without pulling in `typescript` or `node:fs` at all.
   feature alone.
 - **No default export.** Unlike the eslint-plugin entry point (ADR 0017),
   `src/evidence/index.ts` has only named exports, so it needs none of the
-  CJS-interop postprocessing `scripts/fix-eslint-plugin-cjs-interop.mjs`
+  CJS-interop postprocessing `internal-package-contract tool cjs-interop`
   exists for -- esbuild's ordinary CJS output already resolves
   `require("@maverickcer/env-cap/evidence").defineEvidenceProjection`
   correctly.
@@ -56,8 +56,8 @@ projection against it without pulling in `typescript` or `node:fs` at all.
 
 ## Consequences
 
-- `tsup.config.ts`, `scripts/emit-dts-shims.mjs`, `scripts/check-size.mjs`
-  (a 3KB gzip budget, matching `runtime`/`helpers`), `typedoc.json`,
+- `tsup.config.ts`, `scripts/emit-dts-shims.mjs`, `ci/size-budgets.mjs`
+  (a 3KB gzip budget, matching `runtime`; `helpers` has 4KB), `typedoc.json`,
   `package.json#exports`, `AGENTS.md`, and `VERSIONING.md` each gained an
   `evidence` entry, mirroring every other place ADR 0017 already touched for
   `eslint-plugin`.
