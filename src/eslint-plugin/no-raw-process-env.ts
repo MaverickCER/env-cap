@@ -3,10 +3,10 @@
 // `eslint-utils` subpath to keep the loaded surface small.
 import { RuleCreator } from "@typescript-eslint/utils/eslint-utils"
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils"
-import { globToRegExp } from "./glob.js"
+import { matchesAllowList } from "./glob.js"
 
 const createRule = RuleCreator(
-  (name) => `https://github.com/maverickcer/env-cap#eslint-plugin-${name}`,
+  () => "https://github.com/MaverickCER/env-cap/blob/main/GUIDE.md#eslint-plugin",
 )
 
 export interface RuleOptions {
@@ -53,10 +53,9 @@ export const noRawProcessEnv = createRule<[RuleOptions], "noRawProcessEnv">({
   },
   defaultOptions: [{ allow: [] }],
   create(context, [options]) {
-    const filename = context.filename
     // `RuleCreator` merges `defaultOptions` onto the configured options, so `allow` is always set.
     const allowPatterns = [...DEFAULT_SCHEMA_ALLOWLIST, ...(options.allow as readonly string[])]
-    if (allowPatterns.some((p) => globToRegExp(p).test(filename))) return {}
+    if (matchesAllowList(allowPatterns, context.filename, context.cwd)) return {}
 
     return {
       MemberExpression(node) {

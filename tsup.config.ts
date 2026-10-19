@@ -55,7 +55,7 @@ const bundles: Options[] = [
     // `BuildFileSystem` adapter (`src/cli/filesystem.ts`, re-exported through
     // `src/node/index.ts`). An executable-context entry like `bin` /
     // `./eslint-plugin`: it legitimately bundles `node:fs/promises`, and
-    // `scripts/verify-no-ambient-fs.mjs` exempts its resolved target. See ADR 0040.
+    // the `AmbientCapabilities` check exempts its resolved target. See ADR 0040.
     entry: { node: "src/node/index.ts" },
     format: ["esm", "cjs"],
     platform: "node",
@@ -118,7 +118,7 @@ const bundles: Options[] = [
     // see its own module doc comment). tsup's built-in `cjsInterop` option
     // only rewrites `module.exports` when a chunk has exactly one export
     // named "default" (see its source), so it silently no-ops for this
-    // two-export chunk. See scripts/fix-eslint-plugin-cjs-interop.mjs for
+    // two-export chunk. See internal-package-contract tool cjs-interop for
     // the actual fix -- it has to run as a post-build pass, since tsup's own
     // named-export assignments are appended after esbuild finishes (an
     // `esbuildOptions.footer` here would land too early, before those

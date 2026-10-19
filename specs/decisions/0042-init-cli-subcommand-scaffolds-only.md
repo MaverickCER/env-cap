@@ -70,7 +70,7 @@ into a consumer's repo is theirs and unaffected.
   path.
 - `src/cli/init.ts` uses `node:fs` directly. That's consistent with ADR
   0040's carve-out (`src/cli/**` is executable-context source) and the
-  file is bundled into the `bin` target, so `verify-no-ambient-fs`'s
+  file is bundled into the `bin` target, so the `AmbientCapabilities` check's
   tarball scan exempts it exactly as it does `src/cli/index.ts`.
 - The scaffolded templates are plain string constants in `init.ts`. If the
   public `createEnv`/`documentEnv`/`generateEnvArtifacts` API changes

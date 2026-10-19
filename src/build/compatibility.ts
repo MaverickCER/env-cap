@@ -1,5 +1,6 @@
 import { deepEqual } from "./deep-equal.js"
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
+import { VALUE_FIELDS, donatedTo } from "./merge-documentation.js"
 
 /**
  * Every stable `code` a check in this file (or `exclusive-group.ts`) can
@@ -41,26 +42,34 @@ export interface CompatibilityIssue {
   readonly code?: CompatibilityIssueCode
 }
 
-const DOCUMENTATION_COMPARISON_FIELDS = [
-  "description",
-  "owner",
-  "sensitivity",
-  "expiresAt",
-  "refreshInstructions",
-  "setupInstructions",
-  "required",
-] as const
-
-/** Field names (including `metadata.<key>`) where two documented declarations of the same variable disagree -- empty when they match. */
+/** Field names (including `metadata.<key>`) that two documented declarations of the same variable both set, to different values -- empty when they agree or one leaves the field to the other. */
 function documentationDivergences(a: DiscoveredVariable, b: DiscoveredVariable): string[] {
   const divergences: string[] = []
-  for (const field of DOCUMENTATION_COMPARISON_FIELDS) {
-    if (a[field] !== b[field]) divergences.push(field)
+  // A field only one declaration sets is not a disagreement: the other leaves it to the first (see
+  // `mergeSharedDocumentation()`), so only a field both set, to different values, is.
+  // Every field the merge can fill, compared structurally: a list or an object that reads the same is the same.
+  // A value one of them was given by the documentation merge is not one it wrote, so it is not compared.
+  const given = new Set([...donatedTo(a), ...donatedTo(b)])
+  for (const field of VALUE_FIELDS) {
+    if (
+      !given.has(field) &&
+      a[field] !== undefined &&
+      b[field] !== undefined &&
+      !deepEqual(a[field], b[field])
+    ) {
+      divergences.push(field)
+    }
   }
   const aMetadata = a.metadata ?? {}
   const bMetadata = b.metadata ?? {}
-  for (const key of new Set([...Object.keys(aMetadata), ...Object.keys(bMetadata)])) {
-    if (!deepEqual(aMetadata[key], bMetadata[key])) divergences.push(`metadata.${key}`)
+  for (const key of Object.keys(aMetadata)) {
+    if (
+      !given.has(`metadata.${key}`) &&
+      key in bMetadata &&
+      !deepEqual(aMetadata[key], bMetadata[key])
+    ) {
+      divergences.push(`metadata.${key}`)
+    }
   }
   return divergences
 }
@@ -164,20 +173,20 @@ export function detectCompatibilityIssues(
           })
         }
 
-        if (a.variable.documented && b.variable.documented) {
-          const divergences = documentationDivergences(a.variable, b.variable)
-          if (divergences.length > 0) {
-            issues.push({
-              severity: "warning",
-              variable: key,
-              files: [a.file, b.file],
-              code: "DUPLICATE_VARIABLE_DOCUMENTATION",
-              reason:
-                `"${a.contractName}" and "${b.contractName}" both document this variable, but disagree on: ` +
-                `${divergences.join(", ")}. Confirm they're still meant to be the same variable and align the ` +
-                "documentation, or document them separately if they're not.",
-            })
-          }
+        // Only a field both set, to different values, disagrees, so a declaration that documents nothing has no
+        // disagreement to report and needs no test of its own.
+        const divergences = documentationDivergences(a.variable, b.variable)
+        if (divergences.length > 0) {
+          issues.push({
+            severity: "warning",
+            variable: key,
+            files: [a.file, b.file],
+            code: "DUPLICATE_VARIABLE_DOCUMENTATION",
+            reason:
+              `"${a.contractName}" and "${b.contractName}" both document this variable, but disagree on: ` +
+              `${divergences.join(", ")}. Confirm they're still meant to be the same variable and align the ` +
+              "documentation, or document them separately if they're not.",
+          })
         }
       }
     }

@@ -42,6 +42,114 @@ afterEach(async () => {
   await fs.rm(fixtureRoot, { recursive: true, force: true })
 })
 
+describe("linkFiles -- a variable declared in two contracts", () => {
+  const shipped = `
+    import { createEnv, documentEnv } from "@maverickcer/env-cap";
+    const shippedSchema = { TOKEN: { default: "", validator: () => true }, ONLY_THERE: { default: "" } };
+    export const shippedEnv = createEnv(shippedSchema, { name: "shipped" });
+    documentEnv(shippedSchema, {
+      variables: {
+        TOKEN: { description: "Explained once.", sensitivity: "secret", refreshInstructions: "Ask the package." },
+        ONLY_THERE: { description: "Only the package has this." },
+      },
+    });
+  `
+  const own = `
+    import { createEnv, documentEnv } from "@maverickcer/env-cap";
+    const ownSchema = { TOKEN: { default: "", validator: () => true }, MINE: { default: "" }, BARE: { default: "" } };
+    export const ownEnv = createEnv(ownSchema, { name: "own" });
+    documentEnv(ownSchema, {
+      variables: { TOKEN: { expiresAt: "2027-01-01" }, MINE: { description: "Mine." } },
+    });
+  `
+
+  it("takes the explanation from the package's contract and adds the application's own expiry", async () => {
+    const shippedFile = await write("node_modules/shared/env.ts", shipped)
+    const ownFile = await write("ci/env.ts", own)
+    const origins = new Map([[shippedFile, { packageName: "shared" } as never]])
+    const { contracts } = await linkFiles([ownFile, shippedFile], readFile, context, origins)
+    const token = (name: string) =>
+      contracts.find((c) => c.contractName === name)?.variables.find((v) => v.key === "TOKEN")
+    expect(token("own")).toMatchObject({
+      description: "Explained once.",
+      sensitivity: "secret",
+      refreshInstructions: "Ask the package.",
+      expiresAt: "2027-01-01",
+    })
+    expect(token("shipped")).toMatchObject({
+      description: "Explained once.",
+      expiresAt: "2027-01-01",
+    })
+  })
+
+  it("matches an undocumented variable to its own contract, not to the first one", async () => {
+    const first = await write(
+      "a/env.ts",
+      `import { createEnv } from "@maverickcer/env-cap";
+       export const firstEnv = createEnv({ UNRELATED: { default: "" } }, { name: "first" });`,
+    )
+    const second = await write(
+      "b/env.ts",
+      `import { createEnv } from "@maverickcer/env-cap";
+       export const secondEnv = createEnv({ SHARED: { default: "" } }, { name: "second" });`,
+    )
+    const third = await write(
+      "c/env.ts",
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+       const schema = { SHARED: { default: "" } };
+       export const thirdEnv = createEnv(schema, { name: "third" });
+       documentEnv(schema, { variables: { SHARED: { description: "Said here." } } });`,
+    )
+    const origins = new Map([[third, { packageName: "shared" } as never]])
+    const result = await linkFiles([first, second, third], readFile, context, origins)
+    expect(
+      result.undocumentedVariables.map(({ exportName, key }) => `${exportName}.${key}`),
+    ).toEqual(["firstEnv.UNRELATED"])
+  })
+
+  it("does not let one of the application's own contracts document another's variable", async () => {
+    const first = await write(
+      "a/env.ts",
+      `import { createEnv } from "@maverickcer/env-cap";
+       export const firstEnv = createEnv({ SHARED: { default: "" } }, { name: "first" });`,
+    )
+    const second = await write(
+      "b/env.ts",
+      `import { createEnv, documentEnv } from "@maverickcer/env-cap";
+       const schema = { SHARED: { default: "" } };
+       export const secondEnv = createEnv(schema, { name: "second" });
+       documentEnv(schema, { variables: { SHARED: { description: "Said here.", owner: "team-b" } } });`,
+    )
+    const result = await linkFiles([first, second], readFile, context)
+    expect(
+      result.undocumentedVariables.map(({ exportName, key }) => `${exportName}.${key}`),
+    ).toEqual(["firstEnv.SHARED"])
+    expect(
+      result.contracts.find((c) => c.contractName === "first")?.variables[0]?.owner,
+    ).toBeUndefined()
+  })
+
+  it("stops reporting a variable as undocumented once another declaration of it is documented", async () => {
+    const shippedFile = await write("node_modules/shared/env.ts", shipped)
+    const ownFile = await write("ci/env.ts", own)
+    const noDocs = await write(
+      "app/env.ts",
+      `import { createEnv } from "@maverickcer/env-cap";
+       export const appEnv = createEnv({ TOKEN: { default: "", validator: () => true }, LOOSE: { default: "" } }, { name: "app" });`,
+    )
+    const origins = new Map([[shippedFile, { packageName: "shared" } as never]])
+    const result = await linkFiles([noDocs, ownFile, shippedFile], readFile, context, origins)
+    expect(
+      result.undocumentedVariables.map(({ exportName, key }) => `${exportName}.${key}`).sort(),
+    ).toEqual(["appEnv.LOOSE", "ownEnv.BARE"])
+    expect(
+      result.contracts
+        .find((c) => c.contractName === "app")
+        ?.variables.find((v) => v.key === "TOKEN")?.documented,
+    ).toBe(true)
+  })
+})
+
 describe("linkFiles", () => {
   it("links a same-file createEnv + documentEnv pair via a shared local const", async () => {
     const file = await write(

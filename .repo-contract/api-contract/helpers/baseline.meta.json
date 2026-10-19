@@ -1,9 +1,9 @@
 {
   "packageName": "@maverickcer/env-cap",
-  "packageVersion": "0.4.0",
-  "apiExtractorVersion": "7.59.3",
+  "packageVersion": "0.6.0",
+  "apiExtractorVersion": "7.59.4",
   "apiJsonSchemaVersion": 1011,
-  "apiJsonHash": "4af4b6c004849648d4a67583b64541aded01dfc207344ad313b5ea8cbfc04cdd",
-  "dtsHash": "c35ab069fe73baefd090bffbdc805cec381e4ef6994521711d60ddd599653f66",
-  "generatedAt": "2026-09-30T15:21:30.762Z"
+  "apiJsonHash": "a524559bac8a0a9ffce826e92d3a16e8f19bb4a6002ad7752930a7aae96ddcbc",
+  "dtsHash": "f93ca9595cba1a9860bfd378482586a60e7d415f5b02682ecdffc5eb79826e48",
+  "generatedAt": "2026-10-13T03:02:52.917Z"
 }

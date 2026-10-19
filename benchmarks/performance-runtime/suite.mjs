@@ -34,6 +34,29 @@ const buildContract = (n) =>
     source: import.meta.url,
   })
 
+/** `total` variables split across contracts of `perContract` variables each, every key unique. */
+const buildContracts = (total, perContract) => {
+  if (!Number.isInteger(perContract) || perContract < 1) {
+    throw new RangeError(`perContract must be a positive integer, got ${String(perContract)}`)
+  }
+  const contracts = []
+  for (let offset = 0; offset < total; offset += perContract) {
+    const size = Math.min(perContract, total - offset)
+    contracts.push(
+      createEnv(
+        Object.fromEntries(
+          Array.from({ length: size }, (_, i) => [
+            `ENV_VARIABLE_${String(offset + i)}`,
+            { processor: (value) => value },
+          ]),
+        ),
+        { name: `bench-${String(contractCounter++)}`, source: import.meta.url },
+      ),
+    )
+  }
+  return contracts
+}
+
 const VARIABLES = {
   name: "variables",
   how: "swept",
@@ -45,6 +68,13 @@ const RUNTIME = {
   value: "Node (V8)",
   description: "Measured on Node only; Bun, Deno and edge runtimes are not covered.",
 }
+const PER_CONTRACT = {
+  name: "variables-per-contract",
+  how: "swept",
+  description:
+    "How many variables each contract declares (ten in the main sweep). With the total fixed, a few large contracts or many small ones cost differently: per-contract work against per-variable work.",
+}
+
 const VARIABLE_SHAPE = {
   name: "variable declaration",
   how: "fixed",
@@ -167,9 +197,9 @@ const PROCESSORS = [
     slug: "to-big-int",
     name: "toBigInt()",
     use: "Parses a very large integer (a numeric identifier, a counter) without losing precision.",
-    expected: "linear",
+    expected: "quadratic",
     reason:
-      "Parsing reads each decimal digit once to build the integer, so cost follows the number of digits.",
+      "Each decimal digit multiplies the integer built so far, which grows with the digits already read, so the cost grows faster than the digit count; CI measured an exponent near 1.6, and quadratic is the nearest class.",
     sizeMeans: "Number of decimal digits.",
     content: "a string of the digit 1",
     build: (n) => [processors.toBigInt(), "1".repeat(n)],
@@ -700,6 +730,11 @@ export default defineSuite({
     ],
   },
 
+  notBenchmarked: {
+    documentEnv:
+      "A deliberate no-op at runtime: it exists so build tooling can read the call site and so the compiler checks the documentation's shape, and it does nothing with its arguments, so it costs the same whatever they hold.",
+  },
+
   functions: [
     {
       id: "cold-start",
@@ -772,6 +807,13 @@ export default defineSuite({
         },
         RUNTIME,
       ],
+      covers: {
+        createEnv: {
+          schema: "swept",
+          "options.name": "fixed: a unique name per call, which is what every real contract has",
+          "options.source": "fixed: this module's own URL, one string recorded with the contract",
+        },
+      },
       setup: (n) => identitySchema(n),
       run: (schema) =>
         createEnv(schema, { name: `bench-${String(contractCounter++)}`, source: import.meta.url }),
@@ -787,6 +829,7 @@ export default defineSuite({
         "It visits each declared variable once, runs its processor and validator and records the outcome, so cost is proportional to the number of variables.",
       variables: [
         VARIABLES,
+        PER_CONTRACT,
         VARIABLE_SHAPE,
         VALUE_SOURCE,
         {
@@ -804,13 +847,37 @@ export default defineSuite({
         },
         RUNTIME,
       ],
+      sweeps: [
+        {
+          variable: "variables-per-contract",
+          description: PER_CONTRACT.description,
+          baseValue: 10,
+          primaryValue: 640,
+          tiers: [5, 10, 20, 40, 80, 160],
+          expectedComplexity: "constant",
+          complexityReason:
+            "The same total number of variables is validated however they are split across contracts; each contract adds one lookup, a share that shrinks as contracts grow.",
+        },
+      ],
+      covers: {
+        validateEnv: {
+          "options.activeContexts":
+            "not covered: it only filters variables that declare a `context`, and the fixtures declare none",
+          "options.manifest": "sweep:variables-per-contract",
+          "options.values": "swept",
+        },
+      },
       inEndToEnd: { callsPerOperation: 1, description: "This is the end-to-end operation itself." },
       fresh: true,
-      setup: (n) => {
+      setup: (_n, _options, context) => {
         resetEnvCache()
-        return { values: valuesFor(n), contract: buildContract(n) }
+        const total = context.values.variable
+        return {
+          values: valuesFor(total),
+          contracts: buildContracts(total, context.values["variables-per-contract"]),
+        }
       },
-      run: ({ values, contract }) => validateEnv({ values, manifest: [contract] }),
+      run: ({ values, contracts }) => validateEnv({ values, manifest: contracts }),
     },
     ...PROCESSORS.map((spec) => {
       const { _growth, ...entry } = helper("processor", spec)

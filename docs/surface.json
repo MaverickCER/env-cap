@@ -1,0 +1,46 @@
+{
+  "entries": {
+    ".": {
+      "source": "src/runtime/",
+      "environment": "isomorphic, zero deps",
+      "tier": "Stable",
+      "purpose": "`createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`"
+    },
+    "./build": {
+      "source": "src/build/",
+      "environment": "Node-only, dev/CI",
+      "tier": "Stable",
+      "purpose": "discovery, AST analysis, artifact generation (see `VERSIONING.md` \u2014 the four `generate*()` orchestrators and the lower-level primitives are all Stable, ADR 0045)"
+    },
+    "./helpers": {
+      "source": "src/helpers/",
+      "environment": "isomorphic, optional",
+      "tier": "Stable",
+      "purpose": "`processors` / `validators`"
+    },
+    "./node": {
+      "source": "src/node/",
+      "environment": "Node-only, dev/CI",
+      "tier": "Stable",
+      "purpose": "`nodeBuildFileSystem` \u2014 the ready-made `BuildFileSystem` adapter a build script hands to `./build`"
+    },
+    "./evidence": {
+      "source": "src/evidence/",
+      "environment": "isomorphic, optional",
+      "tier": "Stable",
+      "purpose": "`defineEvidenceProjection` \u2014 pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)"
+    },
+    "./eslint-plugin": {
+      "source": "src/eslint-plugin/",
+      "environment": "Node-only, optional",
+      "tier": "Stable",
+      "purpose": "`no-raw-process-env` and `no-node-fs` lint rules"
+    },
+    "./schema": {
+      "source": "schemas/",
+      "environment": "static JSON",
+      "tier": "Stable",
+      "purpose": "The published JSON Schema for `env-cap --json` output (`env-cap-report.schema.json`), plus the model schemas under `./schema/*`"
+    }
+  }
+}

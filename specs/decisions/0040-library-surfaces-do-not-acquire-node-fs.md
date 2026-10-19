@@ -8,7 +8,12 @@ every `src/build/**` module and every public options object in
 as the public `@maverickcer/env-cap/node` entry (`src/node/index.ts`) for a
 consumer's own build script; `src/build/tool-version.ts` + `src/cli/json.ts`
 (version via build-time constant, not a self-read); `src/eslint-plugin/no-node-fs.ts`
-and `no-restricted-imports` in `eslint.config.js`; `scripts/verify-no-ambient-fs.mjs`.
+and `no-restricted-imports` in `eslint.config.js`; the `AmbientCapabilities` check.
+
+**Amended.** The `BuildFileSystem`, `BuildDirent` and `BuildStats` types and the `no-node-fs` lint rule are now
+carried as managed copies of internal-package-contract's canonical sources (`src/_ipc/build-fs.ts`,
+`src/_ipc/no-node-fs.ts`), re-exported from `src/build/types.ts` and wrapped in `src/eslint-plugin/no-node-fs.ts`.
+The decision itself, that library surfaces never acquire `node:fs`, is unchanged.
 
 ## Context
 
@@ -121,7 +126,7 @@ flagged capabilities.
   under `src/**` except `src/cli/**`. The published `env-cap/
 eslint-plugin` also ships `no-node-fs` for a consumer to enforce the same
   discipline on its own code.
-- **Tarball-level** (release-blocking backstop): `scripts/verify-no-ambient-fs.mjs`
+- **Tarball-level** (release-blocking backstop): the `AmbientCapabilities` check
   runs `npm pack --ignore-scripts`, extracts it, and greps every `.js`/
   `.cjs`/`.mjs` file **inside the extracted package root** for the forbidden
   specifier set, excluding only the resolved `bin`, `./eslint-plugin`, and

@@ -11,7 +11,7 @@ document covers the judgement calls CI can't make.
 A change is ready to merge when all of the following hold:
 
 - CI is green — `npm run verify` (typecheck, lint, format, build, schema
-  generation, coverage thresholds, `npm run size`, `verify:no-ambient-fs`,
+  generation, coverage thresholds, `npm run size`, the `AmbientCapabilities` check,
   the API-report drift check) plus the Bun/Deno cross-runtime conformance
   suite.
 - Every invariant in §2 that the change touches is still true, and the
@@ -124,7 +124,7 @@ When any of these appear in a diff:
   installed package metadata). Anything that could execute that content, or
   read/traverse outside the declared discovery roots, is a vulnerability,
   not a bug.
-- `verify:no-ambient-fs` enforces that runtime/helpers acquire no ambient
+- the `AmbientCapabilities` check enforces that runtime/helpers acquire no ambient
   filesystem capability; `src/build` receives its filesystem explicitly
   from the CLI ([ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)).
   A change that reaches for `node:fs` directly inside a library surface

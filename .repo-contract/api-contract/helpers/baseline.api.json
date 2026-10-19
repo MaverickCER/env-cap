@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.59.3",
+    "toolVersion": "7.59.4",
     "schemaVersion": 1011,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -191,7 +191,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!processors:var",
-          "docComment": "/**\n * Convenience {@link runtime.Processor} implementations for common coercion\n * patterns (e.g. `processors.toNumber()`).\n *\n * @remarks\n *\n * Naming matches `@maverickcer/data-cap`'s `helpers.processors` -- but these\n * throw with a formatted `Error` message on invalid input, where data-cap's\n * silently return `undefined`. Do not assume the same failure mode when\n * moving between packages.\n */\n",
+          "docComment": "/**\n * Convenience {@link runtime.Processor} implementations for common coercion\n * patterns (e.g. `processors.toNumber()`).\n *\n * @remarks\n *\n * Naming matches `data-cap`'s `helpers.processors` -- but these\n * throw with a formatted `Error` message on invalid input, where data-cap's\n * silently return `undefined`. Do not assume the same failure mode when\n * moving between packages.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

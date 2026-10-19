@@ -1,0 +1,220 @@
+# @maverickcer/env-cap public API
+
+Every export a consumer can import, by entry point, for version 0.6.0. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
+
+## `@maverickcer/env-cap`
+
+- `ContractDocs` (interface): `interface ContractDocs<S extends EnvSchema = EnvSchema>`
+- `createEnv` (function): `function createEnv<S extends EnvSchema>(schema: S, options?: CreateEnvOptions): EnvContract<S>`
+- `CreateEnvOptions` (interface): `interface CreateEnvOptions`
+- `DefaultValue` (typealias): `type DefaultValue = unknown | (() => unknown)`
+- `documentEnv` (function): `function documentEnv<S extends EnvSchema>(schema: S, docs: ContractDocs<S>): void`
+- `EnvContract` (typealias): `type EnvContract<S extends EnvSchema> = { readonly [K in keyof S]: InferEnvValue<S[K]>; } & { toString(): string; }`
+- `EnvDefinition` (interface): `interface EnvDefinition<T>`
+- `EnvNotReadyError` (class): `class EnvNotReadyError extends Error`
+- `EnvSchema` (typealias): `type EnvSchema = Record<string, EnvDefinition<any>>`
+- `EnvValidationError` (class): `class EnvValidationError extends Error`
+- `InferEnvValue` (typealias): `type InferEnvValue<D extends EnvDefinition<any>> = D extends { processor: Processor<infer P>; } ? P : [UnwrapDefault<D>] extends [never] ? string : UnwrapDefault<D>`
+- `isEnvContract` (function): `function isEnvContract(value: unknown): value is object`
+- `Processor` (typealias): `type Processor<T> = (value: unknown) => T`
+- `RawEnv` (typealias): `type RawEnv = Readonly<Record<string, unknown>>`
+- `resetEnvCache` (function): `function resetEnvCache(): void`
+- `validateEnv` (function): `function validateEnv(options: validateEnvOptions): Promise<validateEnvResult>`
+- `validateEnvOptions` (interface): `interface validateEnvOptions`
+- `validateEnvResult` (interface): `interface validateEnvResult`
+- `Validator` (typealias): `type Validator<T> = (value: T, rawEnv: RawEnv) => true | string`
+- `VariableDocs` (interface): `interface VariableDocs`
+- `VariableEvidenceDocs` (interface): `interface VariableEvidenceDocs`
+- `VariableFailure` (interface): `interface VariableFailure`
+
+## `@maverickcer/env-cap/build`
+
+- `AbandonedContractFinding` (interface): `interface AbandonedContractFinding`
+- `applyLiveExpirationOverrides` (function): `function applyLiveExpirationOverrides(contracts: readonly DiscoveredContract[], overrides: Readonly<Record<string, string>>): readonly DiscoveredContract[]`
+- `ArtifactCheckFinding` (interface): `interface ArtifactCheckFinding`
+- `AssertedDynamicAccessFinding` (interface): `interface AssertedDynamicAccessFinding`
+- `buildChangeModel` (function): `function buildChangeModel(manifest: ManifestChangeReport, currentContracts: readonly DiscoveredContract[], root: string): ChangeModel`
+- `buildContractModel` (function): `function buildContractModel(contracts: readonly DiscoveredContract[], root: string): ContractModel`
+- `buildDependencyModel` (function): `function buildDependencyModel(contracts: readonly DiscoveredContract[], scanFiles: readonly string[], readFile: (filePath: string) => Promise<string>, context: ImportResolutionContext, root: string, scannedSurfaces?: readonly ScannedSurface[], dynamicAccessAcknowledgments?: ReadonlyMap<string, readonly DynamicAccessAssertion[]>): Promise<DependencyModel>`
+- `BuildDirent` (interface): `interface BuildDirent`
+- `BuildFileSystem` (interface): `interface BuildFileSystem`
+- `buildFindingModel` (function): `function buildFindingModel(input: BuildFindingModelInput): FindingModel`
+- `BuildFindingModelInput` (interface): `interface BuildFindingModelInput`
+- `buildLifecycleModel` (function): `function buildLifecycleModel(contracts: readonly DiscoveredContract[], expiringWithinDays: number, now: Date, root: string): LifecycleModel`
+- `buildOwnershipModel` (function): `function buildOwnershipModel(contracts: readonly DiscoveredContract[], root: string): OwnershipModel`
+- `buildSarifLog` (function): `function buildSarifLog(findingModel: FindingModel): SarifLog`
+- `BuildStats` (interface): `interface BuildStats`
+- `CHANGE_MODEL_SCHEMA_VERSION` (variable): `CHANGE_MODEL_SCHEMA_VERSION = 1`
+- `ChangeEvidenceReference` (interface): `interface ChangeEvidenceReference`
+- `ChangeModel` (interface): `interface ChangeModel`
+- `checkEnvArtifacts` (function): `function checkEnvArtifacts(options: GenerateEnvArtifactsOptions): Promise<CheckEnvArtifactsResult>`
+- `CheckEnvArtifactsResult` (interface): `interface CheckEnvArtifactsResult`
+- `collectVariableNames` (function): `function collectVariableNames(contracts: readonly DiscoveredContract[]): string[]`
+- `CompatibilityIssue` (interface): `interface CompatibilityIssue`
+- `CompatibilityIssueCode` (typealias): `type CompatibilityIssueCode = "PROCESSOR_RETURN_TYPE_CONFLICT" | "PROCESSOR_SOURCE_CONFLICT" | "VALIDATOR_SOURCE_CONFLICT" | "DUPLICATE_VARIABLE_DOCUMENTATION" | "DUPLICATE_VARIABLE_SHAPE_ACROSS_CONTRACTS"`
+- `computeExpiringEntries` (function): `function computeExpiringEntries(contracts: readonly ExpiryBearingContract[], expiringWithinDays: number, now: Date): ExpiringEntry[]`
+- `computeReconciliation` (function): `function computeReconciliation(contracts: readonly DiscoveredContract[], existingContent: string): Reconciliation`
+- `computeRotationStatus` (function): `function computeRotationStatus(variable: { readonly expiresAt: string | undefined; readonly authenticatorType: string | undefined; readonly rotationPeriod: string | undefined; readonly lastRotatedAt: string | undefined; readonly rotationTriggerEvents: readonly string[] | undefined; }, now: Date): RotationComplianceStatus`
+- `computeSecurityReviewCounters` (function): `function computeSecurityReviewCounters(contracts: readonly ContractModelContract[], expiringWithinDays: number, now: Date, undocumentedContractCount: number, undocumentedVariableCount: number): SecurityReviewCounters`
+- `computeSourceFingerprint` (function): `function computeSourceFingerprint(options: ComputeSourceFingerprintOptions): Promise<string>`
+- `ComputeSourceFingerprintOptions` (interface): `interface ComputeSourceFingerprintOptions`
+- `configurationReference` (function): `function configurationReference(evidence: EvidenceModel): ConfigurationReference`
+- `ConfigurationReference` (interface): `interface ConfigurationReference extends Record<string, unknown>`
+- `configurationReference` (namespace): `namespace configurationReference`
+- `ConfigurationReferenceEntry` (interface): `interface ConfigurationReferenceEntry`
+- `CONTRACT_MODEL_SCHEMA_VERSION` (variable): `CONTRACT_MODEL_SCHEMA_VERSION = 3`
+- `ContractEvidenceReference` (interface): `interface ContractEvidenceReference`
+- `ContractModel` (interface): `interface ContractModel`
+- `ContractModelContract` (interface): `interface ContractModelContract extends EnvGovernanceFields`
+- `ContractModelVariable` (interface): `interface ContractModelVariable extends EnvGovernanceFields`
+- `ContractRef` (interface): `interface ContractRef`
+- `deepFreeze` (function): `function deepFreeze<T>(value: T): T`
+- `DEPENDENCY_MODEL_SCHEMA_VERSION` (variable): `DEPENDENCY_MODEL_SCHEMA_VERSION = 2`
+- `DependencyModel` (interface): `interface DependencyModel`
+- `DependencyModelConsumer` (interface): `interface DependencyModelConsumer`
+- `DependencyModelContract` (interface): `interface DependencyModelContract`
+- `DependencyModelContractRef` (typealias): `type DependencyModelContractRef = ContractRef`
+- `DependencyModelVariable` (interface): `interface DependencyModelVariable`
+- `detectCompatibilityIssues` (function): `function detectCompatibilityIssues(contracts: readonly DiscoveredContract[]): CompatibilityIssue[]`
+- `detectDuplicateVariableShapes` (function): `function detectDuplicateVariableShapes(contracts: readonly DiscoveredContract[]): CompatibilityIssue[]`
+- `detectExclusiveGroupIssues` (function): `function detectExclusiveGroupIssues(contracts: readonly DiscoveredContract[]): CompatibilityIssue[]`
+- `DiscoveredContract` (interface): `interface DiscoveredContract extends EnvGovernanceFields`
+- `DiscoveredContractDocs` (interface): `interface DiscoveredContractDocs extends EnvGovernanceFields`
+- `DiscoveredContractSummary` (interface): `interface DiscoveredContractSummary`
+- `DiscoveredSchemaVariable` (interface): `interface DiscoveredSchemaVariable`
+- `DiscoveredVariable` (interface): `interface DiscoveredVariable extends DiscoveredSchemaVariable, EnvGovernanceFields`
+- `DiscoveredVariableDocs` (interface): `interface DiscoveredVariableDocs extends EnvGovernanceFields`
+- `DiscoveredVariableEvidence` (interface): `interface DiscoveredVariableEvidence`
+- `discoverSchemaFiles` (function): `function discoverSchemaFiles(options: DiscoverOptions): Promise<string[]>`
+- `displayPath` (function): `function displayPath(root: string, filePath: string): string`
+- `DocumentationFindings` (interface): `interface DocumentationFindings`
+- `DynamicAccessAssertion` (interface): `interface DynamicAccessAssertion extends SourcePosition`
+- `DynamicAccessCitationProblem` (interface): `interface DynamicAccessCitationProblem`
+- `effectiveOwner` (function): `function effectiveOwner(contract: { readonly owner: string | undefined; }, variable: { readonly owner: string | undefined; }): string | undefined`
+- `EnvDocumentationGenerationError` (class): `class EnvDocumentationGenerationError extends Error`
+- `EnvExampleOnExisting` (typealias): `type EnvExampleOnExisting = "keep-sibling" | "overwrite" | "skip"`
+- `EnvExampleResult` (interface): `interface EnvExampleResult`
+- `EnvManifestGenerationError` (class): `class EnvManifestGenerationError extends Error`
+- `EnvProjectGenerationError` (class): `class EnvProjectGenerationError extends Error`
+- `EnvUsageAnalysisError` (class): `class EnvUsageAnalysisError extends Error`
+- `EVIDENCE_MODEL_SCHEMA_VERSION` (variable): `EVIDENCE_MODEL_SCHEMA_VERSION = 1`
+- `EvidenceModel` (interface): `interface EvidenceModel`
+- `EvidenceProvenance` (interface): `interface EvidenceProvenance`
+- `EvidenceReference` (typealias): `type EvidenceReference = ContractEvidenceReference | OwnershipEvidenceReference | ChangeEvidenceReference`
+- `ExpiringEntry` (interface): `interface ExpiringEntry`
+- `ExpiringSoonEntry` (interface): `interface ExpiringSoonEntry`
+- `expiringSoonReport` (function): `function expiringSoonReport(evidence: EvidenceModel): ExpiringSoonReport`
+- `ExpiringSoonReport` (interface): `interface ExpiringSoonReport extends Record<string, unknown>`
+- `expiringSoonReport` (namespace): `namespace expiringSoonReport`
+- `extractCommentedVariables` (function): `function extractCommentedVariables(source: string): string[]`
+- `extractContractDocs` (function): `function extractContractDocs(docsArg: TS.Expression | undefined, filePath: string, contextLabel: string, warnings: ParseWarning[]): DiscoveredContractDocs`
+- `extractDeclaredVariables` (function): `function extractDeclaredVariables(source: string): string[]`
+- `extractPreviouslyDocumentedKeys` (function): `function extractPreviouslyDocumentedKeys(previousContent: string): Set<string>`
+- `extractSchemaVariables` (function): `function extractSchemaVariables(schemaLiteral: TS.ObjectLiteralExpression, filePath: string, contextLabel: string, warnings: ParseWarning[], sourceFile: TS.SourceFile): DiscoveredSchemaVariable[]`
+- `FileParseResult` (interface): `interface FileParseResult`
+- `FINDING_MODEL_SCHEMA_VERSION` (variable): `FINDING_MODEL_SCHEMA_VERSION = 3`
+- `Finding` (interface): `interface Finding`
+- `FindingCode` (typealias): `type FindingCode = CompatibilityIssueCode | "EXCLUSIVE_GROUP_VIOLATION" | "ARTIFACT_STALE" | "ARTIFACT_MISSING" | "UNDOCUMENTED_CONTRACT" | "UNDOCUMENTED_VARIABLE" | "STALE_DOC_ENTRY" | "EXPIRED" | "EXPIRING_SOON" | "UNRESOLVED_DOCUMENTENV_LINK" | "ABANDONED_CONTRACT" | "UNRESOLVED_CONSUMER" | "UNCONSUMED_OWNED_VARIABLE" | "INDETERMINATE_OWNERSHIP" | "MISSING_DYNAMIC_ACCESS_CITATION" | "STALE_DYNAMIC_ACCESS_CITATION" | "NONSTANDARD_SENSITIVITY_LEVEL"`
+- `FindingFamily` (typealias): `type FindingFamily = "compatibility" | "drift" | "documentation" | "ownership"`
+- `FindingModel` (interface): `interface FindingModel`
+- `generateDocumentation` (function): `function generateDocumentation(options: GenerateDocumentationOptions): Promise<GenerateDocumentationResult>`
+- `GenerateDocumentationOptions` (interface): `interface GenerateDocumentationOptions`
+- `GenerateDocumentationResult` (interface): `interface GenerateDocumentationResult`
+- `generateEnvArtifacts` (function): `function generateEnvArtifacts(options: GenerateEnvArtifactsOptions): Promise<GenerateEnvArtifactsResult>`
+- `GenerateEnvArtifactsOptions` (interface): `interface GenerateEnvArtifactsOptions`
+- `GenerateEnvArtifactsResult` (interface): `interface GenerateEnvArtifactsResult`
+- `generateEnvManifest` (function): `function generateEnvManifest(options: GenerateEnvManifestOptions): Promise<GenerateEnvManifestResult>`
+- `GenerateEnvManifestOptions` (interface): `interface GenerateEnvManifestOptions`
+- `GenerateEnvManifestResult` (interface): `interface GenerateEnvManifestResult`
+- `generateEvidenceModel` (function): `function generateEvidenceModel(options: GenerateEvidenceModelOptions): Promise<EvidenceModel>`
+- `GenerateEvidenceModelOptions` (interface): `interface GenerateEvidenceModelOptions`
+- `generateUsageReport` (function): `function generateUsageReport(options: GenerateUsageReportOptions): Promise<GenerateUsageReportResult>`
+- `GenerateUsageReportOptions` (interface): `interface GenerateUsageReportOptions`
+- `GenerateUsageReportResult` (interface): `interface GenerateUsageReportResult extends RenderUsageReportOptions`
+- `getEvidenceModel` (function): `function getEvidenceModel(options: GetEvidenceModelOptions): Promise<GetEvidenceModelResult>`
+- `GetEvidenceModelOptions` (interface): `interface GetEvidenceModelOptions extends GenerateEvidenceModelOptions`
+- `GetEvidenceModelResult` (interface): `interface GetEvidenceModelResult`
+- `groupVariablesByOwner` (function): `function groupVariablesByOwner<C extends OwnerBearingContract>(contracts: readonly C[], ownerOf: (contract: C, variable: VariableOf<C>) => string | undefined): ReadonlyMap<string, readonly { contract: C; variable: VariableOf<C>; }[]>`
+- `ImportBinding` (interface): `interface ImportBinding`
+- `IndeterminateOwnershipFinding` (interface): `interface IndeterminateOwnershipFinding`
+- `LIFECYCLE_MODEL_SCHEMA_VERSION` (variable): `LIFECYCLE_MODEL_SCHEMA_VERSION = 3`
+- `LifecycleModel` (interface): `interface LifecycleModel`
+- `LifecycleModelContract` (interface): `interface LifecycleModelContract`
+- `LifecycleModelVariable` (interface): `interface LifecycleModelVariable`
+- `linkFiles` (function): `function linkFiles(discoveredFiles: readonly string[], readFile: (filePath: string) => Promise<string>, context: ImportResolutionContext, packageOrigins?: ReadonlyMap<string, PackageOrigin>): Promise<LinkResult>`
+- `LinkResult` (interface): `interface LinkResult`
+- `LiveExpirationDates` (typealias): `type LiveExpirationDates = (variableNames: readonly string[]) => Promise<Readonly<Record<string, string>>>`
+- `ManifestChangeReport` (interface): `interface ManifestChangeReport`
+- `ManifestContractRef` (typealias): `type ManifestContractRef = ContractRef`
+- `ManifestContractUpdate` (interface): `interface ManifestContractUpdate extends ManifestContractRef`
+- `ManifestFieldChange` (interface): `interface ManifestFieldChange`
+- `ManifestVariableRef` (interface): `interface ManifestVariableRef extends ContractRef`
+- `ManifestVariableUpdate` (interface): `interface ManifestVariableUpdate extends ManifestVariableRef`
+- `NonstandardSensitivityEntry` (interface): `interface NonstandardSensitivityEntry`
+- `OwnerBearingContract` (interface): `interface OwnerBearingContract`
+- `OWNERSHIP_MODEL_SCHEMA_VERSION` (variable): `OWNERSHIP_MODEL_SCHEMA_VERSION = 1`
+- `OwnershipDependencyEntry` (interface): `interface OwnershipDependencyEntry`
+- `OwnershipEvidenceReference` (interface): `interface OwnershipEvidenceReference`
+- `OwnershipModel` (interface): `interface OwnershipModel`
+- `OwnershipModelContract` (interface): `interface OwnershipModelContract`
+- `OwnershipModelContractRef` (typealias): `type OwnershipModelContractRef = ContractRef`
+- `OwnershipModelVariable` (interface): `interface OwnershipModelVariable`
+- `OwnershipModelVariableRef` (interface): `interface OwnershipModelVariableRef extends ContractRef`
+- `ownershipSummary` (function): `function ownershipSummary(evidence: EvidenceModel): OwnershipSummary`
+- `OwnershipSummary` (interface): `interface OwnershipSummary extends Record<string, unknown>`
+- `ownershipSummary` (namespace): `namespace ownershipSummary`
+- `OwnershipSummaryEntry` (interface): `interface OwnershipSummaryEntry`
+- `PackageOrigin` (interface): `interface PackageOrigin`
+- `parseRotationPeriodDays` (function): `function parseRotationPeriodDays(value: string): number | undefined`
+- `parseSchemaFile` (function): `function parseSchemaFile(filePath: string, sourceText: string): FileParseResult`
+- `ParseWarning` (interface): `interface ParseWarning`
+- `readToolVersion` (function): `function readToolVersion(): string`
+- `Reconciliation` (interface): `interface Reconciliation`
+- `RenamedVariable` (interface): `interface RenamedVariable`
+- `renderDocs` (function): `function renderDocs(contracts: readonly ContractModelContract[], options: RenderDocsOptions): string`
+- `RenderDocsOptions` (interface): `interface RenderDocsOptions`
+- `renderEnvExample` (function): `function renderEnvExample(contracts: readonly DiscoveredContract[], reconciliationHeader?: readonly string[]): string`
+- `renderManifest` (function): `function renderManifest(contracts: readonly DiscoveredContract[], outputFile: string): string`
+- `renderUsageReport` (function): `function renderUsageReport(computed: RenderUsageReportOptions): string`
+- `RenderUsageReportOptions` (interface): `interface RenderUsageReportOptions`
+- `resolveLiveExpirationDates` (function): `function resolveLiveExpirationDates(contracts: readonly DiscoveredContract[], liveExpirationDates: LiveExpirationDates | undefined): Promise<readonly DiscoveredContract[]>`
+- `resolveRelativeImport` (function): `function resolveRelativeImport(importingFile: string, specifier: string, fs: BuildFileSystem): Promise<string | undefined>`
+- `RotationComplianceStatus` (typealias): `type RotationComplianceStatus = "compliant" | "overdue" | "expired" | "undeclared"`
+- `SarifLog` (interface): `interface SarifLog`
+- `ScannedSurface` (interface): `interface ScannedSurface`
+- `SchemaRef` (typealias): `type SchemaRef = { readonly kind: "literal"; readonly node: TS.ObjectLiteralExpression; } | { readonly kind: "identifier"; readonly name: string; } | { readonly kind: "unresolvable"; }`
+- `SecurityReviewCounters` (interface): `interface SecurityReviewCounters`
+- `SourcePosition` (interface): `interface SourcePosition`
+- `STANDARD_SENSITIVITY_LEVELS` (variable): `STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string>`
+- `UnconsumedOwnedVariableFinding` (interface): `interface UnconsumedOwnedVariableFinding`
+- `UndocumentedContractRef` (interface): `interface UndocumentedContractRef`
+- `UndocumentedVariableRef` (interface): `interface UndocumentedVariableRef`
+- `UnresolvedConsumerFinding` (interface): `interface UnresolvedConsumerFinding`
+- `UnresolvedLink` (interface): `interface UnresolvedLink`
+- `VariableAccessStatus` (typealias): `type VariableAccessStatus = "used" | "unconsumed" | "indeterminate"`
+- `writeEnvExample` (function): `function writeEnvExample(contracts: readonly DiscoveredContract[], location: string, fs: BuildFileSystem, options?: { onExisting?: EnvExampleOnExisting; }): Promise<EnvExampleResult>`
+
+## `@maverickcer/env-cap/helpers`
+
+- `processors` (variable): `processors: { base64: typeof base64; parseJSON: typeof parseJSON; split: typeof split; toArray: typeof toArray; toBigInt: typeof toBigInt; toBoolean: typeof toBoolean; toDate: typeof toDate; toInteger: typeof toInteger; toLowerCase: typeof toLowerCase; toNumber: typeof toNumber; toRegExp: typeof toRegExp; toString: typeof toString; toURL: typeof toURL; toUpperCase: typeof toUpperCase; trim: typeof trim; }`
+- `validators` (variable): `validators: { after: typeof after; all: typeof all; any: typeof any; before: typeof before; custom: typeof custom; email: typeof email; endsWith: typeof endsWith; enum: typeof oneOf; finite: typeof finite; future: typeof future; includes: typeof includes; integer: typeof integerValidator; length: typeof length; matches: typeof matches; max: typeof max; maxItems: typeof maxItems; maxLength: typeof maxLength; min: typeof min; minItems: typeof minItems; minLength: typeof minLength; negative: typeof negative; not: typeof not; oneOf: typeof oneOf; optional: typeof optional; past: typeof past; positive: typeof positive; range: typeof range; refine: typeof refine; regex: typeof matches; required: typeof required; safeInteger: typeof safeInteger; unique: typeof unique; url: typeof urlValidator; uuid: typeof uuid; uuidVersion: typeof uuidVersion; }`
+
+## `@maverickcer/env-cap/node`
+
+- `nodeBuildFileSystem` (variable): `nodeBuildFileSystem: BuildFileSystem`
+
+## `@maverickcer/env-cap/evidence`
+
+- `defineEvidenceProjection` (function): `function defineEvidenceProjection<T extends Record<string, unknown>>(schema: EvidenceProjectionSchema<T>): EvidenceProjection<T>`
+- `EvidenceModel` (interface): `interface EvidenceModel`
+- `EvidenceProjection` (interface): `interface EvidenceProjection<T extends Record<string, unknown>>`
+- `EvidenceProjectionResult` (interface): `interface EvidenceProjectionResult<T extends Record<string, unknown>>`
+- `EvidenceProjectionSchema` (typealias): `type EvidenceProjectionSchema<T extends Record<string, unknown>> = { readonly [K in keyof T]: EvidenceProjector<T[K]>; }`
+- `EvidenceProjector` (typealias): `type EvidenceProjector<T> = (evidence: EvidenceModel) => T`
+- `EvidenceProvenance` (interface): `interface EvidenceProvenance`
+
+## `@maverickcer/env-cap/eslint-plugin`
+
+- `noNodeFs` (variable): `noNodeFs: import("@typescript-eslint/utils/ts-eslint").RuleModule<"noNodeFs", [import("../_ipc/no-node-fs.js").RuleOptions], unknown, import("@typescript-eslint/utils/ts-eslint").RuleListener> & { name: string; }`
+- `noRawProcessEnv` (variable): `noRawProcessEnv: import("@typescript-eslint/utils/ts-eslint").RuleModule<"noRawProcessEnv", [RuleOptions], unknown, import("@typescript-eslint/utils/ts-eslint").RuleListener> & { name: string; }`
+- `plugin` (variable): `plugin: { rules: { "no-raw-process-env": import("@typescript-eslint/utils/ts-eslint").RuleModule<"noRawProcessEnv", [import("./no-raw-process-env.js").RuleOptions], unknown, import("@typescript-eslint/utils/ts-eslint").RuleListener> & { name: string; }; "no-node-fs": import("@typescript-eslint/utils/ts-eslint").RuleModule<"noNodeFs", [import("../_ipc/no-node-fs.js").RuleOptions], unknown, import("@typescript-eslint/utils/ts-eslint").RuleListener> & { name: string; }; }; }`

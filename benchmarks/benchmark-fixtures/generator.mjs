@@ -23,10 +23,10 @@ import path from "node:path"
 export const VARIABLES_PER_CONTRACT = 10
 
 /** Contract sizes for exactly `variables` variables: contracts of ten, plus one smaller remainder contract. */
-export function uniformContractSizes(variables) {
-  const full = Math.floor(variables / VARIABLES_PER_CONTRACT)
-  const sizes = Array(full).fill(VARIABLES_PER_CONTRACT)
-  if (variables % VARIABLES_PER_CONTRACT > 0) sizes.push(variables % VARIABLES_PER_CONTRACT)
+export function uniformContractSizes(variables, perContract = VARIABLES_PER_CONTRACT) {
+  const full = Math.floor(variables / perContract)
+  const sizes = Array(full).fill(perContract)
+  if (variables % perContract > 0) sizes.push(variables % perContract)
   return sizes
 }
 
@@ -122,8 +122,13 @@ function renderBuildtimeContract(contractName, variables) {
  * a project of `variables` variables. `docsStyle` ("minimal" | "heavy") controls documentation
  * payload size only -- see `documentation-payload`'s benchmark.
  */
-export async function generateBuildtimeFixtures({ outputDir, docsStyle = "minimal", variables }) {
-  const sizes = uniformContractSizes(variables)
+export async function generateBuildtimeFixtures({
+  outputDir,
+  docsStyle = "minimal",
+  variables,
+  perContract = VARIABLES_PER_CONTRACT,
+}) {
+  const sizes = uniformContractSizes(variables, perContract)
   let globalIndex = 0
 
   await fs.rm(outputDir, { recursive: true, force: true })

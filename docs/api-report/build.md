@@ -907,7 +907,7 @@ One artifact's drift status, as found by [checkEnvArtifacts](#checkenvartifacts)
 ##### artifact
 
 ```ts
-readonly artifact: "evidence" | "docs" | "envExample" | "manifest" | "usage";
+readonly artifact: "docs" | "evidence" | "envExample" | "manifest" | "usage";
 ```
 
 Which generated artifact this finding is about.
@@ -980,7 +980,7 @@ What this variable's status would be without the fresh assertion.
 
 ### BuildDirent
 
-One directory entry from [BuildFileSystem.readdir](#readdir) -- the subset of Node's `Dirent` `src/build/**` reads.
+One directory entry from [BuildFileSystem.readdir](#readdir) -- the subset of Node's `Dirent` the build code reads.
 
 #### Properties
 
@@ -1018,15 +1018,12 @@ readonly name: string;
 
 ### BuildFileSystem
 
-The filesystem capability `@maverickcer/env-cap/build` requires from its caller.
+The filesystem capability a package's `./build` entry requires from its caller.
 
 `./build` is a **library surface**: it must not acquire filesystem access
-implicitly (no `node:fs` import anywhere under `src/` outside `src/cli/`).
-Every public options object in `build/index.ts` carries a required `fs`
-field of this type, and the caller supplies a concrete adapter -- the
-`env-cap` CLI builds one over `node:fs/promises` (`src/cli/filesystem.ts`);
-a test builds either that same real adapter or an in-memory fake. See ADR
-0040.
+implicitly (no `node:fs` import outside the package's CLI). Every public options object carries a required
+`fs` field of this type, and the caller supplies a concrete adapter: the CLI builds one over
+`node:fs/promises`; a test builds either that same adapter or an in-memory fake.
 
 "Ambient-fs-free" means specifically: `./build` never reaches for
 `node:fs` itself. It still performs real filesystem operations -- the
@@ -1037,7 +1034,7 @@ adapter is a drop-in value, but uses minimal structural types
 ([BuildDirent](#builddirent)/[BuildStats](#buildstats)) rather than Node's `Dirent`/
 `Stats` -- the capability boundary shouldn't leak Node's type surface just
 because the concrete adapter happens to be Node-backed. Only the
-operations `src/build/**` actually calls are here.
+operations the build code actually calls are here.
 
 #### Properties
 
@@ -1251,7 +1248,7 @@ From `generateUsageReport()`'s result.
 
 ### BuildStats
 
-A path's stat info from [BuildFileSystem.stat](#stat) -- the subset of Node's `Stats` `src/build/**` reads.
+A path's stat info from [BuildFileSystem.stat](#stat) -- the subset of Node's `Stats` the build code reads.
 
 #### Properties
 
@@ -1404,7 +1401,7 @@ Human-readable explanation of the conflict.
 ##### severity
 
 ```ts
-readonly severity: "error" | "warning" | "info";
+readonly severity: "warning" | "error" | "info";
 ```
 
 `"error"` blocks generation regardless of `onIncompatibility`; `"warning"` blocks only when `onIncompatibility: "throw"`; `"info"` never blocks, under any flag.
@@ -4211,7 +4208,7 @@ Human-readable explanation, reusing the source finding's own prose where one exi
 ##### severity
 
 ```ts
-readonly severity: "error" | "warning" | "info";
+readonly severity: "warning" | "error" | "info";
 ```
 
 `"error"` for a provable, always-blocking violation (e.g. an
@@ -7906,26 +7903,33 @@ meant to run against real projects.
 ### displayPath()
 
 ```ts
-function displayPath(root, absolutePath): string;
+function displayPath(root, filePath): string;
 ```
 
-Renders `absolutePath` relative to `root`, POSIX-separated regardless of
-platform (matching every other rendered path in this package's Markdown and
-JSON output). Falls back to `absolutePath` itself, unchanged, whenever the
-result would need to climb outside `root` (a `packages`-discovered file, or
-any other path not under root) -- never manufactures a `../` escape, which
-reads as a real relative path to a consumer and resolves to nothing useful.
+Renders `filePath` relative to `root`, POSIX-separated whatever the platform.
+
+Two deliberate non-conversions:
+
+- An already-relative `filePath` is returned as given (POSIX-normalized). That makes the function
+  idempotent, which matters because a model's `file` is relativized once and then passed through render
+  helpers that call this again. Resolving a relative path against `process.cwd()` first, which is what
+  `path.relative` does on its own, silently gives a wrong answer whenever the working directory is not `root`.
+- An absolute path that would need to climb outside `root` is returned unchanged, never rewritten into a
+  `../` escape: a file discovered in another package legitimately lives outside `root`, and its absolute path
+  is the only unambiguous thing to say about it.
 
 #### Parameters
 
-| Parameter | Type |
-| ------ | ------ |
-| `root` | `string` |
-| `absolutePath` | `string` |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `root` | `string` | The directory paths are published relative to. |
+| `filePath` | `string` | An absolute path, or one already relative to `root`. |
 
 #### Returns
 
 `string`
+
+The path to publish.
 
 ***
 

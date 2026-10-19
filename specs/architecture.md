@@ -166,7 +166,7 @@ as a normal npm dependency.
 
 This separation is enforced through automated checks. The tree-shaking tests
 and bundle-size checks fail if runtime consumers accidentally receive build
-tooling or unrelated helper code, and `scripts/verify-no-ambient-fs.mjs`
+tooling or unrelated helper code, and the `AmbientCapabilities` check
 fails if a published library entrypoint's packed output reaches for
 `node:fs` outside the CLI/`./node`/`./eslint-plugin` exceptions.
 

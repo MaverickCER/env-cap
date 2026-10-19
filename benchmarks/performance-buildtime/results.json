@@ -3799,19 +3799,25 @@
     "complexity": {
       "end-to-end:baseline": {
         "class": "linear",
-        "exponent": 0.8093624548374969,
+        "exponent": 0.9686460591791736,
+        "rSquared": 0.9971173122080998,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9
       },
       "end-to-end:with-package": {
         "class": "linear",
-        "exponent": 0.7455095643708395,
+        "exponent": 0.8982424955773405,
+        "rSquared": 0.9888828308345778,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9
       },
       "fn:discover-schema-files": {
         "class": "linear",
-        "exponent": 0.7680019270000571,
+        "exponent": 0.8804322248023202,
+        "rSquared": 0.9970435354887776,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
         "expected": "linear",
@@ -3820,25 +3826,31 @@
       },
       "fn:generate-manifest@all-contracts": {
         "class": "linear",
-        "exponent": 0.8357451638328863,
+        "exponent": 0.8939078218617975,
+        "rSquared": 0.9934767965927463,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
-        "expected": "linear",
-        "expectedNotation": "O(n)",
-        "agreement": "matches"
+        "expected": "linearithmic",
+        "expectedNotation": "O(n log n)",
+        "agreement": "close"
       },
       "fn:generate-manifest@one-contract-scoped": {
         "class": "logarithmic",
-        "exponent": 0.37427684333219985,
+        "exponent": 0.6200711593716159,
+        "rSquared": 0.9759804489881831,
+        "variable": "variable",
         "notation": "O(log n)",
         "points": 9,
-        "expected": "constant",
-        "expectedNotation": "O(1)",
-        "agreement": "close"
+        "expected": "logarithmic",
+        "expectedNotation": "O(log n)",
+        "agreement": "matches"
       },
       "fn:generate-documentation@minimal-docs": {
         "class": "linear",
-        "exponent": 0.7729141146806525,
+        "exponent": 0.7255744822654311,
+        "rSquared": 0.9978431282920287,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
         "expected": "linear",
@@ -3847,7 +3859,9 @@
       },
       "fn:generate-documentation@heavy-docs": {
         "class": "linear",
-        "exponent": 0.762683595896086,
+        "exponent": 0.7642931883803428,
+        "rSquared": 0.9986034429144159,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
         "expected": "linear",
@@ -3856,7 +3870,9 @@
       },
       "fn:generate-usage-report": {
         "class": "linear",
-        "exponent": 0.7444054383007712,
+        "exponent": 0.7975312769520674,
+        "rSquared": 0.9978757239705721,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
         "expected": "linear",
@@ -3865,7 +3881,9 @@
       },
       "fn:generate-artifacts": {
         "class": "linear",
-        "exponent": 0.7663038207275003,
+        "exponent": 0.8741233977736271,
+        "rSquared": 0.9887706509786145,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
         "expected": "linear",
@@ -3874,7 +3892,9 @@
       },
       "fn:generate-evidence-model": {
         "class": "linear",
-        "exponent": 0.8103405097608892,
+        "exponent": 0.7737600773421421,
+        "rSquared": 0.9948316086785634,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
         "expected": "linear",
@@ -3883,7 +3903,9 @@
       },
       "fn:evidence-projection": {
         "class": "linear",
-        "exponent": 0.9426699035742576,
+        "exponent": 1.071531439213158,
+        "rSquared": 0.9982503313168161,
+        "variable": "variable",
         "notation": "O(n)",
         "points": 9,
         "expected": "linear",
@@ -4029,63 +4051,63 @@
             "n": 20,
             "calls": 1,
             "estimatedMs": 0.3695914999998422,
-            "shareOfOverhead": 0.022621632016897153,
+            "exclusiveMs": 0.3695914999998422,
             "shareOfTotal": 0.02162722387072199
           },
           {
             "n": 40,
             "calls": 1,
             "estimatedMs": 0.32207225000001927,
-            "shareOfOverhead": 0.01382442930040921,
+            "exclusiveMs": 0.32207225000001927,
             "shareOfTotal": 0.013239549699781033
           },
           {
             "n": 80,
             "calls": 1,
             "estimatedMs": 0.6345655000004626,
-            "shareOfOverhead": 0.01960245263308273,
+            "exclusiveMs": 0.6345655000004626,
             "shareOfTotal": 0.01875001015706776
           },
           {
             "n": 160,
             "calls": 1,
             "estimatedMs": 1.1134170000004815,
-            "shareOfOverhead": 0.01925293393530229,
+            "exclusiveMs": 1.1134170000004815,
             "shareOfTotal": 0.018488828527592448
           },
           {
             "n": 320,
             "calls": 1,
             "estimatedMs": 1.8398100000013073,
-            "shareOfOverhead": 0.020273640872898013,
+            "exclusiveMs": 1.8398100000013073,
             "shareOfTotal": 0.019336396310618266
           },
           {
             "n": 640,
             "calls": 1,
             "estimatedMs": 2.9973429999990913,
-            "shareOfOverhead": 0.021531816057806942,
+            "exclusiveMs": 2.9973429999990913,
             "shareOfTotal": 0.02044301958511869
           },
           {
             "n": 1280,
             "calls": 1,
             "estimatedMs": 5.6509080000014364,
-            "shareOfOverhead": 0.02216892439908641,
+            "exclusiveMs": 5.6509080000014364,
             "shareOfTotal": 0.020921650394335255
           },
           {
             "n": 2560,
             "calls": 1,
             "estimatedMs": 10.558146999999735,
-            "shareOfOverhead": 0.021926399016859808,
+            "exclusiveMs": 10.558146999999735,
             "shareOfTotal": 0.020591455682920274
           },
           {
             "n": 5120,
             "calls": 1,
             "estimatedMs": 20.72668700000031,
-            "shareOfOverhead": 0.019142675846159037,
+            "exclusiveMs": 20.72668700000031,
             "shareOfTotal": 0.01811329280071217
           }
         ]
@@ -4093,140 +4115,140 @@
       {
         "id": "generate-documentation",
         "group": "fn:generate-documentation@minimal-docs",
-        "description": "Once per artifact run, rendering from the shared parse.",
+        "description": "Not called by the end-to-end operation: generateEnvArtifacts renders the catalog from its shared parse, while this standalone generator parses again.",
         "rows": [
           {
             "n": 20,
-            "calls": 1,
-            "estimatedMs": 4.944785000003321,
-            "shareOfOverhead": 0.3026560585749285,
-            "shareOfTotal": 0.2893518173110191
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 40,
-            "calls": 1,
-            "estimatedMs": 9.517099000000599,
-            "shareOfOverhead": 0.40850604878407126,
-            "shareOfTotal": 0.3912231035372863
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 80,
-            "calls": 1,
-            "estimatedMs": 15.520528000000922,
-            "shareOfOverhead": 0.4794468261514856,
-            "shareOfTotal": 0.4585973514835895
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 160,
-            "calls": 1,
-            "estimatedMs": 24.015317999997933,
-            "shareOfOverhead": 0.41526699420705465,
-            "shareOfTotal": 0.3987859863262139
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 320,
-            "calls": 1,
-            "estimatedMs": 48.495726000001014,
-            "shareOfOverhead": 0.5343948194616752,
-            "shareOfTotal": 0.5096899012976924
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 640,
-            "calls": 1,
-            "estimatedMs": 84.12850600000093,
-            "shareOfOverhead": 0.6043484233905418,
-            "shareOfTotal": 0.5737884172166201
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 1280,
-            "calls": 1,
-            "estimatedMs": 129.0317729999988,
-            "shareOfOverhead": 0.5062010602041875,
-            "shareOfTotal": 0.4777210396039921
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 2560,
-            "calls": 1,
-            "estimatedMs": 212.4194639999987,
-            "shareOfOverhead": 0.44113743885281914,
-            "shareOfTotal": 0.41427970070370884
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 5120,
-            "calls": 1,
-            "estimatedMs": 377.2908869999992,
-            "shareOfOverhead": 0.3484569024249121,
-            "shareOfTotal": 0.32971889367901835
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           }
         ]
       },
       {
         "id": "generate-usage-report",
         "group": "fn:generate-usage-report",
-        "description": "Once per artifact run.",
+        "description": "Not called by the end-to-end operation: generateEnvArtifacts builds the usage report from its shared parse, while this standalone generator parses again.",
         "rows": [
           {
             "n": 20,
-            "calls": 1,
-            "estimatedMs": 7.791649999999208,
-            "shareOfOverhead": 0.4769044718412465,
-            "shareOfTotal": 0.455940569175335
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 40,
-            "calls": 1,
-            "estimatedMs": 14.528623999998672,
-            "shareOfOverhead": 0.6236176364781445,
-            "shareOfTotal": 0.5972338179318536
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 80,
-            "calls": 1,
-            "estimatedMs": 25.858883000000787,
-            "shareOfOverhead": 0.7988104130331292,
-            "shareOfTotal": 0.7640729269083933
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 160,
-            "calls": 1,
-            "estimatedMs": 33.37679100000241,
-            "shareOfOverhead": 0.5771432914129753,
-            "shareOfTotal": 0.5542377793765216
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 320,
-            "calls": 1,
-            "estimatedMs": 55.87238999999681,
-            "shareOfOverhead": 0.615681385343937,
-            "shareOfTotal": 0.5872186127157671
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 640,
-            "calls": 1,
-            "estimatedMs": 107.59238900000491,
-            "shareOfOverhead": 0.7729043787010093,
-            "shareOfTotal": 0.733821026001187
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 1280,
-            "calls": 1,
-            "estimatedMs": 175.79914100000315,
-            "shareOfOverhead": 0.6896728572208946,
-            "shareOfTotal": 0.6508702968842495
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 2560,
-            "calls": 1,
-            "estimatedMs": 296.0556590000051,
-            "shareOfOverhead": 0.6148270629717182,
-            "shareOfTotal": 0.5773945922496168
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           },
           {
             "n": 5120,
-            "calls": 1,
-            "estimatedMs": 534.3250379999954,
-            "shareOfOverhead": 0.4934899146651063,
-            "shareOfTotal": 0.4669528643938816
+            "calls": 0,
+            "estimatedMs": 0,
+            "exclusiveMs": 0,
+            "shareOfTotal": 0
           }
         ]
       },
@@ -4239,66 +4261,192 @@
             "n": 20,
             "calls": 1,
             "estimatedMs": 13.923252000000502,
-            "shareOfOverhead": 0.8522021832825516,
-            "shareOfTotal": 0.8147408368769766
+            "exclusiveMs": 13.55366050000066,
+            "shareOfTotal": 0.7931136130062547
           },
           {
             "n": 40,
             "calls": 1,
             "estimatedMs": 22.04176500000176,
-            "shareOfOverhead": 0.9461070362278661,
-            "shareOfTotal": 0.906079437729888
+            "exclusiveMs": 21.71969275000174,
+            "shareOfTotal": 0.8928398880301069
           },
           {
             "n": 80,
             "calls": 1,
             "estimatedMs": 34.87501799999882,
-            "shareOfOverhead": 1.0773291148390294,
-            "shareOfTotal": 1.0304798192265763
+            "exclusiveMs": 34.240452499998355,
+            "shareOfTotal": 1.0117298090695086
           },
           {
             "n": 160,
             "calls": 1,
             "estimatedMs": 59.99089200000162,
-            "shareOfOverhead": 1.0373478044572577,
-            "shareOfTotal": 0.9961778160427476
+            "exclusiveMs": 58.87747500000114,
+            "shareOfTotal": 0.9776889875151551
           },
           {
             "n": 320,
             "calls": 1,
             "estimatedMs": 98.13536300000123,
-            "shareOfOverhead": 1.081394875770919,
-            "shareOfTotal": 1.0314023029840362
+            "exclusiveMs": 96.29555299999993,
+            "shareOfTotal": 1.0120659066734181
           },
           {
             "n": 640,
             "calls": 1,
             "estimatedMs": 148.52192500000092,
-            "shareOfOverhead": 1.0669271984061843,
-            "shareOfTotal": 1.0129760329716915
+            "exclusiveMs": 145.52458200000183,
+            "shareOfTotal": 0.9925330133865727
           },
           {
             "n": 1280,
             "calls": 1,
             "estimatedMs": 268.00829499999963,
-            "shareOfOverhead": 1.0514160963479726,
-            "shareOfTotal": 0.9922610403089975
+            "exclusiveMs": 262.3573869999982,
+            "shareOfTotal": 0.9713393899146623
           },
           {
             "n": 2560,
             "calls": 1,
             "estimatedMs": 509.2424769999998,
-            "shareOfOverhead": 1.0575580873269077,
-            "shareOfTotal": 0.9931708563071062
+            "exclusiveMs": 498.68433000000005,
+            "shareOfTotal": 0.972579400624186
           },
           {
             "n": 5120,
             "calls": 1,
             "estimatedMs": 1096.3401529999974,
-            "shareOfOverhead": 1.0125537267971016,
-            "shareOfTotal": 0.9581044090870015
+            "exclusiveMs": 1075.613465999997,
+            "shareOfTotal": 0.9399911162862893
           }
         ]
+      },
+      {
+        "id": "check-artifacts",
+        "group": "fn:check-artifacts",
+        "description": "A CI gate, not part of generating the artifacts.",
+        "rows": []
+      },
+      {
+        "id": "compute-source-fingerprint",
+        "group": "fn:compute-source-fingerprint",
+        "description": "Run before a cached read, not while generating.",
+        "rows": []
+      },
+      {
+        "id": "get-evidence-model",
+        "group": "fn:get-evidence-model@cache-hit",
+        "description": "A cached read, not part of generating the artifacts.",
+        "rows": []
+      },
+      {
+        "id": "parse-schema-file",
+        "group": "fn:parse-schema-file",
+        "description": "Run once per schema file inside every generator; measured here on one file.",
+        "rows": []
+      },
+      {
+        "id": "link-files",
+        "group": "fn:link-files",
+        "description": "Run once inside every generator; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "build-contract-model",
+        "group": "fn:build-contract-model",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "build-ownership-model",
+        "group": "fn:build-ownership-model",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "build-lifecycle-model",
+        "group": "fn:build-lifecycle-model",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "compute-expiring-entries",
+        "group": "fn:compute-expiring-entries",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "compute-security-review-counters",
+        "group": "fn:compute-security-review-counters",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "render-docs",
+        "group": "fn:render-docs",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "render-manifest",
+        "group": "fn:render-manifest",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "compute-reconciliation",
+        "group": "fn:compute-reconciliation",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "render-env-example",
+        "group": "fn:render-env-example",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "group-variables-by-owner",
+        "group": "fn:group-variables-by-owner",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "apply-live-expiration-overrides",
+        "group": "fn:apply-live-expiration-overrides",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "resolve-live-expiration-dates",
+        "group": "fn:resolve-live-expiration-dates",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "configuration-reference",
+        "group": "fn:configuration-reference",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "expiring-soon-report",
+        "group": "fn:expiring-soon-report",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "ownership-summary",
+        "group": "fn:ownership-summary",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
+      },
+      {
+        "id": "build-sarif-log",
+        "group": "fn:build-sarif-log",
+        "description": "Not part of the end-to-end operation, which calls the generators; measured on its own.",
+        "rows": []
       }
     ],
     "cost": {
@@ -4330,6 +4478,369 @@
           "highUsdPerMillion": 2.255728751031812,
           "opsPerSecondPerCore": 0.9235762496031685
         }
+      }
+    },
+    "coverage": {
+      "benchmarks": [
+        {
+          "id": "discover-schema-files",
+          "covers": {
+            "discoverSchemaFiles": {
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.root": "swept"
+            }
+          }
+        },
+        {
+          "id": "generate-manifest",
+          "covers": {
+            "generateEnvManifest": {
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "variant:one-contract-scoped",
+              "options.location": "fixed: one file under the fixture's output folder",
+              "options.onIncompatibility": "not covered: called only when a finding is raised, which the fixtures never do",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.root": "swept",
+              "options.tsconfig": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing"
+            }
+          }
+        },
+        {
+          "id": "generate-documentation",
+          "covers": {
+            "generateDocumentation": {
+              "options.envExample": "not covered: the optional `.env.example` is a separate rendering, measured as `render-env-example` and `compute-reconciliation`",
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.expiringWithinDays": "fixed: 30 days, the default window; the scan reads every variable once whatever the window",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.liveExpirationDates": "not covered: it calls the caller's own function (a lookup the caller pays for), so its cost is not env-cap's",
+              "options.location": "fixed: one file under the fixture's output folder",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.root": "swept",
+              "options.tsconfig": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing"
+            }
+          }
+        },
+        {
+          "id": "generate-usage-report",
+          "covers": {
+            "generateUsageReport": {
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.report": "fixed: one file under the fixture's output folder",
+              "options.root": "swept",
+              "options.tsconfig": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing"
+            }
+          }
+        },
+        {
+          "id": "generate-artifacts",
+          "covers": {
+            "generateEnvArtifacts": {
+              "options.docs": "fixed: requested, at one location, with default documentation options",
+              "options.evidence": "not covered: persisting the evidence model is the evidence model written to disk, which `generate-evidence-model` builds",
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.liveExpirationDates": "not covered: it calls the caller's own function (a lookup the caller pays for), so its cost is not env-cap's",
+              "options.manifest": "fixed: requested, at one location",
+              "options.onOwnershipIssue": "not covered: called only when a finding is raised, which the fixtures never do",
+              "options.onUndocumented": "not covered: called only when a finding is raised, which the fixtures never do",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.root": "swept",
+              "options.tsconfig": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing",
+              "options.usage": "fixed: requested, at one location"
+            }
+          }
+        },
+        {
+          "id": "check-artifacts",
+          "covers": {
+            "checkEnvArtifacts": {
+              "options.docs": "fixed: checked, against the file `generate-artifacts` writes",
+              "options.evidence": "not covered: checking the persisted evidence model compares one more rendered file, the same work as the others",
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.liveExpirationDates": "not covered: it calls the caller's own function (a lookup the caller pays for), so its cost is not env-cap's",
+              "options.manifest": "fixed: checked, against the file `generate-artifacts` writes",
+              "options.onOwnershipIssue": "not covered: called only when a finding is raised, which the fixtures never do",
+              "options.onUndocumented": "not covered: called only when a finding is raised, which the fixtures never do",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.root": "swept",
+              "options.tsconfig": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing",
+              "options.usage": "fixed: checked, against the file `generate-artifacts` writes"
+            }
+          }
+        },
+        {
+          "id": "compute-source-fingerprint",
+          "covers": {
+            "computeSourceFingerprint": {
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.root": "swept"
+            }
+          }
+        },
+        {
+          "id": "generate-evidence-model",
+          "covers": {
+            "generateEvidenceModel": {
+              "options.commit": "not covered: a caller-supplied function that returns the commit recorded as provenance; its cost is the caller's lookup, and env-cap only copies the string it returns",
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.expiringWithinDays": "fixed: 30 days, the default window; the scan reads every variable once whatever the window",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.liveExpirationDates": "not covered: it calls the caller's own function (a lookup the caller pays for), so its cost is not env-cap's",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.previousSnapshotLocation": "fixed: none, the first-run state, where everything reads as added",
+              "options.root": "swept",
+              "options.tsconfig": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing"
+            }
+          }
+        },
+        {
+          "id": "get-evidence-model",
+          "covers": {
+            "getEvidenceModel": {
+              "options.commit": "not covered: a caller-supplied function that returns the commit recorded as provenance; its cost is the caller's lookup, and env-cap only copies the string it returns",
+              "options.exclude": "fixed: the standard ignore list, whose patterns are tested against every path walked",
+              "options.expiringWithinDays": "fixed: 30 days, the default window; the scan reads every variable once whatever the window",
+              "options.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "options.include": "fixed: the default schema glob",
+              "options.liveExpirationDates": "not covered: it calls the caller's own function (a lookup the caller pays for), so its cost is not env-cap's",
+              "options.location": "variant:cache-hit",
+              "options.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "options.previousSnapshotLocation": "fixed: none, the first-run state",
+              "options.root": "swept",
+              "options.tsconfig": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing"
+            }
+          }
+        },
+        {
+          "id": "parse-schema-file",
+          "covers": {
+            "parseSchemaFile": {
+              "filePath": "fixed: one short path, which is only recorded in the result",
+              "sourceText": "swept"
+            }
+          }
+        },
+        {
+          "id": "link-files",
+          "covers": {
+            "linkFiles": {
+              "discoveredFiles": "swept",
+              "readFile": "fixed: reads the file from the local disk through the Node adapter",
+              "context.fs": "fixed: the Node filesystem adapter, which is what every real build uses",
+              "context.root": "fixed: the generated fixture tree",
+              "context.packages": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none",
+              "context.cache": "fixed: an empty cache, which is what a first resolution of each package starts with",
+              "context.tsconfigPaths": "not covered: path-alias resolution applies one tsconfig to each import, and the fixtures import nothing",
+              "context.aliasCache": "fixed: an empty cache, which is what a first resolution of each alias starts with",
+              "packageOrigins": "not covered: resolving an allowlisted package reads that package's schemas, and the fixtures allowlist none"
+            }
+          }
+        },
+        {
+          "id": "build-contract-model",
+          "covers": {
+            "buildContractModel": {
+              "contracts": "swept",
+              "root": "fixed: the generated fixture tree, which only shortens the file paths"
+            }
+          }
+        },
+        {
+          "id": "build-ownership-model",
+          "covers": {
+            "buildOwnershipModel": {
+              "contracts": "swept",
+              "root": "fixed: the generated fixture tree, which only shortens the file paths"
+            }
+          }
+        },
+        {
+          "id": "build-lifecycle-model",
+          "covers": {
+            "buildLifecycleModel": {
+              "contracts": "swept",
+              "expiringWithinDays": "fixed: 30 days, the default window; the scan reads every variable once whatever the window",
+              "now": "fixed: one instant, because the clock only decides which entries are due",
+              "root": "fixed: the generated fixture tree, which only shortens the file paths"
+            }
+          }
+        },
+        {
+          "id": "compute-expiring-entries",
+          "covers": {
+            "computeExpiringEntries": {
+              "contracts": "swept",
+              "expiringWithinDays": "fixed: 30 days, the default window; the scan reads every variable once whatever the window",
+              "now": "fixed: one instant, because the clock only decides which entries are due"
+            }
+          }
+        },
+        {
+          "id": "compute-security-review-counters",
+          "covers": {
+            "computeSecurityReviewCounters": {
+              "contracts": "swept",
+              "expiringWithinDays": "fixed: 30 days, the default window; the scan reads every variable once whatever the window",
+              "now": "fixed: one instant, because the clock only decides which entries are due",
+              "undocumentedContractCount": "fixed: zero, the fixtures document everything",
+              "undocumentedVariableCount": "fixed: zero, the fixtures document everything"
+            }
+          }
+        },
+        {
+          "id": "render-docs",
+          "covers": {
+            "renderDocs": {
+              "contracts": "swept",
+              "options.expiringWithinDays": "fixed: 30 days, the default window; the scan reads every variable once whatever the window",
+              "options.generatedAt": "fixed: one instant, which is only printed in the header",
+              "options.previousContent": "fixed: none, the first-run state, so nothing is compared with an earlier document",
+              "options.undocumentedContracts": "fixed: none, the fixtures document everything",
+              "options.undocumentedVariables": "fixed: none, the fixtures document everything"
+            }
+          }
+        },
+        {
+          "id": "render-manifest",
+          "covers": {
+            "renderManifest": {
+              "contracts": "swept",
+              "outputFile": "fixed: one path, which only decides the relative import paths printed"
+            }
+          }
+        },
+        {
+          "id": "compute-reconciliation",
+          "covers": {
+            "computeReconciliation": {
+              "contracts": "swept",
+              "existingContent": "fixed: empty, the first-run state, where every variable is new"
+            }
+          }
+        },
+        {
+          "id": "render-env-example",
+          "covers": {
+            "renderEnvExample": {
+              "contracts": "swept",
+              "reconciliationHeader": "fixed: none, the default header"
+            }
+          }
+        },
+        {
+          "id": "group-variables-by-owner",
+          "covers": {
+            "groupVariablesByOwner": {
+              "contracts": "swept",
+              "ownerOf": "fixed: reads one field of the contract, the cheapest honest owner lookup"
+            }
+          }
+        },
+        {
+          "id": "apply-live-expiration-overrides",
+          "covers": {
+            "applyLiveExpirationOverrides": {
+              "contracts": "swept",
+              "overrides": "fixed: one override for every tenth variable"
+            }
+          }
+        },
+        {
+          "id": "resolve-live-expiration-dates",
+          "covers": {
+            "resolveLiveExpirationDates": {
+              "contracts": "swept",
+              "liveExpirationDates": "fixed: an in-memory lookup that answers at once, so the benchmark measures env-cap's own collecting and applying"
+            }
+          }
+        },
+        {
+          "id": "configuration-reference",
+          "covers": {
+            "configurationReference": {
+              "evidence.change": "swept",
+              "evidence.contract": "swept",
+              "evidence.dependency": "swept",
+              "evidence.finding": "swept",
+              "evidence.lifecycle": "swept",
+              "evidence.ownership": "swept",
+              "evidence.provenance": "fixed: one small record, which is copied",
+              "evidence.schemaVersion": "fixed: one number, which is copied"
+            }
+          }
+        },
+        {
+          "id": "expiring-soon-report",
+          "covers": {
+            "expiringSoonReport": {
+              "evidence.change": "swept",
+              "evidence.contract": "swept",
+              "evidence.dependency": "swept",
+              "evidence.finding": "swept",
+              "evidence.lifecycle": "swept",
+              "evidence.ownership": "swept",
+              "evidence.provenance": "fixed: one small record, which is copied",
+              "evidence.schemaVersion": "fixed: one number, which is copied"
+            }
+          }
+        },
+        {
+          "id": "ownership-summary",
+          "covers": {
+            "ownershipSummary": {
+              "evidence.change": "swept",
+              "evidence.contract": "swept",
+              "evidence.dependency": "swept",
+              "evidence.finding": "swept",
+              "evidence.lifecycle": "swept",
+              "evidence.ownership": "swept",
+              "evidence.provenance": "fixed: one small record, which is copied",
+              "evidence.schemaVersion": "fixed: one number, which is copied"
+            }
+          }
+        },
+        {
+          "id": "build-sarif-log",
+          "covers": {
+            "buildSarifLog": {
+              "findingModel.findings": "swept",
+              "findingModel.schemaVersion": "fixed: one number, which is copied"
+            }
+          }
+        }
+      ],
+      "notBenchmarked": {
+        "buildChangeModel": "Its input is the list of changes a caller read from a previous manifest, which is empty on a first run and small on any later one; the model it builds from the contracts is part of `generate-evidence-model`, which builds all six fact models from the same linked contracts.",
+        "buildDependencyModel": "It scans the files that consume the contracts, and the fixtures contain only the schemas; the scan is what `generate-usage-report` and `generate-evidence-model` run on every call, so it is measured there at every size.",
+        "buildFindingModel": "Its input is the lists of findings the other passes produced, which the fixtures never produce; the model it builds from them is derived once in `generate-evidence-model`.",
+        "computeRotationStatus": "It reads five fields of one variable and compares dates, a constant amount of work done once per variable; `build-lifecycle-model` runs it for every variable at every size.",
+        "displayPath": "It trims one path against one root, a constant amount of work in the length of a path; every generator calls it per file, so `generate-evidence-model` measures it at every size.",
+        "effectiveOwner": "It reads two fields of one variable and one of its contract, a constant amount of work; `build-ownership-model` runs it for every variable at every size.",
+        "extractContractDocs": "An internal step of `parseSchemaFile`, which receives the parser's own syntax nodes and cannot be called without one; `parse-schema-file` measures it as part of parsing each schema at every size.",
+        "extractSchemaVariables": "An internal step of `parseSchemaFile`, which receives the parser's own syntax nodes and cannot be called without one; `parse-schema-file` measures it as part of parsing each schema at every size.",
+        "renderUsageReport": "Its input is the findings of the dependency pass, which the fixtures never produce; the report is rendered once in `generate-usage-report`, which measures it at every size.",
+        "resolveRelativeImport": "It tries a fixed list of file extensions against the filesystem for one import, a constant number of probes; `link-files` runs it for every import at every size.",
+        "writeEnvExample": "It renders the `.env.example` file (measured as `render-env-example`) and writes it once through the filesystem adapter, which the standard keeps out of the benchmarks (no real I/O).",
+        "processors.toArray": "A factory that builds one processor from a separator and a list of item processors in constant time; the processor it returns is what the runtime suite's `processor-to-array` measures.",
+        "validators.matches": "A factory that builds one validator from a pattern and a message in constant time; the validator it returns is what the runtime suite's `validator-matches` measures.",
+        "validators.range": "A factory that builds one validator from two numbers in constant time; the validator it returns is what the runtime suite's `validator-range` measures.",
+        "validators.refine": "A factory that wraps one validator with a message in constant time; the validator it returns is what the runtime suite's `validator-refine` measures.",
+        "validators.regex": "A factory that builds one validator from a pattern and a message in constant time; the validator it returns is what the runtime suite's `validator-matches` measures."
       }
     }
   }

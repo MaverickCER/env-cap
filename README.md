@@ -2,10 +2,10 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/maverickcer/env-cap/ci.yml?branch=main&label=CI)](https://github.com/maverickcer/env-cap/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
-[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/coverage-badge.json)](https://github.com/MaverickCER/env-cap/blob/main/vitest.config.ts)
-[![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/mutation-badge.json)](https://github.com/MaverickCER/env-cap/blob/main/stryker.config.mjs)
+[![Coverage: the lowest of line, statement, function and branch coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/coverage-badge.json)](https://maverickcer.github.io/env-cap/coverage.json)
+[![Mutation score: the share of applicable mutants the tests detect](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/mutation-badge.json)](https://maverickcer.github.io/env-cap/mutation.json)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/MaverickCER/env-cap/badge)](https://scorecard.dev/viewer/?uri=github.com/MaverickCER/env-cap)
-[![Bundle size](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/size-badge.json)](specs/decisions/0008-gzip-size-budget.md)
+[![Bundle size: gzip size of the entry point against its budget](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/size-badge.json)](https://maverickcer.github.io/env-cap/size.json)
 [![Socket Badge](https://badge.socket.dev/npm/package/@maverickcer/env-cap/latest)](https://socket.dev/npm/package/@maverickcer/env-cap)
 [![Node](https://img.shields.io/node/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
 [![License](https://img.shields.io/npm/l/%40maverickcer%2Fenv-cap)](LICENSE)
@@ -112,7 +112,7 @@ The important part is what the analysis can establish: `STRIPE_KEY` has an owner
 - **Real fixtures:** the output above comes from a runnable example that is also a regression test, and two more stages (a [team service](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service) and an [enterprise platform](https://github.com/MaverickCER/env-cap/tree/main/examples/enterprise-platform)) show the model at scale.
 - **Enforced in CI:** coverage is a ratchet that may only move up, mutation score is a gate ([CODE_REVIEW.md](CODE_REVIEW.md)), and the README's own demo is re-run and compared on every change.
 - **Runtime-tested:** the runtime and helpers are verified against real Node, Bun, and Deno in CI, not assumed isomorphic.
-- **Hard size budget:** the runtime and helpers entry points each stay under 3 KB gzip, enforced before publish ([ADR 0008](specs/decisions/0008-gzip-size-budget.md)).
+- **Hard size budget:** the runtime entry point stays under 3 KB gzip and the helpers under 4 KB, enforced before publish ([ADR 0008](specs/decisions/0008-gzip-size-budget.md)).
 - **Verifiable release:** published with npm OIDC provenance and no long-lived token ([SECURITY.md](SECURITY.md#supply-chain-posture)).
 
 ## Install and verify
@@ -125,6 +125,8 @@ npx env-cap init                  # scaffolds env.schema.ts and scripts/generate
 npm install --save-dev typescript # the generator parses your schema with it
 node scripts/generate-env.mjs
 ```
+
+**Using an AI agent?** Give it [the skill](https://raw.githubusercontent.com/MaverickCER/env-cap/main/skills/env-cap/SKILL.md): a short manual written from this package's own exports, with the rules a type signature cannot say.
 
 `init` never overwrites existing files and never edits `package.json`. **Verify it works:** the generator prints `Discovered 1 contract(s).` and writes the manifest, `docs/ENVIRONMENT.md`, and an ownership report. Then validate once at startup and read values through the contract:
 

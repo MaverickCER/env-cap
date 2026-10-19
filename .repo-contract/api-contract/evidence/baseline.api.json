@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.59.3",
+    "toolVersion": "7.59.4",
     "schemaVersion": 1011,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -272,7 +272,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!EvidenceModel:interface",
-          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one intentional exception to `src/build/`'s zero-\n * cross-folder-import rule: `src/evidence/` imports it with `import type`\n * only (fully erased at compile time under `verbatimModuleSyntax`), the same\n * shape as `helpers`' single sanctioned edge onto `runtime` -- see\n * `specs/architecture.md`. `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
+          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one intentional exception to `src/build/`'s zero-\n * cross-folder-import rule: `src/evidence/` imports it with `import type`\n * only (fully erased at compile time under `verbatimModuleSyntax`), the same\n * shape as `helpers`' single sanctioned edge onto `runtime` -- see\n * `specs/architecture.md`. `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

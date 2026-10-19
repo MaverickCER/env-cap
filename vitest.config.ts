@@ -39,7 +39,7 @@ export default defineConfig({
       // accurate reflection, not a loophole: there is no line inside them a
       // test could ever "cover." `src/build/types.ts` is the `BuildFileSystem`
       // capability contract (ADR 0040).
-      exclude: ["src/runtime/types.ts", "src/build/types.ts"],
+      exclude: ["src/runtime/types.ts", "src/build/types.ts", "src/_ipc/**"],
       // "json" (not just "json-summary") is load-bearing: it's what actually
       // writes coverage/coverage-final.json, the per-file raw coverage data
       // internal-package-contract's Crap check hands to `crap4ts --coverage`.

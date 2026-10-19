@@ -31,6 +31,10 @@ export default {
     // `BuildFileSystem` capability contract (ADR 0040).
     "!src/runtime/types.ts",
     "!src/build/types.ts",
+    // Managed copies of internal-package-contract's `runtime/*.ts` modules (everything under `src/_ipc`): their
+    // tests and their mutation testing live with the canonical sources, and `ManagedFiles` fails if a copy
+    // drifts.
+    "!src/_ipc/**",
   ],
   incremental: true,
   incrementalFile: "reports/mutation/stryker-incremental.json",
