@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- 8997705: A variable declared in more than one contract is documented once: every field a declaration leaves unset is filled from a declaration of the same variable when one of the two comes from a package's contract, in either direction: the application's declaration takes the package's explanation, and the package's declaration shows the application's own `expiresAt` or `owner` when the application's contracts that set it agree (alternatives that disagree, such as two databases, give it neither). Two of the application's own contracts never fill each other. An application can therefore add only its own `expiresAt` or `owner` to a variable a package already explains. `DUPLICATE_VARIABLE_DOCUMENTATION` is now reported only for a field both declarations set differently.
+
+### Patch Changes
+
+- 8997705: fix(eslint-plugin): an `allow` pattern written relative to the working directory, such as `scripts/**`, now matches the absolute path ESLint passes a rule (on Windows too), in `no-raw-process-env` and `no-node-fs`; a `**/`-prefixed pattern matched before and still does. `no-node-fs` also reports `node:fs` reached through a re-export or TypeScript's `import x = require()`. Each rule's documentation link now opens the guide's ESLint plugin section; the README anchor it pointed at did not exist.
+- fix(site): readable inline code in the hero; record the brief link that goes live on deploy
+- fix(security): commit the Socket registry in the form the check writes it
+- fix(security): record the Socket alerts that only appear once a version is published
+- feat(ci): publish the mutation badge and the OpenSSF Scorecard result
+- fix(security): give every v2 Socket record an explicit expires
+- 8997705: `env-cap --help` is shorter and shows examples, with the options grouped by what they are for and no decision-record numbers. Shared build-tooling code (glob, path display, tsconfig path resolution, the generated-file banner, the no-node-fs rule) is now carried as managed copies of the standard's, so a fix lands once. The `/build` types change only in compatible ways: optional options also accept `undefined`, and `configurationReference`, `expiringSoonReport` and `ownershipSummary` also expose the `project` step they are built from.
+
 ## 0.6.0
 
 ### Minor Changes
