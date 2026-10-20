@@ -437,7 +437,7 @@ own (e.g. in a helper function's own parameter type) without narrowing to one sp
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `S` *extends* [`EnvSchema`](#envschema) | [`EnvSchema`](#envschema) |
+| <a id="type-parameter-s"></a> `S` *extends* [`EnvSchema`](#envschema) | [`EnvSchema`](#envschema) |
 
 #### Properties
 
@@ -627,7 +627,7 @@ Configuration for one schema entry: how to default, process, and validate a sing
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t"></a> `T` |
 
 #### Properties
 
@@ -1101,12 +1101,18 @@ would erase the one thing a reader of the generated `.d.ts` needs to learn here.
 
 ```ts
 type EnvContract<S> = { readonly [K in keyof S]: InferEnvValue<S[K]> } & {
-  toString: string;
+  toString(): string;
 };
 ```
 
 The object returned by [createEnv](#createenv). Each key is a lazily-resolved getter backed by the
 runtime cache -- there is no global env object, only per-feature contracts like this one.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-s-1"></a> `S` *extends* [`EnvSchema`](#envschema) |
 
 #### Type Declaration
 
@@ -1121,12 +1127,6 @@ Returns the redacted `EnvContract("name")` representation, never resolved values
 ###### Returns
 
 `string`
-
-#### Type Parameters
-
-| Type Parameter |
-| ------ |
-| `S` *extends* [`EnvSchema`](#envschema) |
 
 #### Remarks
 
@@ -1170,7 +1170,7 @@ default's type, else `string` (the shape raw process.env values naturally arrive
 
 | Type Parameter |
 | ------ |
-| `D` *extends* [`EnvDefinition`](#envdefinition)\<`any`\> |
+| <a id="type-parameter-d"></a> `D` *extends* [`EnvDefinition`](#envdefinition)\<`any`\> |
 
 #### Remarks
 
@@ -1191,7 +1191,7 @@ Processes a raw value into a typed, ready-to-use application value. Must not rea
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t-1"></a> `T` |
 
 #### Parameters
 
@@ -1228,7 +1228,7 @@ string when invalid.
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t-2"></a> `T` |
 
 #### Parameters
 
@@ -1260,14 +1260,14 @@ feature that consumes the variables (e.g. `features/payments/env.schema.ts`).
 
 | Type Parameter |
 | ------ |
-| `S` *extends* [`EnvSchema`](#envschema) |
+| <a id="type-parameter-s-2"></a> `S` *extends* [`EnvSchema`](#envschema) |
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
 | `schema` | `S` |
-| `options` | [`CreateEnvOptions`](#createenvoptions) |
+| `options?` | [`CreateEnvOptions`](#createenvoptions) |
 
 #### Returns
 
@@ -1307,7 +1307,7 @@ the generator's static link and the type checker's.
 
 | Type Parameter |
 | ------ |
-| `S` *extends* [`EnvSchema`](#envschema) |
+| <a id="type-parameter-s-3"></a> `S` *extends* [`EnvSchema`](#envschema) |
 
 #### Parameters
 

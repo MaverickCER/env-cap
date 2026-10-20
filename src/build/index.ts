@@ -20,7 +20,7 @@
  * `generateEnvArtifacts`) plus the lower-level discovery/linking primitives,
  * justified by real external use (custom CI scripts, bundler plugins) and
  * promoted to Stable alongside the orchestrators per ADR 0045 -- see
- * VERSIONING.md. The dependency-ownership engine's internals (scanning,
+ * `VERSIONING.md`. The dependency-ownership engine's internals (scanning,
  * graph-building, derivation) are intentionally NOT exported here -- see ADR
  * 0010 and ADR 0011. `env-cap` answers ownership/visibility questions; it
  * doesn't ship a general-purpose static-analysis toolkit. The scanner
@@ -32,14 +32,14 @@
  * Each generator also accepts a `packages` option (an explicit
  * allowlist of installed package names) for discovering a schema that ships
  * inside a separately-published dependency rather than the project's own
- * source tree -- see ADR 0014 and VERSIONING.md.
+ * source tree -- see ADR 0014 and `VERSIONING.md`.
  *
  * Each generator also accepts a `tsconfig` option for resolving
  * import specifiers written as TypeScript path aliases (e.g. `"@/lib/env"`)
  * against a project's own `tsconfig.json` `paths`/`baseUrl` during static
  * analysis. Unlike `packages`, this is on by default (auto-detecting
  * `tsconfig.json` at `root`) since it never crosses a trust/versioning
- * boundary -- see ADR 0023 and VERSIONING.md.
+ * boundary -- see ADR 0023 and `VERSIONING.md`.
  */
 
 // Orchestrators -- the entire public build API.

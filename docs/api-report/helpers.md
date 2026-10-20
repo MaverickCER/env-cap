@@ -77,7 +77,7 @@ Splits a string on `separator` into a trimmed string array; returns `[]` for non
 
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
-| `separator` | `string` | `","` |
+| `separator?` | `string` | `","` |
 
 ###### Returns
 
@@ -103,8 +103,8 @@ Splits a delimited string (or passes through an array) into items, running each 
 
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
-| `separator` | `string` \| `RegExp` | `","` |
-| `processors` | [`Processor`](runtime.md#processor-1)\<`unknown`\>[] | `[]` |
+| `separator?` | `string` \| `RegExp` | `","` |
+| `processors?` | [`Processor`](runtime.md#processor-1)\<`unknown`\>[] | `[]` |
 
 ###### Returns
 
@@ -935,7 +935,7 @@ Passes when the value is defined and, unless `allowEmptyString` is set, non-empt
 
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
-| `allowEmptyString` | `boolean` | `false` |
+| `allowEmptyString?` | `boolean` | `false` |
 
 ###### Returns
 
@@ -1003,7 +1003,7 @@ Passes when the string is a valid UUID of one of the given `versions` (default: 
 
 | Parameter | Type |
 | ------ | ------ |
-| `versions` | readonly `number`[] |
+| `versions?` | readonly `number`[] |
 
 ###### Returns
 
