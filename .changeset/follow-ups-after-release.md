@@ -1,5 +1,5 @@
 ---
-"env-cap": patch
+"@maverickcer/env-cap": patch
 ---
 
 - Built with tsup 9, with this month's other development-tool updates; the API-contract check confirms the published API is unchanged.
