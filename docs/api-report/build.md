@@ -2918,7 +2918,8 @@ linked `documentEnv()` call's matching `variables` entry, or `undefined`.
 
 #### Extends
 
-- [`DiscoveredSchemaVariable`](#discoveredschemavariable).`EnvGovernanceFields`
+- [`DiscoveredSchemaVariable`](#discoveredschemavariable)
+- `EnvGovernanceFields`
 
 #### Properties
 
@@ -7728,7 +7729,7 @@ structure throws instead of silently succeeding.
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t"></a> `T` |
 
 #### Parameters
 
@@ -8369,7 +8370,7 @@ its contract's), preserving input order within each owner.
 
 | Type Parameter |
 | ------ |
-| `C` *extends* [`OwnerBearingContract`](#ownerbearingcontract) |
+| <a id="type-parameter-c"></a> `C` *extends* [`OwnerBearingContract`](#ownerbearingcontract) |
 
 #### Parameters
 
@@ -8425,7 +8426,7 @@ of the generator (`compatibility.ts`, `exclusive-group.ts`, `manifest.ts`,
 | `discoveredFiles` | readonly `string`[] | - |
 | `readFile` | (`filePath`) => `Promise`\<`string`\> | - |
 | `context` | `ImportResolutionContext` | See `ImportResolutionContext`; drives how a resolved import specifier maps back to a file on disk. |
-| `packageOrigins` | `ReadonlyMap`\<`string`, [`PackageOrigin`](#packageorigin-2)\> | - |
+| `packageOrigins?` | `ReadonlyMap`\<`string`, [`PackageOrigin`](#packageorigin-2)\> | - |
 
 #### Returns
 
@@ -8623,7 +8624,7 @@ spliced in right after the banner (see `computeReconciliation`).
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `contracts` | readonly [`DiscoveredContract`](#discoveredcontract)[] | `undefined` |
-| `reconciliationHeader` | readonly `string`[] | `[]` |
+| `reconciliationHeader?` | readonly `string`[] | `[]` |
 
 #### Returns
 
@@ -8798,7 +8799,7 @@ diagnostic -- independent of whether anything was actually written.
 | `contracts` | readonly [`DiscoveredContract`](#discoveredcontract)[] |
 | `location` | `string` |
 | `fs` | [`BuildFileSystem`](#buildfilesystem) |
-| `options` | \{ `onExisting?`: [`EnvExampleOnExisting`](#envexampleonexisting); \} |
+| `options?` | \{ `onExisting?`: [`EnvExampleOnExisting`](#envexampleonexisting); \} |
 | `options.onExisting?` | [`EnvExampleOnExisting`](#envexampleonexisting) |
 
 #### Returns
