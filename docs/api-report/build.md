@@ -7879,7 +7879,8 @@ function discoverSchemaFiles(options): Promise<string[]>;
 ```
 
 Finds every schema file matching `include`/`exclude` under `root`, returned
-as absolute paths in deterministic (alphabetically sorted) order.
+as absolute paths in deterministic (alphabetically sorted) order -- the
+same walk as `discoverFiles`, plus a sanity limit on the count.
 
 #### Parameters
 

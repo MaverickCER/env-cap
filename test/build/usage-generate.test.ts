@@ -1,4 +1,4 @@
-import { nodeBuildFs } from "../support/build-filesystem.js"
+import { createInMemoryBuildFs, nodeBuildFs } from "../support/build-filesystem.js"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
@@ -447,6 +447,26 @@ describe("generateUsageReport", () => {
         packageDir,
       }
     }
+
+    it("scans more than 1,000 source files, locally and in a package -- the schema-file sanity limit does not apply to the usage scan (regression)", async () => {
+      const memRoot = path.normalize("/project")
+      const memPackageDir = path.normalize("/vendor/package-a")
+      const seeded: Record<string, string> = {}
+      for (let i = 0; i < 1001; i++) {
+        seeded[`${memRoot}/src/module-${String(i)}.ts`] = "export {}\n"
+        seeded[`${memPackageDir}/src/module-${String(i)}.ts`] = "export {}\n"
+      }
+      const a = origin("@fixtures/package-a", memPackageDir)
+
+      const { scanFiles } = await computeScanSurface(
+        memRoot,
+        [],
+        new Map([[a.resolvedFile, a]]),
+        createInMemoryBuildFs(seeded),
+      )
+
+      expect(scanFiles).toHaveLength(2002)
+    })
 
     it("returns just the application surface when no package origins are given -- including a .tsx-only file", async () => {
       const { scannedSurfaces, scanFiles } = await computeScanSurface(
