@@ -31,8 +31,38 @@ function isAlwaysSkippedDirName(name: string): boolean {
 const MAX_DISCOVERED_SCHEMA_FILES = 1000
 
 /**
+ * Finds every file matching `include`/`exclude` under `root`, returned as
+ * absolute paths in deterministic (alphabetically sorted) order. No count
+ * limit -- the usage scan walks every TypeScript source file, which a large
+ * project legitimately has thousands of; {@link discoverSchemaFiles} adds the
+ * schema-specific sanity limit on top.
+ *
+ * @remarks
+ * No external glob dependency: directories are pruned *during* the walk
+ * (both a hardcoded node_modules/.git skip and the caller's `exclude`
+ * patterns), rather than walked in full and filtered afterward -- walking an
+ * entire node_modules tree just to discard it is not acceptable for a tool
+ * meant to run against real projects.
+ */
+export async function discoverFiles(options: DiscoverOptions): Promise<string[]> {
+  const files = await walkDirectory(options.root, options.root, options.exclude, options.fs)
+
+  return files
+    .filter((file) => {
+      const relativePath = toPosixRelative(options.root, file)
+      return (
+        matchesAnyPattern(relativePath, options.include) &&
+        !matchesAnyPattern(relativePath, options.exclude)
+      )
+    })
+    .map((file) => path.normalize(file))
+    .sort()
+}
+
+/**
  * Finds every schema file matching `include`/`exclude` under `root`, returned
- * as absolute paths in deterministic (alphabetically sorted) order.
+ * as absolute paths in deterministic (alphabetically sorted) order -- the
+ * same walk as `discoverFiles`, plus a sanity limit on the count.
  *
  * @remarks
  * No external glob dependency: directories are pruned *during* the walk
@@ -42,15 +72,7 @@ const MAX_DISCOVERED_SCHEMA_FILES = 1000
  * meant to run against real projects.
  */
 export async function discoverSchemaFiles(options: DiscoverOptions): Promise<string[]> {
-  const files = await walkDirectory(options.root, options.root, options.exclude, options.fs)
-
-  const included = files.filter((file) => {
-    const relativePath = toPosixRelative(options.root, file)
-    return (
-      matchesAnyPattern(relativePath, options.include) &&
-      !matchesAnyPattern(relativePath, options.exclude)
-    )
-  })
+  const included = await discoverFiles(options)
 
   // Fails fast, before any caller starts parsing a single discovered file,
   // when `include`/`root` matched far more than any legitimate single
@@ -71,7 +93,7 @@ export async function discoverSchemaFiles(options: DiscoverOptions): Promise<str
     )
   }
 
-  return included.map((file) => path.normalize(file)).sort()
+  return included
 }
 
 async function walkDirectory(

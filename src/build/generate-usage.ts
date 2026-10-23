@@ -4,7 +4,7 @@ import type { BuildFileSystem } from "./types.js"
 import { buildDependencyGraph, deriveOwnershipFindings } from "./dependency-graph.js"
 import type { DependencyGraph, ScannedSurface } from "./dependency-graph.js"
 import { displayPath } from "./display-path.js"
-import { discoverSchemaFiles } from "./discover.js"
+import { discoverFiles } from "./discover.js"
 import { EnvUsageAnalysisError } from "./errors.js"
 import type { DynamicAccessCitationProblem } from "./citation-verification.js"
 import { dynamicAccessVariableIdentity } from "./citation-verification.js"
@@ -33,7 +33,7 @@ import {
  * successfully resolved -- reusing `origins`' already-resolved
  * `packageDir` (from `resolveAllowlistedPackages()`, already computed by
  * the caller for contract discovery, not re-resolved here) as a bounded
- * scan root, walked with the exact same `discoverSchemaFiles()` +
+ * scan root, walked with the exact same `discoverFiles()` +
  * `SCAN_INCLUDE`/`defaultExclude()` policy the local root already uses --
  * never a naive, unbounded walk of the package's whole directory. Shared by
  * `generateUsageReport()` and `generateEvidenceModel()` so both agree on
@@ -47,8 +47,12 @@ export async function computeScanSurface(
 ): Promise<{ scanFiles: string[]; scannedSurfaces: ScannedSurface[] }> {
   // Deliberately broader than schema discovery -- usage can occur in any
   // source file, not just `env.schema.ts` files. Not configurable (see ADR
-  // 0010's "convention over configuration").
-  const localScanFiles = await discoverSchemaFiles({
+  // 0010's "convention over configuration"). `discoverFiles`, not
+  // `discoverSchemaFiles`: the schema-file sanity limit would reject any
+  // project with more than 1,000 source files. Every caller runs schema
+  // discovery (with that limit) on this same root first, so a misconfigured
+  // root is still caught there.
+  const localScanFiles = await discoverFiles({
     fs,
     root,
     include: ["**/*.ts", "**/*.tsx"],
@@ -61,7 +65,7 @@ export async function computeScanSurface(
   for (const origin of origins.values()) {
     if (seenPackageDirs.has(origin.packageDir)) continue // multiple resolved files can share one packageDir; scan it once
     seenPackageDirs.add(origin.packageDir)
-    const packageScanFiles = await discoverSchemaFiles({
+    const packageScanFiles = await discoverFiles({
       fs,
       root: origin.packageDir,
       include: ["**/*.ts", "**/*.tsx"],

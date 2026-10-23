@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { discoverSchemaFiles } from "../../src/build/discover.js"
+import { discoverFiles, discoverSchemaFiles } from "../../src/build/discover.js"
 import { createInMemoryBuildFs, nodeBuildFs } from "../support/build-filesystem.js"
 
 let root: string
@@ -314,5 +314,48 @@ describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
     })
 
     expect(files).toHaveLength(1000)
+  })
+})
+
+describe("discoverFiles", () => {
+  const memRoot = path.normalize("/project")
+
+  it("has no file-count limit -- it backs the usage scan, which walks every source file", async () => {
+    const seeded: Record<string, string> = {}
+    for (let i = 0; i < 1001; i++) {
+      seeded[`${memRoot}/src/module-${String(i)}.ts`] = "export {}\n"
+    }
+
+    const files = await discoverFiles({
+      fs: createInMemoryBuildFs(seeded),
+      root: memRoot,
+      include: ["**/*.ts"],
+      exclude: [],
+    })
+
+    expect(files).toHaveLength(1001)
+  })
+
+  it("returns the same sorted, filtered paths as discoverSchemaFiles under the limit", async () => {
+    const inMemoryFs = createInMemoryBuildFs({
+      [`${memRoot}/b/env.schema.ts`]: "// contract\n",
+      [`${memRoot}/a/env.schema.ts`]: "// contract\n",
+      [`${memRoot}/dist/env.schema.ts`]: "// contract\n",
+      [`${memRoot}/a/index.ts`]: "// not a schema\n",
+    })
+    const options = {
+      fs: inMemoryFs,
+      root: memRoot,
+      include: ["**/env.schema.ts"],
+      exclude: ["dist/**"],
+    }
+
+    const files = await discoverFiles(options)
+
+    expect(files).toEqual([
+      path.join(memRoot, "a/env.schema.ts"),
+      path.join(memRoot, "b/env.schema.ts"),
+    ])
+    expect(await discoverSchemaFiles(options)).toEqual(files)
   })
 })
