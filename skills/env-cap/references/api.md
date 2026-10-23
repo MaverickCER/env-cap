@@ -1,6 +1,6 @@
 # @maverickcer/env-cap public API
 
-Every export a consumer can import, by entry point, for version 0.7.1. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
+Every export a consumer can import, by entry point, for version 0.7.2. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
 
 ## `@maverickcer/env-cap`
 
