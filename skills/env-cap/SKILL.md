@@ -88,4 +88,4 @@ Report any check you could not run, and any assumption you made.
 
 ## Authority
 
-Target `@maverickcer/env-cap@0.7.1`. The installed package's exports and type declarations are the API: do not invent exports, options or return values. Behaviour is established by its tests and examples. If this skill and the code disagree, say so rather than guessing.
+Target `@maverickcer/env-cap@0.7.2`. The installed package's exports and type declarations are the API: do not invent exports, options or return values. Behaviour is established by its tests and examples. If this skill and the code disagree, say so rather than guessing.
