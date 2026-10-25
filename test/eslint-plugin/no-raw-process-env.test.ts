@@ -1,6 +1,6 @@
 import { RuleTester } from "eslint"
 import type { Rule } from "eslint"
-import { describe, it } from "vitest"
+import { describe, expect, it } from "vitest"
 import { noRawProcessEnv } from "../../src/eslint-plugin/no-raw-process-env.js"
 
 // RuleTester's own `run()` registers cases via Mocha-style global
@@ -88,4 +88,15 @@ ruleTester.run("no-raw-process-env", noRawProcessEnv as unknown as Rule.RuleModu
       errors: [{ messageId: "noRawProcessEnv" }],
     },
   ],
+})
+
+describe("noRawProcessEnv default options", () => {
+  it("exempts nothing beyond the built-in allowance by default, in both places a version of @typescript-eslint/utils reads them", () => {
+    // `meta.defaultOptions` is read from 8.55 on; the top-level property by every release before that, and
+    // by the later ones as a fallback. Read through a cast: the property is deprecated, and this checks it
+    // is still passed.
+    const legacy = (noRawProcessEnv as { defaultOptions?: unknown }).defaultOptions
+    expect(noRawProcessEnv.meta.defaultOptions).toEqual([{ allow: [] }])
+    expect(legacy).toEqual([{ allow: [] }])
+  })
 })

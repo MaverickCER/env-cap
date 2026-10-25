@@ -22,6 +22,15 @@ export interface RuleOptions {
 
 const DEFAULT_SCHEMA_ALLOWLIST = ["**/env.schema.ts", "**/env.schema.tsx"]
 
+/** The rule's options when none are configured: nothing beyond the built-in allowance is exempt. */
+const DEFAULT_RULE_OPTIONS = [{ allow: [] as string[] }] as const
+
+// `@typescript-eslint/utils` before 8.55 reads a rule's default options from this top-level property only.
+// Later releases read `meta.defaultOptions` and mark the top-level one deprecated. The optional peer range
+// (`^8.0.0`) still covers the earlier releases, so it is passed too, spread from a plain object so the call
+// does not name the deprecated property itself.
+const LEGACY_DEFAULT_OPTIONS = { defaultOptions: DEFAULT_RULE_OPTIONS }
+
 /**
  * Flags any direct `process.env.X`/`process.env["X"]` read in application code, so environment
  * access always goes through a capability's own `createEnv()` contract instead.
@@ -50,10 +59,11 @@ export const noRawProcessEnv = createRule<[RuleOptions], "noRawProcessEnv">({
       noRawProcessEnv:
         "Direct process.env access bypasses this capability's owned contract. Read this value through createEnv()'s validated contract instead (see README's ESLint plugin section for the allow-list escape hatch for legitimate build-time bootstrap code).",
     },
+    defaultOptions: [{ allow: [] }],
   },
-  defaultOptions: [{ allow: [] }],
+  ...LEGACY_DEFAULT_OPTIONS,
   create(context, [options]) {
-    // `RuleCreator` merges `defaultOptions` onto the configured options, so `allow` is always set.
+    // `RuleCreator` merges the default options onto the configured options, so `allow` is always set.
     const allowPatterns = [...DEFAULT_SCHEMA_ALLOWLIST, ...(options.allow as readonly string[])]
     if (matchesAllowList(allowPatterns, context.filename, context.cwd)) return {}
 
