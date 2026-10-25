@@ -330,7 +330,7 @@ jobs:
       - name: application
         working-directory: examples/application
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # README.md's "See it run" section claims to be real output from this
@@ -345,13 +345,13 @@ jobs:
       - name: team-service
         working-directory: examples/team-service
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       - name: enterprise-platform
         working-directory: examples/enterprise-platform
         run: |
-          npm install
+          npm ci
           npm run typecheck
           npm run test:evidence
           npm start
@@ -365,7 +365,7 @@ jobs:
       - name: nextjs-app
         working-directory: examples/nextjs-app
         run: |
-          npm install
+          npm ci
           npm run build
 
       # Runs each flagship's real npm scripts against its own committed,
@@ -402,7 +402,7 @@ jobs:
       - name: cli-usage
         working-directory: test/integration/positive/basic/cli-usage
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # application's exact contract, generated via three separate standalone
@@ -411,7 +411,7 @@ jobs:
       - name: split-generators
         working-directory: test/integration/positive/basic/split-generators
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # One schema/manifest, validated by two separate entry points
@@ -420,7 +420,7 @@ jobs:
       - name: validation-contexts
         working-directory: test/integration/positive/team/validation-contexts
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # Not broken -- two independently-owned, both-active contracts document
@@ -429,7 +429,7 @@ jobs:
       - name: duplicate-variable-metadata
         working-directory: test/integration/positive/team/duplicate-variable-metadata
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # No AWS credentials are configured in this job on purpose: a failed
@@ -439,7 +439,7 @@ jobs:
       - name: aws-secrets-manager
         working-directory: test/integration/positive/enterprise/aws-secrets-manager
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # paypal-consumer installs paypal-addon from a real packed tarball, not
@@ -449,14 +449,14 @@ jobs:
       - name: paypal-addon (typecheck, build, pack)
         working-directory: test/integration/positive/enterprise/paypal-addon
         run: |
-          npm install
+          npm ci
           npm run typecheck
           npm run pack:local
 
       - name: paypal-consumer (installs paypal-addon's packed tarball)
         working-directory: test/integration/positive/enterprise/paypal-consumer
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # A contract imported only through a "@/*" tsconfig.json path alias,
@@ -468,7 +468,7 @@ jobs:
       - name: tsconfig-aliases (typecheck, build, pack)
         working-directory: test/integration/positive/enterprise/tsconfig-aliases
         run: |
-          npm install
+          npm ci
           npm run typecheck
           npm run pack:local
 
@@ -479,7 +479,7 @@ jobs:
       - name: tsconfig-aliases-consumer (installs tsconfig-aliases's packed tarball)
         working-directory: test/integration/positive/enterprise/tsconfig-aliases-consumer
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # env-cap's own first-party Evidence Model projections -- the original
@@ -492,7 +492,7 @@ jobs:
       - name: evidence-projections
         working-directory: test/integration/positive/enterprise/evidence-projections
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # Deliberately, permanently broken by design -- a missing required
@@ -502,7 +502,7 @@ jobs:
       - name: missing-env-var
         working-directory: test/integration/negative/invalid-config/missing-env-var
         run: |
-          npm install
+          npm ci
           npm run typecheck
 
       # Deliberately, permanently broken by design -- two active contracts
