@@ -7,8 +7,8 @@
 ```ts
 const default: {
   rules: {
-     no-node-fs: RuleModuleWithName<"noNodeFs", [RuleOptions], unknown, RuleListener>;
-     no-raw-process-env: RuleModuleWithName<"noRawProcessEnv", [RuleOptions], unknown, RuleListener>;
+     "no-node-fs": RuleModuleWithName<"noNodeFs", [RuleOptions], unknown, RuleListener>;
+     "no-raw-process-env": RuleModuleWithName<"noRawProcessEnv", [RuleOptions], unknown, RuleListener>;
   };
 };
 ```
@@ -27,8 +27,8 @@ A 4th public entry point alongside `.`, `./build`, `./helpers` -- see ADR 0017.
 
 ```ts
 rules: {
-  no-node-fs: RuleModuleWithName<"noNodeFs", [RuleOptions], unknown, RuleListener>;
-  no-raw-process-env: RuleModuleWithName<"noRawProcessEnv", [RuleOptions], unknown, RuleListener>;
+  "no-node-fs": RuleModuleWithName<"noNodeFs", [RuleOptions], unknown, RuleListener>;
+  "no-raw-process-env": RuleModuleWithName<"noRawProcessEnv", [RuleOptions], unknown, RuleListener>;
 };
 ```
 
@@ -37,7 +37,7 @@ Every rule this plugin ships, keyed by its flat-config rule name.
 ###### rules.no-node-fs
 
 ```ts
-no-node-fs: RuleModuleWithName<"noNodeFs", [RuleOptions], unknown, RuleListener> = noNodeFs;
+"no-node-fs": RuleModuleWithName<"noNodeFs", [RuleOptions], unknown, RuleListener> = noNodeFs;
 ```
 
 See [noNodeFs](#nonodefs).
@@ -45,7 +45,7 @@ See [noNodeFs](#nonodefs).
 ###### rules.no-raw-process-env
 
 ```ts
-no-raw-process-env: RuleModuleWithName<"noRawProcessEnv", [RuleOptions], unknown, RuleListener> = noRawProcessEnv;
+"no-raw-process-env": RuleModuleWithName<"noRawProcessEnv", [RuleOptions], unknown, RuleListener> = noRawProcessEnv;
 ```
 
 See [noRawProcessEnv](#norawprocessenv).

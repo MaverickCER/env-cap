@@ -38,9 +38,7 @@ new EnvDocumentationGenerationError(issues): EnvDocumentationGenerationError;
 
 ###### Overrides
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 #### Properties
 
@@ -68,9 +66,7 @@ message: string;
 
 ###### Inherited from
 
-```ts
-Error.message
-```
+`Error.message`
 
 ##### name
 
@@ -80,21 +76,17 @@ name: string;
 
 ###### Inherited from
 
-```ts
-Error.name
-```
+`Error.name`
 
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
 
-```ts
-Error.stack
-```
+`Error.stack`
 
 ##### stackTraceLimit
 
@@ -114,9 +106,7 @@ not capture any frames.
 
 ###### Inherited from
 
-```ts
-Error.stackTraceLimit
-```
+`Error.stackTraceLimit`
 
 #### Methods
 
@@ -183,9 +173,7 @@ a();
 
 ###### Inherited from
 
-```ts
-Error.captureStackTrace
-```
+`Error.captureStackTrace`
 
 ##### prepareStackTrace()
 
@@ -210,9 +198,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ###### Inherited from
 
-```ts
-Error.prepareStackTrace
-```
+`Error.prepareStackTrace`
 
 ***
 
@@ -253,9 +239,7 @@ new EnvManifestGenerationError(issues): EnvManifestGenerationError;
 
 ###### Overrides
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 #### Properties
 
@@ -283,9 +267,7 @@ message: string;
 
 ###### Inherited from
 
-```ts
-Error.message
-```
+`Error.message`
 
 ##### name
 
@@ -295,21 +277,17 @@ name: string;
 
 ###### Inherited from
 
-```ts
-Error.name
-```
+`Error.name`
 
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
 
-```ts
-Error.stack
-```
+`Error.stack`
 
 ##### stackTraceLimit
 
@@ -329,9 +307,7 @@ not capture any frames.
 
 ###### Inherited from
 
-```ts
-Error.stackTraceLimit
-```
+`Error.stackTraceLimit`
 
 #### Methods
 
@@ -398,9 +374,7 @@ a();
 
 ###### Inherited from
 
-```ts
-Error.captureStackTrace
-```
+`Error.captureStackTrace`
 
 ##### prepareStackTrace()
 
@@ -425,9 +399,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ###### Inherited from
 
-```ts
-Error.prepareStackTrace
-```
+`Error.prepareStackTrace`
 
 ***
 
@@ -472,9 +444,7 @@ new EnvProjectGenerationError(issues): EnvProjectGenerationError;
 
 ###### Overrides
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 #### Properties
 
@@ -502,9 +472,7 @@ message: string;
 
 ###### Inherited from
 
-```ts
-Error.message
-```
+`Error.message`
 
 ##### name
 
@@ -514,21 +482,17 @@ name: string;
 
 ###### Inherited from
 
-```ts
-Error.name
-```
+`Error.name`
 
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
 
-```ts
-Error.stack
-```
+`Error.stack`
 
 ##### stackTraceLimit
 
@@ -548,9 +512,7 @@ not capture any frames.
 
 ###### Inherited from
 
-```ts
-Error.stackTraceLimit
-```
+`Error.stackTraceLimit`
 
 #### Methods
 
@@ -617,9 +579,7 @@ a();
 
 ###### Inherited from
 
-```ts
-Error.captureStackTrace
-```
+`Error.captureStackTrace`
 
 ##### prepareStackTrace()
 
@@ -644,9 +604,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ###### Inherited from
 
-```ts
-Error.prepareStackTrace
-```
+`Error.prepareStackTrace`
 
 ***
 
@@ -688,9 +646,7 @@ new EnvUsageAnalysisError(issues): EnvUsageAnalysisError;
 
 ###### Overrides
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 #### Properties
 
@@ -718,9 +674,7 @@ message: string;
 
 ###### Inherited from
 
-```ts
-Error.message
-```
+`Error.message`
 
 ##### name
 
@@ -730,21 +684,17 @@ name: string;
 
 ###### Inherited from
 
-```ts
-Error.name
-```
+`Error.name`
 
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
 
-```ts
-Error.stack
-```
+`Error.stack`
 
 ##### stackTraceLimit
 
@@ -764,9 +714,7 @@ not capture any frames.
 
 ###### Inherited from
 
-```ts
-Error.stackTraceLimit
-```
+`Error.stackTraceLimit`
 
 #### Methods
 
@@ -833,9 +781,7 @@ a();
 
 ###### Inherited from
 
-```ts
-Error.captureStackTrace
-```
+`Error.captureStackTrace`
 
 ##### prepareStackTrace()
 
@@ -860,9 +806,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ###### Inherited from
 
-```ts
-Error.prepareStackTrace
-```
+`Error.prepareStackTrace`
 
 ## Interfaces
 
@@ -915,7 +859,7 @@ Which generated artifact this finding is about.
 ##### detail?
 
 ```ts
-readonly optional detail?: string;
+readonly detail?: string;
 ```
 
 Human-readable detail, set for `"stale"`/`"missing"` findings.
@@ -1167,7 +1111,7 @@ top-level fields are each independently optional.
 ##### abandonedContracts?
 
 ```ts
-readonly optional abandonedContracts?: readonly AbandonedContractFinding[];
+readonly abandonedContracts?: readonly AbandonedContractFinding[];
 ```
 
 From `generateUsageReport()`'s result.
@@ -1175,7 +1119,7 @@ From `generateUsageReport()`'s result.
 ##### artifactCheckFindings?
 
 ```ts
-readonly optional artifactCheckFindings?: readonly ArtifactCheckFinding[];
+readonly artifactCheckFindings?: readonly ArtifactCheckFinding[];
 ```
 
 From `checkEnvArtifacts()`'s result. Only `"stale"`/`"missing"` findings become a `Finding` -- `"ok"` means nothing to report.
@@ -1183,7 +1127,7 @@ From `checkEnvArtifacts()`'s result. Only `"stale"`/`"missing"` findings become 
 ##### compatibilityIssues?
 
 ```ts
-readonly optional compatibilityIssues?: readonly CompatibilityIssue[];
+readonly compatibilityIssues?: readonly CompatibilityIssue[];
 ```
 
 From `detectCompatibilityIssues()`.
@@ -1191,7 +1135,7 @@ From `detectCompatibilityIssues()`.
 ##### documentation?
 
 ```ts
-readonly optional documentation?: DocumentationFindings;
+readonly documentation?: DocumentationFindings;
 ```
 
 From `generateDocumentation()`'s result.
@@ -1199,7 +1143,7 @@ From `generateDocumentation()`'s result.
 ##### dynamicAccessCitationProblems?
 
 ```ts
-readonly optional dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[];
+readonly dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[];
 ```
 
 From `computeManifestChanges()`'s result -- every `dynamicAccess` citation that's gone `"stale"` or `"missing"` since it was last acknowledged. See ADR 0037.
@@ -1207,7 +1151,7 @@ From `computeManifestChanges()`'s result -- every `dynamicAccess` citation that'
 ##### exclusiveGroupIssues?
 
 ```ts
-readonly optional exclusiveGroupIssues?: readonly CompatibilityIssue[];
+readonly exclusiveGroupIssues?: readonly CompatibilityIssue[];
 ```
 
 From `detectExclusiveGroupIssues()` -- kept separate from `compatibilityIssues` since it never sets its own `code` yet (ADR 0009), so this adapter synthesizes `"EXCLUSIVE_GROUP_VIOLATION"` for every entry.
@@ -1215,7 +1159,7 @@ From `detectExclusiveGroupIssues()` -- kept separate from `compatibilityIssues` 
 ##### indeterminateOwnership?
 
 ```ts
-readonly optional indeterminateOwnership?: readonly IndeterminateOwnershipFinding[];
+readonly indeterminateOwnership?: readonly IndeterminateOwnershipFinding[];
 ```
 
 From `generateUsageReport()`'s result.
@@ -1231,7 +1175,7 @@ Every `EvidenceReference.file` below is rendered relative to this, matching ever
 ##### unconsumedOwnedVariables?
 
 ```ts
-readonly optional unconsumedOwnedVariables?: readonly UnconsumedOwnedVariableFinding[];
+readonly unconsumedOwnedVariables?: readonly UnconsumedOwnedVariableFinding[];
 ```
 
 From `generateUsageReport()`'s result.
@@ -1239,7 +1183,7 @@ From `generateUsageReport()`'s result.
 ##### unresolvedConsumers?
 
 ```ts
-readonly optional unresolvedConsumers?: readonly UnresolvedConsumerFinding[];
+readonly unresolvedConsumers?: readonly UnresolvedConsumerFinding[];
 ```
 
 From `generateUsageReport()`'s result.
@@ -1369,7 +1313,7 @@ One compatibility problem found between two or more declarations of the same var
 ##### code?
 
 ```ts
-readonly optional code?: CompatibilityIssueCode;
+readonly code?: CompatibilityIssueCode;
 ```
 
 Stable, machine-readable identifier for CI filtering / doc-linking /
@@ -1445,7 +1389,7 @@ readonly include: readonly string[];
 ##### packages?
 
 ```ts
-readonly optional packages?: readonly string[];
+readonly packages?: readonly string[];
 ```
 
 ##### root
@@ -1676,9 +1620,7 @@ readonly auditRequired: boolean | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.auditRequired
-```
+`EnvGovernanceFields.auditRequired`
 
 ##### category
 
@@ -1700,9 +1642,7 @@ readonly dataResidency: string | readonly string[] | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.dataResidency
-```
+`EnvGovernanceFields.dataResidency`
 
 ##### declaration
 
@@ -1740,9 +1680,7 @@ readonly expiresAt: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.expiresAt
-```
+`EnvGovernanceFields.expiresAt`
 
 ##### exportName
 
@@ -1766,9 +1704,7 @@ readonly legalBasis: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.legalBasis
-```
+`EnvGovernanceFields.legalBasis`
 
 ##### metadata
 
@@ -1778,9 +1714,7 @@ readonly metadata: Readonly<Record<string, unknown>> | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.metadata
-```
+`EnvGovernanceFields.metadata`
 
 ##### owner
 
@@ -1790,9 +1724,7 @@ readonly owner: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.owner
-```
+`EnvGovernanceFields.owner`
 
 ##### packageOrigin
 
@@ -1808,9 +1740,7 @@ readonly purpose: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.purpose
-```
+`EnvGovernanceFields.purpose`
 
 ##### retention
 
@@ -1820,9 +1750,7 @@ readonly retention: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.retention
-```
+`EnvGovernanceFields.retention`
 
 ##### sensitivity
 
@@ -1832,9 +1760,7 @@ readonly sensitivity: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.sensitivity
-```
+`EnvGovernanceFields.sensitivity`
 
 ##### variables
 
@@ -1871,9 +1797,7 @@ readonly auditRequired: boolean | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.auditRequired
-```
+`EnvGovernanceFields.auditRequired`
 
 ##### context
 
@@ -1889,9 +1813,7 @@ readonly dataResidency: string | readonly string[] | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.dataResidency
-```
+`EnvGovernanceFields.dataResidency`
 
 ##### declaration
 
@@ -1945,9 +1867,7 @@ readonly expiresAt: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.expiresAt
-```
+`EnvGovernanceFields.expiresAt`
 
 ##### hasDefault
 
@@ -1981,9 +1901,7 @@ readonly legalBasis: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.legalBasis
-```
+`EnvGovernanceFields.legalBasis`
 
 ##### metadata
 
@@ -1993,9 +1911,7 @@ readonly metadata: Readonly<Record<string, unknown>> | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.metadata
-```
+`EnvGovernanceFields.metadata`
 
 ##### owner
 
@@ -2005,9 +1921,7 @@ readonly owner: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.owner
-```
+`EnvGovernanceFields.owner`
 
 ##### processorReturnType
 
@@ -2029,9 +1943,7 @@ readonly purpose: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.purpose
-```
+`EnvGovernanceFields.purpose`
 
 ##### refreshInstructions
 
@@ -2053,9 +1965,7 @@ readonly retention: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.retention
-```
+`EnvGovernanceFields.retention`
 
 ##### sensitivity
 
@@ -2065,9 +1975,7 @@ readonly sensitivity: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.sensitivity
-```
+`EnvGovernanceFields.sensitivity`
 
 ##### setupInstructions
 
@@ -2327,9 +2235,7 @@ readonly auditRequired: boolean | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.auditRequired
-```
+`EnvGovernanceFields.auditRequired`
 
 ##### category
 
@@ -2355,9 +2261,7 @@ readonly dataResidency: string | readonly string[] | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.dataResidency
-```
+`EnvGovernanceFields.dataResidency`
 
 ##### declaration
 
@@ -2415,9 +2319,7 @@ readonly expiresAt: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.expiresAt
-```
+`EnvGovernanceFields.expiresAt`
 
 ##### exportName
 
@@ -2443,9 +2345,7 @@ readonly legalBasis: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.legalBasis
-```
+`EnvGovernanceFields.legalBasis`
 
 ##### metadata
 
@@ -2455,9 +2355,7 @@ readonly metadata: Readonly<Record<string, unknown>> | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.metadata
-```
+`EnvGovernanceFields.metadata`
 
 ##### owner
 
@@ -2467,9 +2365,7 @@ readonly owner: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.owner
-```
+`EnvGovernanceFields.owner`
 
 ##### packageOrigin
 
@@ -2490,9 +2386,7 @@ readonly purpose: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.purpose
-```
+`EnvGovernanceFields.purpose`
 
 ##### retention
 
@@ -2502,9 +2396,7 @@ readonly retention: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.retention
-```
+`EnvGovernanceFields.retention`
 
 ##### sensitivity
 
@@ -2514,9 +2406,7 @@ readonly sensitivity: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.sensitivity
-```
+`EnvGovernanceFields.sensitivity`
 
 ##### variables
 
@@ -2554,9 +2444,7 @@ readonly auditRequired: boolean | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.auditRequired
-```
+`EnvGovernanceFields.auditRequired`
 
 ##### category
 
@@ -2574,9 +2462,7 @@ readonly dataResidency: string | readonly string[] | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.dataResidency
-```
+`EnvGovernanceFields.dataResidency`
 
 ##### deprecated
 
@@ -2610,9 +2496,7 @@ readonly expiresAt: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.expiresAt
-```
+`EnvGovernanceFields.expiresAt`
 
 ##### legalBasis
 
@@ -2622,9 +2506,7 @@ readonly legalBasis: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.legalBasis
-```
+`EnvGovernanceFields.legalBasis`
 
 ##### metadata
 
@@ -2634,9 +2516,7 @@ readonly metadata: Readonly<Record<string, unknown>> | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.metadata
-```
+`EnvGovernanceFields.metadata`
 
 ##### name
 
@@ -2654,9 +2534,7 @@ readonly owner: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.owner
-```
+`EnvGovernanceFields.owner`
 
 ##### purpose
 
@@ -2666,9 +2544,7 @@ readonly purpose: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.purpose
-```
+`EnvGovernanceFields.purpose`
 
 ##### retention
 
@@ -2678,9 +2554,7 @@ readonly retention: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.retention
-```
+`EnvGovernanceFields.retention`
 
 ##### sensitivity
 
@@ -2690,9 +2564,7 @@ readonly sensitivity: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.sensitivity
-```
+`EnvGovernanceFields.sensitivity`
 
 ##### variables
 
@@ -2931,9 +2803,7 @@ readonly auditRequired: boolean | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.auditRequired
-```
+`EnvGovernanceFields.auditRequired`
 
 ##### authenticatorType
 
@@ -2963,9 +2833,7 @@ readonly dataResidency: string | readonly string[] | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.dataResidency
-```
+`EnvGovernanceFields.dataResidency`
 
 ##### declaration
 
@@ -3098,9 +2966,7 @@ readonly expiresAt: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.expiresAt
-```
+`EnvGovernanceFields.expiresAt`
 
 ##### hasDefault
 
@@ -3166,9 +3032,7 @@ readonly legalBasis: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.legalBasis
-```
+`EnvGovernanceFields.legalBasis`
 
 ##### metadata
 
@@ -3178,9 +3042,7 @@ readonly metadata: Readonly<Record<string, unknown>> | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.metadata
-```
+`EnvGovernanceFields.metadata`
 
 ##### owner
 
@@ -3190,9 +3052,7 @@ readonly owner: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.owner
-```
+`EnvGovernanceFields.owner`
 
 ##### processorReturnType
 
@@ -3226,9 +3086,7 @@ readonly purpose: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.purpose
-```
+`EnvGovernanceFields.purpose`
 
 ##### refreshInstructions
 
@@ -3270,9 +3128,7 @@ readonly retention: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.retention
-```
+`EnvGovernanceFields.retention`
 
 ##### rotationPeriod
 
@@ -3298,9 +3154,7 @@ readonly sensitivity: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.sensitivity
-```
+`EnvGovernanceFields.sensitivity`
 
 ##### setupInstructions
 
@@ -3342,9 +3196,7 @@ readonly auditRequired: boolean | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.auditRequired
-```
+`EnvGovernanceFields.auditRequired`
 
 ##### authenticatorType
 
@@ -3362,9 +3214,7 @@ readonly dataResidency: string | readonly string[] | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.dataResidency
-```
+`EnvGovernanceFields.dataResidency`
 
 ##### deprecated
 
@@ -3408,9 +3258,7 @@ readonly expiresAt: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.expiresAt
-```
+`EnvGovernanceFields.expiresAt`
 
 ##### key
 
@@ -3436,9 +3284,7 @@ readonly legalBasis: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.legalBasis
-```
+`EnvGovernanceFields.legalBasis`
 
 ##### metadata
 
@@ -3448,9 +3294,7 @@ readonly metadata: Readonly<Record<string, unknown>> | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.metadata
-```
+`EnvGovernanceFields.metadata`
 
 ##### owner
 
@@ -3460,9 +3304,7 @@ readonly owner: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.owner
-```
+`EnvGovernanceFields.owner`
 
 ##### purpose
 
@@ -3472,9 +3314,7 @@ readonly purpose: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.purpose
-```
+`EnvGovernanceFields.purpose`
 
 ##### refreshInstructions
 
@@ -3516,9 +3356,7 @@ readonly retention: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.retention
-```
+`EnvGovernanceFields.retention`
 
 ##### rotationPeriod
 
@@ -3544,9 +3382,7 @@ readonly sensitivity: string | undefined;
 
 ###### Inherited from
 
-```ts
-EnvGovernanceFields.sensitivity
-```
+`EnvGovernanceFields.sensitivity`
 
 ##### setupInstructions
 
@@ -4250,7 +4086,7 @@ Options for [generateDocumentation](#generatedocumentation).
 ##### envExample?
 
 ```ts
-optional envExample?: {
+envExample?: {
   location: string;
   onExisting?: EnvExampleOnExisting;
 };
@@ -4272,7 +4108,7 @@ Output path for the `.env.example`-style file, relative to `root`.
 ###### onExisting?
 
 ```ts
-optional onExisting?: EnvExampleOnExisting;
+onExisting?: EnvExampleOnExisting;
 ```
 
 What to do when a file already exists at `location`. Defaults to `"keep-sibling"`.
@@ -4280,7 +4116,7 @@ What to do when a file already exists at `location`. Defaults to `"keep-sibling"
 ##### exclude?
 
 ```ts
-optional exclude?: string[];
+exclude?: string[];
 ```
 
 Glob patterns for files/directories to prune. Defaults to `defaultExclude()`.
@@ -4288,7 +4124,7 @@ Glob patterns for files/directories to prune. Defaults to `defaultExclude()`.
 ##### expiringWithinDays?
 
 ```ts
-optional expiringWithinDays?: number;
+expiringWithinDays?: number;
 ```
 
 How many days out counts as "expiring soon". Defaults to 30.
@@ -4304,7 +4140,7 @@ The filesystem capability -- `./build` never imports `node:fs` (ADR 0040).
 ##### include?
 
 ```ts
-optional include?: string[];
+include?: string[];
 ```
 
 Glob patterns for files to scan. Defaults to `defaultInclude()`.
@@ -4312,7 +4148,7 @@ Glob patterns for files to scan. Defaults to `defaultInclude()`.
 ##### liveExpirationDates?
 
 ```ts
-optional liveExpirationDates?: LiveExpirationDates;
+liveExpirationDates?: LiveExpirationDates;
 ```
 
 Supplies expiration metadata from a live source as a post-discovery
@@ -4331,7 +4167,7 @@ Output path for the Markdown docs artifact, relative to `root`.
 ##### packages?
 
 ```ts
-optional packages?: readonly string[];
+packages?: readonly string[];
 ```
 
 See `GenerateEnvManifestOptions.packages`; see ADR 0014.
@@ -4339,7 +4175,7 @@ See `GenerateEnvManifestOptions.packages`; see ADR 0014.
 ##### root?
 
 ```ts
-optional root?: string;
+root?: string;
 ```
 
 Project root schema discovery is relative to. Defaults to `process.cwd()`.
@@ -4347,7 +4183,7 @@ Project root schema discovery is relative to. Defaults to `process.cwd()`.
 ##### tsconfig?
 
 ```ts
-optional tsconfig?: string | false;
+tsconfig?: string | false;
 ```
 
 See `GenerateEnvManifestOptions.tsconfig`; see ADR 0023.
@@ -4420,7 +4256,7 @@ Options for [generateEnvArtifacts](#generateenvartifacts).
 ##### docs?
 
 ```ts
-optional docs?: 
+docs?: 
   | false
   | Omit<GenerateDocumentationOptions, 
   | "fs"
@@ -4437,7 +4273,7 @@ Docs pass options, or `false` to skip it entirely.
 ##### evidence?
 
 ```ts
-optional evidence?: 
+evidence?: 
   | false
   | {
   location: string;
@@ -4457,7 +4293,7 @@ nothing is written, `result.evidence` is still populated.
 ##### exclude?
 
 ```ts
-optional exclude?: string[];
+exclude?: string[];
 ```
 
 Glob patterns to exclude, shared across every requested pass. Defaults to node_modules/dist/.git.
@@ -4473,7 +4309,7 @@ The filesystem capability, shared across every requested pass -- `./build` never
 ##### include?
 
 ```ts
-optional include?: string[];
+include?: string[];
 ```
 
 Shared schema-discovery glob for the contract graph. Defaults to `["**/env.schema.ts"]`.
@@ -4481,7 +4317,7 @@ Shared schema-discovery glob for the contract graph. Defaults to `["**/env.schem
 ##### liveExpirationDates?
 
 ```ts
-optional liveExpirationDates?: LiveExpirationDates;
+liveExpirationDates?: LiveExpirationDates;
 ```
 
 Supplies expiration metadata from a live source (a secrets manager, an
@@ -4494,7 +4330,7 @@ is unchanged from a purely static `expiresAt`.
 ##### manifest?
 
 ```ts
-optional manifest?: 
+manifest?: 
   | false
 | Omit<GenerateEnvManifestOptions, "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig">;
 ```
@@ -4504,7 +4340,7 @@ Manifest pass options, or `false` to skip it entirely.
 ##### onOwnershipIssue?
 
 ```ts
-optional onOwnershipIssue?: "warn" | "throw";
+onOwnershipIssue?: "warn" | "throw";
 ```
 
 Escalates every warning-severity `"ownership"`-family finding (abandoned
@@ -4515,7 +4351,7 @@ blocking error. Defaults to `"warn"` -- see [onUndocumented](#onundocumented).
 ##### onUndocumented?
 
 ```ts
-optional onUndocumented?: "warn" | "throw";
+onUndocumented?: "warn" | "throw";
 ```
 
 Escalates every warning-severity `"documentation"`-family finding
@@ -4533,7 +4369,7 @@ escalated by either -- see `Finding.severity`.
 ##### packages?
 
 ```ts
-optional packages?: readonly string[];
+packages?: readonly string[];
 ```
 
 See `GenerateEnvManifestOptions.packages`; shared across every requested pass. See ADR 0014.
@@ -4541,7 +4377,7 @@ See `GenerateEnvManifestOptions.packages`; shared across every requested pass. S
 ##### root?
 
 ```ts
-optional root?: string;
+root?: string;
 ```
 
 Directory glob patterns are resolved against, shared across every requested pass. Defaults to `process.cwd()`.
@@ -4549,7 +4385,7 @@ Directory glob patterns are resolved against, shared across every requested pass
 ##### tsconfig?
 
 ```ts
-optional tsconfig?: string | false;
+tsconfig?: string | false;
 ```
 
 See `GenerateEnvManifestOptions.tsconfig`; shared across every requested pass. See ADR 0023.
@@ -4557,7 +4393,7 @@ See `GenerateEnvManifestOptions.tsconfig`; shared across every requested pass. S
 ##### usage?
 
 ```ts
-optional usage?: 
+usage?: 
   | false
 | Omit<GenerateUsageReportOptions, "fs" | "root" | "include" | "exclude" | "packages" | "tsconfig">;
 ```
@@ -4617,7 +4453,7 @@ Options for [generateEnvManifest](#generateenvmanifest).
 ##### exclude?
 
 ```ts
-optional exclude?: string[];
+exclude?: string[];
 ```
 
 Glob patterns to exclude. Defaults to node_modules/dist/.git.
@@ -4633,7 +4469,7 @@ The filesystem capability -- `./build` never imports `node:fs` (ADR 0040).
 ##### include?
 
 ```ts
-optional include?: string[];
+include?: string[];
 ```
 
 Glob patterns for schema files. Defaults to `["**/env.schema.ts"]`.
@@ -4649,7 +4485,7 @@ Output path for the generated manifest, relative to `root` (e.g. "src/generated/
 ##### onIncompatibility?
 
 ```ts
-optional onIncompatibility?: "warn" | "throw";
+onIncompatibility?: "warn" | "throw";
 ```
 
 "warn" (default): only provable incompatibilities (conflicting explicit processor
@@ -4659,7 +4495,7 @@ return type annotations) block generation; everything else is reported as a warn
 ##### packages?
 
 ```ts
-optional packages?: readonly string[];
+packages?: readonly string[];
 ```
 
 Explicit allowlist of installed
@@ -4672,7 +4508,7 @@ exact name appears here. See ADR 0014.
 ##### root?
 
 ```ts
-optional root?: string;
+root?: string;
 ```
 
 Directory glob patterns are resolved against. Defaults to `process.cwd()`.
@@ -4680,7 +4516,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 ##### tsconfig?
 
 ```ts
-optional tsconfig?: string | false;
+tsconfig?: string | false;
 ```
 
 Path to a tsconfig.json (relative to `root`)
@@ -4747,7 +4583,7 @@ Options for [generateEvidenceModel](#generateevidencemodel).
 ##### commit?
 
 ```ts
-optional commit?: () => Promise<string | undefined>;
+commit?: () => Promise<string | undefined>;
 ```
 
 Resolves the commit SHA to stamp onto `EvidenceModel.provenance.commit`.
@@ -4762,7 +4598,7 @@ shells out to `git` itself -- see ADR 0012's callback precedent. Omitted:
 ##### exclude?
 
 ```ts
-optional exclude?: string[];
+exclude?: string[];
 ```
 
 Glob patterns to exclude, shared across every pass. Defaults to node_modules/dist/.git.
@@ -4770,7 +4606,7 @@ Glob patterns to exclude, shared across every pass. Defaults to node_modules/dis
 ##### expiringWithinDays?
 
 ```ts
-optional expiringWithinDays?: number;
+expiringWithinDays?: number;
 ```
 
 Feeds Lifecycle Model's `expiring` list. Defaults to 30.
@@ -4786,7 +4622,7 @@ The filesystem capability -- `./build` never imports `node:fs` (ADR 0040).
 ##### include?
 
 ```ts
-optional include?: string[];
+include?: string[];
 ```
 
 Schema-discovery glob for the contract graph. Defaults to `["**/env.schema.ts"]`.
@@ -4794,7 +4630,7 @@ Schema-discovery glob for the contract graph. Defaults to `["**/env.schema.ts"]`
 ##### liveExpirationDates?
 
 ```ts
-optional liveExpirationDates?: LiveExpirationDates;
+liveExpirationDates?: LiveExpirationDates;
 ```
 
 Supplies expiration metadata from a live source as a post-discovery
@@ -4805,7 +4641,7 @@ schema's own static `expiresAt`. See `live-expirations.ts` and ADR 0012.
 ##### packages?
 
 ```ts
-optional packages?: readonly string[];
+packages?: readonly string[];
 ```
 
 See `GenerateEnvManifestOptions.packages`. See ADR 0014.
@@ -4813,7 +4649,7 @@ See `GenerateEnvManifestOptions.packages`. See ADR 0014.
 ##### previousSnapshotLocation?
 
 ```ts
-optional previousSnapshotLocation?: string;
+previousSnapshotLocation?: string;
 ```
 
 Where a previously-persisted evidence artifact lives, relative to
@@ -4828,7 +4664,7 @@ never an error.
 ##### root?
 
 ```ts
-optional root?: string;
+root?: string;
 ```
 
 Directory glob patterns are resolved against. Defaults to `process.cwd()`.
@@ -4836,7 +4672,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 ##### tsconfig?
 
 ```ts
-optional tsconfig?: string | false;
+tsconfig?: string | false;
 ```
 
 See `GenerateEnvManifestOptions.tsconfig`. See ADR 0023.
@@ -4852,7 +4688,7 @@ Options for [generateUsageReport](#generateusagereport).
 ##### exclude?
 
 ```ts
-optional exclude?: string[];
+exclude?: string[];
 ```
 
 Glob patterns to exclude, for both schema discovery and the usage scan. Defaults to node_modules/dist/.git.
@@ -4868,7 +4704,7 @@ The filesystem capability -- `./build` never imports `node:fs` (ADR 0040).
 ##### include?
 
 ```ts
-optional include?: string[];
+include?: string[];
 ```
 
 Schema-discovery glob, for the contract graph -- self-sufficient like the other two generator functions.
@@ -4876,7 +4712,7 @@ Schema-discovery glob, for the contract graph -- self-sufficient like the other 
 ##### packages?
 
 ```ts
-optional packages?: readonly string[];
+packages?: readonly string[];
 ```
 
 See `GenerateEnvManifestOptions.packages`; see ADR 0014.
@@ -4884,7 +4720,7 @@ See `GenerateEnvManifestOptions.packages`; see ADR 0014.
 ##### report?
 
 ```ts
-optional report?: {
+report?: {
   location: string;
 };
 ```
@@ -4902,7 +4738,7 @@ Output path for the report, relative to `root`.
 ##### root?
 
 ```ts
-optional root?: string;
+root?: string;
 ```
 
 Directory glob patterns are resolved against. Defaults to `process.cwd()`.
@@ -4910,7 +4746,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 ##### tsconfig?
 
 ```ts
-optional tsconfig?: string | false;
+tsconfig?: string | false;
 ```
 
 See `GenerateEnvManifestOptions.tsconfig`; see ADR 0023.
@@ -5059,7 +4895,7 @@ Options for [getEvidenceModel](#getevidencemodel) -- every `generateEvidenceMode
 ##### commit?
 
 ```ts
-optional commit?: () => Promise<string | undefined>;
+commit?: () => Promise<string | undefined>;
 ```
 
 Resolves the commit SHA to stamp onto `EvidenceModel.provenance.commit`.
@@ -5078,7 +4914,7 @@ shells out to `git` itself -- see ADR 0012's callback precedent. Omitted:
 ##### exclude?
 
 ```ts
-optional exclude?: string[];
+exclude?: string[];
 ```
 
 Glob patterns to exclude, shared across every pass. Defaults to node_modules/dist/.git.
@@ -5090,7 +4926,7 @@ Glob patterns to exclude, shared across every pass. Defaults to node_modules/dis
 ##### expiringWithinDays?
 
 ```ts
-optional expiringWithinDays?: number;
+expiringWithinDays?: number;
 ```
 
 Feeds Lifecycle Model's `expiring` list. Defaults to 30.
@@ -5114,7 +4950,7 @@ The filesystem capability -- `./build` never imports `node:fs` (ADR 0040).
 ##### include?
 
 ```ts
-optional include?: string[];
+include?: string[];
 ```
 
 Schema-discovery glob for the contract graph. Defaults to `["**/env.schema.ts"]`.
@@ -5126,7 +4962,7 @@ Schema-discovery glob for the contract graph. Defaults to `["**/env.schema.ts"]`
 ##### liveExpirationDates?
 
 ```ts
-optional liveExpirationDates?: LiveExpirationDates;
+liveExpirationDates?: LiveExpirationDates;
 ```
 
 Supplies expiration metadata from a live source as a post-discovery
@@ -5149,7 +4985,7 @@ Where the cached evidence artifact (and its `.fingerprint` sidecar) live, e.g. `
 ##### packages?
 
 ```ts
-optional packages?: readonly string[];
+packages?: readonly string[];
 ```
 
 See `GenerateEnvManifestOptions.packages`. See ADR 0014.
@@ -5161,7 +4997,7 @@ See `GenerateEnvManifestOptions.packages`. See ADR 0014.
 ##### previousSnapshotLocation?
 
 ```ts
-optional previousSnapshotLocation?: string;
+previousSnapshotLocation?: string;
 ```
 
 Where a previously-persisted evidence artifact lives, relative to
@@ -5180,7 +5016,7 @@ never an error.
 ##### root?
 
 ```ts
-optional root?: string;
+root?: string;
 ```
 
 Directory glob patterns are resolved against. Defaults to `process.cwd()`.
@@ -5192,7 +5028,7 @@ Directory glob patterns are resolved against. Defaults to `process.cwd()`.
 ##### tsconfig?
 
 ```ts
-optional tsconfig?: string | false;
+tsconfig?: string | false;
 ```
 
 See `GenerateEnvManifestOptions.tsconfig`. See ADR 0023.
@@ -5666,9 +5502,7 @@ The binding name the `createEnv()` result is exported as.
 
 ###### Inherited from
 
-```ts
-ManifestContractRef.exportName
-```
+`ManifestContractRef.exportName`
 
 ##### file
 
@@ -5680,9 +5514,7 @@ Root-relative, POSIX-separated path of the file declaring the contract -- see `d
 
 ###### Inherited from
 
-```ts
-ManifestContractRef.file
-```
+`ManifestContractRef.file`
 
 ***
 
