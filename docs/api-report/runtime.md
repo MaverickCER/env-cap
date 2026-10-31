@@ -37,9 +37,7 @@ new EnvNotReadyError(contractName, key): EnvNotReadyError;
 
 ###### Overrides
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 #### Properties
 
@@ -59,9 +57,7 @@ message: string;
 
 ###### Inherited from
 
-```ts
-Error.message
-```
+`Error.message`
 
 ##### name
 
@@ -71,21 +67,17 @@ name: string;
 
 ###### Inherited from
 
-```ts
-Error.name
-```
+`Error.name`
 
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
 
-```ts
-Error.stack
-```
+`Error.stack`
 
 ##### stackTraceLimit
 
@@ -105,9 +97,7 @@ not capture any frames.
 
 ###### Inherited from
 
-```ts
-Error.stackTraceLimit
-```
+`Error.stackTraceLimit`
 
 #### Methods
 
@@ -174,9 +164,7 @@ a();
 
 ###### Inherited from
 
-```ts
-Error.captureStackTrace
-```
+`Error.captureStackTrace`
 
 ##### prepareStackTrace()
 
@@ -201,9 +189,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ###### Inherited from
 
-```ts
-Error.prepareStackTrace
-```
+`Error.prepareStackTrace`
 
 ***
 
@@ -242,9 +228,7 @@ new EnvValidationError(failures): EnvValidationError;
 
 ###### Overrides
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 #### Properties
 
@@ -272,9 +256,7 @@ message: string;
 
 ###### Inherited from
 
-```ts
-Error.message
-```
+`Error.message`
 
 ##### name
 
@@ -284,21 +266,17 @@ name: string;
 
 ###### Inherited from
 
-```ts
-Error.name
-```
+`Error.name`
 
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
 
-```ts
-Error.stack
-```
+`Error.stack`
 
 ##### stackTraceLimit
 
@@ -318,9 +296,7 @@ not capture any frames.
 
 ###### Inherited from
 
-```ts
-Error.stackTraceLimit
-```
+`Error.stackTraceLimit`
 
 #### Methods
 
@@ -387,9 +363,7 @@ a();
 
 ###### Inherited from
 
-```ts
-Error.captureStackTrace
-```
+`Error.captureStackTrace`
 
 ##### prepareStackTrace()
 
@@ -414,9 +388,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ###### Inherited from
 
-```ts
-Error.prepareStackTrace
-```
+`Error.prepareStackTrace`
 
 ## Interfaces
 
@@ -444,7 +416,7 @@ own (e.g. in a helper function's own parameter type) without narrowing to one sp
 ##### active?
 
 ```ts
-optional active?: boolean;
+active?: boolean;
 ```
 
 When `false`, this contract is excluded from the generated manifest, docs' required section, and exclusiveGroup checks -- it still appears, marked disabled, in the feature catalog. Defaults to `true`.
@@ -452,7 +424,7 @@ When `false`, this contract is excluded from the generated manifest, docs' requi
 ##### auditRequired?
 
 ```ts
-optional auditRequired?: boolean;
+auditRequired?: boolean;
 ```
 
 Default audit-required assertion for this contract's variables -- see [VariableDocs.auditRequired](#auditrequired-1).
@@ -460,7 +432,7 @@ Default audit-required assertion for this contract's variables -- see [VariableD
 ##### category?
 
 ```ts
-optional category?: string;
+category?: string;
 ```
 
 Groups this contract under a heading in the generated docs' feature catalog.
@@ -468,7 +440,7 @@ Groups this contract under a heading in the generated docs' feature catalog.
 ##### dataResidency?
 
 ```ts
-optional dataResidency?: string | string[];
+dataResidency?: string | string[];
 ```
 
 Default data residency for this contract's variables -- see [VariableDocs.dataResidency](#dataresidency-1).
@@ -476,7 +448,7 @@ Default data residency for this contract's variables -- see [VariableDocs.dataRe
 ##### deprecated?
 
 ```ts
-optional deprecated?: boolean;
+deprecated?: boolean;
 ```
 
 Marks this whole contract/feature as being phased out. Independent of `active` (on/off, not a phase-out signal).
@@ -484,7 +456,7 @@ Marks this whole contract/feature as being phased out. Independent of `active` (
 ##### deprecatedReason?
 
 ```ts
-optional deprecatedReason?: string;
+deprecatedReason?: string;
 ```
 
 Why this contract is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`.
@@ -492,7 +464,7 @@ Why this contract is deprecated, and/or what to use instead. Only meaningful alo
 ##### exclusiveGroup?
 
 ```ts
-optional exclusiveGroup?: string;
+exclusiveGroup?: string;
 ```
 
 The generator throws if two *active* contracts declare the same `exclusiveGroup` -- use it to mark interchangeable features (e.g. two database backends) as mutually exclusive.
@@ -500,7 +472,7 @@ The generator throws if two *active* contracts declare the same `exclusiveGroup`
 ##### expiresAt?
 
 ```ts
-optional expiresAt?: string;
+expiresAt?: string;
 ```
 
 Whole-contract/feature sunset date, ISO date string.
@@ -508,7 +480,7 @@ Whole-contract/feature sunset date, ISO date string.
 ##### legalBasis?
 
 ```ts
-optional legalBasis?: string;
+legalBasis?: string;
 ```
 
 Default legal basis for this contract's variables -- see [VariableDocs.legalBasis](#legalbasis-1).
@@ -516,7 +488,7 @@ Default legal basis for this contract's variables -- see [VariableDocs.legalBasi
 ##### metadata?
 
 ```ts
-optional metadata?: Record<string, unknown>;
+metadata?: Record<string, unknown>;
 ```
 
 Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this feature -- see [VariableDocs.metadata](#metadata-1).
@@ -524,7 +496,7 @@ Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this
 ##### name?
 
 ```ts
-optional name?: string;
+name?: string;
 ```
 
 Overrides the auto-generated label used in generated docs. Purely cosmetic. Wins over `createEnv()`'s own `name` option, which in turn wins over the exported binding name.
@@ -532,7 +504,7 @@ Overrides the auto-generated label used in generated docs. Purely cosmetic. Wins
 ##### owner?
 
 ```ts
-optional owner?: string;
+owner?: string;
 ```
 
 Default owner for every variable in this contract that doesn't set its own `owner`.
@@ -540,7 +512,7 @@ Default owner for every variable in this contract that doesn't set its own `owne
 ##### purpose?
 
 ```ts
-optional purpose?: string;
+purpose?: string;
 ```
 
 Default reason this contract's variables' values are collected/used -- see [VariableDocs.purpose](#purpose-1).
@@ -548,7 +520,7 @@ Default reason this contract's variables' values are collected/used -- see [Vari
 ##### retention?
 
 ```ts
-optional retention?: string;
+retention?: string;
 ```
 
 Default retention policy for this contract's variables -- see [VariableDocs.retention](#retention-1).
@@ -556,7 +528,7 @@ Default retention policy for this contract's variables -- see [VariableDocs.rete
 ##### sensitivity?
 
 ```ts
-optional sensitivity?: string;
+sensitivity?: string;
 ```
 
 Default sensitivity for every variable in this contract that doesn't set its own `sensitivity` -- see [VariableDocs.sensitivity](#sensitivity-1) for why this is an open `string`.
@@ -564,7 +536,7 @@ Default sensitivity for every variable in this contract that doesn't set its own
 ##### variables?
 
 ```ts
-optional variables?: { readonly [K in string | number | symbol]?: VariableDocs };
+variables?: { readonly [K in string | number | symbol]?: VariableDocs };
 ```
 
 Per-variable documentation, keyed by variable name -- keys are checked against `S`'s own keys
@@ -596,7 +568,7 @@ cheap and safe to import as `createEnv` -- see `document.ts`.
 ##### name?
 
 ```ts
-optional name?: string;
+name?: string;
 ```
 
 A short, stable label for this contract (e.g. "payments", "database").
@@ -607,7 +579,7 @@ errors.
 ##### source?
 
 ```ts
-optional source?: string;
+source?: string;
 ```
 
 Pass `import.meta.url` here so validation errors point at the file that
@@ -634,7 +606,7 @@ Configuration for one schema entry: how to default, process, and validate a sing
 ##### context?
 
 ```ts
-optional context?: string;
+context?: string;
 ```
 
 The validation context this variable belongs to (e.g. `"server"`,
@@ -656,7 +628,7 @@ ADR 0022's Formal Invariants.
 ##### default?
 
 ```ts
-optional default?: unknown;
+default?: unknown;
 ```
 
 Literal fallback or lazy thunk used when the raw value is `undefined`.
@@ -664,7 +636,7 @@ Literal fallback or lazy thunk used when the raw value is `undefined`.
 ##### processor?
 
 ```ts
-optional processor?: Processor<T>;
+processor?: Processor<T>;
 ```
 
 Converts the raw (or defaulted) value to `T`; passed through unprocessed when omitted.
@@ -672,7 +644,7 @@ Converts the raw (or defaulted) value to `T`; passed through unprocessed when om
 ##### validator?
 
 ```ts
-optional validator?: Validator<T>;
+validator?: Validator<T>;
 ```
 
 Rejects an invalid processed value; return `true` to accept it.
@@ -699,7 +671,7 @@ cheap and safe to import as `createEnv` -- see `document.ts`.
 ##### activeContexts?
 
 ```ts
-optional activeContexts?: readonly string[];
+activeContexts?: readonly string[];
 ```
 
 The validation contexts active for this run (e.g. `["server",
@@ -779,7 +751,7 @@ know about yet without it being rejected.
 ##### auditRequired?
 
 ```ts
-optional auditRequired?: boolean;
+auditRequired?: boolean;
 ```
 
 Documentation-level assertion that this variable's handling must be auditable. Overrides the contract's own `auditRequired` for this key.
@@ -787,7 +759,7 @@ Documentation-level assertion that this variable's handling must be auditable. O
 ##### authenticatorType?
 
 ```ts
-optional authenticatorType?: string;
+authenticatorType?: string;
 ```
 
 The kind of authenticator/secret this variable holds (e.g. "api-key", "oauth-client-secret",
@@ -804,7 +776,7 @@ names a fixed set of types either.
 ##### dataResidency?
 
 ```ts
-optional dataResidency?: string | string[];
+dataResidency?: string | string[];
 ```
 
 Where this variable's value is/must be stored (a region, or a permitted set of regions). Overrides the contract's own `dataResidency` for this key.
@@ -812,7 +784,7 @@ Where this variable's value is/must be stored (a region, or a permitted set of r
 ##### deprecated?
 
 ```ts
-optional deprecated?: boolean;
+deprecated?: boolean;
 ```
 
 Marks this variable as being phased out. Independent of `expiresAt` (a rotation/sunset date) and of the contract-level `active` switch (on/off, not a phase-out signal).
@@ -820,7 +792,7 @@ Marks this variable as being phased out. Independent of `expiresAt` (a rotation/
 ##### deprecatedReason?
 
 ```ts
-optional deprecatedReason?: string;
+deprecatedReason?: string;
 ```
 
 Why this variable is deprecated, and/or what to use instead. Only meaningful alongside `deprecated: true`.
@@ -828,7 +800,7 @@ Why this variable is deprecated, and/or what to use instead. Only meaningful alo
 ##### description?
 
 ```ts
-optional description?: string;
+description?: string;
 ```
 
 Human-readable explanation of what this variable is and what it controls.
@@ -836,7 +808,7 @@ Human-readable explanation of what this variable is and what it controls.
 ##### evidence?
 
 ```ts
-optional evidence?: VariableEvidenceDocs;
+evidence?: VariableEvidenceDocs;
 ```
 
 Developer-supplied evidence assertions for this variable -- verified over
@@ -847,7 +819,7 @@ verified. Kept structurally separate for exactly that reason; see
 ##### expiresAt?
 
 ```ts
-optional expiresAt?: string;
+expiresAt?: string;
 ```
 
 ISO date string (e.g. "2026-06-01") -- when this variable's current value stops being valid (a key rotation deadline, a sunset date, etc.).
@@ -855,7 +827,7 @@ ISO date string (e.g. "2026-06-01") -- when this variable's current value stops 
 ##### lastRotatedAt?
 
 ```ts
-optional lastRotatedAt?: string;
+lastRotatedAt?: string;
 ```
 
 ISO date string -- the last time this variable's value was actually rotated. Paired with
@@ -867,7 +839,7 @@ for rotation while its `expiresAt` (if any) is still comfortably in the future.
 ##### legalBasis?
 
 ```ts
-optional legalBasis?: string;
+legalBasis?: string;
 ```
 
 The legal basis this variable's collection/use relies on -- framework-agnostic (e.g. "user consent," "contractual necessity"), never a specific statute name. Overrides the contract's own `legalBasis` for this key.
@@ -875,7 +847,7 @@ The legal basis this variable's collection/use relies on -- framework-agnostic (
 ##### metadata?
 
 ```ts
-optional metadata?: Record<string, unknown>;
+metadata?: Record<string, unknown>;
 ```
 
 Structured, unsupported-key documentation -- any primitive or object value, for anything that
@@ -885,7 +857,7 @@ field above instead of here once one exists for it.
 ##### owner?
 
 ```ts
-optional owner?: string;
+owner?: string;
 ```
 
 Who owns this variable (a team, a handle, whatever your org uses). Overrides the contract's own `owner` for this key.
@@ -893,7 +865,7 @@ Who owns this variable (a team, a handle, whatever your org uses). Overrides the
 ##### purpose?
 
 ```ts
-optional purpose?: string;
+purpose?: string;
 ```
 
 Why this variable's value is collected/used -- a framework-agnostic fact (pairs with `legalBasis`; a specific citation like a GDPR article belongs in `metadata` instead). Overrides the contract's own `purpose` for this key.
@@ -901,7 +873,7 @@ Why this variable's value is collected/used -- a framework-agnostic fact (pairs 
 ##### refreshInstructions?
 
 ```ts
-optional refreshInstructions?: string;
+refreshInstructions?: string;
 ```
 
 How to get a new value before/when it expires (e.g. "Rotate in the Stripe dashboard, then redeploy.").
@@ -909,7 +881,7 @@ How to get a new value before/when it expires (e.g. "Rotate in the Stripe dashbo
 ##### removeBy?
 
 ```ts
-optional removeBy?: string;
+removeBy?: string;
 ```
 
 ISO date string -- by when a deprecated variable must be removed. Only meaningful alongside `deprecated: true`.
@@ -917,7 +889,7 @@ ISO date string -- by when a deprecated variable must be removed. Only meaningfu
 ##### renamedFrom?
 
 ```ts
-optional renamedFrom?: string;
+renamedFrom?: string;
 ```
 
 The previous environment variable name this one replaces, if this declaration is the result of a rename. Lets the Change Model correlate a remove+add pair into a single rename entry instead of two unrelated changes.
@@ -925,7 +897,7 @@ The previous environment variable name this one replaces, if this declaration is
 ##### required?
 
 ```ts
-optional required?: boolean;
+required?: boolean;
 ```
 
 Documentation-level assertion that this variable must be set. Independent of how (or whether) a validator actually enforces it.
@@ -933,7 +905,7 @@ Documentation-level assertion that this variable must be set. Independent of how
 ##### retention?
 
 ```ts
-optional retention?: string;
+retention?: string;
 ```
 
 Descriptive retention policy (e.g. "delete after 90 days"). A policy statement, not a computed value -- unlike `expiresAt`, nothing parses or evaluates this. Overrides the contract's own `retention` for this key.
@@ -941,7 +913,7 @@ Descriptive retention policy (e.g. "delete after 90 days"). A policy statement, 
 ##### rotationPeriod?
 
 ```ts
-optional rotationPeriod?: string;
+rotationPeriod?: string;
 ```
 
 How often this variable's value must be rotated, in organization-defined terms (e.g. "90
@@ -954,7 +926,7 @@ than only recording that a period was declared; see `lifecycle-model.ts`'s
 ##### rotationTriggerEvents?
 
 ```ts
-optional rotationTriggerEvents?: readonly string[];
+rotationTriggerEvents?: readonly string[];
 ```
 
 IA-5's event-based rotation triggers that apply to this variable (e.g. "suspected compromise",
@@ -969,7 +941,7 @@ event-based trigger's existence visible in generated output.
 ##### sensitivity?
 
 ```ts
-optional sensitivity?: string;
+sensitivity?: string;
 ```
 
 How sensitive this variable's value is. Overrides the contract's own `sensitivity` for this
@@ -986,7 +958,7 @@ without being enforced.
 ##### setupInstructions?
 
 ```ts
-optional setupInstructions?: string;
+setupInstructions?: string;
 ```
 
 Explicit, actionable instructions for obtaining this variable's value the *first* time --
@@ -1013,7 +985,7 @@ the shape itself and not only in a doc comment. See ADR 0037.
 ##### dynamicAccess?
 
 ```ts
-optional dynamicAccess?: readonly string[];
+dynamicAccess?: readonly string[];
 ```
 
 Citation(s) of where this variable is actually read dynamically --
