@@ -204,7 +204,10 @@
     "glob": "^14.0.3",
     "minimatch": "^11.0.4",
     "re2js": "^2.9.1",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "typedoc": {
+      "minimatch": "^10.2.5"
+    }
   },
   "publishConfig": {
     "access": "public"
