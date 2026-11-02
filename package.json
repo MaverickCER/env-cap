@@ -200,7 +200,14 @@
     },
     "adm-zip": "0.6.1",
     "katex": "^0.18.2",
-    "qs": "6.16.0"
+    "qs": "^6.17.1",
+    "glob": "^14.0.3",
+    "minimatch": "^11.0.4",
+    "re2js": "^2.9.1",
+    "zod": "^4.6.7",
+    "typedoc": {
+      "minimatch": "^10.2.5"
+    }
   },
   "publishConfig": {
     "access": "public"
