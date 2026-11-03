@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.4
+
+### Patch Changes
+
+- fix(deps): keep TypeDoc on minimatch 10, which it needs
+- fix(deps): override glob, minimatch, re2js, zod and qs to their patched versions
+- 891e891: Bump `internal-package-contract` to v0.13.3.
+
 ## 0.7.3
 
 ### Patch Changes
