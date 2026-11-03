@@ -6,7 +6,7 @@
 [![Mutation score: the share of applicable mutants the tests detect](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/mutation-badge.json)](https://maverickcer.github.io/env-cap/mutation.json)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/MaverickCER/env-cap/badge)](https://scorecard.dev/viewer/?uri=github.com/MaverickCER/env-cap)
 [![Bundle size: gzip size of the entry point against its budget](https://img.shields.io/endpoint?url=https://maverickcer.github.io/env-cap/size-badge.json)](https://maverickcer.github.io/env-cap/size.json)
-[![Socket Badge](https://badge.socket.dev/npm/package/@maverickcer/env-cap/latest)](https://socket.dev/npm/package/@maverickcer/env-cap)
+![Socket Badge](https://badge.socket.dev/npm/package/@maverickcer/env-cap/latest)
 [![Node](https://img.shields.io/node/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
 [![License](https://img.shields.io/npm/l/%40maverickcer%2Fenv-cap)](LICENSE)
 
