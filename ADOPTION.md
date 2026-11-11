@@ -112,7 +112,7 @@ that lower the bar for a successor maintainer or fork.
 ## Bundle size and performance
 
 The runtime entry point carries a **hard 3&nbsp;KB gzip budget** and the helpers a **hard 4&nbsp;KB** one,
-enforced at `prepublishOnly` — not an aspirational CI check a maintainer can
+enforced by the `Size` check of every contract run and by the release workflow's `verify` step (the publish itself runs with `--ignore-scripts`, so no `prepublishOnly` hook is involved) — not an aspirational CI check a maintainer can
 ignore, a publish-blocking one ([ADR
 0008](specs/decisions/0008-gzip-size-budget.md)). `sideEffects: false` is set
 and verified by a dedicated test that bundles the real `dist/helpers.js`

@@ -106,3 +106,28 @@ documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { descrip
     })
   },
 )
+
+describe("published JSON Schema: the evidence file", () => {
+  // GUIDE's "Using the CLI outside GitHub Actions" says the evidence file matches the published
+  // schema's `EvidenceModel` definition; this is the test behind that sentence, on the committed
+  // evidence of two examples.
+  it("a committed env.evidence.json validates against the schema's EvidenceModel definition", () => {
+    const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as {
+      definitions: Record<string, unknown>
+    }
+    const validate = new Ajv({ strict: false, allErrors: true }).compile({
+      $ref: "#/definitions/EvidenceModel",
+      definitions: schema.definitions,
+    })
+    for (const example of ["application", "enterprise-platform"]) {
+      const file = path.resolve(projectRoot, "examples", example, "docs/env.evidence.json")
+      const evidence: unknown = JSON.parse(readFileSync(file, "utf8"))
+      expect(
+        validate(evidence),
+        `${example}: ${JSON.stringify(validate.errors?.slice(0, 3))}`,
+      ).toBe(true)
+    }
+    // The control: a document that is not an evidence model is refused.
+    expect(validate({ schemaVersion: 1 })).toBe(false)
+  })
+})
