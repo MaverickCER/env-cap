@@ -75,3 +75,7 @@ benchmarks/performance-buildtime/BENCHMARKS.md
 
 # Written by `internal-package-contract skill` and checked against what it would write, so reformatting it would only make that check fail.
 /skills/
+
+# Vendored, byte-for-byte as published by OASIS, so the tests validate against the standard itself
+# (see test/fixtures/standards/README.md). Reformatting it would make it our copy, not the standard.
+test/fixtures/standards/*.json

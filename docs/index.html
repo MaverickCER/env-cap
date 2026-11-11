@@ -258,9 +258,9 @@ Wrote evidence: docs/env.evidence.json
                 >The runtime has no dependencies and no filesystem access.</span
               ><span class="adoption-card-desc"
                 ><strong>Scope:</strong> True of the runtime entry points, which are held to a size
-                budget in CI. The build entry is separate: it bundles a TypeScript 6 compiler (about
-                24 MB unpacked), runs only in development and CI, and a build step fails if a
-                runtime entry can reach it.</span
+                budget in CI. The build entry is separate: it uses the TypeScript 6 compiler the
+                package depends on (about 24 MB unpacked), runs only in development and CI, and a
+                build step fails if a runtime entry can reach it.</span
               ><a
                 class="external-link-note"
                 href="https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md"
@@ -426,8 +426,8 @@ Wrote evidence: docs/env.evidence.json
               href="https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
               ><span class="adoption-card-title">Security model</span
               ><span class="adoption-card-desc"
-                >Zero runtime dependencies, self-redacting contracts, and what stays an application
-                responsibility.</span
+                >A runtime that imports nothing, self-redacting contracts, and what stays an
+                application responsibility.</span
               ><span class="external-link-note">Read the security model ↗</span></a
             ><a
               class="adoption-card"

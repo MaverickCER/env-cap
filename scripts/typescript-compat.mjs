@@ -6,10 +6,13 @@
 //      points. TypeScript 7 ships no programmatic compiler API, so under a 7 root the scanner has to
 //      fall back to the bundled `@typescript/typescript6` (src/build/typescript.ts) -- the case no
 //      unit test can reach, because it needs a real TypeScript 7 root in `node_modules`.
-//   2. The shipped `.d.ts` files type-check in a consumer under `moduleResolution: nodenext` and
-//      `strict`: the runtime, helpers and node entries with full library checking, and `./build` /
-//      `./evidence` with `skipLibCheck` (their declarations name TypeScript AST types, and
-//      TypeScript 7's `typescript` package exports none -- see VERSIONING.md, "Supported toolchain").
+//   2. The shipped `.d.ts` files type-check in a consumer under `moduleResolution: nodenext`,
+//      `strict` and full library checking (no `skipLibCheck`), every entry point but `./eslint-plugin`
+//      (its declarations type themselves from the `@typescript-eslint/utils` peer, whose TypeScript
+//      support applies) included. Under a 7
+//      root the `types@>=7` export conditions serve `dist/.dts7`, whose compiler-API types come from
+//      the bundled `@typescript/typescript6` (TypeScript 7's own package ships none); under 5 and 6 the
+//      primary declarations typed from the consumer's `typescript` are served (ADR 0049).
 //
 // Under a 7 root it also removes the bundled compiler and asserts the readable failure, so the
 // "no usable compiler" message cannot rot unseen.
@@ -26,7 +29,8 @@ const PACKAGE = "@maverickcer/env-cap"
 const repoRoot = path.resolve(import.meta.dirname, "..")
 
 function run(command, args, cwd, { allowFailure = false } = {}) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8" })
+  // --traceResolution under TypeScript 7 prints several MB; the 1 MiB default kills the child (exit null).
+  const result = spawnSync(command, args, { cwd, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 })
   if (result.status !== 0 && !allowFailure) {
     process.stderr.write(result.stdout + result.stderr)
     console.error(`${command} ${args.join(" ")} failed (exit ${String(result.status)}) in ${cwd}`)
@@ -42,33 +46,86 @@ const tarball = path.join(
   readdirSync(packDir).find((f) => f.endsWith(".tgz")),
 )
 
+// The scanner, run from both entry formats over every committed `env.schema.ts` fixture (the example
+// applications and the integration fixtures -- 23 files, from one-liners to multi-call schemas with
+// documentation metadata). Each TypeScript root writes what it found, and the three outputs must be
+// byte-identical: TypeScript 5, 6 and the bundled 6 under a 7 root parse the same corpus the same way.
 const scanScript = `import { createRequire } from "node:module"
+import { readFileSync, writeFileSync } from "node:fs"
 const require = createRequire(import.meta.url)
-const source = 'export const e = createEnv({ KEY: { processor: (v) => String(v) } }, { name: "x" });'
+const fixtures = JSON.parse(readFileSync("fixtures.json", "utf8"))
 const esm = await import("${PACKAGE}/build")
 const cjs = require("${PACKAGE}/build")
+const seen = {}
 for (const [label, build] of [["esm", esm], ["cjs", cjs]]) {
-  const result = build.parseSchemaFile("/repo/env.schema.ts", source)
-  if (result.createEnvCalls.length !== 1 || result.createEnvCalls[0].exportName !== "e") {
-    throw new Error(label + " scan found the wrong thing: " + JSON.stringify(result.createEnvCalls.map((c) => c.exportName)))
+  const out = {}
+  for (const file of Object.keys(fixtures).sort()) {
+    const result = build.parseSchemaFile("/repo/" + file, fixtures[file])
+    if (result.createEnvCalls.length === 0) throw new Error(label + ": no createEnv call found in " + file)
+    // The raw result carries AST nodes (circular, with parents): an inline schema literal is kept as its
+    // source text, an identifier reference as the plain record it already is.
+    const call = (c) => ({
+      schema: c.schemaRef.kind === "literal" ? { kind: "literal", text: c.schemaRef.node.getText() } : c.schemaRef,
+      call: c.node.getText(),
+    })
+    out[file] = {
+      createEnvCalls: result.createEnvCalls.map(call),
+      documentEnvCalls: result.documentEnvCalls.map(call),
+      localConsts: [...result.localConsts.keys()].sort(),
+      exportedConstNames: [...result.exportedConstNames].sort(),
+      imports: [...result.imports.entries()].sort(),
+      warnings: result.warnings,
+    }
   }
+  seen[label] = JSON.stringify(out, null, 2)
 }
-console.log("scanner ok (esm + cjs)")
+if (seen.esm !== seen.cjs) throw new Error("esm and cjs scans disagree")
+writeFileSync("scan-output.json", seen.esm)
+console.log("scanner ok (esm + cjs) over " + Object.keys(fixtures).length + " schema files")
 `
 
+/** Every committed schema file the scanner is meant to read, outside node_modules, generated output and reference-only files. */
+function schemaFixtures() {
+  const out = {}
+  const walk = (dir) => {
+    for (const entry of readdirSync(path.join(repoRoot, dir), { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === "expected" || entry.name.startsWith("."))
+        continue
+      const rel = path.posix.join(dir, entry.name)
+      if (entry.isDirectory()) walk(rel)
+      else if (entry.name === "env.schema.ts") {
+        const source = readFileSync(path.join(repoRoot, rel), "utf8")
+        // examples/application keeps two schema files as commented-out reference material (their
+        // header says so); it declares nothing, so the scanner is right to find no call in it.
+        if (!source.startsWith("// REFERENCE ONLY")) out[rel] = source
+      }
+    }
+  }
+  walk("examples")
+  walk("test/integration")
+  return out
+}
+const fixtures = schemaFixtures()
+if (Object.keys(fixtures).length !== 23) {
+  throw new Error(
+    `expected the committed schema corpus (23 files), found ${Object.keys(fixtures).length}`,
+  )
+}
+const scanOutputs = new Map()
+
+// Every entry point, with the compiler-API-typed result read back so the build declarations are
+// really resolved, not only imported.
 const strictConsumer = `import { createEnv } from "${PACKAGE}"
 import * as helpers from "${PACKAGE}/helpers"
 import * as node from "${PACKAGE}/node"
-console.log(typeof createEnv, typeof helpers, typeof node)
-`
-
-const libSkippedConsumer = `import { parseSchemaFile } from "${PACKAGE}/build"
+import { parseSchemaFile } from "${PACKAGE}/build"
 import * as evidence from "${PACKAGE}/evidence"
 const result = parseSchemaFile("a.ts", "export const e = 1")
-console.log(result.createEnvCalls.length, typeof evidence)
+const kind: number = result.sourceFile.kind
+console.log(typeof createEnv, typeof helpers, typeof node, result.createEnvCalls.length, kind, typeof evidence)
 `
 
-function tsconfig(file, skipLibCheck) {
+function tsconfig(file) {
   return JSON.stringify({
     compilerOptions: {
       module: "nodenext",
@@ -76,7 +133,7 @@ function tsconfig(file, skipLibCheck) {
       strict: true,
       noEmit: true,
       types: ["node"],
-      skipLibCheck,
+      skipLibCheck: false,
     },
     files: [file],
   })
@@ -121,16 +178,30 @@ try {
       console.log(`tsc bin is still the root compiler (${linked})`)
       mkdirSync(path.join(dir, "src"))
       writeFileSync(path.join(dir, "strict.ts"), strictConsumer)
-      writeFileSync(path.join(dir, "tsconfig.strict.json"), tsconfig("strict.ts", false))
-      writeFileSync(path.join(dir, "libskipped.ts"), libSkippedConsumer)
-      writeFileSync(path.join(dir, "tsconfig.skipped.json"), tsconfig("libskipped.ts", true))
+      writeFileSync(path.join(dir, "tsconfig.strict.json"), tsconfig("strict.ts"))
       writeFileSync(path.join(dir, "scan.mjs"), scanScript)
+      writeFileSync(path.join(dir, "fixtures.json"), JSON.stringify(fixtures))
 
       run("node", [tsc, "-p", "tsconfig.strict.json"], dir)
-      console.log("types ok: runtime, helpers, node entries (full library check)")
-      run("node", [tsc, "-p", "tsconfig.skipped.json"], dir)
-      console.log("types ok: build, evidence entries (skipLibCheck)")
+      console.log(
+        "types ok: every entry point but ./eslint-plugin, full library check, no skipLibCheck",
+      )
+      // Which declaration set answered: the primary one under 5 and 6, the `types@>=7` one under 7.
+      const trace = run(
+        "node",
+        [tsc, "-p", "tsconfig.strict.json", "--traceResolution"],
+        dir,
+      ).stdout
+      const expected = version === "7" ? "types@>=7" : "types"
+      if (!trace.includes(`Resolved under condition '${expected}'`)) {
+        console.error(
+          `expected the '${expected}' export condition to resolve the declarations under typescript@${version}`,
+        )
+        process.exit(1)
+      }
+      console.log(`declarations served under the '${expected}' export condition`)
       console.log(run("node", ["scan.mjs"], dir).stdout.trim())
+      scanOutputs.set(version, readFileSync(path.join(dir, "scan-output.json"), "utf8"))
 
       if (version === "7") {
         // Bundled inside the package (bundleDependencies), not hoisted into the consumer's node_modules.
@@ -160,6 +231,19 @@ try {
       rmSync(dir, { recursive: true, force: true })
     }
   }
+  // The same corpus, the same result, whichever TypeScript parsed it.
+  const [first, ...rest] = [...scanOutputs.entries()]
+  for (const [version, output] of rest) {
+    if (output !== first[1]) {
+      console.error(
+        `scanner output under typescript@${version} differs from typescript@${first[0]}`,
+      )
+      process.exit(1)
+    }
+  }
+  console.log(
+    `scanner output identical across typescript ${[...scanOutputs.keys()].join(", ")} for ${Object.keys(fixtures).length} schema files`,
+  )
   console.log(`\nTypeScript compat check passed for typescript ${versions.join(", ")}.`)
 } finally {
   rmSync(packDir, { recursive: true, force: true })

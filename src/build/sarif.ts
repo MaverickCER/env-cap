@@ -42,16 +42,23 @@ interface SarifLocation {
  * problem is, which is exactly what a code-scanning UI would then anchor an
  * annotation to.
  */
+/** A root-relative path as a SARIF `uri-reference`: percent-encoded, with `#` and `?` encoded too. */
+function uriReference(file: string): string {
+  return encodeURI(file).replace(/#/g, "%23").replace(/\?/g, "%3F")
+}
+
 function sarifLocations(finding: Finding): readonly SarifLocation[] | undefined {
   const location = finding.location
-  const uri = location.model === "change" ? location.path : location.file
-  if (uri === undefined) return undefined
   // A change-model location (a generated artifact) has no position inside it.
   const { position } = location as { readonly position?: SourcePosition | undefined }
+  // A position names its own file (a stale citation's line is in the cited file, not the contract
+  // file), so the artifact is the file the line belongs to.
+  const file = position?.file ?? (location.model === "change" ? location.path : location.file)
+  if (file === undefined) return undefined
   return [
     {
       physicalLocation: {
-        artifactLocation: { uri },
+        artifactLocation: { uri: uriReference(file) },
         ...(position === undefined
           ? {}
           : { region: { startLine: position.line, startColumn: position.column } }),

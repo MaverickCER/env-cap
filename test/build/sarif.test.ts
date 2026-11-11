@@ -1,3 +1,8 @@
+import { readFileSync } from "node:fs"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import Ajv04 from "ajv-draft-04"
+import addFormats from "ajv-formats"
 import { describe, expect, it } from "vitest"
 import { buildSarifLog } from "../../src/build/sarif.js"
 import { FINDING_MODEL_SCHEMA_VERSION } from "../../src/build/finding-model.js"
@@ -139,8 +144,88 @@ describe("buildSarifLog", () => {
     ])
   })
 
+  it("anchors a positioned finding to the file the position names, not the contract file", () => {
+    // A stale dynamic-access citation lives in the cited file; annotating line 12 of the contract
+    // file would point a code-scanning UI at the wrong place.
+    const cited: Finding = {
+      ...CONTRACT_FINDING,
+      code: "STALE_DYNAMIC_ACCESS_CITATION",
+      location: {
+        model: "ownership",
+        contractName: "payments",
+        file: "src/payments/env.schema.ts",
+        variable: "STRIPE_KEY",
+        position: { file: "scripts/deploy.sh", line: 12, column: 4 },
+      },
+    }
+    expect(buildSarifLog(model([cited])).runs[0]?.results[0]?.locations).toEqual([
+      {
+        physicalLocation: {
+          artifactLocation: { uri: "scripts/deploy.sh" },
+          region: { startLine: 12, startColumn: 4 },
+        },
+      },
+    ])
+  })
+
+  it("percent-encodes a path so it is a URI reference", () => {
+    const odd: Finding = {
+      ...CONTRACT_FINDING,
+      location: {
+        model: "ownership",
+        contractName: "payments",
+        file: "docs/a b#c?d%.md",
+        variable: "STRIPE_KEY",
+        position: undefined,
+      },
+    }
+    expect(
+      buildSarifLog(model([odd])).runs[0]?.results[0]?.locations?.[0]?.physicalLocation
+        .artifactLocation.uri,
+    ).toBe("docs/a%20b%23c%3Fd%25.md")
+  })
+
   it("round-trips through JSON unchanged -- the log is plain, serializable data", () => {
     const log = buildSarifLog(model([CONTRACT_FINDING]))
     expect(JSON.parse(JSON.stringify(log))).toEqual(log)
+  })
+
+  it("is valid against the official OASIS SARIF 2.1.0 schema, with and without positions", () => {
+    // The schema is vendored byte for byte (test/fixtures/standards/README.md), so this checks the
+    // log against the standard, not against a shape written here.
+    const here = path.dirname(fileURLToPath(import.meta.url))
+    const schema = JSON.parse(
+      readFileSync(path.join(here, "../fixtures/standards/sarif-schema-2.1.0.json"), "utf8"),
+    ) as object
+    // ajv-formats registers `uri` and `uri-reference`, which the schema puts on every location, so
+    // a malformed path would be rejected rather than passed over as an unknown format.
+    const ajv = new Ajv04({ strict: false, allErrors: true })
+    addFormats(ajv)
+    const validate = ajv.compile(schema)
+    const positioned: Finding = {
+      ...CONTRACT_FINDING,
+      code: "STALE_DYNAMIC_ACCESS_CITATION",
+      location: {
+        model: "ownership",
+        contractName: "payments",
+        file: "src/payments/env.schema.ts",
+        variable: "STRIPE_KEY",
+        position: { file: "scripts/deploy.sh", line: 12, column: 4 },
+      },
+    }
+    for (const log of [
+      buildSarifLog(model([])),
+      buildSarifLog(model([CONTRACT_FINDING, positioned])),
+    ]) {
+      expect(validate(log), JSON.stringify(validate.errors?.slice(0, 3))).toBe(true)
+    }
+    // The control: the same validator refuses a log whose artifact location is not a URI reference.
+    const malformed = JSON.parse(JSON.stringify(buildSarifLog(model([CONTRACT_FINDING])))) as {
+      runs: {
+        results: { locations: { physicalLocation: { artifactLocation: { uri: string } } }[] }[]
+      }[]
+    }
+    malformed.runs[0]!.results[0]!.locations[0]!.physicalLocation.artifactLocation.uri = "docs/%zz"
+    expect(validate(malformed)).toBe(false)
   })
 })

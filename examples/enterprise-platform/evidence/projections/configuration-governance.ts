@@ -15,12 +15,12 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  * test/integration/positive/enterprise/evidence-projections/ are. Named for
  * what it actually enforces, not the domain it happens to run against:
  * three policy rules -- is every credential documented
- * (`credential-without-documentation`), is every sensitive variable's
- * handling legally justified (`sensitive-without-legal-basis`), is every
+ * (`credential-without-documentation`), does every sensitive variable
+ * declare a legal basis (`sensitive-without-legal-basis`), is every
  * audit-required variable actually auditable
  * (`audit-required-but-not-found`) -- the kind of "here's what we can prove
- * about how configuration is governed" report useful during litigation,
- * audit prep, or as a CI gate. env-cap core exposes the generic facts
+ * about how configuration is governed" report useful for audit preparation
+ * or as a CI gate. env-cap core exposes the generic facts
  * (sensitivity, metadata, legalBasis, ...); this file, not env-cap,
  * decides what those facts imply for this organization. See ADR 0024 and
  * ADR 0035.

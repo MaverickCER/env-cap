@@ -1,7 +1,7 @@
-# Secrets-rotation compliance log generator
+# Secrets-rotation log generator
 
 Generates `docs/SECRETS-ROTATION-LOG.md` -- a NIST SP 800-53 Rev. 5 **IA-5** (Authenticator
-Management) rotation-compliance document, built from `env-cap`'s own schema-level lifecycle
+Management) secrets-rotation record, built from `env-cap`'s own schema-level lifecycle
 fields: the pre-existing `expiresAt`/`refreshInstructions` (already used by `../generate-docs`'s
 ENVIRONMENT.md and the lifecycle report), plus `authenticatorType`/`rotationPeriod`/
 `lastRotatedAt`/`rotationTriggerEvents` and a computed `rotationStatus` per variable

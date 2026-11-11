@@ -76,6 +76,19 @@ rendering function may never blend them or imply one is another:
 | **Drift check** (`--check`)                                                                  | `checkArtifacts`                               | Recomputes every requested artifact and diffs it against disk — writes nothing, exits non-zero if anything is stale or missing. Its exit code reflects staleness only, independent of `--strict*` finding severity.                                                                                                          |
 | **SARIF log**                                                                                | `buildSarifLog` (library export)               | A SARIF 2.1.0 adapter over the Finding Model, for a security-tooling pipeline that already ingests SARIF. Not CLI-wired — an ordinary consumer of the public Finding Model type, called directly by whichever project needs it (the same boundary Phase 4/5's own generator scripts sit behind).                             |
 
+## Standard-format documents
+
+Generated from `docs/surface.json` by `internal-package-contract generate`; each row names the test that
+checks the format, and generation fails if that test is gone.
+
+<!-- ipc:begin standards -->
+
+| Document | Standard          | Produced by                                                            | Checked against                                                        | Test                       | Limits                                                                                                                                                                                                             |
+| -------- | ----------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Findings | OASIS SARIF 2.1.0 | `buildSarifLog` (`@maverickcer/env-cap/build`), over the Finding Model | The official OASIS schema (`test/fixtures/standards/`, a managed copy) | `test/build/sarif.test.ts` | A library export, not wired to the CLI. A finding carries a region only when it has a real position. A finding with a position points at the cited file (percent-encoded path); the rest carry a file but no line. |
+
+<!-- ipc:end standards -->
+
 ## Canonical fact models (ADR 0024)
 
 Seven canonical, versioned, JSON-serializable models — the machine-readable
@@ -98,7 +111,6 @@ A first wave of reference projections ships alongside the models themselves
 (all built through `defineEvidenceProjection()`), plus `buildSarifLog` (a
 SARIF 2.1.0 adapter over Finding Model). Every one of these is an ordinary
 consumer of the public model types above — none has a privileged internal
-path a downstream tool couldn't also use. Phase 5's open-standard
-alignment-evidence generator (see `specs/decisions/`, once written) is
+path a downstream tool couldn't also use. A future open-standard projection would be
 architecturally no different: another `defineEvidenceProjection()` consumer,
 not a bespoke script bypassing this model.

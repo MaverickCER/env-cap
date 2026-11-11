@@ -24,13 +24,18 @@ import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 export const LIFECYCLE_MODEL_SCHEMA_VERSION = 3
 
 /**
- * One variable's computed NIST SP 800-53 IA-5 rotation-compliance status --
+ * One variable's computed NIST SP 800-53 IA-5 rotation status (a policy-window judgement) --
  * see `computeRotationStatus()` for exactly how it's derived. Always present
  * on a `LifecycleModelVariable` (never `undefined`) since a variable with
  * literally nothing lifecycle-relevant set never reaches this model at all
  * (`hasLifecycleData()` below) -- `"undeclared"` is itself the honest value
  * for "reached this model for some other lifecycle reason (e.g. `deprecated`)
  * but declares none of the four rotation-specific fields."
+ *
+ * This is a policy-window judgement from the declared metadata ("within the declared
+ * rotation period"), never a statement that any control is met or that a rotation
+ * happened; env-cap never checks a declaration against reality. The 1.0 release
+ * renames the value `"compliant"` to `"withinPolicy"` for that reason.
  */
 export type RotationComplianceStatus = "compliant" | "overdue" | "expired" | "undeclared"
 
@@ -145,7 +150,7 @@ const DAYS_PER_YEAR = 365
  * fit either grammar still has it stored and rendered verbatim everywhere else, it just can't feed
  * a computed due date, and `computeRotationStatus()` fails closed (`"overdue"`) rather than
  * guessing at one. Month/year are calendar approximations (30/365 days) -- acceptable for a
- * rotation-compliance signal, not precise enough for anything billing/calendar-accurate.
+ * rotation-window signal, not precise enough for anything billing/calendar-accurate.
  *
  * A computed total of zero days (e.g. "0 days", "P0D", "P0Y0M0D" -- the digit grammar can't
  * produce a *negative* total, but zero is reachable) is treated the same as an unparseable
@@ -211,7 +216,7 @@ export function parseRotationPeriodDays(value: string): number | undefined {
 }
 
 /**
- * Computes one variable's NIST SP 800-53 IA-5 rotation-compliance status from its lifecycle facts,
+ * Computes one variable's NIST SP 800-53 IA-5 rotation status (a policy-window judgement) from its lifecycle facts,
  * relative to `now`.
  *
  * @remarks

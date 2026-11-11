@@ -609,7 +609,7 @@ dependency rules between them.
 | Shared discovery, compute-atomic but not write-atomic `generateEnvArtifacts()`                                         | [0011](decisions/0011-shared-discovery-compute-atomic-write-non-atomic.md)         |
 | Live expiration overrides via callback, not AST                                                                        | [0012](decisions/0012-live-expiration-overrides-not-ast-functions.md)              |
 | `--json` CLI output is a versioned mirror                                                                              | [0013](decisions/0013-json-output-is-a-versioned-mirror.md)                        |
-| Cross-package schema discovery via explicit allowlist (Experimental)                                                   | [0014](decisions/0014-cross-package-schema-discovery.md)                           |
+| Cross-package schema discovery via explicit allowlist (Stable since ADR 0045)                                          | [0014](decisions/0014-cross-package-schema-discovery.md)                           |
 | Post-1.0 security-fix backport window (one major back, ≥6 months, never shortened once stated)                         | [0015](decisions/0015-security-backport-window.md)                                 |
 | `--check` computes fully before comparing, and never partially writes                                                  | [0016](decisions/0016-check-mode-compute-before-compare-never-partial-write.md)    |
 | A 4th public entry point (`./eslint-plugin`) for a capability-owned-access lint rule                                   | [0017](decisions/0017-eslint-plugin-entry-point.md)                                |
@@ -618,7 +618,7 @@ dependency rules between them.
 | Declaration maps emitted by a separate `tsc` pass, not tsup's own `dts` pipeline                                       | [0020](decisions/0020-declaration-maps-via-separate-tsc-pass.md)                   |
 | The manifest change report is a persisted, committed JSON sidecar snapshot                                             | [0021](decisions/0021-manifest-change-report-persisted-snapshot.md)                |
 | Generic, declarative validation contexts (`context`/`activeContexts`)                                                  | [0022](decisions/0022-validation-contexts.md)                                      |
-| TypeScript path-alias resolution, on by default (Experimental)                                                         | [0023](decisions/0023-tsconfig-path-alias-resolution.md)                           |
+| TypeScript path-alias resolution, on by default (Stable since ADR 0045)                                                | [0023](decisions/0023-tsconfig-path-alias-resolution.md)                           |
 | Seven canonical fact models (Contract/Dependency/Ownership/Lifecycle/Finding/Change/Evidence), not thirty-five reports | [0024](decisions/0024-fact-model-architecture.md)                                  |
 | Contract Model is a new, versioned JSON projection, published alongside the manifest                                   | [0025](decisions/0025-contract-model-json-projection.md)                           |
 | Finding Model unifies four independently-shaped finding families                                                       | [0026](decisions/0026-finding-model-unifies-four-families.md)                      |

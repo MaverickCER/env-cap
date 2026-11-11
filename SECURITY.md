@@ -65,8 +65,19 @@ The runtime does not:
   generated artifacts and never executed by the runtime.
 
 * **Send telemetry.**
-  No package entry point (`.`, `./build`, or `./helpers`) performs network
+  No package entry point (`.`, `./build`, `./helpers`, `./evidence`, `./node` or
+  `./eslint-plugin`) performs network
   requests or sends usage information.
+
+* **Reach the machine on its own.**
+  Three things are checked mechanically, not by inspection. A lint rule bans
+  `node:fs` and `node:child_process` imports throughout `src/` (the CLI alone
+  may import `node:fs`, to build the file-system adapter it hands to `./build`).
+  Then the `AmbientCapabilities` contract check scans the packed tarball and
+  fails when any shipped file outside the CLI (`bin`), the ESLint plugin or
+  `./node` reaches `fs`, when any file at all reaches `child_process`, or when
+  any file outside the CLI and the ESLint plugin reads `process.env`. The
+  runtime takes its values from the `values` you pass, never from the process.
 
 * **Log secret values.**
   The library does not write logs or emit environment values. Validation
@@ -235,11 +246,11 @@ secret in this repository to leak, rotate, or scope. The workflow's
 `id-token: write` permission is exchanged for a short-lived publish
 credential per run, tied to this exact repository and workflow file, and
 the same OIDC flow attaches npm provenance attestations to each published
-version. The runtime and helpers entry points are verified against real
-Node, Bun, and Deno engines in CI (`test/cross-runtime/`), not merely
-asserted to be isomorphic by inspection. Test coverage is enforced
-ratchet-up-only (see `vitest.config.ts`; [`CONTRIBUTING.md`](CONTRIBUTING.md)
-forbids lowering a threshold to accommodate a drop). See
+version. The runtime, helpers and evidence entry points are executed under real
+Node, Bun and Deno engines in CI (`test/cross-runtime/`), not merely
+asserted to be isomorphic by inspection; the build entry and CLI are Node-only. Test coverage is enforced
+against fixed floors (`vitest.config.ts`; [`CONTRIBUTING.md`](CONTRIBUTING.md)
+allows raising a threshold in review, never lowering one to accommodate a drop). See
 [`RELEASING.md`](RELEASING.md#first-time-setup) for the one-time
 trusted-publisher setup this depends on.
 

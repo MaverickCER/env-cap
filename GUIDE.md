@@ -407,21 +407,31 @@ Without it, a second `validateEnv()` call with different `values` silently retur
 
 ## Runtime support matrix
 
-| Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
-| -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
-| Node.js 22+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
-| Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅ ¹        | ❌ not applicable — build-only, never bundle this into an app |
-| Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅ ¹        | ❌ not applicable                                             |
-| Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
-| Deno                                                           | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
+| Environment                                                    | `.` (runtime)       | `./helpers`         | `./evidence`        | `./build`, CLI, `./node`, `./eslint-plugin`                   |
+| -------------------------------------------------------------- | ------------------- | ------------------- | ------------------- | ------------------------------------------------------------- |
+| Node.js 22+ (CJS or ESM)                                       | ✅                  | ✅                  | ✅                  | ✅                                                            |
+| Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅ ²                | ✅ ¹ ²              | ✅ ²                | ❌ not applicable — build-only, never bundle this into an app |
+| Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅ ²                | ✅ ¹ ²              | ✅ ²                | ❌ not applicable                                             |
+| Bun                                                            | ✅ (executed in CI) | ✅ (executed in CI) | ✅ (executed in CI) | Node-only tooling; not tested                                 |
+| Deno                                                           | ✅ (executed in CI) | ✅ (executed in CI) | ✅ (executed in CI) | Node-only tooling; not tested                                 |
 
 ¹ Except `processors.base64()`, which returns a Node `Buffer`: use it only where `Buffer` exists, or decode with your own processor elsewhere.
 
+² Bundled for the browser and then executed in a V8 context that has only Web globals (no `process`, `Buffer`, `require` or timers) in `test/runtime/browser-bundle.test.ts`; not run in a real browser or edge runtime in CI.
+
 The runtime (`.` and `./helpers`) has zero dependencies, never touches the filesystem, and never imports a Node module (the one Node global it uses is the `Buffer` that `processors.base64()` returns) — see [`specs/architecture.md`](specs/architecture.md). `./build` is Node-only developer tooling (uses `node:path` and the TypeScript compiler API — never `node:fs`, see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)) meant for CI/npm-script use, never for shipping to a browser. Both ESM and CommonJS builds are published for every entry point (`package.json#exports`).
+
+### Package managers
+
+npm is the supported and fully tested package manager: every CI job installs with it. pnpm, Yarn 1
+and Yarn Berry with the `node-modules` linker are tested for one thing, in CI's `package-managers`
+job (`scripts/package-managers-smoke.mjs`): the packed tarball installs and every entry point
+imports, as ESM and as CommonJS. Nothing wider is claimed for them. Yarn Plug'n'Play and pnpm
+without `node-modules` hoisting are unsupported.
 
 ### Requirements
 
-Node.js `>=22`. TypeScript 5, 6 or 7 is only required for build-time manifest generation: a bundled TypeScript 6 parses the schemas when yours is 7, is bundled inside the package and used only by the build entry, and adds about 24 MB unpacked to the install. The runtime works in plain JavaScript. TypeScript consumers need `moduleResolution` set to `node16`, `nodenext` or `bundler` to resolve the subpath exports (`./build`, `./helpers`, ...); the legacy `node10` resolver is not supported. `@maverickcer/env-cap/eslint-plugin` also needs `@typescript-eslint/utils` installed (an optional peer).
+Node.js `>=22`. Your own TypeScript is optional and matters only for build-time manifest generation: the generator parses with it when it is version 5 or 6, and otherwise (TypeScript 7, or none installed) with the TypeScript 6 compiler that `env-cap` declares as its one npm dependency and bundles inside its tarball (`bundleDependencies`), so it arrives with the package rather than from the registry. Only the build entry uses that compiler, and it adds about 24 MB unpacked to the install. The runtime works in plain JavaScript. TypeScript consumers need `moduleResolution` set to `node16`, `nodenext` or `bundler` to resolve the subpath exports (`./build`, `./helpers`, ...); the legacy `node10` resolver is not supported. `@maverickcer/env-cap/eslint-plugin` also needs `@typescript-eslint/utils` installed (an optional peer).
 
 ## Validation contexts
 
@@ -949,6 +959,36 @@ With `--json`, the response includes an additive `checkResult` field containing 
 
 See [ADR 0016](specs/decisions/0016-check-mode-compute-before-compare-never-partial-write.md).
 
+## Using the CLI outside GitHub Actions
+
+The GitHub Action is a thin wrapper: it runs `env-cap --json` with the arguments you give it and
+turns the JSON report into annotations and a summary comment. Every other CI system gets the same
+gate from the CLI alone.
+
+1. Install the package as a devDependency and run the generator in your pipeline:
+
+   ```bash
+   npx env-cap --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --check --json > env-cap.json
+   ```
+
+2. Fail the job on the exit code: `0` when every generated artifact is current, `1` when one is
+   stale or missing or the run failed (the JSON report then carries an `error`), `2` only from the
+   Action's wrapper when the CLI is not installed and no `version` was given, or the `version`
+   input is not a plain version or dist-tag.
+
+3. Read `env-cap.json` for what to show: `checkResult.ok` is the verdict and `checkResult.stale`
+   names each artifact that is stale or missing (see [`--json`](#--json)). The check report carries
+   no per-issue detail. For severity, file and, where a finding has a position, line, run the
+   generator with `--evidence <path>` and read `finding.findings` from that evidence file. The
+   report validates against the published JSON Schema (`@maverickcer/env-cap/schema`) and the
+   evidence file against that schema's `EvidenceModel` definition, so a GitLab, Jenkins or
+   Buildkite step can render them with any JSON Schema aware tool. For a SARIF upload, project the persisted Finding Model with
+   `buildSarifLog` from `@maverickcer/env-cap/build`, validated against the official OASIS schema in
+   `test/build/sarif.test.ts` ([ADR 0026](specs/decisions/0026-finding-model-unifies-four-families.md)).
+
+Nothing in the CLI reads GitHub-specific environment variables; the Action's inputs are the CLI's
+flags.
+
 ## GitHub Action
 
 The first-party GitHub Action runs `env-cap --json` and integrates configuration analysis into pull requests and scheduled maintenance workflows.
@@ -980,6 +1020,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - run: npm ci # the action runs the env-cap your project installs
+
       - uses: maverickcer/env-cap@v0
         with:
           args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
@@ -1001,16 +1043,16 @@ produces is what the Action's own PR annotations/summary comment/rotation
 alerts read from (Finding Model, ADR 0038), regardless of whether your repo
 also generates `docs/ENVIRONMENT.md`/`docs/ENV-OWNERSHIP.md` as a separate step (the scaffolded default is `ENV-OWNERSHIP.md` so it never collides with a sibling package's ownership report).
 
-| Input               | Default               | Purpose                                                                                               |
-| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
-| `args`              | _(required)_          | Arguments passed to `env-cap --json`, such as `--location`, `--evidence`, and strict validation flags |
-| `working-directory` | `.`                   | Directory where `env-cap` executes                                                                    |
-| `version`           | _(latest)_            | Version to execute through `npx` when `env-cap` is not installed locally                              |
-| `comment`           | `true`                | Creates or updates a sticky pull request summary comment                                              |
-| `annotations`       | `true`                | Emits GitHub workflow annotations for detected issues                                                 |
-| `rotation-alert`    | `true`                | Enables scheduled expiration reporting outside pull requests                                          |
-| `report-key`        | _(working-directory)_ | Identifies this report when multiple workflows run against the same pull request                      |
-| `github-token`      | `${{ github.token }}` | Token used for the `gh` CLI calls that post/update PR comments and rotation-alert issues              |
+| Input               | Default                 | Purpose                                                                                                                                                  |
+| ------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `args`              | _(required)_            | Arguments passed to `env-cap --json`, such as `--location`, `--evidence`, and strict validation flags                                                    |
+| `working-directory` | `.`                     | Directory where `env-cap` executes                                                                                                                       |
+| `version`           | _(none; required then)_ | Version to execute through `npx` when `env-cap` is not a local devDependency; the action refuses to run without one (pin a version rather than `latest`) |
+| `comment`           | `true`                  | Creates or updates a sticky pull request summary comment                                                                                                 |
+| `annotations`       | `true`                  | Emits GitHub workflow annotations for detected issues                                                                                                    |
+| `rotation-alert`    | `true`                  | Enables scheduled expiration reporting outside pull requests                                                                                             |
+| `report-key`        | _(working-directory)_   | Identifies this report when multiple workflows run against the same pull request                                                                         |
+| `github-token`      | `${{ github.token }}`   | Token used for the `gh` CLI calls that post/update PR comments and rotation-alert issues                                                                 |
 
 The Action does not create its own policy layer. Pass/fail behavior always follows the CLI exit code and whatever `--strict`/`--strict-docs`/`--strict-ownership` combination this invocation's own `args` input passes (ADR 0044 — see [Troubleshooting](#troubleshooting)). A finding family with no matching `--strict*` flag never fails the run on its own; read it from `--evidence`'s output and gate on it in your own workflow step if you want that enforced.
 
@@ -1057,6 +1099,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - run: npm ci # the action runs the env-cap your project installs
 
       - uses: maverickcer/env-cap@v0
         with:

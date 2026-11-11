@@ -110,19 +110,19 @@ The important part is what the analysis can establish: `STRIPE_KEY` has an owner
 ### Evidence it works
 
 - **Real fixtures:** the output above comes from a runnable example that is also a regression test, and two more stages (a [team service](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service) and an [enterprise platform](https://github.com/MaverickCER/env-cap/tree/main/examples/enterprise-platform)) show the model at scale.
-- **Enforced in CI:** coverage is a ratchet that may only move up, mutation score is a gate ([CODE_REVIEW.md](CODE_REVIEW.md)), and the README's own demo is re-run and compared on every change.
-- **Runtime-tested:** the runtime and helpers are verified against real Node, Bun, and Deno in CI, not assumed isomorphic.
+- **Enforced in CI:** coverage thresholds are fixed floors (90% branches, 100% functions, 95% lines and statements) that are only ever raised, mutation score is a gate ([CODE_REVIEW.md](CODE_REVIEW.md)), and the README's own demo is re-run and compared on every change.
+- **Runtime-tested:** the runtime, helpers and evidence entry points are executed under real Node, Bun and Deno engines in CI (`test/cross-runtime/`), not assumed isomorphic; the build entry and CLI are Node-only.
 - **Hard size budget:** the runtime entry point stays under 3 KB gzip and the helpers under 4 KB, enforced before publish ([ADR 0008](specs/decisions/0008-gzip-size-budget.md)).
 - **Verifiable release:** published with npm OIDC provenance and no long-lived token ([SECURITY.md](SECURITY.md#supply-chain-posture)).
 
 ## Install and verify
 
-**Prerequisites:** Node.js `>=22`. TypeScript 5, 6, or 7 is needed only for the build-time generator (the runtime works in plain JavaScript); the [runtime and TypeScript requirements](GUIDE.md#runtime-support-matrix) are in the Guide.
+**Prerequisites:** Node.js `>=22`. Your own TypeScript is optional: the build-time generator parses with it when it is version 5 or 6, and otherwise with the TypeScript 6 compiler `env-cap` installs as its one dependency (the runtime works in plain JavaScript); the [runtime and TypeScript requirements](GUIDE.md#runtime-support-matrix) are in the Guide.
 
 ```sh
 npm install @maverickcer/env-cap
 npx env-cap init                  # scaffolds env.schema.ts and scripts/generate-env.mjs
-npm install --save-dev typescript # the generator parses your schema with it
+npm install --save-dev typescript # optional: used instead of env-cap's TypeScript 6 when it is 5 or 6
 node scripts/generate-env.mjs
 ```
 
@@ -154,20 +154,20 @@ The smallest contract is one `createEnv` call with a validator per variable ([Co
 
 **How it works:** the runtime and the build tooling are separate on purpose. Runtime validation needs no dependencies and no filesystem; the build pass analyzes your source and runs only in development and CI ([Architecture](specs/architecture.md)).
 
-**Integration:** it works beside the validator and secret manager you already use, so nothing is replaced. **Runtimes:** Node.js 22+, browser bundles, edge runtimes, Bun, and Deno for the runtime; the build entry is Node-only ([support matrix](GUIDE.md#runtime-support-matrix)). **Configuration and extension:** plug any `Validator<T>` or `Processor<T>` function into a contract, share contracts from a reusable package, and resolve TypeScript path aliases ([Guide](GUIDE.md)).
+**Integration:** it works beside the validator and secret manager you already use, so nothing is replaced. **Runtimes:** Node.js 22+, browser bundles, edge runtimes, Bun, and Deno for the runtime; the build entry is Node-only ([support matrix](GUIDE.md#runtime-support-matrix)). **Configuration and extension:** plug any `Validator<T>` or `Processor<T>` function into a contract, share contracts from a reusable package, and resolve TypeScript path aliases ([Guide](GUIDE.md)). **Package managers:** npm is supported; pnpm, Yarn 1 and Yarn Berry (node-modules linker) are tested for install and import of every entry point only ([details](GUIDE.md#package-managers)).
 
 ## Limits and when not to use it
 
 - **Skip it when** the application is small, one team owns every configuration decision, there are only a few stable variables, ownership is already obvious, or you do not need project-wide evidence about usage. A validation library or `dotenv` may be all you need.
 - **Trade-offs:** it adds a build step and a declaration per variable, and its reports are only as accurate as those declarations. It cannot see variables read from outside the code it analyzes.
-- **Install weight:** the build entry bundles a TypeScript 6 compiler (about 24 MB unpacked) used only in development and CI; the runtime never reaches it, which CI verifies ([Adoption guide](ADOPTION.md#bundle-size-and-performance)).
+- **Install weight:** the package's one dependency is a TypeScript 6 compiler, bundled inside the tarball (about 5 MB packed, 24 MB unpacked), that only the build entry uses, in development and CI; the runtime never reaches it, which CI verifies ([Adoption guide](ADOPTION.md#bundle-size-and-performance)).
 - **Automation:** agents and bots can consume the same manifests and evidence, but a structured finding does not guarantee a correct fix; the automation owns its retry and validation loop. See the [AI integration prompt](PROMPT.md).
 
 ## Security and supply chain
 
 - **Guarantees:** the runtime never persists, retrieves, rotates, or logs secrets, and contracts redact themselves when logged or serialized ([runtime security model](SECURITY.md#runtime-security-model)).
 - **Trust boundaries:** the build tool parses schema files as ASTs and never imports or executes them, but it does not sandbox the rest of your build, and a validator you write can still log ([build-time model](SECURITY.md#build-time-security-model), [your responsibilities](SECURITY.md#application-responsibilities)).
-- **Dependencies and licence:** zero runtime dependencies in the runtime and helpers entry points; the build entry bundles one compiler. MIT licensed.
+- **Dependencies and licence:** the runtime and helpers entry points import nothing. Everything installing the package adds is listed, with the reason for each, in the [Adoption guide](ADOPTION.md#security--threat-model), generated from `package.json`. MIT licensed.
 - **Release integrity:** npm OIDC trusted publishing with provenance ([supply-chain posture](SECURITY.md#supply-chain-posture)). Report a vulnerability through [SECURITY.md](SECURITY.md#reporting-a-vulnerability).
 
 ## Maturity, versioning and support

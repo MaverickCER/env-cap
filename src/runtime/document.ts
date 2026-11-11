@@ -56,7 +56,7 @@ export interface VariableDocs {
   refreshInstructions?: string
   /**
    * The kind of authenticator/secret this variable holds (e.g. "api-key", "oauth-client-secret",
-   * "database-password", "tls-certificate") -- feeds the NIST SP 800-53 IA-5 rotation-compliance
+   * "database-password", "tls-certificate") -- feeds the NIST SP 800-53 IA-5 rotation-status
    * report's "authenticator type" column (IA-5's main statement requires an organization-defined
    * rotation period "by authenticator type," so this is what a generator groups/labels by).
    *
@@ -72,7 +72,10 @@ export interface VariableDocs {
    * type (the time-based half of IA-5's two-trigger rotation model). Paired with
    * {@link lastRotatedAt} so a generator can compute whether rotation is actually current, rather
    * than only recording that a period was declared; see `lifecycle-model.ts`'s
-   * `computeRotationStatus()` for exactly how the two combine with {@link expiresAt}.
+   * `computeRotationStatus()` for exactly how the two combine with {@link expiresAt}. What comes
+   * out is a policy-window judgement over declared metadata ("within the declared period"), never
+   * a statement that a rotation happened or that a control is met: env-cap reads declarations, it
+   * does not check them against the secret store.
    */
   rotationPeriod?: string
   /**
@@ -90,7 +93,7 @@ export interface VariableDocs {
    * rather than replacing it: this is a list a generator can render as its own column,
    * `refreshInstructions` stays prose ("how to actually rotate it"). Presence-only -- env-cap has
    * no way to observe whether a listed event actually occurred, so declaring this never by itself
-   * changes a computed rotation-compliance status (see `lifecycle-model.ts`); it only makes the
+   * changes a computed rotation status (see `lifecycle-model.ts`); it only makes the
    * event-based trigger's existence visible in generated output.
    */
   rotationTriggerEvents?: readonly string[]

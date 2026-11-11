@@ -8,7 +8,7 @@
 
 _Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-11-02T20:26:54.917Z_
+_Generated 2026-11-11T08:02:55.326Z_
 
 ## Changes since last report
 
@@ -87,7 +87,7 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`WEBHOOK_URL`](#audit-log-webhook_url) | team-security | 2026-04-01 (**expired 215d ago**) | -- |
+| [`WEBHOOK_URL`](#audit-log-webhook_url) | team-security | 2026-04-01 (**expired 224d ago**) | -- |
 | [`WEBHOOK_URL`](#notifications-webhook_url) | team-notifications | -- | -- |
 
 ## Security review

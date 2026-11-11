@@ -21,8 +21,8 @@ assumes the concepts the previous one already covered:
    evidence document built with `defineEvidenceProjection()` — showing what `env-cap` deliberately
    doesn't own (a database, auth, external services) alongside what it does.
 
-Every flagship's own README documents exactly how to run it. All three are validated in CI (see
-`.github/workflows/ci.yml`'s `examples` job and
+Every flagship's own README documents exactly how to run it. All three are validated in CI by the `examples` job, which the
+`required` status check makes a merge condition (see `.github/workflows/ci.yml` and
 [`test/examples/`](https://github.com/MaverickCER/env-cap/tree/main/test/examples)) against the real,
 currently-built `env-cap` package, so they stay in sync with the API rather than
 drifting silently.

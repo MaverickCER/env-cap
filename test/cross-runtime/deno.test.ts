@@ -29,6 +29,8 @@ import {
   resetEnvCache,
   validateEnv,
 } from "../../dist/index.js"
+import { processors, validators } from "../../dist/helpers.js"
+import { defineEvidenceProjection } from "../../dist/evidence.js"
 
 function assertEqual<T>(actual: T, expected: T, message: string): void {
   if (actual !== expected)
@@ -101,4 +103,26 @@ Deno.test("contract self-redacts on String() -- ADR 0006 holds under Deno too", 
     throw new Error("contract leaked its secret value via String()")
   if (!stringified.includes("deno-redaction"))
     throw new Error("contract's redacted form should still name the contract")
+})
+
+Deno.test("helpers run under Deno: a processor converts and a validator rejects", () => {
+  assertEqual(processors.toNumber()("8080"), 8080, "toNumber")
+  assertEqual(processors.toBoolean()("true"), true, "toBoolean")
+  assertEqual(validators.range(1, 65535)(1024, {}), true, "range accepts 1024")
+  assertEqual(
+    typeof validators.range(1, 65535)(70000, {}),
+    "string",
+    "range rejects 70000 with a message",
+  )
+})
+
+Deno.test("evidence runs under Deno: a projection computes and records what it read", () => {
+  const projection = defineEvidenceProjection({
+    count: (evidence: { finding: { findings: unknown[] } }) => evidence.finding.findings.length,
+  })
+  // deno-lint-ignore no-explicit-any
+  const result = projection.project({ schemaVersion: 1, finding: { findings: [] } } as any)
+  assertEqual(result.value.count, 0, "count")
+  if (!result.sources.count.includes("finding.findings"))
+    throw new Error("sources should name finding.findings")
 })

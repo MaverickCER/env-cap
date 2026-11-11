@@ -1,6 +1,6 @@
 /**
  * Optional convenience helpers for common processor/validator patterns.
- * Entirely separate from the core runtime -- `defineEnv`/`validateEnv` have
+ * Entirely separate from the core runtime -- `createEnv`/`validateEnv` have
  * no knowledge of this module and work identically without it.
  *
  * Usage: `processors.toNumber()`, `validators.range(1, 65535)`.

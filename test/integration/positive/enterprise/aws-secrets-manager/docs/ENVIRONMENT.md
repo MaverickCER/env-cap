@@ -8,7 +8,7 @@
 
 _Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-11-02T20:27:04.661Z_
+_Generated 2026-11-11T08:02:56.571Z_
 
 ## Changes since last report
 
@@ -85,8 +85,8 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-02-01 (**expired 274d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
-| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-01-01 (**expired 305d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
+| [`DATABASE_PASSWORD`](#aws-secrets-manager-example-database_password) | platform-team | 2026-02-01 (**expired 283d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/database/password); no manual redeploy needed once rotation is enabled. |
+| [`STRIPE_SECRET_KEY`](#aws-secrets-manager-example-stripe_secret_key) | platform-team | 2026-01-01 (**expired 314d ago**) | Rotate the secret in AWS Secrets Manager (secret: prod/stripe/secret-key); no manual redeploy needed once rotation is enabled. |
 
 ## Security review
 

@@ -5,13 +5,19 @@
 ```bash
 git clone https://github.com/maverickcer/env-cap.git
 cd env-cap
-npm install
+npm run setup   # install, build, regenerate the schema, and install the git hooks
 ```
 
-There is one local pre-flight gate that mirrors CI exactly:
+`npm run setup` installs the shared git hooks (`internal-package-contract install-hooks`):
+pre-commit runs the contract for the checks a change can reach, pre-push runs it without the
+slow analyses, and commit-msg checks the Conventional Commit format. CI is still the gate;
+the hooks are the same gate, earlier.
+
+There is one local pre-flight script that runs what CI's `verify` and `lint` jobs run (the
+`contract` job runs `npm run contract` on top of it):
 
 ```bash
-npm run verify   # typecheck && build && test && size
+npm run verify   # typecheck, lint, format, build, schema, coverage, size, ambient, isolation, API-report and README-example checks
 ```
 
 Run it before opening a pull request. Individual steps are also available on
@@ -40,9 +46,9 @@ npm run examples:update-golden
    check whether it's breaking, additive, or a fix — this determines the
    changeset bump type in step 4.
 3. Add or update tests. `npm run test:coverage` must not drop coverage below
-   the thresholds in `vitest.config.ts` — the policy is ratchet-up-only:
-   thresholds are raised when coverage improves, never lowered to
-   accommodate a drop.
+   the thresholds in `vitest.config.ts`. They are fixed floors, raised in
+   review when coverage improves and never lowered to accommodate a drop;
+   nothing raises them automatically.
 4. Run `npx changeset` and describe your change from the consumer's
    perspective (not "what I changed in the code", but "what changes for
    someone who installs this package"). Pick `patch`/`minor`/`major`
@@ -51,7 +57,8 @@ npm run examples:update-golden
    `major`, even if it's breaking, since Experimental surfaces are explicitly
    exempted from the stability guarantee until they're promoted to stable.
 5. Open a pull request. CI runs `npm run verify`, `npm run lint`, coverage
-   thresholds, and the Bun/Deno cross-runtime conformance suite.
+   thresholds, the Bun/Deno cross-runtime conformance suite, the examples and the
+   package-manager smoke; the `required` check waits for all of them.
 
 ## Adding an Architecture Decision Record (ADR)
 

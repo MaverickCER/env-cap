@@ -72,7 +72,7 @@
     "items": [
       {
         "claim": "The runtime has no dependencies and no filesystem access.",
-        "scope": "True of the runtime entry points, which are held to a size budget in CI. The build entry is separate: it bundles a TypeScript 6 compiler (about 24 MB unpacked), runs only in development and CI, and a build step fails if a runtime entry can reach it.",
+        "scope": "True of the runtime entry points, which are held to a size budget in CI. The build entry is separate: it uses the TypeScript 6 compiler the package depends on (about 24 MB unpacked), runs only in development and CI, and a build step fails if a runtime entry can reach it.",
         "linkLabel": "Read the adoption guide",
         "url": "https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md"
       },
@@ -143,7 +143,7 @@
     "whatCouldGoWrong": [
       "Its reports are only as accurate as the declarations a team writes, and it cannot see settings read from outside the code it scans.",
       "Security fixes target the latest 0.x release only, and there is no backport branch before 1.0.",
-      "The install includes a bundled compiler, about 24 MB unpacked, used only for the build-time reports."
+      "The install includes a TypeScript 6 compiler, about 24 MB unpacked, used only for the build-time reports."
     ],
     "whatWeAsk": "Agree that one application trials it for a few weeks, then judge from its ownership report whether to spread it."
   },
@@ -166,7 +166,7 @@
       },
       {
         "title": "Security model",
-        "description": "Zero runtime dependencies, self-redacting contracts, and what stays an application responsibility.",
+        "description": "A runtime that imports nothing, self-redacting contracts, and what stays an application responsibility.",
         "label": "Read the security model",
         "url": "https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
       },

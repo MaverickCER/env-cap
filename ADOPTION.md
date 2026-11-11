@@ -28,11 +28,25 @@ Full detail: [`SECURITY.md`](SECURITY.md). The summary a security reviewer
 needs:
 
 - **The runtime has no dependencies.** The runtime entry points (`.` and `./helpers`) import
-  nothing, so nothing is added to your application's production bundle. `package.json` has one
-  `dependencies` entry: a bundled TypeScript 6 compiler (about 5 MB to download, about 24 MB unpacked in your
-  `node_modules`), used only by the build entry so that TypeScript 7 projects can run the scanner
+  nothing, so nothing is added to your application's production bundle. What installing the package
+  adds is generated from `package.json` below; the TypeScript 6 compiler in it is used only by the
+  build entry, so that TypeScript 7 projects can run the scanner
   ([ADR 0049](specs/decisions/0049-typescript-7-scanner-uses-a-bundled-typescript-6.md)).
   `internal-package-contract tool compiler-isolation` fails the build if any runtime entry can reach it.
+
+<!-- ipc:begin dependencies -->
+
+Installing `@maverickcer/env-cap` installs 1 package directly, and whatever it depends on. It names 3 optional peers, which you install yourself when you use the part that needs them.
+
+| Package                    | Kind          | Range                              | Why                                                                                                                                                                                                                                                 |
+| -------------------------- | ------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@typescript/typescript6`  | dependency    | `^6.0.2`                           | The TypeScript 6 compiler the build entry parses schemas with when the project's own TypeScript is 7 or missing (ADR 0049). Bundled inside the tarball, about 5 MB packed and 24 MB unpacked; no runtime entry can reach it (`compiler-isolation`). |
+| `@typescript-eslint/utils` | optional peer | `^8.0.0`                           | Only for `@maverickcer/env-cap/eslint-plugin`; projects linting TypeScript already have it through `typescript-eslint`.                                                                                                                             |
+| `eslint`                   | optional peer | `^8.57.0 \|\| ^9.0.0 \|\| ^10.0.0` | Only for `@maverickcer/env-cap/eslint-plugin`, which runs inside the project's own ESLint.                                                                                                                                                          |
+| `typescript`               | optional peer | `^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0`   | The project's own compiler, used by the build entry instead of `@typescript/typescript6` when it is version 5 or 6.                                                                                                                                 |
+
+<!-- ipc:end dependencies -->
+
 - **The runtime never persists, retrieves, rotates, or logs secrets**, and
   never inserts raw or processed values into a thrown error — only variable
   names, contract names, and the _developer's own_ validator/processor

@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed / **Experimental** (see [`VERSIONING.md`](../../VERSIONING.md)).
+Accepted. Stable since [ADR 0045](0045-promote-experimental-surfaces-to-stable.md) (see [`VERSIONING.md`](../../VERSIONING.md)).
 Implemented in:
 
 - `src/build/resolve-package-schema.ts`
@@ -10,6 +10,9 @@ Implemented in:
 - `src/build/link.ts` (`DiscoveredContract.packageOrigin`)
 - `src/build/dependency-graph.ts`
 - `src/build/manifest.ts`
+
+The tier statements in the body below describe the decision as it was taken; ADR 0045 has since
+promoted these surfaces to Stable, and `VERSIONING.md` is the current policy.
 
 The `packages` option, the `PackageOrigin` type it attaches to discovered
 contracts, and the `"envCap": { "schema": "<path>" }` package.json convention

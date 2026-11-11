@@ -61,8 +61,11 @@ major version bump (once the package reaches 1.0 -- see
   compiler API, which TypeScript 7 does not ship, so it uses the consumer's `typescript` when that has
   the API and otherwise the bundled `@typescript/typescript6` dependency -- no configuration, and `tsc`
   stays TypeScript 7 ([ADR 0049](specs/decisions/0049-typescript-7-scanner-uses-a-bundled-typescript-6.md)).
-  Under TypeScript 7 the `./build` and `./evidence` declarations need `skipLibCheck`; the runtime,
-  helpers and node entry points type-check strictly.
+  Every entry point but `./eslint-plugin` (typed through its `@typescript-eslint/utils` peer) type-checks
+  with full library checking under TypeScript 5, 6 and 7: a 7 root is
+  served declarations (`types@>=7` export conditions) whose compiler-API types come from the bundled
+  TypeScript 6, since TypeScript 7's package ships none; 5 and 6 are served declarations typed from
+  the project's own `typescript`.
 
 All promoted from Experimental per [ADR 0045](specs/decisions/0045-promote-experimental-surfaces-to-stable.md)
 -- see that ADR for why each one had already cleared this tier's own
@@ -88,8 +91,8 @@ enough to warrant it will be added here, explicitly, with its own ADR.
 
 Never covered by semver, may change at any time without notice:
 
-- Internal modules and functions not re-exported from `.`, `./build`, or
-  `./helpers`.
+- Internal modules and functions not re-exported from an entry point in
+  `package.json`'s `exports`.
 - Parsing/AST-traversal implementation details (e.g. exactly how
   `src/build/parse.ts` walks a source file).
 - The dependency-ownership engine's internals (`scan-dependencies.ts`,

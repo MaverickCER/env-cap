@@ -42,5 +42,21 @@
       "tier": "Stable",
       "purpose": "The published JSON Schema for `env-cap --json` output (`env-cap-report.schema.json`), plus the model schemas under `./schema/*`"
     }
-  }
+  },
+  "dependencies": {
+    "@typescript/typescript6": "The TypeScript 6 compiler the build entry parses schemas with when the project's own TypeScript is 7 or missing (ADR 0049). Bundled inside the tarball, about 5 MB packed and 24 MB unpacked; no runtime entry can reach it (`compiler-isolation`).",
+    "typescript": "The project's own compiler, used by the build entry instead of `@typescript/typescript6` when it is version 5 or 6.",
+    "eslint": "Only for `@maverickcer/env-cap/eslint-plugin`, which runs inside the project's own ESLint.",
+    "@typescript-eslint/utils": "Only for `@maverickcer/env-cap/eslint-plugin`; projects linting TypeScript already have it through `typescript-eslint`."
+  },
+  "standards": [
+    {
+      "document": "Findings",
+      "standard": "OASIS SARIF 2.1.0",
+      "producedBy": "`buildSarifLog` (`@maverickcer/env-cap/build`), over the Finding Model",
+      "checkedAgainst": "The official OASIS schema (`test/fixtures/standards/`, a managed copy)",
+      "test": "test/build/sarif.test.ts",
+      "limits": "A library export, not wired to the CLI. A finding carries a region only when it has a real position. A finding with a position points at the cited file (percent-encoded path); the rest carry a file but no line."
+    }
+  ]
 }
