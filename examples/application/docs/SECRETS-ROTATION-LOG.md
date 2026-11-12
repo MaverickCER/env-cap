@@ -4,7 +4,7 @@ Internal secrets-rotation record for NIST SP 800-53 Rev. 5 **IA-5** (Authenticat
 
 > **Not NIST certification or ATO evidence.** This is an internal engineering artifact for tracking secrets-rotation hygiene, not a compliance attestation, an authorization package exhibit, or a substitute for your organization's own IA-5 assessment procedures.
 
-Generated at: 2026-11-11T08:02:46.813Z
+Generated at: 2026-11-12T00:13:08.826Z
 
 | Variable | Authenticator type | Rotation period | Last rotated | Status | Time-based trigger | Event-based triggers declared |
 | --- | --- | --- | --- | --- | --- | --- |

@@ -19,23 +19,23 @@
         } catch (error) {}
       })()
     </script>
-    <title>env-cap — capability-owned environment contracts</title>
+    <title>env-cap: capability-owned environment contracts</title>
     <meta
       name="description"
-      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env — and sits next to your existing validation, not instead of it."
+      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env. It sits next to your existing validation, not instead of it."
     />
     <link rel="canonical" href="https://maverickcer.github.io/env-cap/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://maverickcer.github.io/env-cap/" />
-    <meta property="og:title" content="env-cap — capability-owned environment contracts" />
+    <meta property="og:title" content="env-cap: capability-owned environment contracts" />
     <meta
       property="og:description"
-      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env — and sits next to your existing validation, not instead of it."
+      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env. It sits next to your existing validation, not instead of it."
     />
-    <meta name="twitter:title" content="env-cap — capability-owned environment contracts" />
+    <meta name="twitter:title" content="env-cap: capability-owned environment contracts" />
     <meta
       name="twitter:description"
-      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env — and sits next to your existing validation, not instead of it."
+      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env. It sits next to your existing validation, not instead of it."
     />
     <meta property="og:image" content="https://maverickcer.github.io/env-cap/assets/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -91,9 +91,8 @@
             well-formed. Neither says who owns it, why it exists, or when it expires.
           </p>
           <p class="hero-support">
-            env-cap treats configuration as a capability-owned contract: each part of your code
-            declares the variables it owns, and a build step turns those declarations into a
-            project-wide ownership and lifecycle report.
+            Each part of your code declares the variables it owns. A build step turns those
+            declarations into an ownership and lifecycle report.
           </p>
           <p class="hero-outcome">
             Give every team a clear owner and expiry date for each environment variable, alongside
@@ -131,9 +130,9 @@ npx env-cap init</code></pre>
           <p class="section-eyebrow">Why it exists</p>
           <h2 id="why-heading">Secret managers and validators answer different questions.</h2>
           <p class="section-lede">
-            A secret manager decides where a value lives. A validator decides whether a value is
-            well-formed. Neither answers why a variable exists and which capability depends on it,
-            who owns it and who to page when it must rotate, or whether it is still needed.
+            A secret manager decides where a value lives. A validator decides whether it is
+            well-formed. Neither says why a variable exists, who owns it, or whether it is still
+            needed.
           </p>
           <div class="diagram">
             <p class="sr-only">
@@ -156,9 +155,8 @@ npx env-cap init</code></pre>
             </ol>
           </div>
           <p>
-            env-cap makes the answer part of the code: each capability declares the environment it
-            owns, and a build-time pass turns every declaration into a project-wide ownership and
-            lifecycle view.
+            env-cap puts the answer in the code. Each capability declares the variables it owns, and
+            a build step turns the declarations into one project-wide view.
           </p>
         </div>
       </section>
@@ -167,9 +165,9 @@ npx env-cap init</code></pre>
           <p class="section-eyebrow">How it works</p>
           <h2 id="how-heading">Runtime and build-time stay separate on purpose.</h2>
           <p class="section-lede">
-            Runtime receives only what the application requires: no dependencies and no filesystem
-            access. Build tooling creates the visibility needed to understand and maintain
-            dependencies, as an explicit development or CI step, never at startup.
+            The runtime has no filesystem access and imports no Node module. Build tooling creates
+            the visibility needed to maintain dependencies, as an explicit development or CI step,
+            never at startup.
           </p>
           <div class="diagram">
             <p class="sr-only">
@@ -202,33 +200,42 @@ npx env-cap init</code></pre>
       <section class="section" id="see-it" aria-labelledby="see-it-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">See it</p>
-          <h2 id="see-it-heading">Not a mockup: real output from this repository.</h2>
+          <h2 id="see-it-heading">Output from examples/application.</h2>
           <p class="section-lede">
-            Run against
+            In
             <a href="https://github.com/maverickcer/env-cap/tree/main/examples/application"
               >examples/application</a
+            >,
+            <code
+              >npx env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence
+              docs/env.evidence.json</code
             >
-            in this repo:
+            prints the first lines. <code>npx tsx scripts/generate-docs/run.ts</code> prints the
+            rest.
           </p>
           <div class="code-block">
             <div class="code-block-header">
-              <span class="code-block-filename">npx env-cap --location ... --evidence ...</span
+              <span class="code-block-filename">npm run docs:reports</span
               ><button class="copy-button" type="button" data-copy-target="demo-output">
                 Copy
               </button>
             </div>
-            <pre tabindex="0"><code id="demo-output">Wrote manifest: src/generated/env.manifest.ts
+            <pre
+              tabindex="0"
+            ><code id="demo-output">$ npx env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json
+Wrote manifest: src/generated/env.manifest.ts
 Discovered 1 contract(s).
 Wrote evidence: docs/env.evidence.json
 
+$ npx tsx scripts/generate-docs/run.ts
 [generate-docs] wrote docs/ENVIRONMENT.md (1 contract(s)), .env.example, and docs/OWNERSHIP.md (0 abandoned, 2 unconsumed owned variable(s)).
 
 1 variable(s)/contract(s) expiring soon or already expired:
-- STRIPE_KEY in env: 2026-09-01 (expired Nd ago)
+  - STRIPE_KEY in env: 2026-09-01 (expired Nd ago)
 
 2 unconsumed owned variable(s):
-- DATABASE_URL in app
-- STRIPE_KEY in app</code></pre>
+  - DATABASE_URL in app
+  - STRIPE_KEY in app</code></pre>
           </div>
           <p class="source-note">
             Source:
@@ -237,30 +244,28 @@ Wrote evidence: docs/env.evidence.json
             >
           </p>
           <p>
-            Not &quot;CI failed&quot;: a rotation deadline that already passed, and two variables a
-            capability declares owning but nothing in the codebase reads. Both are real, provable
-            facts about this fixture. N is the number of days since 2026-09-01, counted from the day
-            you run it.
+            An expiry date that has passed, and two variables a contract declares but nothing reads.
+            The first comes from a declaration; the second is computed from the syntax tree. N is
+            the number of days since 2026-09-01, counted on the day you run it.
           </p>
         </div>
       </section>
       <section class="section section--muted" id="guarantees" aria-labelledby="guarantees-heading">
         <div class="container">
-          <p class="section-eyebrow">Guarantees</p>
-          <h2 id="guarantees-heading">What is guaranteed, and where it stops.</h2>
+          <p class="section-eyebrow">Enforced</p>
+          <h2 id="guarantees-heading">What is enforced, and where it stops.</h2>
           <p class="section-lede">
-            Each claim states its scope and links to the document that defines it, so you can check
-            the boundary before you rely on it.
+            Each claim names what enforces it and where it stops, and links to the document that
+            defines it.
           </p>
           <div class="adoption-grid">
             <div class="adoption-card guarantee">
               <span class="adoption-card-title"
-                >The runtime has no dependencies and no filesystem access.</span
+                >The runtime has no filesystem access and imports no Node module.</span
               ><span class="adoption-card-desc"
-                ><strong>Scope:</strong> True of the runtime entry points, which are held to a size
-                budget in CI. The build entry is separate: it uses the TypeScript 6 compiler the
-                package depends on (about 24 MB unpacked), runs only in development and CI, and a
-                build step fails if a runtime entry can reach it.</span
+                ><strong>Scope:</strong> Lint and a tarball scan enforce the first; a browser-bundle
+                test the second. The build entry loads a bundled TypeScript 6 compiler, and a build
+                step fails if a runtime entry can reach it.</span
               ><a
                 class="external-link-note"
                 href="https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md"
@@ -271,10 +276,10 @@ Wrote evidence: docs/env.evidence.json
               <span class="adoption-card-title"
                 >The build tool never executes your schema files.</span
               ><span class="adoption-card-desc"
-                ><strong>Scope:</strong> Schema files are parsed as TypeScript ASTs and never
-                imported or evaluated; only literal values are resolved, and anything dynamic is
-                reported as unresolved. It does not sandbox the rest of your build or your own
-                code.</span
+                ><strong>Scope:</strong> Schema files are parsed as TypeScript syntax trees, never
+                imported or evaluated, and a test proves a throwing statement never runs. Only
+                literal values are resolved; anything dynamic is reported as unresolved. It does not
+                sandbox the rest of your build.</span
               ><a
                 class="external-link-note"
                 href="https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
@@ -283,12 +288,12 @@ Wrote evidence: docs/env.evidence.json
             </div>
             <div class="adoption-card guarantee">
               <span class="adoption-card-title"
-                >The runtime never persists, retrieves, rotates or logs secrets.</span
+                >The runtime never stores, fetches or rotates secrets, and keeps values out of its
+                errors.</span
               ><span class="adoption-card-desc"
-                ><strong>Scope:</strong> Values live in memory and contracts redact themselves when
-                logged or serialized. Storing, rotating and auditing secrets stay your
-                infrastructure&#39;s job, and it cannot stop a validator you write from
-                logging.</span
+                ><strong>Scope:</strong> No code for storing or fetching secrets exists; that is a
+                statement about the source, not a check. A message your own validator builds from
+                the value is passed through. Spreading a contract reads every value.</span
               ><a
                 class="external-link-note"
                 href="https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
@@ -300,13 +305,13 @@ Wrote evidence: docs/env.evidence.json
       </section>
       <section class="section" id="why-not-ci" aria-labelledby="why-not-ci-heading">
         <div class="container">
-          <p class="section-eyebrow">Why not just dotenv, Zod, envalid, or t3-env?</p>
+          <p class="section-eyebrow">Why not dotenv, Zod, envalid or t3-env?</p>
           <h2 id="why-not-ci-heading">You keep all of them.</h2>
           <p class="section-lede">
-            env-cap doesn&#39;t replace your loader or your validator. It adds the layer none of
-            them cover. Plug an existing <code>Validator&lt;T&gt;</code> or
-            <code>Processor&lt;T&gt;</code> function straight into a contract, or use env-cap&#39;s
-            lightweight helpers when a validation library is more than the variable needs.
+            env-cap does not replace your loader or your validator. It adds the layer none of them
+            cover. Plug an existing <code>Validator&lt;T&gt;</code> or
+            <code>Processor&lt;T&gt;</code> function into a contract, or use env-cap&#39;s helpers
+            when a validation library is more than a variable needs.
           </p>
           <div class="table-scroll">
             <table class="comparison-table">
@@ -400,9 +405,9 @@ Wrote evidence: docs/env.evidence.json
           <p class="section-eyebrow">Go deeper</p>
           <h2 id="proof-heading">Read past the pitch.</h2>
           <p class="section-lede">
-            The output above comes from a real fixture in this repository, not a mockup. These are
-            the documents behind it: the full workflow, the architecture invariants, the security
-            model, and the generated API surface.
+            The output above comes from a real example in this repository. These are the documents
+            behind it: the workflow, the architecture, the security model, and the generated API
+            surface.
           </p>
           <div class="adoption-grid">
             <a
@@ -410,43 +415,44 @@ Wrote evidence: docs/env.evidence.json
               href="https://github.com/maverickcer/env-cap/blob/main/GUIDE.md"
               ><span class="adoption-card-title">Guide</span
               ><span class="adoption-card-desc"
-                >The full generate/validate workflow, validation contexts, reusable packages, and
-                the CLI.</span
+                >One story per entry point: the runtime, helpers, the build step, the CLI and
+                Action, evidence, and the ESLint plugin.</span
               ><span class="external-link-note">Read the Guide ↗</span></a
             ><a
               class="adoption-card"
               href="https://github.com/maverickcer/env-cap/blob/main/specs/architecture.md"
               ><span class="adoption-card-title">Architecture</span
               ><span class="adoption-card-desc"
-                >The core invariants — runtime/build-time separation, self-redacting contracts, and
-                why the build tool never acquires a filesystem capability itself.</span
+                >The core invariants: runtime and build-time separation, self-redacting contracts,
+                and why the build tool never acquires a filesystem itself.</span
               ><span class="external-link-note">Read architecture.md ↗</span></a
             ><a
               class="adoption-card"
               href="https://github.com/maverickcer/env-cap/blob/main/SECURITY.md"
               ><span class="adoption-card-title">Security model</span
               ><span class="adoption-card-desc"
-                >A runtime that imports nothing, self-redacting contracts, and what stays an
-                application responsibility.</span
+                >A runtime with no filesystem access, self-redacting contracts, what enforces each
+                rule, and what stays your responsibility.</span
               ><span class="external-link-note">Read the security model ↗</span></a
             ><a
               class="adoption-card"
               href="https://github.com/maverickcer/env-cap/blob/main/ADOPTION.md"
               ><span class="adoption-card-title">Adoption guide</span
               ><span class="adoption-card-desc"
-                >A decision-maker summary: security posture, bundle size, and versioning/LTS
-                stance.</span
+                >The decision document: what adopting costs, what it needs, and what it refuses to
+                do.</span
               ><span class="external-link-note">Read ADOPTION.md ↗</span></a
             ><a class="adoption-card" href="api/"
               ><span class="adoption-card-title">API reference</span
               ><span class="adoption-card-desc"
-                >Every exported symbol, generated from source so it cannot drift.</span
+                >Every exported symbol, generated from source and checked against the committed
+                report on every change.</span
               ><span class="external-link-note">Read the API reference ↗</span></a
             ><a class="adoption-card" href="benchmarks/"
               ><span class="adoption-card-title">Benchmarks</span
               ><span class="adoption-card-desc"
-                >Runtime and build-time cost as project size scales, measured on every PR and
-                charted over time.</span
+                >Runtime and build-time cost as project size grows, measured on pull requests from
+                this repository and charted over time.</span
               ><span class="external-link-note">See the benchmarks ↗</span></a
             >
           </div>
@@ -460,11 +466,10 @@ Wrote evidence: docs/env.evidence.json
             Read the README for a first contract, or run an example to see the report it produces.
           </p>
           <p class="maturity">
-            env-cap is pre-1.0. Per
-            <a href="https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md"
+            env-cap is pre-1.0. Before 1.0, a minor release may break the Stable tier (<a
+              href="https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md"
               >VERSIONING.md</a
-            >, a minor release may still include a breaking change to the Stable tier before 1.0, so
-            pin accordingly and read the changelog on every minor upgrade.
+            >). Pin a version and read the changelog on every minor.
           </p>
           <div class="hero-actions">
             <a class="button button--primary" href="https://github.com/maverickcer/env-cap#readme"

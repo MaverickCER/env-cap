@@ -80,7 +80,7 @@ export interface VariableDocs {
   rotationPeriod?: string
   /**
    * ISO date string -- the last time this variable's value was actually rotated. Paired with
-   * {@link rotationPeriod} to compute rotation compliance. Independent of {@link expiresAt}, which
+   * {@link rotationPeriod} to compute whether rotation is within the declared period. Independent of {@link expiresAt}, which
    * states when the *current* value stops being valid, not when it was last changed -- a value can
    * be freshly rotated and still have a near-term `expiresAt` (a short-lived token), or long overdue
    * for rotation while its `expiresAt` (if any) is still comfortably in the future.

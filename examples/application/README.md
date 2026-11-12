@@ -1,87 +1,53 @@
 # Application example
 
-*"How does this make my code better?"* -- the first of env-cap's three
-flagship examples (see [`../README.md`](../README.md)), aimed at an
-individual developer adopting env-cap in their own project.
+_"How does this make my code better?"_ This is the first of the flagship [examples](../README.md), for a developer adopting env-cap in their own project.
 
-Most teams don't start with a schema file per feature -- they start with one
-file, `env.ts` (or `config.ts`), that every part of the app imports from. This
-example shows that `env-cap` doesn't require you to give that up on day one:
-a single, centralized schema still gets fail-fast startup validation,
-generated documentation, a generated `.env.example`, and an ownership/blast-radius
-report -- the same benefits capability-owned adoption gets, just applied to
-one contract instead of many.
+Most applications start with one `env.ts` that every module imports. This example keeps that file. One central contract still gets startup validation, generated documentation, a generated `.env.example` and an ownership report.
 
 ```text
 src/
-  env.ts                   <- one centralized schema/contract for the whole app
-  generated/
-    env.manifest.ts        <- generated, do not edit
-  startup.ts                <- validateEnv() runs here, once
-  server.ts                 <- app code imports the one contract directly
+  env.ts                      one central contract for the whole app
+  startup.ts                  validateEnv() runs here, once
+  server.ts                   app code imports the contract directly
+  generated/env.manifest.ts   generated, do not edit
 scripts/
-  generate-manifest.mjs     <- build-time only, never imported by the app
-  generate-docs/
-    run.ts                   <- writes ENVIRONMENT.md/OWNERSHIP.md/.env.example (see its own README)
-    check.ts                  <- their --check counterpart
+  generate-docs/run.ts        writes ENVIRONMENT.md, OWNERSHIP.md and .env.example
+  generate-docs/check.ts      the drift check for those three files
+  rotation-log/run.ts         writes docs/SECRETS-ROTATION-LOG.md from the evidence file
 features/
-  database/env.schema.ts    <- reference only, unused: what this slice would
-  payments/env.schema.ts       look like split into its own contract later
+  database/env.schema.ts      reference only, commented out: the same schema split per feature
+  payments/env.schema.ts
 docs/
-  ENVIRONMENT.md            <- generated
-  OWNERSHIP.md              <- generated
-  env.evidence.json          <- generated, the full EvidenceModel (see ADR 0038)
-  env.evidence.json.fingerprint  <- generated, a content hash of what it was built from
+  ENVIRONMENT.md, OWNERSHIP.md, env.evidence.json (+ .fingerprint)   generated and committed
 ```
 
-The two files under `features/` are commented out and never discovered by
-`docs` (it only includes `src/env.ts`). They exist purely as a
-side-by-side reference for what splitting the schema apart, capability by
-capability, would look like -- see
-[`specs/migrations/from-centralized-schema.md`](../../specs/migrations/from-centralized-schema.md)
-for the migration path itself, and [`../team-service`](../team-service) for a
-working example of the fully split, multi-capability model.
+The two files under `features/` are never discovered; `npm run docs` includes only `src/env.ts`. They show what splitting the schema would look like. [`specs/migrations/from-centralized-schema.md`](../../specs/migrations/from-centralized-schema.md) covers that path, and [`../team-service`](../team-service) shows the result.
 
 ## Run it
 
-```bash
-npm install
-cp .env.example .env
-npm start
-```
+Build the repository root first ([examples/README.md](../README.md#before-you-run-one)). The committed `.env` holds placeholder values.
 
-`npm start` runs `docs:reports` (which chains `docs` -- writing
-`src/generated/env.manifest.ts` and `docs/env.evidence.json` (+ its
-`.fingerprint` sidecar) via the `env-cap` CLI, the only two outputs with a
-real runtime/evidence contract, per [ADR
-0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)
--- and then `scripts/generate-docs/run.ts`, writing `docs/ENVIRONMENT.md`,
-`docs/OWNERSHIP.md`, and `.env.example` directly from `@maverickcer/env-cap/build` -- see
-[that script's own README](scripts/generate-docs/README.md)) -- none of
-these are gitignored; all are committed on purpose so regenerating them
-shows up as an ordinary diff, the same way you'd review any other
-generated-but-tracked file -- and then boots `src/server.ts`, which
-validates the environment and prints the resolved config.
+| Step | Command                | Exit code | Line of output to look for                |
+| ---- | ---------------------- | --------- | ----------------------------------------- |
+| 1    | `npm install`          | `0`       | none                                      |
+| 2    | `npm start`            | `0`       | `Environment validated successfully.`     |
+| 3    | `npm run check`        | `0`       | `All generated artifacts are up to date.` |
+| 4    | `npm run docs:reports` | `0`       | `2 unconsumed owned variable(s):`         |
 
-`.env.example` here is regenerated and overwritten directly on every run
-(`onExisting: "overwrite"`) -- it's a live, always-current teaching artifact
-in this example, not something meant to be hand-merged. The default library
-behavior, if you don't pass `onExisting`, is the opposite: never touch an
-existing file, write a timestamped sibling instead. See the root README's
-CLI section for all three modes.
+`test/examples/application.test.ts` runs steps 2 and 3 in CI's `examples` job. Step 4 is the README demo, which `npm run verify:readme-example` compares with the root README.
 
-Try deleting `STRIPE_KEY` from `.env` and re-running `npm start` -- you'll get
-an aggregated `EnvValidationError` naming the failing variable and contract,
-not a stack trace from deep inside your app.
+The commands chain as follows:
 
-## Why this example uses one contract, not several
+1. `npm start` runs `docs:reports`, then boots `src/server.ts`. That validates the environment and prints the resolved configuration, such as `Payment provider: stripe`.
+2. `docs:reports` runs `npm run docs`, the CLI, which writes the manifest and `docs/env.evidence.json` ([ADR 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)). It then runs `scripts/generate-docs/run.ts` and `scripts/rotation-log/run.ts`.
+3. `npm run check` recomputes every generated file and compares it with the committed copy, without writing.
 
-`env-cap`'s architecture supports capability-owned contracts (see
-[`../team-service`](../team-service)), but that's an adoption target, not a
-requirement. A single `createEnv()` call -- like the
-one in `src/env.ts` here -- is a complete, valid, first-class use of the
-library on its own. If your team already has one `env.ts` and isn't ready to
-split it up, this is what keeping it looks like with `env-cap` layered on top:
-the same file still gets startup validation, generated docs, a generated
-`.env.example`, and an ownership report, before you've moved a single line of
-configuration.
+## Try a failure
+
+Delete `STRIPE_KEY` from `.env` and run `npm start` again. Expect a non-zero exit and an `EnvValidationError` that names `STRIPE_KEY` and its contract, without its value. CI does not run this step.
+
+`.env.example` is overwritten on every run here (`onExisting: "overwrite"`), so it always matches the schema. The library default is the opposite: it never replaces an existing file and writes a timestamped sibling instead. The [Guide's build section](../../GUIDE.md#platform-engineers-generating-artifacts) lists the modes.
+
+## Why one contract, not several
+
+Capability-owned contracts are an option, not a requirement. One `createEnv()` call, like `src/env.ts` here, is a complete use of the library. A team that is not ready to split its `env.ts` keeps it and still gets every generated report.

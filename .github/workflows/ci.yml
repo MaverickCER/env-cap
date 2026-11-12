@@ -533,7 +533,8 @@ jobs:
       # test/support/example-runner.ts.
       - run: npx vitest run test/integration/positive/ test/integration/negative/
 
-  # The one status check the ruleset requires for every job above that is not `contract` or `lint`.
+  # Aggregates every job above that is not `contract` or `lint`. It runs as the `required` job and
+  # blocks a merge once the ruleset lists `required` (today the ruleset lists only those two).
   # GitHub cannot name a matrix job (`verify (22.x)`) as a required context and counts a skipped or
   # cancelled job as passing, so this job runs `if: always()` and fails unless each job it needs
   # finished `success`. `benchmark-pr` may skip: it runs only on same-repo pull requests by design.

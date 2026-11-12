@@ -10,21 +10,19 @@
 [![Node](https://img.shields.io/node/v/%40maverickcer%2Fenv-cap)](https://www.npmjs.com/package/@maverickcer/env-cap)
 [![License](https://img.shields.io/npm/l/%40maverickcer%2Fenv-cap)](LICENSE)
 
-**Define who owns your environment variables, why they exist, and where they are used.**
+**Know who owns each environment variable, why it exists, and when it expires.**
 
-`env-cap` turns environment configuration into capability-owned contracts you can version, review, validate, document, and query. It keeps `dotenv`, Zod, envalid, t3-env, your secret manager, and plain `process.env` exactly where they are, and adds the layer they do not provide: ownership, lifecycle, and project-wide evidence about whether declared configuration is actually consumed.
+`env-cap` adds ownership, lifecycle and usage evidence to the loader, validator and secret manager you already use. It does not load `.env` files or store secrets.
 
 [Why](#why-it-exists) · [See it run](#see-it-run) · [Install](#install-and-verify) · [Fit](#fit-and-capabilities) · [Limits](#limits-and-when-not-to-use-it) · [Security](#security-and-supply-chain) · [Maturity](#maturity-versioning-and-support) · [Docs](#documentation)
 
 ## Why it exists
 
-**Benefit:** every environment variable has an owner, a reason to exist, and a lifecycle you can query, so a rotation deadline or an orphaned secret is found by a report instead of an outage.
+**The problem:** a variable can be well-formed and still be a problem. A validator checks its shape and a secret manager stores it. Neither says who owns it, what depends on it, when it must rotate, or whether anything still reads it.
 
-**Problem:** a configuration value can be perfectly valid and still be a problem. A secret manager stores a credential securely and a validator confirms its shape, but neither says why the variable exists, which capability depends on it, who owns it, when it should be rotated or retired, or whether anything still consumes it. That knowledge drifts into wikis, Slack threads, and memory, until the application accepts a variable that nobody owns, nobody uses, or nobody remembers to retire.
+**What changes:** each part of your code declares the variables it owns. A build step reports owners, expiry dates and declared variables that nothing reads. At startup, the application fails with the variable's name, never its value.
 
-**Who it is for:** platform and staff engineers responsible for configuration across teams or packages, and teams whose environment has outgrown a single `.env` convention.
-
-**Why it matters:** an undetected expiry or an unowned secret is a security and availability risk that no validator can see, because the value itself is well-formed.
+**Who it is for:** application developers who have shipped an undefined variable to production, and platform engineers who own configuration across teams.
 
 ## How it differs
 
@@ -35,11 +33,19 @@
 | Secret manager         | Stores and manages secrets                              | Which capability in the codebase actually consumes the secret                       |
 | `env-cap`              | Defines ownership, lifecycle, and consumption contracts | Does not replace loading, secret storage, or application-specific validation        |
 
-`env-cap` is additive: use it with your existing validator or processor, or with its lightweight helpers when a validation library is unnecessary. [Migration guides](specs/migrations/README.md) cover `dotenv`, Zod, envalid, and t3-env, including cases where switching is not worth it.
+Keep your existing validator: any function that returns `true` or a message plugs into a contract. [Migration guides](specs/migrations/README.md) cover `dotenv`, Zod, envalid and t3-env, including when to stay put.
 
 ## What it does
 
-A capability declares the environment it owns next to the validation it already needs. A build-time pass reads those declarations and your source, and writes a project-wide manifest, documentation, an ownership report, and an evidence artifact. At runtime the application validates its environment against that manifest and reads typed, capability-scoped values.
+Each entry point has one reader. The [Guide](GUIDE.md) tells each reader's story in full.
+
+| Entry point                                   | Written for                          | What it gives you                                                                         |
+| --------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `@maverickcer/env-cap`                        | Application developers               | One startup check that names every failing variable, and contracts that redact themselves |
+| `@maverickcer/env-cap/helpers`                | The same developers                  | Small processors and validators, tree-shaken when unused                                  |
+| `@maverickcer/env-cap/build`, CLI, Action     | Platform engineers who own CI        | A manifest, docs and an evidence file from static analysis; `--check` fails on drift      |
+| `@maverickcer/env-cap/evidence`               | Reviewers who need an inventory      | Findings, lifecycle data and SARIF that support a review                                  |
+| `@maverickcer/env-cap/node`, `/eslint-plugin` | Build-script authors and lint owners | The `node:fs` adapter `./build` needs, and two lint rules                                 |
 
 ```text
 declare → generate → validate → consume
@@ -47,44 +53,40 @@ declare → generate → validate → consume
 
 ### See it run
 
-**Every environment variable has an owner, a reason to exist, and a lifecycle you can query.**
-
-A capability declares the environment it owns alongside the validation already needed at runtime:
+A contract declares the variables it owns next to their validation. This excerpt is from [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts), the file CI runs:
 
 ```ts
-// features/payments/env.schema.ts
+// examples/application/src/env.ts (excerpt: other variables and fields omitted)
+import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap"
+import { processors } from "@maverickcer/env-cap/helpers"
 
-import { createEnv, documentEnv } from "@maverickcer/env-cap"
-
-const paymentsSchema = {
+const schema = {
+  DATABASE_URL: { processor: processors.toURL() },
   STRIPE_KEY: {
-    validator: (value: string) => value.startsWith("sk_") || 'Expected a key starting with "sk_".',
+    processor: (value: unknown): string => String(value ?? ""),
+    validator: (value: string, rawEnv: RawEnv) => {
+      if (rawEnv["PAYMENT_PROVIDER"] !== "stripe") return true
+      return value.length > 0 || "Stripe key is required when PAYMENT_PROVIDER=stripe."
+    },
   },
 }
 
-export const paymentsEnv = createEnv(paymentsSchema, { name: "payments" })
+export const env = createEnv(schema, { name: "app", source: import.meta.url })
 
-documentEnv(paymentsSchema, {
-  owner: "payments-team",
+documentEnv(schema, {
+  owner: "platform-team",
   variables: {
+    DATABASE_URL: { description: "Postgres connection string.", required: true },
     STRIPE_KEY: {
-      description: "Stripe secret key used to create charges and process refunds.",
-      owner: "payments-team",
-      expiresAt: "2027-01-01",
-      sensitivity: "secret",
+      description: "Stripe secret key used to authenticate server-side API calls.",
+      required: true,
+      expiresAt: "2026-09-01",
     },
   },
 })
 ```
 
-Generate, then validate: the build-time analysis writes the manifest your code imports
-(`./generated/env.manifest`) and the evidence artifact, with one command (`npx env-cap init` scaffolds
-the same thing as a script, `scripts/generate-env.mjs`). The manifest and the
-persisted evidence artifact -- the two outputs a real project actually reads
-at runtime/in CI (see [ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md))
--- come from the CLI itself; the human-facing docs/ownership report come
-from a small script calling `@maverickcer/env-cap/build` directly (see
-`examples/application/scripts/generate-docs`):
+The CLI writes the manifest your code imports and the evidence file ([ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)). A short script calls `@maverickcer/env-cap/build` for the human-facing docs and ownership report:
 
 ```text
 $ npx env-cap --include src/env.ts --location src/generated/env.manifest.ts --evidence docs/env.evidence.json
@@ -103,95 +105,98 @@ $ npx tsx scripts/generate-docs/run.ts
   - STRIPE_KEY in app
 ```
 
-This is real output from [`examples/application`](https://github.com/MaverickCER/env-cap/tree/main/examples/application)'s own `npm run docs` and `npm run docs:reports` scripts, not a mockup. The age (`Nd`) is counted from the day you run it, so it is shown as `N` here instead of a number that would rot.
+This is output from [`examples/application`](https://github.com/MaverickCER/env-cap/tree/main/examples/application) (`npm run docs:reports`). `N` stands for the days since 2026-09-01, counted on the day you run it.
 
-The important part is what the analysis can establish: `STRIPE_KEY` has an ownership and expiration record, its declared expiration has passed, and `DATABASE_URL` and `STRIPE_KEY` are declared as owned but are not consumed by the analyzed application. Those are facts about the application's configuration and dependencies, not merely the result of a value validator.
+The report states facts a validator cannot see. `STRIPE_KEY` is declared to expire on 2026-09-01, and that date has passed. `DATABASE_URL` and `STRIPE_KEY` are declared in the `app` contract, but the analysis found no code that reads them.
 
 ### Evidence it works
 
-- **Real fixtures:** the output above comes from a runnable example that is also a regression test, and two more stages (a [team service](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service) and an [enterprise platform](https://github.com/MaverickCER/env-cap/tree/main/examples/enterprise-platform)) show the model at scale.
-- **Enforced in CI:** coverage thresholds are fixed floors (90% branches, 100% functions, 95% lines and statements) that are only ever raised, mutation score is a gate ([CODE_REVIEW.md](CODE_REVIEW.md)), and the README's own demo is re-run and compared on every change.
-- **Runtime-tested:** the runtime, helpers and evidence entry points are executed under real Node, Bun and Deno engines in CI (`test/cross-runtime/`), not assumed isomorphic; the build entry and CLI are Node-only.
-- **Hard size budget:** the runtime entry point stays under 3 KB gzip and the helpers under 4 KB, enforced before publish ([ADR 0008](specs/decisions/0008-gzip-size-budget.md)).
-- **Verifiable release:** published with npm OIDC provenance and no long-lived token ([SECURITY.md](SECURITY.md#supply-chain-posture)).
+- **Real output:** CI's `examples` job re-runs the block above and compares its expiry and unconsumed lists with this README (`npm run verify:readme-example`). That job does not yet block a merge.
+- **Coverage floors:** 90% branches, 100% functions, 95% lines and statements, enforced by the `contract` job (`vitest.config.ts`). A pull request can lower a floor; reviewers treat that as a reviewed change.
+- **Mutation testing:** the `contract` job fails on any surviving, timed-out or uncovered Stryker mutant in `src/`. Managed copies under `src/_ipc/`, `scripts/`, and mutants silenced by a disable comment are not counted.
+- **Runtimes:** the runtime, helpers and evidence entries run on Node 22 and 24 in blocking jobs. They also run under Bun, Deno and a Web-globals VM; the Bun and Deno job is not yet merge-blocking.
+- **Size budgets:** 3 KB gzip for the runtime, 4 KB for helpers and 3 KB for evidence, enforced by the `Size` check ([ADR 0008](specs/decisions/0008-gzip-size-budget.md)). The budget measures the entry file, not your bundle.
 
 ## Install and verify
 
-**Prerequisites:** Node.js `>=22`. Your own TypeScript is optional: the build-time generator parses with it when it is version 5 or 6, and otherwise with the TypeScript 6 compiler `env-cap` installs as its one dependency (the runtime works in plain JavaScript); the [runtime and TypeScript requirements](GUIDE.md#runtime-support-matrix) are in the Guide.
+**Prerequisites:** Node.js `>=22`. Your own TypeScript is optional. The generator uses it when it is version 5 or 6, and otherwise the bundled TypeScript 6 compiler. CI tests the newest 5.x only; the 5.0 floor is untested. The runtime works in plain JavaScript ([requirements](GUIDE.md#requirements)).
 
 ```sh
 npm install @maverickcer/env-cap
-npx env-cap init                  # scaffolds env.schema.ts and scripts/generate-env.mjs
-npm install --save-dev typescript # optional: used instead of env-cap's TypeScript 6 when it is 5 or 6
+npx env-cap init                  # writes env.schema.ts and scripts/generate-env.mjs
 node scripts/generate-env.mjs
 ```
 
-**Using an AI agent?** Give it [the skill](https://raw.githubusercontent.com/MaverickCER/env-cap/main/skills/env-cap/SKILL.md): a short manual written from this package's own exports, with the rules a type signature cannot say.
+`init` writes two files and skips any file that already exists. Without a valid `package.json` it exits `1` and writes nothing. `test/cli/init.test.ts` pins these rules and the templates. **Verify it works:** the script exits `0` and prints `Discovered 1 contract(s).` CI pins the script's text but does not run it. Report an issue if that line differs.
 
-`init` never overwrites existing files and never edits `package.json`. **Verify it works:** the generator prints `Discovered 1 contract(s).` and writes the manifest, `docs/ENVIRONMENT.md`, and an ownership report. Then validate once at startup and read values through the contract:
+Then validate once at startup and read values through the contract. `init` writes `env.schema.ts` into `src/` when that folder exists, otherwise into the project root; adjust the import path to match:
 
 ```ts
 import { validateEnv } from "@maverickcer/env-cap"
 import { manifest } from "./generated/env.manifest"
-import { paymentsEnv } from "./features/payments/env.schema"
+import { exampleEnv } from "./env.schema"
 
 await validateEnv({ manifest, values: process.env })
-paymentsEnv.STRIPE_KEY
+exampleEnv.EXAMPLE_API_URL
 ```
 
-The smallest contract is one `createEnv` call with a validator per variable ([Core workflow](GUIDE.md#core-workflow) has the complete generate and validate cycle).
+**Using an AI agent?** Give it [the skill](https://raw.githubusercontent.com/MaverickCER/env-cap/main/skills/env-cap/SKILL.md), a short manual generated from this package's exports.
 
 ## Fit and capabilities
 
-**Use cases:** find expired or unowned secrets before they page someone; document every variable from the code instead of a wiki; let each team own the variables its feature needs; give CI bots and coding agents concrete facts (`payments owns STRIPE_KEY`, `STRIPE_KEY is declared but unconsumed`) instead of "configuration check failed".
+**Use cases:** find expired or unowned secrets before they page someone. Generate variable documentation from the code instead of a wiki. Let each team own the variables its feature needs. Give CI bots facts such as "`STRIPE_KEY` is declared but unconsumed".
 
 **Core capabilities:**
 
-- Capability-scoped contracts with validators, ownership, sensitivity, and expiry ([model](GUIDE.md#capability-owned-contracts)).
-- A project-wide manifest, environment docs, `.env.example`, and an ownership and unconsumed-variable report, generated by static analysis that never executes your schema files.
-- A persisted evidence artifact for change tracking, a CLI, a [GitHub Action](GUIDE.md#github-action), scheduled rotation alerts, and an [ESLint plugin](GUIDE.md#eslint-plugin).
-- Adoption from one centralized schema to per-feature and per-package contracts; the manifest stays project-wide however the schema is organized.
+- Capability-scoped contracts with validators, owners, sensitivity and expiry dates ([contracts](GUIDE.md#capability-owned-contracts)).
+- A manifest, environment docs, `.env.example` and an ownership report, from static analysis that never imports your schema files.
+- A persisted evidence file, a CLI, a [GitHub Action](GUIDE.md#github-action), scheduled rotation reports and an [ESLint plugin](GUIDE.md#eslint-plugin).
+- One central schema or one contract per feature or package; the manifest stays project-wide either way.
 
-**How it works:** the runtime and the build tooling are separate on purpose. Runtime validation needs no dependencies and no filesystem; the build pass analyzes your source and runs only in development and CI ([Architecture](specs/architecture.md)).
+**How it works:** the runtime and the build tooling are separate entry points. The runtime has no filesystem access, which lint and a tarball scan enforce. The build pass runs only in development and CI ([Architecture](GUIDE.md#runtime-and-build-time-are-intentionally-separate)).
 
-**Integration:** it works beside the validator and secret manager you already use, so nothing is replaced. **Runtimes:** Node.js 22+, browser bundles, edge runtimes, Bun, and Deno for the runtime; the build entry is Node-only ([support matrix](GUIDE.md#runtime-support-matrix)). **Configuration and extension:** plug any `Validator<T>` or `Processor<T>` function into a contract, share contracts from a reusable package, and resolve TypeScript path aliases ([Guide](GUIDE.md)). **Package managers:** npm is supported; pnpm, Yarn 1 and Yarn Berry (node-modules linker) are tested for install and import of every entry point only ([details](GUIDE.md#package-managers)).
+**Runtimes:** Node.js 22 and 24 are tested. Bun, Deno and a browser-style bundle run in CI for the runtime, helpers and evidence entries; edge runtimes are not tested ([support matrix](GUIDE.md#runtime-support-matrix)). **Package managers:** npm is supported. pnpm, Yarn 1 and Yarn Berry are tested only for installing the tarball and importing every entry ([details](GUIDE.md#package-managers)).
 
 ## Limits and when not to use it
 
-- **Skip it when** the application is small, one team owns every configuration decision, there are only a few stable variables, ownership is already obvious, or you do not need project-wide evidence about usage. A validation library or `dotenv` may be all you need.
-- **Trade-offs:** it adds a build step and a declaration per variable, and its reports are only as accurate as those declarations. It cannot see variables read from outside the code it analyzes.
-- **Install weight:** the package's one dependency is a TypeScript 6 compiler, bundled inside the tarball (about 5 MB packed, 24 MB unpacked), that only the build entry uses, in development and CI; the runtime never reaches it, which CI verifies ([Adoption guide](ADOPTION.md#bundle-size-and-performance)).
-- **Automation:** agents and bots can consume the same manifests and evidence, but a structured finding does not guarantee a correct fix; the automation owns its retry and validation loop. See the [AI integration prompt](PROMPT.md).
+- **Skip it when** one team owns every variable, there are few of them, and ownership is obvious. A validator or `dotenv` may be all you need.
+- **Trade-offs:** it adds a build step and a declaration per variable. Its reports are only as accurate as those declarations, and it cannot see variables read outside the analyzed code.
+- **Install weight:** the one dependency is a TypeScript 6 compiler bundled in the tarball. Only the build entry loads it, and a CI step fails if a runtime entry can reach it ([Adoption guide](ADOPTION.md#bundle-size-and-performance)).
+- **Dynamic schemas:** a schema built by a function, or a spread at the top of a schema object, produces a parse warning. A spread nested inside a variable's definition or its `documentEnv()` entry is skipped without one. Nothing is guessed.
+- **Automation:** bots can read the same manifest and evidence. A structured finding does not make a fix correct; see the [AI integration prompt](PROMPT.md).
 
 ## Security and supply chain
 
-- **Guarantees:** the runtime never persists, retrieves, rotates, or logs secrets, and contracts redact themselves when logged or serialized ([runtime security model](SECURITY.md#runtime-security-model)).
-- **Trust boundaries:** the build tool parses schema files as ASTs and never imports or executes them, but it does not sandbox the rest of your build, and a validator you write can still log ([build-time model](SECURITY.md#build-time-security-model), [your responsibilities](SECURITY.md#application-responsibilities)).
-- **Dependencies and licence:** the runtime and helpers entry points import nothing. Everything installing the package adds is listed, with the reason for each, in the [Adoption guide](ADOPTION.md#security--threat-model), generated from `package.json`. MIT licensed.
-- **Release integrity:** npm OIDC trusted publishing with provenance ([supply-chain posture](SECURITY.md#supply-chain-posture)). Report a vulnerability through [SECURITY.md](SECURITY.md#reporting-a-vulnerability).
+- **Runtime:** it has no filesystem access and reads only the `values` you pass; lint and the tarball scan enforce the first, the tarball scan and a browser-bundle test the second. Both scans are textual. Contracts redact themselves when logged or serialized, but spreading a contract reads every value ([runtime model](SECURITY.md#runtime-security-model)).
+- **Errors:** validation errors carry variable and contract names and your own messages, never values (tested). A validator message that embeds the value is passed through.
+- **Build:** schema files are parsed as syntax trees and never imported or run (tested). It does not sandbox the rest of your build ([build-time model](SECURITY.md#build-time-security-model)).
+- **Dependencies:** what installing the package adds is generated from `package.json` into the [Adoption guide](ADOPTION.md#security--threat-model). MIT licensed.
+- **Release integrity:** releases publish from CI over npm OIDC with a provenance attestation, and the repository stores no npm token. A manual last-resort publish carries no attestation ([supply chain](SECURITY.md#supply-chain-posture)).
+- **Report a vulnerability** privately: [SECURITY.md](SECURITY.md#reporting-a-vulnerability).
 
 ## Maturity, versioning and support
 
-Pre-1.0 (see the npm badge for the current version). Per [VERSIONING.md](VERSIONING.md), a minor release may include a breaking change to the Stable tier before 1.0, so pin accordingly. Security fixes target the latest published `0.x` only; there is no backport branch until 1.0 ([Adoption guide](ADOPTION.md#versioning-stability-and-long-term-support)).
+Pre-1.0; the npm badge shows the current version. Before 1.0, a minor release may break the Stable tier, so pin a version ([VERSIONING.md](VERSIONING.md)). Security fixes target the latest `0.x` only, with no backport branch before 1.0.
 
-- **Upgrade and migrate:** read the [CHANGELOG](CHANGELOG.md) on every minor; [migration guides](specs/migrations/README.md) cover adoption from other tools.
-- **Release history:** [CHANGELOG](CHANGELOG.md) and [GitHub releases](https://github.com/MaverickCER/env-cap/releases); the process is in [RELEASING.md](RELEASING.md).
+- **Upgrade:** read the [CHANGELOG](CHANGELOG.md) on every minor; [migration guides](specs/migrations/README.md) cover adoption from other tools.
+- **Releases:** [GitHub releases](https://github.com/MaverickCER/env-cap/releases); a person merges every release pull request ([RELEASING.md](RELEASING.md)).
 - **Bugs and requests:** [open an issue](https://github.com/MaverickCER/env-cap/issues); see [SUPPORT.md](SUPPORT.md).
-- **Troubleshooting:** the [Guide's troubleshooting section](GUIDE.md#troubleshooting).
+- **Troubleshooting:** the [Guide's troubleshooting table](GUIDE.md#troubleshooting).
 
 ## Documentation
 
-- **[Guide](GUIDE.md)**: the complete generate and validate workflow, validation contexts, reusable packages, path aliases, CLI, GitHub Action, ESLint plugin, and performance.
-- **[Adoption guide](ADOPTION.md)**: the decision-maker summary of security, bundle size, and versioning.
-- **[API reference](https://maverickcer.github.io/env-cap/api/)**: every exported symbol, generated from source.
-- **[Architecture](specs/architecture.md)** and **[ADRs](https://github.com/MaverickCER/env-cap/tree/main/specs/decisions)**: why it is designed this way.
-- **[Examples](https://github.com/MaverickCER/env-cap/tree/main/examples)**: runnable application, team-service, and enterprise-platform examples.
-- **Part of the MaverickCER toolkit:** `@maverickcer/env-cap` governs configuration and `data-cap` governs application data; `repo-contract` and `internal-package-contract` are how they are verified ([toolkit overview](https://github.com/MaverickCER/internal-package-contract/blob/main/TOOLKIT.md)).
+- **[Guide](GUIDE.md):** one story per entry point and reader, the CLI options, the GitHub Action and the ESLint plugin.
+- **[Adoption guide](ADOPTION.md):** what adopting costs, what it needs, and what it refuses to do.
+- **[Security](SECURITY.md):** the reviewer's model of what is enforced, where, and what is not.
+- **[API reference](https://maverickcer.github.io/env-cap/api/):** every exported symbol, generated from source.
+- **[Architecture](specs/architecture.md)** and **[ADRs](https://github.com/MaverickCER/env-cap/tree/main/specs/decisions):** why it is designed this way.
+- **[Examples](https://github.com/MaverickCER/env-cap/tree/main/examples):** runnable application, team-service, enterprise-platform and Next.js examples.
+- **Toolkit:** `data-cap` governs application data; `repo-contract` and `internal-package-contract` verify both ([toolkit overview](https://github.com/MaverickCER/internal-package-contract/blob/main/TOOLKIT.md)).
 
 ## Next steps
 
-- **Evaluate:** read the [Adoption guide](ADOPTION.md), then try env-cap against one real schema.
-- **Integrate:** follow the [Guide](GUIDE.md#core-workflow) and the [examples](https://github.com/MaverickCER/env-cap/tree/main/examples).
-- **Verify:** inspect the [security model](SECURITY.md#runtime-security-model) and the [architecture](specs/architecture.md).
+- **Evaluate:** read the [Adoption guide](ADOPTION.md), then try env-cap on one real schema.
+- **Integrate:** follow the [Guide](GUIDE.md#core-workflow) and run an [example](https://github.com/MaverickCER/env-cap/tree/main/examples).
+- **Verify:** check the [security model](SECURITY.md#runtime-security-model) against the tests it names.
 
-Contributing: [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, the change workflow, ADRs and changesets; [CODE_REVIEW.md](CODE_REVIEW.md) covers review. License: MIT, see [LICENSE](LICENSE).
+Contributing: [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and changesets; [CODE_REVIEW.md](CODE_REVIEW.md) covers review. License: MIT, see [LICENSE](LICENSE).

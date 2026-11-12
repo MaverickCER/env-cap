@@ -1,172 +1,88 @@
 # Team service example
 
-*"How does this help my team?"* -- the second of env-cap's three flagship
-examples (see [`../README.md`](../README.md)), aimed at an engineering team
-running a real service: multiple capabilities, multiple owners, a security
-review, and a CI gate that fails a PR when generated artifacts drift.
+_"How does this help my team?"_ This is the second flagship [example](../README.md). It is for a team running a service with several features, several owners and a drift check in CI.
 
-Four capabilities, two real teams:
+Four capabilities, two teams:
 
 ```text
 features/
-  postgres/env.schema.ts   <- DATABASE_URL                (active by default, data-platform-team)
-  mongodb/env.schema.ts    <- DATABASE_URL, MONGODB_REPLICA_SET (shipped dormant, data-platform-team)
-  prisma/env.schema.ts     <- DATABASE_PROVIDER            (always active, data-platform-team)
-  auth/env.schema.ts       <- SESSION_SECRET (classification: secret)  (security-team)
+  postgres/env.schema.ts   DATABASE_URL                          active, data-platform-team
+  mongodb/env.schema.ts    DATABASE_URL, MONGODB_REPLICA_SET     shipped inactive, data-platform-team
+  prisma/env.schema.ts     DATABASE_PROVIDER                     always active, data-platform-team
+  auth/env.schema.ts       SESSION_SECRET (classification: secret)  security-team
 scripts/
-  generate-manifest.mjs    <- build-time only, never imported by the app
-  generate-docs/
-    run.ts                  <- writes ENVIRONMENT.md/OWNERSHIP.md/.env.example (see its own README)
-    check.ts                 <- their --check counterpart
+  generate-docs/run.ts     writes ENVIRONMENT.md, OWNERSHIP.md and .env.example
+  generate-docs/check.ts   the drift check for those three files
 src/
-  startup.ts               <- validateEnv() runs here, once
-  app.ts                   <- capability code imports its own contract directly
+  startup.ts               validateEnv() runs here, once
+  app.ts                   each feature's code imports its own contract
 ```
 
-None of the four import each other or a shared `env.ts`. Each schema is
-split into a `createEnv()` call (processor/validator/default -- the
-runtime-relevant fields `validateEnv()` reads) and a `documentEnv()` call
-right below it (`category`, `exclusiveGroup`, `active`, `owner`,
-`classification`, and a free-form `metadata` record -- generator-only
-fields, never retained at runtime). Every field here is used for a
-specific, real reason, not as a feature showcase:
+No feature imports another or a shared `env.ts`. Each schema has a `createEnv()` call for validation and a `documentEnv()` call for the generator. Each field has a reason:
 
-- **`category`** splits the boilerplate into the real decisions a project
-  has to make: `"database"` (postgres vs. mongodb -- pick one), `"orm"`
-  (prisma -- a layer on top of whichever database is chosen, not an
-  alternative to it), and `"auth"` (session handling -- unrelated to either).
-- **`exclusiveGroup: "database"`** is on postgres and mongodb only. They're
-  genuinely mutually exclusive -- one `DATABASE_URL`, one physical database.
-  It's deliberately *not* on prisma or auth, neither of which is an
-  alternative to anything else here.
-- **`active`**: `postgres: true`, `mongodb: false`. Postgres is the default;
-  Mongo ships in the repo but isn't wired in. Shipping it dormant costs
-  nothing at runtime (see below) and one commented-out line in
-  `.env.example`.
-- **`owner`** is where this example earns its name: `postgres`/`mongodb`/
-  `prisma` are all `data-platform-team`'s; `auth` is `security-team`'s. A
-  real service has more than one team's name in its ownership matrix, and
-  the generated `docs/OWNERSHIP.md` reflects exactly that split.
-- **`classification: "secret"`** on `SESSION_SECRET` (and, per below,
-  `postgres`'s `DATABASE_URL`) is what gives the generated security review
-  something real to enumerate.
-- **`setupInstructions`/`expiresAt`/`refreshInstructions`** on both secrets
-  turn the generated lifecycle report and security review from an empty
-  table into a genuinely useful one -- see "Rotation reminders" below.
+| Field                              | Where                              | Why                                                                                     |
+| ---------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `category`                         | Every feature                      | Groups the decisions: `database` (pick one), `orm` (a layer on top), `auth` (unrelated) |
+| `exclusiveGroup: "database"`       | `postgres` and `mongodb`           | One `DATABASE_URL`, one database; two active at once is a build error                   |
+| `active`                           | `postgres: true`, `mongodb: false` | Mongo ships in the repository but is not wired in                                       |
+| `owner`                            | Every feature                      | Two teams appear in the ownership matrix                                                |
+| `classification: "secret"`         | `SESSION_SECRET`, `DATABASE_URL`   | Gives the generated security review real rows                                           |
+| `expiresAt`, `refreshInstructions` | Both secrets                       | Fills the lifecycle report                                                              |
 
-## Cross-team ownership: when a variable's owner isn't its contract's owner
+## Cross-team ownership
 
-Every variable so far has inherited its owner from its contract: postgres's
-`DATABASE_URL` is `data-platform-team`'s because the postgres *contract* is.
-But real ownership doesn't always nest that cleanly. `postgres/env.schema.ts`
-sets `owner: "security-team"` directly on `DATABASE_URL` itself, overriding
-the contract's `data-platform-team` -- the connection string embeds a live
-credential, and at this org, credential rotation is security-team's
-responsibility even though data-platform-team runs the database capability
-around it.
+`postgres/env.schema.ts` sets `owner: "security-team"` on `DATABASE_URL`, overriding the contract's `data-platform-team`. The connection string holds a credential, and here security-team rotates credentials.
 
-`effectiveOwner()` (`@maverickcer/env-cap/build`) is what resolves this: it
-reads the variable's own `owner` first, falling back to the contract's only
-if the variable didn't set one. Every generated report that shows
-per-variable ownership uses it, so:
+`effectiveOwner()` from `@maverickcer/env-cap/build` reads the variable's own `owner` first, then the contract's. The reports differ by level, on purpose:
 
-- `docs/ENVIRONMENT.md`'s **catalog entry** for `DATABASE_URL` and its
-  **ownership matrix** both show `security-team` for this one variable.
-- `docs/OWNERSHIP.md`'s **dependency ownership table**, by contrast, is
-  intentionally *contract*-level -- it still lists postgres's owner as
-  `data-platform-team`, because that table answers "who runs this
-  capability," not "who owns this specific credential."
+- `docs/ENVIRONMENT.md` shows `security-team` for `DATABASE_URL`, in the catalog and the ownership matrix.
+- `docs/OWNERSHIP.md` lists contracts, so it still shows `data-platform-team` for `postgres`. It answers "who runs this capability".
 
-Both are correct, at their own level, at the same time. That's the actual
-shape of cross-team coordination this example exists to show: a team can own
-running a capability without owning every credential inside it, and
-`env-cap`'s generated docs represent that split instead of flattening it to
-one name.
+## Rotation reminders
 
-## Rotation reminders: two secrets, two teams, two schedules
+`SESSION_SECRET` and `DATABASE_URL` both declare `expiresAt`. As either date approaches, `npm run docs:reports` marks it "expiring soon" in `docs/ENVIRONMENT.md`. Two teams track their own secrets in one shared report.
 
-`SESSION_SECRET` (security-team, in `auth/`) and `DATABASE_URL`
-(effectively security-team, in `postgres/`, per above) both set
-`expiresAt`/`refreshInstructions`/`setupInstructions` now, so
-`docs/ENVIRONMENT.md`'s lifecycle report and security review sections have
-two real rows instead of reading "Variables with `expiresAt` set: 0." Run
-`npm run docs:reports` as either date approaches and watch the docs mark it
-"expiring soon" -- this is the same mechanism `examples/application`
-demonstrates for a single owner; here it's two different teams each
-tracking their own secret's rotation on their own schedule, surfaced in one
-shared report either team (or a platform team auditing both) can read.
+## `active` is a build-time switch
 
-## `active` is a real build-time gate, not a cosmetic flag
+`active: false` on `mongoEnv` excludes it from the generated manifest:
 
-Setting `active: false` on `mongoEnv` excludes it from the generated
-contract entirely:
-
-- `validateEnv()` never requires `DATABASE_URL`/`MONGODB_REPLICA_SET` on
-  mongodb's account -- only postgres's copy of `DATABASE_URL` is required.
-- Reading `mongoEnv.DATABASE_URL` throws `EnvNotReadyError` -- the same
-  error already thrown for any contract never passed to `validateEnv()`.
-  That's why `src/app.ts` only imports `postgresEnv`, `prismaEnv`, and
-  `authEnv` -- importing `mongoEnv` there would be a latent bug, not a
-  convenience.
-- `docs/ENVIRONMENT.md` (generated, but committed rather than gitignored --
-  run `npm run docs:reports` to regenerate it and review the diff) still
-  documents `mongodb` in full, marked disabled, in the catalog -- plus it
-  shows up in the ownership matrix and, since it's inactive, doesn't count
-  toward the security review's "active" variable total.
+1. `validateEnv()` never requires `mongodb`'s variables.
+2. Reading `mongoEnv.DATABASE_URL` throws `EnvNotReadyError`, so `src/app.ts` does not import `mongoEnv`.
+3. `docs/ENVIRONMENT.md` still documents `mongodb`, marked disabled, and leaves it out of the active-variable count.
 
 ## Run it
 
-```bash
-npm install
-cp .env.example .env
-npm start
-```
+Build the repository root first ([examples/README.md](../README.md#before-you-run-one)). The committed `.env` holds placeholder values.
 
-`npm start` runs `docs:reports` (which chains `docs` -- writing
-`src/generated/env.manifest.ts` and `docs/env.evidence.json` via the
-packaged `env-cap` CLI, the only two outputs with a real runtime/evidence
-contract, per [ADR 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)
--- and then `scripts/generate-docs/run.ts`, which writes
-`docs/ENVIRONMENT.md`, `docs/OWNERSHIP.md`, and `.env.example` directly from
-`@maverickcer/env-cap/build`'s still-exported `generateDocumentation()`/
-`generateUsageReport()` -- see [that script's own
-README](scripts/generate-docs/README.md)) and then boots `src/app.ts`, which
-validates the environment and prints the active configuration.
+| Step | Command         | Exit code | Line of output to look for                |
+| ---- | --------------- | --------- | ----------------------------------------- |
+| 1    | `npm install`   | `0`       | none                                      |
+| 2    | `npm start`     | `0`       | `Environment validated successfully.`     |
+| 3    | `npm run check` | `0`       | `All generated artifacts are up to date.` |
 
-## The CI gate: `check`
+`npm start` runs `docs:reports`, then boots `src/app.ts`, which also prints `Prisma provider: postgresql`. `docs:reports` runs the CLI for the manifest and `docs/env.evidence.json` ([ADR 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)), then `scripts/generate-docs/run.ts` for the Markdown reports and `.env.example`.
 
-```bash
-npm run check
-```
+`test/examples/team-service.test.ts` runs steps 2 and 3 in CI's `examples` job, which does not yet block a merge.
 
-runs the packaged `env-cap` CLI binary with `--check` (ADR 0016) against the
-manifest and the persisted evidence artifact, then
-`scripts/generate-docs/check.ts` (via `@maverickcer/env-cap/build`'s exported
-`checkEnvArtifacts()`) against `docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md`/
-`.env.example` -- together, every artifact this example generates is
-recomputed in memory and compared against what's committed, without writing
-anything, exiting `1` if anything is stale or missing. This is the actual
-shape of the check a real team wires into CI: a schema change lands, someone
-forgets to re-run `docs:reports`, and the PR fails loudly instead of
-shipping documentation that's already wrong. Try it: edit
-`SESSION_SECRET`'s `description` in `features/auth/env.schema.ts` and run
-`npm run check` again without first running `docs:reports` -- it reports at
-least `docs/env.evidence.json` (and, once the CLI's own manifest+evidence
-check passes, `docs/ENVIRONMENT.md` too) as stale and exits non-zero.
+## The drift check: `npm run check`
+
+`npm run check` runs the CLI with `--check` ([ADR 0016](../../specs/decisions/0016-check-mode-compute-before-compare-never-partial-write.md)), then `scripts/generate-docs/check.ts`. Together they recompute every generated file in memory and compare it with the committed copy. Nothing is written.
+
+Try it:
+
+1. Edit `SESSION_SECRET`'s `description` in `features/auth/env.schema.ts`.
+2. Run `npm run check` without regenerating.
+3. Expect exit code `1`, a `STALE` row for `docs/env.evidence.json`, and a line ending `are stale or missing. Run without --check to regenerate.`
+
+The same test file makes that edit and asserts the failure. Wire `npm run check` into your own CI to fail a pull request whose generated files are out of date.
 
 ## Try swapping the database backend
 
-Flip `active` on both files -- `mongodb/env.schema.ts` to `true`, `postgres/env.schema.ts`
-to `false` -- and swap `src/app.ts`'s import from `postgresEnv` to `mongoEnv`.
-Re-run `npm run docs:reports`: the contract now requires `DATABASE_URL` and
-`MONGODB_REPLICA_SET`, and `.env.example` shows postgres's line commented out
-instead.
+1. Set `active: true` in `mongodb/env.schema.ts` and `active: false` in `postgres/env.schema.ts`.
+2. Change the import in `src/app.ts` from `postgresEnv` to `mongoEnv`.
+3. Run `npm run docs:reports`. The manifest now requires `DATABASE_URL` and `MONGODB_REPLICA_SET`, and `.env.example` comments out postgres's line.
 
-Now try flipping mongodb to `active: true` *without* touching postgres:
-
-```bash
-npm run docs
-```
+Now set `mongodb` to `active: true` without touching `postgres`, and run `npm run docs`. Expect a non-zero exit and this error:
 
 ```text
 Exclusive group "database"
@@ -176,6 +92,4 @@ exclusiveGroup "database" -- only one active contract per exclusive group is
 allowed. Set active: false on whichever one isn't in use.
 ```
 
-That's the guardrail `exclusiveGroup` exists for: a service can ship every
-backend it supports, but two of them running at once is a build-time error,
-not a silent double-wire.
+A service can ship every backend it supports, but two active at once fail the build. `test/build/exclusive-group.test.ts` pins the message; CI does not run this step.

@@ -1,35 +1,35 @@
 name: "env-cap report"
-description: "Runs env-cap and turns the result into PR annotations and a summary comment."
+description: "Runs env-cap (your installed copy, or the version you name), fails on its exit code, and reports findings as PR annotations and one summary comment."
 inputs:
   args:
-    description: "Arguments passed to `env-cap --json`, e.g. '--location src/generated/env.manifest.ts --strict-docs --evidence docs/env.evidence.json'. Include --evidence to get full documentation/ownership/expiring-secret reporting (PR annotations, the summary comment, and rotation-alert issues all read the persisted evidence artifact's Finding/Lifecycle Model, ADR 0038) -- without it, this run produces manifest-only pass/fail output. --docs/--ownership are no longer CLI flags at all (ADR 0046); this Action's own reporting no longer depends on them."
+    description: "Arguments passed to `env-cap --json`, for example '--location src/generated/env.manifest.ts --evidence docs/env.evidence.json --strict-docs'. Annotations, the summary comment and rotation-alert issues read the evidence file, so pass --evidence to get them. Without it, the run reports only the manifest pass or fail. The value is split into words, so it can add CLI flags."
     required: true
   working-directory:
     description: "Directory to run env-cap from."
     required: false
     default: "."
   version:
-    description: "env-cap version to fetch via npx when it is not a local devDependency. Required in that case: the action fails rather than guess a version (pin one rather than `latest`). Ignored when the project has env-cap installed."
+    description: "env-cap version to run through npx when the project does not install env-cap. Required in that case: without it the Action exits 2. It accepts a version or a dist-tag, so `latest` runs the newest release; pin a version instead. Ignored when env-cap is installed."
     required: false
     default: ""
   comment:
-    description: "Upsert a sticky PR summary comment."
+    description: "Create or update one sticky summary comment on the PR."
     required: false
     default: "true"
   report-key:
-    description: "Identifies this invocation's sticky comment, so multiple calls against the same PR (e.g. one per package in a monorepo) don't overwrite each other. Empty defaults to working-directory (resolved in report.mjs, not here -- action.yml input defaults can't reliably reference another input)."
+    description: "Identifies this invocation's sticky comment, so several calls on one PR (for example one per package in a monorepo) do not overwrite each other. Empty means working-directory."
     required: false
     default: ""
   annotations:
-    description: "Emit inline ::warning/::error PR annotations."
+    description: "Emit inline ::warning and ::error annotations for findings."
     required: false
     default: "true"
   rotation-alert:
-    description: "When no PR is available to comment on (e.g. a scheduled run), open/update a GitHub issue -- and auto-close it once resolved -- for any expiring/expired variable found. Requires `issues: write` in the calling workflow's permissions."
+    description: "On a run with no PR, such as a scheduled run, open or update an issue listing expiring variables. Close it when none remain. Needs --evidence and `issues: write`. Only the open-or-close decision is unit-tested."
     required: false
     default: "true"
   github-token:
-    description: "Token used for `gh` PR-comment calls."
+    description: "Token for the gh calls that post the PR comment and the rotation-alert issue."
     required: false
     default: ${{ github.token }}
 runs:

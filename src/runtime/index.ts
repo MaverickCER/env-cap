@@ -1,16 +1,17 @@
 /**
- * env-cap runtime entry point.
+ * The env-cap runtime entry point: declare contracts, validate them once at startup, and read
+ * typed values through the contract that owns them.
  *
- * Zero dependencies, isomorphic (no `fs`, no `process` other than the values
- * the developer passes in). Handles processing, validation, caching, and
- * typed access only -- discovery and manifest generation live in
- * `@maverickcer/env-cap/build` and are never imported from here.
+ * It imports no Node module and reads no Node global; it takes values only from the `values`
+ * you pass to `validateEnv()`. `test/runtime/browser-bundle.test.ts` checks the built bundle for
+ * Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.
+ * Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.
  *
- * `documentEnv` is exported from here, not `@maverickcer/env-cap/build`, even though
- * it exists purely for documentation: it's meant to be called inline in the
- * same schema file as `createEnv`, which is ordinary runtime code that may
- * end up in any bundle (including a browser one). It must be exactly as
- * cheap and safe to import as `createEnv` -- see `document.ts`.
+ * `documentEnv` is exported here, not from `./build`, because it is called inline in the same
+ * schema file as `createEnv`, which may end up in any bundle. It must be as cheap to import as
+ * `createEnv` (see `document.ts`).
+ *
+ * @packageDocumentation
  */
 
 export type {

@@ -18,3 +18,15 @@ describe("pasted command output", () => {
     })
   }
 })
+
+describe("the landing page demo", () => {
+  it("shows exactly the README's demo block, which scripts/check-readme-example-fresh.mjs re-runs", () => {
+    const readme = readFileSync(path.join(root, "README.md"), "utf8")
+    const block = /```text\n(\$ npx env-cap[\s\S]*?)\n```/.exec(readme)?.[1]
+    expect(block, "README.md has no '$ npx env-cap' demo block").toBeDefined()
+    const site = JSON.parse(readFileSync(path.join(root, "docs/site.json"), "utf8")) as {
+      demo: { output: string }
+    }
+    expect(site.demo.output).toBe(block)
+  })
+})

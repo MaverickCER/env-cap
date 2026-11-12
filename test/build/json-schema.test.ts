@@ -108,9 +108,9 @@ documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { descrip
 )
 
 describe("published JSON Schema: the evidence file", () => {
-  // GUIDE's "Using the CLI outside GitHub Actions" says the evidence file matches the published
-  // schema's `EvidenceModel` definition; this is the test behind that sentence, on the committed
-  // evidence of two examples.
+  // GUIDE's "Published JSON Schema" section says the committed evidence files validate against the
+  // published schema's `EvidenceModel` definition; this is the test behind that sentence, on the
+  // committed evidence of two examples.
   it("a committed env.evidence.json validates against the schema's EvidenceModel definition", () => {
     const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as {
       definitions: Record<string, unknown>

@@ -20,8 +20,8 @@ source tree. See [`paypal-consumer`](../paypal-consumer/) for an
 application that installs and consumes it.
 
 There is no exported `paypalDoc` or similar -- `documentEnv()` returns `void`
-and is inert at runtime by design (see the root README's
-[Documentation and lifecycle metadata](../../README.md#documentation-and-lifecycle-metadata)
+and is inert at runtime by design (see the Guide's
+[Capability-owned contracts](../../../../../GUIDE.md#capability-owned-contracts)
 section). Its only job is to exist as a static marker `generateEnvManifest()`
 can link back to `paypalSchema` during build-time discovery.
 
@@ -43,8 +43,8 @@ organization would have.
 
 Making the environment contract discoverable in that shape requires this
 package to take on two obligations -- both **Experimental**, see
-[ADR 0014](../../specs/decisions/0014-cross-package-schema-discovery.md) and
-[`VERSIONING.md`](../../VERSIONING.md):
+[ADR 0014](../../../../../specs/decisions/0014-cross-package-schema-discovery.md) and
+[`VERSIONING.md`](../../../../../VERSIONING.md):
 
 1. **Declare a `"envCap": { "schema": "./src/env.schema.ts" }` field in
    `package.json`.** This tells `generateEnvArtifacts({ packages: [...] })`

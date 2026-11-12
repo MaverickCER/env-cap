@@ -1,5 +1,17 @@
 # runtime
 
+The env-cap runtime entry point: declare contracts, validate them once at startup, and read
+typed values through the contract that owns them.
+
+It imports no Node module and reads no Node global; it takes values only from the `values`
+you pass to `validateEnv()`. `test/runtime/browser-bundle.test.ts` checks the built bundle for
+Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.
+Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.
+
+`documentEnv` is exported here, not from `./build`, because it is called inline in the same
+schema file as `createEnv`, which may end up in any bundle. It must be as cheap to import as
+`createEnv` (see `document.ts`).
+
 ## Classes
 
 ### EnvNotReadyError
@@ -550,18 +562,13 @@ generator, exactly as before.
 
 ### CreateEnvOptions
 
-env-cap runtime entry point.
+Options for [createEnv](#createenv): a display name for error messages and where the contract was
+declared.
 
-Zero dependencies, isomorphic (no `fs`, no `process` other than the values
-the developer passes in). Handles processing, validation, caching, and
-typed access only -- discovery and manifest generation live in
-`@maverickcer/env-cap/build` and are never imported from here.
+#### Remarks
 
-`documentEnv` is exported from here, not `@maverickcer/env-cap/build`, even though
-it exists purely for documentation: it's meant to be called inline in the
-same schema file as `createEnv`, which is ordinary runtime code that may
-end up in any bundle (including a browser one). It must be exactly as
-cheap and safe to import as `createEnv` -- see `document.ts`.
+Purely for identification. Owners, descriptions and other documentation belong in
+`documentEnv()`.
 
 #### Properties
 
@@ -653,18 +660,13 @@ Rejects an invalid processed value; return `true` to accept it.
 
 ### validateEnvOptions
 
-env-cap runtime entry point.
+What [validateEnv](#validateenv) validates: the generated manifest, the raw values, and the active
+validation contexts.
 
-Zero dependencies, isomorphic (no `fs`, no `process` other than the values
-the developer passes in). Handles processing, validation, caching, and
-typed access only -- discovery and manifest generation live in
-`@maverickcer/env-cap/build` and are never imported from here.
+#### Remarks
 
-`documentEnv` is exported from here, not `@maverickcer/env-cap/build`, even though
-it exists purely for documentation: it's meant to be called inline in the
-same schema file as `createEnv`, which is ordinary runtime code that may
-end up in any bundle (including a browser one). It must be exactly as
-cheap and safe to import as `createEnv` -- see `document.ts`.
+Only the first call in a process is used; later calls return its outcome, whatever options
+they pass. Call `resetEnvCache()` between runs in a test.
 
 #### Properties
 
@@ -831,7 +833,7 @@ lastRotatedAt?: string;
 ```
 
 ISO date string -- the last time this variable's value was actually rotated. Paired with
-[rotationPeriod](#rotationperiod) to compute rotation compliance. Independent of [expiresAt](#expiresat-1), which
+[rotationPeriod](#rotationperiod) to compute whether rotation is within the declared period. Independent of [expiresAt](#expiresat-1), which
 states when the *current* value stops being valid, not when it was last changed -- a value can
 be freshly rotated and still have a near-term `expiresAt` (a short-lived token), or long overdue
 for rotation while its `expiresAt` (if any) is still comfortably in the future.
@@ -1253,6 +1255,9 @@ global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Acc
 key throws until [validateEnv](#validateenv) has run successfully for the runtime this contract
 was passed to.
 
+The contract redacts itself under `console.log`, `String()`, `JSON.stringify` and template
+interpolation. Spreading it or calling `Object.entries()` on it reads every value, so do not.
+
 #### Remarks
 
 `createEnv` is runtime-only: `processor`/`validator`/`default` are the
@@ -1376,7 +1381,21 @@ Validates every variable in every contract in `options.manifest` against
 
 Idempotent: the first successful (or failed) call is authoritative for the life of the
 process -- later calls return (or re-throw) that same outcome without re-running any
-processor or validator. Concurrent in-flight calls share one underlying run.
+processor or validator. Concurrent in-flight calls share one underlying run. Call
+`resetEnvCache()` to validate again, for example between test scenarios.
+
+The record of validated values is frozen, but only one level deep: an object, array or `URL`
+a processor returns stays mutable. A failure message carries variable and contract names and
+the message your processor or validator produced, never the value itself.
+
+#### Example
+
+```ts
+import { validateEnv } from "@maverickcer/env-cap"
+import { manifest } from "./generated/env.manifest"
+
+await validateEnv({ manifest, values: process.env })
+```
 
 #### Throws
 

@@ -1,24 +1,24 @@
-# Docs/ownership-report generator
+# Docs and ownership-report generator
 
-Generates `docs/ENVIRONMENT.md` (the rich Markdown catalog), `docs/OWNERSHIP.md` (the dependency & ownership report), and `.env.example` — what `env-cap --docs`/`--ownership`/`--env-example` used to write for this example before those flags were removed from the CLI surface. See [ADR 0046](../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md) for why: none of the three has a real *runtime* consumer the way the generated manifest does (`src/startup.ts` `import`s `src/generated/env.manifest.ts` and passes it to `validateEnv()`; nothing in this app reads `docs/ENVIRONMENT.md`), so generating them is application-level code now, not a CLI concern.
+Writes `docs/ENVIRONMENT.md` (the variable catalog), `docs/OWNERSHIP.md` (the dependency and ownership report) and `.env.example` for this example.
+
+The CLI writes only the manifest and the evidence file, because only those have a runtime or evidence consumer ([ADR 0046](../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)). These three files come from application code instead.
 
 ## What it calls
 
-[`run.ts`](run.ts) imports `generateDocumentation`/`generateUsageReport` directly from `@maverickcer/env-cap/build` (both fully exported, Stable per [ADR 0045](../../../../specs/decisions/0045-promote-experimental-surfaces-to-stable.md)) — the same orchestrators the removed `--docs`/`--ownership` CLI flags called internally, just invoked directly instead of through argv parsing.
+- [`run.ts`](run.ts) calls `generateDocumentation()` and `generateUsageReport()` from `@maverickcer/env-cap/build`.
+- [`check.ts`](check.ts) calls `checkEnvArtifacts()` with the same options, and writes nothing.
 
-[`check.ts`](check.ts) is the `--check` counterpart, via the same package's exported `checkEnvArtifacts()` — the removed `env-cap --check --docs --ownership --env-example` combination's own function, called directly with the same options `run.ts` passes to `generateDocumentation()`/`generateUsageReport()`. `npm run check` (see `package.json`) runs `env-cap --check` (manifest + evidence — the two outputs with a real consumer/contract) and then this script (docs/ownership/env-example), so every artifact this example generates is still drift-checked, split across the same CLI/application-code boundary as generation itself. This is what keeps `test/examples/application.test.ts`'s `checkArtifactsFresh()` assertion accurate.
-
-This intentionally does **not** parse `docs/env.evidence.json`. That file is a separate, versioned projection (`EvidenceModel`/`ContractModel` — see ADR 0038) of the same underlying analysis, not the raw `DiscoveredContract[]`/`ImportResolutionContext` shape `generateDocumentation()`/`generateUsageReport()`/`checkEnvArtifacts()` need, and the internal pass that produces that raw shape (`assembleProject()`/`computeScanSurface()`) is deliberately not part of `@maverickcer/env-cap/build`'s public surface (ADR 0010's "engine internals stay private" precedent). So each function here runs its own real discovery+link pass — exactly what the removed CLI flags did under the hood — rather than trying to reconstruct that pass from the JSON artifact.
+Each call runs its own discovery pass. The scripts do not read `docs/env.evidence.json`, because the evidence model does not carry the discovery shape these functions need ([ADR 0010](../../../../specs/decisions/0010-dependency-ownership-engine-scope-boundary.md)).
 
 ## Running it
 
-```bash
-npm run docs:reports   # generate
-npm run check           # verify (manifest + evidence via the CLI, docs/ownership/env-example via check.ts)
-```
+| Command                | Exit code | Line of output to look for                                                         |
+| ---------------------- | --------- | ---------------------------------------------------------------------------------- |
+| `npm run docs:reports` | `0`       | `[generate-docs] wrote docs/ENVIRONMENT.md`                                        |
+| `npm run check`        | `0`       | `[generate-docs check] docs/ownership artifacts are up to date.`                   |
+| `npm run check`        | `1`       | `[generate-docs check] one or more docs/ownership artifacts are stale or missing.` |
 
-`docs:reports` chains `npm run docs` first (regenerates `src/generated/env.manifest.ts` and `docs/env.evidence.json` via the `env-cap` CLI) so the evidence artifact this script runs alongside is always current. `npm run typecheck`/`npm start` chain `docs:reports` too — see `package.json`.
+`docs:reports` runs `npm run docs` first, so the manifest and evidence file are current. `npm run check` runs `env-cap --check` for those two files, then `check.ts` for the other three.
 
-## Precedent
-
-Matches `examples/nextjs-app/scripts/generate-docs` and `examples/team-service/scripts/generate-docs`'s own identical pattern — all three examples this change touched follow the same split.
+`test/examples/application.test.ts` runs `npm run check` in CI's `examples` job.

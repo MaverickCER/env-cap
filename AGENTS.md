@@ -36,10 +36,11 @@ and aggregated at build time. There is no global `env` object.
    per canonical fact model, e.g. `./schema/contract-model`), and `./package.json`. Import
    only from these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported
    build internal (e.g. the dependency-graph engine).
-5. **Runtime and build are strictly separated.** `src/build` uses `node:fs`/`node:path`/
-   `typescript` and must never be imported from runtime/browser code. `src/runtime` has
-   zero filesystem access and zero dependencies, and is held to a 3KB gzip budget
-   (`npm run size`).
+5. **Runtime and build are strictly separated.** `src/build` uses `node:path` and
+   `typescript`, never `node:fs`. It takes a `BuildFileSystem` from its caller; only `src/cli`
+   may import `node:fs` (ADR 0040). It must never be imported from runtime or browser code.
+   `src/runtime` imports no Node module, has no filesystem access, and is held to a 3 KB gzip
+   budget (`npm run size`).
 6. **Contracts self-redact; errors never carry values.** `console.log(paymentsEnv)`
    prints only `EnvContract("payments") { N variable(s) }`. Validation errors are built
    from variable name, contract name/source, failure kind, and the developer's own error
@@ -113,15 +114,15 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
 
 <!-- ipc:begin entry-points -->
 
-| Export                               | Source               | Environment           | Tier   | Purpose                                                                                                                                                           |
-| ------------------------------------ | -------------------- | --------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@maverickcer/env-cap`               | `src/runtime/`       | isomorphic, zero deps | Stable | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`                                                                          |
-| `@maverickcer/env-cap/build`         | `src/build/`         | Node-only, dev/CI     | Stable | discovery, AST analysis, artifact generation (see `VERSIONING.md` — the four `generate*()` orchestrators and the lower-level primitives are all Stable, ADR 0045) |
-| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | isomorphic, optional  | Stable | `processors` / `validators`                                                                                                                                       |
-| `@maverickcer/env-cap/node`          | `src/node/`          | Node-only, dev/CI     | Stable | `nodeBuildFileSystem` — the ready-made `BuildFileSystem` adapter a build script hands to `./build`                                                                |
-| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | isomorphic, optional  | Stable | `defineEvidenceProjection` — pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)                                                                |
-| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node-only, optional   | Stable | `no-raw-process-env` and `no-node-fs` lint rules                                                                                                                  |
-| `@maverickcer/env-cap/schema`        | `schemas/`           | static JSON           | Stable | The published JSON Schema for `env-cap --json` output (`env-cap-report.schema.json`), plus the model schemas under `./schema/*`                                   |
+| Export                               | Source               | Environment                                                   | Tier   | Purpose                                                                                                                                                      |
+| ------------------------------------ | -------------------- | ------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@maverickcer/env-cap`               | `src/runtime/`       | No Node module or Node global                                 | Stable | `createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, `isEnvContract` and the error types                                                              |
+| `@maverickcer/env-cap/build`         | `src/build/`         | Node only, in development and CI                              | Stable | Discovery, AST analysis and artifact generation. The four `generate*()` orchestrators and the lower-level primitives are Stable (ADR 0045, `VERSIONING.md`). |
+| `@maverickcer/env-cap/helpers`       | `src/helpers/`       | No Node module; `processors.base64()` returns a Node `Buffer` | Stable | `processors` and `validators`                                                                                                                                |
+| `@maverickcer/env-cap/node`          | `src/node/`          | Node only, in development and CI                              | Stable | `nodeBuildFileSystem`, the `BuildFileSystem` adapter a build script hands to `./build`                                                                       |
+| `@maverickcer/env-cap/evidence`      | `src/evidence/`      | No Node module or Node global                                 | Stable | `defineEvidenceProjection`, pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)                                                            |
+| `@maverickcer/env-cap/eslint-plugin` | `src/eslint-plugin/` | Node only, inside the project's ESLint                        | Stable | The `no-raw-process-env` and `no-node-fs` lint rules                                                                                                         |
+| `@maverickcer/env-cap/schema`        | `schemas/`           | Static JSON                                                   | Stable | The JSON Schema for `env-cap --json` output (`env-cap-report.schema.json`) and the model schemas under `./schema/*`                                          |
 
 <!-- ipc:end entry-points -->
 
