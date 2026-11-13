@@ -137,13 +137,13 @@ describe("buildChangeModel", () => {
         file: "a/env.schema.ts",
         exportName: "aEnv",
         // Resolved from the declaring contract, not carried on the change
-        // report's own refs -- see `ContractRef`.
+        // report's own refs: see `ContractRef`.
         contractName: "aEnv",
         previousKey: "OLD_KEY",
         currentKey: "NEW_KEY",
       },
     ])
-    // The legacy report itself is untouched -- the rename's two halves still appear there too.
+    // The legacy report itself is untouched: the rename's two halves still appear there too.
     expect(model.manifest.addedVariables).toHaveLength(1)
     expect(model.manifest.removedVariables).toHaveLength(1)
   })
@@ -168,7 +168,7 @@ describe("buildChangeModel", () => {
 
   it("does not pick an added-variable ref sharing exportName+key but declared under a different file", () => {
     // Two DIFFERENT files can share an exportName (only `${file}#${exportName}`
-    // is truly unique) -- a decoy ref matching on exportName+key but NOT
+    // is truly unique): a decoy ref matching on exportName+key but NOT
     // file must never win, even when it's the FIRST candidate `.find()`
     // sees.
     const report: ManifestChangeReport = {

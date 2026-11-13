@@ -8,13 +8,13 @@ import type { OwnershipModel } from "./ownership-model.js"
 /**
  * Bump only when a reader could misinterpret the new shape of `EvidenceModel`
  * itself (not any one sub-model's own `<MODEL>_SCHEMA_VERSION`, which is
- * versioned independently) -- same rule every other canonical model follows.
+ * versioned independently): same rule every other canonical model follows.
  */
 export const EVIDENCE_MODEL_SCHEMA_VERSION = 1
 
 /**
  * Who/when/what produced a given `EvidenceModel` instance. Caller-supplied,
- * never ambient-detected -- `generateEvidenceModel()` never shells out to
+ * never ambient-detected: `generateEvidenceModel()` never shells out to
  * `git` itself, mirroring ADR 0012's live-expiration-callback precedent.
  */
 export interface EvidenceProvenance {
@@ -33,7 +33,7 @@ export interface EvidenceProvenance {
  * This type is the one intentional exception to `src/build/`'s zero-
  * cross-folder-import rule: `src/evidence/` imports it with `import type`
  * only (fully erased at compile time under `verbatimModuleSyntax`), the same
- * shape as `helpers`' single sanctioned edge onto `runtime` -- see
+ * shape as `helpers`' single sanctioned edge onto `runtime`; see
  * `specs/architecture.md`. `src/evidence/` never imports a *value* from
  * here, only this shape, so it stays isomorphic and Node-free. An actual
  * `EvidenceModel` instance is produced by {@link generateEvidenceModel}

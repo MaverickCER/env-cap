@@ -138,7 +138,7 @@ describe("renderEnvExample", () => {
     expect(output).toContain("PORT=5432")
   })
 
-  it("renders a bare KEY= line with no comments at all when nothing is documented -- every field guard must actually suppress its own comment, not just fill in 'undefined'", () => {
+  it("renders a bare KEY= line with no comments at all when nothing is documented: every field guard must actually suppress its own comment, not just fill in 'undefined'", () => {
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
       exportName: "aEnv",
@@ -241,7 +241,7 @@ describe("renderEnvExample", () => {
     )
   })
 
-  it("shows the context caveat when only SOME variables on SOME contracts declare a context -- not only when every one does", () => {
+  it("shows the context caveat when only SOME variables on SOME contracts declare a context: not only when every one does", () => {
     // Contract A has 2 variables, only ONE with a context; contract B has
     // none at all. Distinguishes the real `.some(c => c.variables.some(...))`
     // from an `.every` at either level, which would require ALL variables on
@@ -331,10 +331,10 @@ describe("renderEnvExample", () => {
     expect(output.indexOf("A_KEY=")).toBeLessThan(output.indexOf("Z_KEY="))
   })
 
-  it("sorts by file, not input order -- for a key shared across contracts, the alphabetically-FIRST file wins the live slot even when passed last", () => {
+  it("sorts by file, not input order: for a key shared across contracts, the alphabetically-FIRST file wins the live slot even when passed last", () => {
     // Both declare the SAME key ("SHARED"), so which one renders live (vs
     // commented, deferring to the other) depends entirely on `sorted`'s own
-    // file order -- unlike a plain "does X appear before Y" check across
+    // file order: unlike a plain "does X appear before Y" check across
     // DIFFERENT keys, which the later `[...keys].sort()` on
     // `activeByKey`/`inactiveByKey` would already satisfy on its own,
     // independent of whether `sorted` itself was ever actually sorted.
@@ -353,7 +353,7 @@ describe("renderEnvExample", () => {
     // Passed in reverse-of-alphabetical (by file) order.
     const output = renderEnvExample([z, a])
     expect(output).toMatch(/^SHARED=/m)
-    expect(output).toContain('# Also declared by "z" -- see "a" above.')
+    expect(output).toContain('# Also declared by "z". See "a" above.')
   })
 
   it("handles two contracts declared in the same schema file (sort comparator's equal-file case)", () => {
@@ -391,7 +391,7 @@ describe("renderEnvExample", () => {
     const output = renderEnvExample([a, b])
     expect(output.match(/^SHARED=/gm)).toHaveLength(1)
     expect(output.match(/^# SHARED=/gm)).toHaveLength(1)
-    expect(output).toContain('# Also declared by "b" -- see "a" above.')
+    expect(output).toContain('# Also declared by "b". See "a" above.')
   })
 
   it("never shows a disabled contract's variable when an active contract already declares the same key", () => {
@@ -437,7 +437,7 @@ describe("renderEnvExample", () => {
     })
 
     const output = renderEnvExample([postgres, mongo])
-    expect(output).toContain('# Disabled -- feature "mongo" is not active.')
+    expect(output).toContain('# Disabled: feature "mongo" is not active.')
     expect(output).toContain("# Mongo replica set name")
     expect(output).toContain("# MONGODB_REPLICA_SET=rs0")
     expect(output).not.toMatch(/^MONGODB_REPLICA_SET=/m) // never live
@@ -462,7 +462,7 @@ describe("extractDeclaredVariables", () => {
     expect(extractDeclaredVariables("# nothing here\n")).toEqual([])
   })
 
-  it("trims leading/trailing whitespace before matching -- an indented KEY=value line is still extracted", () => {
+  it("trims leading/trailing whitespace before matching: an indented KEY=value line is still extracted", () => {
     expect(extractDeclaredVariables("  PADDED_KEY=value  \n")).toEqual(["PADDED_KEY"])
   })
 
@@ -471,11 +471,11 @@ describe("extractDeclaredVariables", () => {
     expect(extractDeclaredVariables("NOT AN ASSIGNMENT\n")).toEqual([])
   })
 
-  it("extracts a declaration whose value happens to end in '#' -- the comment check is startsWith, not endsWith", () => {
+  it("extracts a declaration whose value happens to end in '#': the comment check is startsWith, not endsWith", () => {
     expect(extractDeclaredVariables("HAS_HASH_AT_END=value#\n")).toEqual(["HAS_HASH_AT_END"])
   })
 
-  it("requires the identifier to start at the very beginning of the line -- a 'KEY=' pattern appearing later, after non-identifier characters, does not count", () => {
+  it("requires the identifier to start at the very beginning of the line: a 'KEY=' pattern appearing later, after non-identifier characters, does not count", () => {
     expect(extractDeclaredVariables("123 NOT_AT_START=value\n")).toEqual([])
   })
 })
@@ -500,7 +500,7 @@ describe("extractCommentedVariables", () => {
     expect(extractCommentedVariables("## DOUBLE_HASH=value\n")).toEqual(["DOUBLE_HASH"])
   })
 
-  it("trims leading/trailing whitespace before matching -- an indented '# KEY=value' comment is still extracted", () => {
+  it("trims leading/trailing whitespace before matching: an indented '# KEY=value' comment is still extracted", () => {
     expect(extractCommentedVariables("   # PADDED_COMMENT=value\n")).toEqual(["PADDED_COMMENT"])
   })
 
@@ -509,7 +509,7 @@ describe("extractCommentedVariables", () => {
     expect(extractCommentedVariables("# not an assignment\n")).toEqual([])
   })
 
-  it("requires the identifier to start at the very beginning of the (hash-stripped) content -- a 'KEY=' pattern appearing later does not count", () => {
+  it("requires the identifier to start at the very beginning of the (hash-stripped) content: a 'KEY=' pattern appearing later does not count", () => {
     expect(extractCommentedVariables("# 123 NOT_AT_START=value\n")).toEqual([])
   })
 
@@ -689,7 +689,7 @@ describe("writeEnvExample", () => {
     expect(written).toContain("STRIPE_KEY=")
   })
 
-  it("writes byte-for-byte what renderEnvExample(contracts) alone produces when nothing existed before -- no stray reconciliation header content", async () => {
+  it("writes byte-for-byte what renderEnvExample(contracts) alone produces when nothing existed before: no stray reconciliation header content", async () => {
     const location = path.join(root, ".env.example")
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
@@ -701,7 +701,7 @@ describe("writeEnvExample", () => {
     expect(written).toBe(renderEnvExample([contract]))
   })
 
-  it("never overwrites an existing file -- writes a timestamped sibling instead", async () => {
+  it("never overwrites an existing file: writes a timestamped sibling instead", async () => {
     const location = path.join(root, ".env.example")
     await fs.writeFile(location, "STRIPE_KEY=sk_hand_written\n", "utf8")
 
@@ -756,7 +756,7 @@ describe("writeEnvExample", () => {
     expect(result.variablesToAdd).toEqual(["PORT"])
 
     const written = await fs.readFile(assertWritten(result), "utf8")
-    // A bare "#" separator line precedes each section header -- checked
+    // A bare "#" separator line precedes each section header: checked
     // exactly, not just that the descriptive text appears anywhere.
     expect(written).toContain(
       "#\n# Remove the following variables (no longer declared by any feature):",
@@ -811,7 +811,7 @@ describe("writeEnvExample", () => {
     expect(written).not.toContain("Remove the following")
     expect(written).not.toContain("Comment the following")
     expect(written).not.toContain("Add the following")
-    // An empty reconciliation must render a genuinely EMPTY header -- byte-
+    // An empty reconciliation must render a genuinely EMPTY header: byte-
     // identical to rendering with no header at all, not just free of the
     // three known section strings.
     expect(written).toBe(renderEnvExample(contracts()))
@@ -852,7 +852,7 @@ describe("writeEnvExample", () => {
       expect(written).not.toContain("LEGACY_FEATURE_FLAG")
       expect(written).not.toContain("Remove the following")
       expect(written).not.toContain("Add the following")
-      // Byte-identical to rendering with no header at all -- not just free
+      // Byte-identical to rendering with no header at all: not just free
       // of the known section strings.
       expect(written).toBe(renderEnvExample(contracts()))
     })

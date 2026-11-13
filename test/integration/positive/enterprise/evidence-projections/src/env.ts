@@ -2,7 +2,7 @@ import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap";
 import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
- * The exact same schema as examples/application/src/env.ts, deliberately --
+ * The exact same schema as examples/application/src/env.ts, deliberately:
  * this example isn't about the runtime contract (basic-node already covers
  * that), it's about proving each projection's output is byte-identical to
  * what the existing, already-tested code path produces on the exact same

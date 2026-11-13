@@ -3,7 +3,7 @@ import { Task } from "../db/models/task.model.js";
 import { uploadAttachment } from "../services/storage.service.js";
 
 /**
- * Plain, directly-callable business logic -- see auth.ts's own comment on
+ * Plain, directly-callable business logic: see auth.ts's own comment on
  * why this is kept separate from the createServerFn() wrappers below.
  */
 export interface TaskSummary {

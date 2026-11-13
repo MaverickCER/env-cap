@@ -1,19 +1,18 @@
 /**
- * env-cap's own built-in reference projections, declared through the exact
- * same public `defineEvidenceProjection()` a consumer would use (ADR
- * 0031/0032) -- no privileged internal path, no second way of reading the
- * Evidence Model.
+ * env-cap's own built-in reference projections. They are declared through
+ * the same public `defineEvidenceProjection()` a consumer would use (ADR
+ * 0031/0032). There is no privileged internal path, and no second way of
+ * reading the Evidence Model.
  *
- * This is deliberate dogfooding, not a convenience layer: `renderDocs()`'s
+ * This is deliberate dogfooding, not a convenience layer. `renderDocs()`'s
  * Catalog/ownership/lifecycle sections and `renderUsageReport()`'s ownership
- * table now source their underlying data through these projections, so the
- * extensibility API is exercised by env-cap's own generated output on every
- * single run. If a projector here can't express something, that's a real gap
- * in the public API -- discovered by env-cap itself rather than by a consumer
- * reporting it.
+ * table source their data through these projections. So env-cap's own
+ * generated output exercises the extensibility API on every run. If a
+ * projector here can't express something, that's a real gap in the public
+ * API. It shows up in env-cap's own output, before a consumer has to report it.
  *
  * Every projection is pure and derives *only* from `EvidenceModel`. None
- * reads the filesystem, and none reaches back into `DiscoveredContract` --
+ * reads the filesystem, and none reaches back into `DiscoveredContract`:
  * that would defeat the point, since a consumer only ever has the model.
  */
 
@@ -31,7 +30,7 @@ export interface ConfigurationReferenceEntry {
   /** Root-relative, POSIX-separated path of the declaring contract. */
   readonly file: string
   readonly exportName: string
-  /** The declaring contract's display name, resolved from Contract Model -- the one model that owns it. */
+  /** The declaring contract's display name, resolved from Contract Model: the one model that owns it. */
   readonly contractName: string
   readonly key: string
   readonly description: string | undefined
@@ -44,13 +43,13 @@ export interface ConfigurationReferenceEntry {
   readonly hasProcessor: boolean
   readonly hasValidator: boolean
   readonly expiresAt: string | undefined
-  /** Whether the declaring contract is active. Inactive contracts are included -- the reference documents everything discovered, same scope the Catalog always had. */
+  /** Whether the declaring contract is active. Inactive contracts are included: the reference documents everything discovered, same scope the Catalog always had. */
   readonly active: boolean
 }
 
 /** The Configuration Reference projection's output shape. */
 export interface ConfigurationReference extends Record<string, unknown> {
-  /** The standing "declared, not verified" notice -- see `evidenceDisclaimer()`. Carried in the data, not only in a renderer, so a consumer projecting this to their own format can't accidentally drop it. */
+  /** The standing "declared, not verified" notice: see `evidenceDisclaimer()`. Carried in the data, not only in a renderer, so a consumer projecting this to their own format can't accidentally drop it. */
   readonly disclaimer: string
   /** Every declared variable across every discovered contract, sorted by contract file, then export name, then key. */
   readonly entries: readonly ConfigurationReferenceEntry[]
@@ -67,14 +66,14 @@ function byContractThenKey(
   )
 }
 
-/** Index of every contract by `${file}#${exportName}` -- the join key every projection below uses to resolve display text and contract-level defaults. */
+/** Index of every contract by `${file}#${exportName}`: the join key every projection below uses to resolve display text and contract-level defaults. */
 function contractIndex(
   contracts: readonly ContractModelContract[],
 ): ReadonlyMap<string, ContractModelContract> {
   return new Map(contracts.map((c) => [`${c.file}#${c.exportName}`, c]))
 }
 
-/** The minimal shape {@link groupVariablesByOwner} needs -- structural, not pinned to one model, so the exact same grouping serves `OwnershipModel`'s already-resolved owners and `ContractModel`'s raw ones alike. */
+/** The minimal shape {@link groupVariablesByOwner} needs. It is structural, not pinned to one model. So one grouping serves `OwnershipModel`'s already-resolved owners and `ContractModel`'s raw ones alike. */
 export interface OwnerBearingContract {
   readonly owner: string | undefined
   readonly variables: readonly unknown[]
@@ -88,18 +87,18 @@ type VariableOf<C> = C extends { readonly variables: readonly (infer V)[] } ? V 
  * its contract's), preserving input order within each owner.
  *
  * @remarks
- * The single implementation of "who owns what, rolled up per owner", shared
- * by the {@link ownershipSummary} projection and `docs.ts`'s own rendered
- * ownership matrix. Kept as one function precisely so env-cap's generated
- * Markdown and the projection a consumer reads can never disagree about the
- * grouping -- the same reason `effectiveOwner()` is the single resolution
- * rule (ADR 0028). Variables with no effective owner are omitted entirely
- * rather than bucketed under a synthetic `"unowned"` key, which would read
- * as a real team name; callers that need them ask for them separately.
+ * The single implementation of "who owns what, rolled up per owner". The
+ * {@link ownershipSummary} projection and `docs.ts`'s rendered ownership
+ * matrix share it. One function means env-cap's generated Markdown and the
+ * projection a consumer reads can never disagree about the grouping. That is
+ * also why `effectiveOwner()` is the single resolution rule (ADR 0028).
+ * Variables with no effective owner are omitted entirely. A synthetic
+ * `"unowned"` bucket would read as a real team name. Callers that need them
+ * ask for them separately.
  *
- * `ownerOf` is supplied by the caller so a model whose owners are already
+ * The caller supplies `ownerOf`. So a model whose owners are already
  * resolved (`OwnershipModel`) and one whose aren't (`ContractModel`) both
- * work without this function guessing which it was handed.
+ * work, without this function guessing which it was handed.
  */
 export function groupVariablesByOwner<C extends OwnerBearingContract>(
   contracts: readonly C[],
@@ -124,9 +123,9 @@ export function groupVariablesByOwner<C extends OwnerBearingContract>(
  *
  * @remarks
  * Resolution (variable's own value falling back to its contract's) happens
- * here rather than being left to each consumer, so two readers of this
- * projection can never disagree about who owns a variable -- the same reason
- * `effectiveOwner()` exists on the generator side (ADR 0028).
+ * here rather than being left to each consumer. So two readers of this
+ * projection can never disagree about who owns a variable. That is the same
+ * reason `effectiveOwner()` exists on the generator side (ADR 0028).
  */
 export function configurationReference(evidence: EvidenceModel): ConfigurationReference {
   return projectConfigurationReference(evidence).value
@@ -190,7 +189,7 @@ export interface OwnershipSummary extends Record<string, unknown> {
 }
 
 /**
- * Ownership summary: the inverse of Ownership Model's per-contract view --
+ * Ownership summary: the inverse of Ownership Model's per-contract view;
  * who owns what, rolled up per owner, plus an explicit unowned list.
  */
 export function ownershipSummary(evidence: EvidenceModel): OwnershipSummary {
@@ -262,11 +261,11 @@ export interface ExpiringSoonEntry {
   readonly contractName: string
   /** `undefined` for a contract-level expiry, set for a per-variable one. */
   readonly key: string | undefined
-  /** The raw ISO date string, exactly as declared -- never reformatted. */
+  /** The raw ISO date string, exactly as declared: never reformatted. */
   readonly expiresAt: string
   /** Days remaining as of the run that produced this evidence; negative when already expired. */
   readonly daysRemaining: number
-  /** `true` when `daysRemaining` is negative -- the deadline has already passed. */
+  /** `true` when `daysRemaining` is negative: the deadline has already passed. */
   readonly expired: boolean
   /** How to obtain a replacement value, if the declaration says. */
   readonly refreshInstructions: string | undefined
@@ -286,16 +285,15 @@ export interface ExpiringSoonReport extends Record<string, unknown> {
 
 /**
  * Expiring-Soon report: Lifecycle Model's `expiring` view, joined with
- * ownership and refresh instructions so a reader can act on a row without
+ * ownership and refresh instructions. A reader can act on a row without
  * cross-referencing three other models by hand.
  *
  * @remarks
- * The window itself was applied upstream, when Lifecycle Model was built --
- * this projection deliberately does not re-filter by a date of its own.
- * Recomputing "soon" here would make the projection's answer depend on when
- * it happened to be *read* rather than when the evidence was *generated*,
- * which is exactly the reproducibility property the Evidence Model exists to
- * preserve.
+ * The window itself was applied upstream, when Lifecycle Model was built.
+ * This projection deliberately does not re-filter by a date of its own.
+ * Recomputing "soon" here would tie the answer to when it was *read*, not
+ * when the evidence was *generated*. The Evidence Model exists to preserve
+ * exactly that reproducibility.
  */
 export function expiringSoonReport(evidence: EvidenceModel): ExpiringSoonReport {
   return projectExpiringSoonReport(evidence).value

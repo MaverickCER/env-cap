@@ -10,7 +10,7 @@ export interface Refund {
   status: "COMPLETED";
 }
 
-/** Placeholder for the PayPal Payments API -- no real network call. */
+/** Placeholder for the PayPal Payments API: no real network call. */
 export async function createRefund(input: CreateRefundInput): Promise<Refund> {
   console.log(`[paypal-addon] refunding capture "${input.captureId}" using client ${paypalEnv.PAYPAL_CLIENT_ID}`);
   return {

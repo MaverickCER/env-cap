@@ -1,12 +1,24 @@
 # evidence
 
+Build your own views of the evidence file (`@maverickcer/env-cap/evidence`).
+
+`defineEvidenceProjection()` declares a pure transform from an `EvidenceModel` to a shape you define:
+a dashboard row, an inventory table or a CI comment. The projectors read the model
+through a read-only membrane, and `.project()` also returns which model fields fed each output field
+(ADR 0032). ADR 0031 explains why this is its own entry point.
+
+`generateEvidenceModel()` in `@maverickcer/env-cap/build` assembles the model at build time. This
+module imports no Node module and no TypeScript compiler, and takes the `EvidenceModel` shape as a
+type only. So a projection can run over a JSON-parsed evidence file outside Node; CI runs this
+entry under Bun, Deno and a Web-globals bundle.
+
 ## Interfaces
 
 ### EvidenceProjection()
 
 The function `defineEvidenceProjection()` returns. Callable directly for
 the common case (`projection(evidence)` -> `T`); `.project()` returns the
-same value alongside automatic provenance -- see ADR 0032.
+same value alongside automatic provenance: see ADR 0032.
 
 #### Type Parameters
 
@@ -20,7 +32,7 @@ EvidenceProjection(evidence): T;
 
 The function `defineEvidenceProjection()` returns. Callable directly for
 the common case (`projection(evidence)` -> `T`); `.project()` returns the
-same value alongside automatic provenance -- see ADR 0032.
+same value alongside automatic provenance: see ADR 0032.
 
 #### Parameters
 
@@ -40,7 +52,7 @@ same value alongside automatic provenance -- see ADR 0032.
 project(evidence): EvidenceProjectionResult<T>;
 ```
 
-Same computation as calling the projection directly, plus which `EvidenceModel` field paths fed each output key -- see [EvidenceProjectionResult](#evidenceprojectionresult).
+Same computation as calling the projection directly, plus which `EvidenceModel` field paths fed each output key: see [EvidenceProjectionResult](#evidenceprojectionresult).
 
 ###### Parameters
 
@@ -103,9 +115,9 @@ type EvidenceProjector<T> = (evidence) => T;
 ```
 
 A pure function from the full Evidence Model to one field of a
-projection's output shape. Must not mutate `evidence` -- the membrane
+projection's output shape. Must not mutate `evidence` (the membrane
 `defineEvidenceProjection()` wraps it in enforces that at runtime, see
-`createTrackingProxy()` below -- and must not perform I/O; env-cap can
+`createTrackingProxy()` below) and must not perform I/O; env-cap can
 enforce the read-only half of purity but not the "no side effects" half.
 
 #### Type Parameters
@@ -134,11 +146,11 @@ function defineEvidenceProjection<T>(schema): EvidenceProjection<T>;
 
 Declares a projection: a named, pure transform from the immutable
 `EvidenceModel` to any consumer-defined output shape, built entirely from
-`schema`'s independent per-field projector functions -- see ADR 0031/0032.
+`schema`'s independent per-field projector functions; see ADR 0031/0032.
 
-env-cap's own reference projections (`.env.example`, Environment
+The reference projections env-cap ships (`.env.example`, Environment
 Configuration Reference, Configuration Ownership, etc.) are built through
-this exact function, with no privileged internal path -- a consumer's own
+this exact function, with no privileged internal path. A consumer's own
 projection is a first-class citizen, not a lesser one.
 
 #### Type Parameters

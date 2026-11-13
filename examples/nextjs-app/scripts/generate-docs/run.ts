@@ -1,31 +1,16 @@
-// Regenerates docs/ENVIRONMENT.md, docs/OWNERSHIP.md, and .env.example --
-// what `env-cap --docs`/`--ownership`/`--env-example` used to write for this
-// example, before those flags were removed from the CLI surface (see
-// specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md).
-// Neither has a real *runtime* consumer -- nothing in this app `import`s
-// ENVIRONMENT.md/OWNERSHIP.md/.env.example the way `src/env.ts` imports the
-// generated manifest -- so generating them moved from a CLI flag to plain
-// application code, calling `@maverickcer/env-cap/build`'s still-fully-exported
-// `generateDocumentation()`/`generateUsageReport()` directly. Run via
-// `npm run docs:reports` (see package.json), which chains `npm run docs`
-// first so `docs/env.evidence.json` -- the evidence artifact this script
-// runs alongside -- is always current with what gets written here.
+// Regenerates docs/ENVIRONMENT.md, docs/OWNERSHIP.md and .env.example by
+// calling `generateDocumentation()` and `generateUsageReport()` from
+// `@maverickcer/env-cap/build`. Nothing in the app imports these files at
+// runtime, so the CLI does not write them; it writes only the manifest and the
+// evidence file (specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md).
+// `npm run docs:reports` runs `npm run docs` first, so `docs/env.evidence.json`
+// is current alongside them.
 //
-// This does NOT parse `docs/env.evidence.json` itself: `generateDocumentation()`/
-// `generateUsageReport()`'s own inputs (a freshly-linked `DiscoveredContract[]`
-// graph, an `ImportResolutionContext` for the usage scan) aren't the
-// persisted evidence artifact's shape (`ContractModel`/`EvidenceModel`, a
-// separate, versioned projection -- see ADR 0038) and aren't reconstructible
-// from it; `assembleProject()`/`computeScanSurface()` (the internal pass
-// that produces them) are deliberately not part of `@maverickcer/env-cap/build`'s public
-// surface (ADR 0010's "engine internals stay private" precedent). Each
-// orchestrator below runs its own real discovery+link pass instead -- the
-// same thing the removed CLI flags did under the hood -- rather than trying
-// to rebuild that pass from the JSON artifact. See
-// examples/nextjs-app/scripts/open-config-alignment (removed; see git
-// history) for the sibling pattern this *would* follow if the job here were
-// projecting over already-persisted evidence instead of rendering the full
-// docs/ownership catalogs, which need the richer, pre-projection shape.
+// It runs its own discovery pass instead of reading `docs/env.evidence.json`.
+// The two generators need the linked contract graph and the import-resolution
+// context. The evidence file holds a projected shape (ADR 0038) that cannot
+// rebuild them, and the pass that builds them stays private to `./build`
+// (ADR 0010).
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { generateDocumentation, generateUsageReport } from "@maverickcer/env-cap/build"

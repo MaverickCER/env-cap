@@ -121,7 +121,7 @@ describe("buildLifecycleModel", () => {
   it("includes a contract when ONLY deprecatedReason is set at the contract level (deprecated itself left unset)", () => {
     // The prior test sets `deprecated` and `deprecatedReason` together, so
     // it can't isolate `deprecatedReason !== undefined` from `deprecated
-    // !== undefined` in the same OR-chain -- this contract has no other
+    // !== undefined` in the same OR-chain: this contract has no other
     // contract-level lifecycle field at all.
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
@@ -136,7 +136,7 @@ describe("buildLifecycleModel", () => {
 
   it("includes a contract when ONLY contract-level retention is set (no expiresAt/deprecated/deprecatedReason, no qualifying variables)", () => {
     // Isolates `contract.retention !== undefined` in the `hasContractLevelData`
-    // OR-chain -- the same reason the deprecatedReason-only test above exists.
+    // OR-chain: the same reason the deprecatedReason-only test above exists.
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
       exportName: "aEnv",
@@ -174,7 +174,7 @@ describe("buildLifecycleModel", () => {
 
   it("filters in a variable when ONLY deprecated is set (no expiresAt/refreshInstructions/removeBy/renamedFrom/retention)", () => {
     // Isolates `variable.deprecated !== undefined` in `hasLifecycleData`'s
-    // OR-chain -- every other test combines it with removeBy or other
+    // OR-chain: every other test combines it with removeBy or other
     // fields, which alone would already satisfy the OR.
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
@@ -187,7 +187,7 @@ describe("buildLifecycleModel", () => {
 
   it("filters in a variable when ONLY removeBy is set (no expiresAt/deprecated/refreshInstructions/renamedFrom/retention)", () => {
     // Isolates `variable.removeBy !== undefined` in `hasLifecycleData`'s
-    // OR-chain -- every other test combines it with `deprecated`, which
+    // OR-chain: every other test combines it with `deprecated`, which
     // alone would already satisfy the OR.
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
@@ -230,7 +230,7 @@ describe("buildLifecycleModel", () => {
         rotationTriggerEvents: undefined,
         // None of the four rotation-specific fields are set here (only the
         // pre-existing expiresAt/refreshInstructions/deprecated/... fields
-        // are) -- "undeclared" is the correct, honest computed status.
+        // are): "undeclared" is the correct, honest computed status.
         rotationStatus: "undeclared",
       },
     ])
@@ -266,7 +266,7 @@ describe("buildLifecycleModel", () => {
     expect(model.expiring[0]).toMatchObject({ key: "SOON", expiresAt: "2026-01-15" })
     // Unlike ExpiringEntry's own doc comment (an absolute path, in
     // computeExpiringEntries()'s other direct consumers), LifecycleModel's
-    // own `expiring` field is root-relative -- matching every other
+    // own `expiring` field is root-relative: matching every other
     // canonical model's file convention, not the absolute path
     // computeExpiringEntries() itself returns.
     expect(model.expiring[0]!.file).toBe("a/env.schema.ts")
@@ -393,7 +393,7 @@ describe("hasRotationData / computeRotationStatus", () => {
     ).not.toBe("expired")
   })
 
-  it('does not treat expiresAt === now (the exact boundary) as "expired" -- only strictly in the past counts', () => {
+  it('does not treat expiresAt === now (the exact boundary) as "expired": only strictly in the past counts', () => {
     const status = computeRotationStatus(
       { ...bare, expiresAt: NOW.toISOString(), authenticatorType: "api-key" },
       NOW,
@@ -434,7 +434,7 @@ describe("hasRotationData / computeRotationStatus", () => {
     expect(status).toBe("compliant")
   })
 
-  it('returns "overdue" (fails closed) when lastRotatedAt is in the future -- a rotation timestamped ahead of "now" can\'t have actually happened yet', () => {
+  it('returns "overdue" (fails closed) when lastRotatedAt is in the future: a rotation timestamped ahead of "now" can\'t have actually happened yet', () => {
     const status = computeRotationStatus(
       { ...bare, rotationPeriod: "90 days", lastRotatedAt: "2026-12-01" },
       NOW,
@@ -470,7 +470,7 @@ describe("hasRotationData / computeRotationStatus", () => {
     expect(status).toBe("overdue")
   })
 
-  it('returns "overdue" (fails closed) for a zero-length rotationPeriod -- "rotate every 0 days" is treated as unverifiable, not as an always-due-instantly duration', () => {
+  it('returns "overdue" (fails closed) for a zero-length rotationPeriod: "rotate every 0 days" is treated as unverifiable, not as an always-due-instantly duration', () => {
     const status = computeRotationStatus(
       { ...bare, rotationPeriod: "0 days", lastRotatedAt: "2026-05-01" },
       NOW,
@@ -505,7 +505,7 @@ describe("parseRotationPeriodDays", () => {
     expect(parseRotationPeriodDays("  90 days  ")).toBe(90)
   })
 
-  it("rejects a plain form with trailing garbage after the unit -- the whole string must match, not just a prefix", () => {
+  it("rejects a plain form with trailing garbage after the unit: the whole string must match, not just a prefix", () => {
     expect(parseRotationPeriodDays("90 daysx")).toBeUndefined()
     expect(parseRotationPeriodDays("90 days and change")).toBeUndefined()
   })
@@ -520,11 +520,11 @@ describe("parseRotationPeriodDays", () => {
     expect(parseRotationPeriodDays("p90d")).toBe(90)
   })
 
-  it("rejects an ISO 8601 form with trailing garbage -- the whole string must match, not just a prefix", () => {
+  it("rejects an ISO 8601 form with trailing garbage: the whole string must match, not just a prefix", () => {
     expect(parseRotationPeriodDays("P90Dxyz")).toBeUndefined()
   })
 
-  it("rejects an ISO 8601 form with leading garbage before the 'P' -- the whole string must match, not just a suffix", () => {
+  it("rejects an ISO 8601 form with leading garbage before the 'P': the whole string must match, not just a suffix", () => {
     expect(parseRotationPeriodDays("xP90D")).toBeUndefined()
   })
 
@@ -535,7 +535,7 @@ describe("parseRotationPeriodDays", () => {
     expect(parseRotationPeriodDays("every other release")).toBeUndefined()
   })
 
-  it("returns undefined for a zero-length period in either grammar -- a degenerate duration, not a real one", () => {
+  it("returns undefined for a zero-length period in either grammar: a degenerate duration, not a real one", () => {
     expect(parseRotationPeriodDays("0 days")).toBeUndefined()
     expect(parseRotationPeriodDays("0d")).toBeUndefined()
     expect(parseRotationPeriodDays("0 weeks")).toBeUndefined()

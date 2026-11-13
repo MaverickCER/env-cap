@@ -4,7 +4,7 @@ import type { GenerateUsageReportResult } from "../../src/build/generate-usage.j
 
 // Nothing else calls renderUsageReport() with more than a single, mostly-
 // empty computation (see test/build/usage-generate.test.ts, which only
-// asserts a handful of substrings on the real end-to-end output) -- every
+// asserts a handful of substrings on the real end-to-end output): every
 // render*() helper's non-empty branch, and the sort comparator's both
 // directions, are exercised here directly instead.
 type Computed = Omit<GenerateUsageReportResult, "reportPath">
@@ -304,7 +304,7 @@ describe("renderUsageReport", () => {
         "\n" +
         "## Abandoned ownership\n" +
         "\n" +
-        "Contracts never imported anywhere in the scanned repository -- a feature's schema outliving the feature.\n" +
+        "Contracts never imported anywhere in the scanned repository: a feature's schema outliving the feature.\n" +
         "\n" +
         "| Contract | Owner | File |\n" +
         "|---|---|---|\n" +
@@ -312,7 +312,7 @@ describe("renderUsageReport", () => {
         "\n" +
         "## Unresolved consumers (barrel re-exports)\n" +
         "\n" +
-        "Contracts reachable only through an unresolved `export * from` barrel re-export -- cannot be proven abandoned or consumed. Advisory only; never fails a build.\n" +
+        "Contracts reachable only through an unresolved `export * from` barrel re-export. They cannot be proven abandoned or consumed. Advisory only; never fails a build.\n" +
         "\n" +
         "- **barreled** (`b.ts`): reason\n" +
         "\n" +
@@ -322,7 +322,7 @@ describe("renderUsageReport", () => {
         "\n" +
         "Searched: application.\n" +
         "\n" +
-        'A blank Stale/missing citations cell is the strongest "looks genuinely unused" signal -- no developer has ever claimed otherwise. A non-blank cell means someone specifically claimed dynamic access here via `dynamicAccess`, and that claim can no longer be verified (ADR 0037) -- check with them before deleting.\n' +
+        'A blank Stale/missing citations cell is the strongest "looks unused" signal: no developer has ever claimed otherwise. A non-blank cell means someone specifically claimed dynamic access here via `dynamicAccess`, and that claim can no longer be verified (ADR 0037). Check with them before deleting.\n' +
         "\n" +
         "| Variable | Contract | Owner | Stale/missing citations |\n" +
         "|---|---|---|---|\n" +
@@ -330,7 +330,7 @@ describe("renderUsageReport", () => {
         "\n" +
         "## Indeterminate (dynamic access)\n" +
         "\n" +
-        "Dynamic (computed) property access was observed -- usage cannot be determined statically. Never guessed at.\n" +
+        "Dynamic (computed) property access was observed, so usage cannot be determined statically. Never guessed at.\n" +
         "\n" +
         "| Variable | Contract | Reason | Stale/missing citations |\n" +
         "|---|---|---|---|\n" +
@@ -338,7 +338,7 @@ describe("renderUsageReport", () => {
         "\n" +
         "## Asserted (developer-acknowledged dynamic access)\n" +
         "\n" +
-        "Variables env-cap's own scan would otherwise flag as unconsumed or indeterminate, but a developer has cited exactly where the dynamic access happens via `dynamicAccess`. The raw static status is shown alongside the citation, never hidden behind it -- a citation is a re-acknowledgment, not proof.\n" +
+        "Variables env-cap's own scan would otherwise flag as unconsumed or indeterminate, but a developer has cited exactly where the dynamic access happens via `dynamicAccess`. The raw static status is shown alongside the citation, never hidden behind it. A citation is a re-acknowledgment, not proof.\n" +
         "\n" +
         "| Variable | Contract | Static status | Developer assertion |\n" +
         "|---|---|---|---|\n" +

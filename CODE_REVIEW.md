@@ -6,10 +6,10 @@ A change is safe to merge when CI is green, no invariant below has moved, and ev
 
 A change is ready to merge when all of these hold:
 
-- The `contract` and `lint` checks are green; the branch ruleset requires both.
-- Every other CI job is green too. They are the Bun and Deno suite, the examples, the integration fixtures, `typescript-5`, `typescript-compat` and the package-manager smoke test.
-- The `required` check waits for those jobs, but the ruleset does not yet require `required`, so a reviewer must look.
-- `benchmark-pr` is green. A failure there skips `lint`, `verify` and `contract`, which GitHub then counts as passing; check it by hand.
+- The `contract`, `lint` and `required` checks are green; the branch ruleset requires all three.
+- `required` waits for every gate job in ci.yml: `verify`, `lint`, `contract`, `cross-runtime` (the Bun and Deno suite), `examples`, `integration-fixtures`, `typescript-5`, `typescript-compat`, `package-managers` and `benchmark-pr`.
+- Three jobs are outside `required`. `verify-current` tries the newest Node and is informational. `badges` and `deploy` run only after a push to `main`.
+- A `benchmark-pr` failure also fails `contract` in its first step, so it cannot pass as a skip.
 - Every invariant in §2 that the change touches still holds, checked in the code, not the description.
 - Any public-surface change (§3) is intended, explained, and carries the right changeset.
 - Any generated artifact in the diff (§4) has been read as output.
@@ -70,7 +70,7 @@ A pull request written with an AI assistant gets the same scrutiny. Its common f
 - **Tests that assert the bug:** a regenerated golden or a test that encodes whatever the code now does. Confirm the expected value independently.
 - **Mutation gaming:** a test that kills a mutant but asserts nothing meaningful.
 
-[`AGENTS.md`](AGENTS.md), [`PROMPT.md`](PROMPT.md) and [`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md) are the rules an assistant works against; use the same list.
+[`AGENTS.md`](AGENTS.md) and [`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md) are the rules an assistant works against; use the same list.
 
 ## 7. Required verification
 

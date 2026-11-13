@@ -2,7 +2,7 @@
 // imported by application code.
 //
 // Unlike project-env-example.mjs, this doesn't self-compare against
-// docs/ENVIRONMENT.md -- Contract Model's canonical alphabetical variable
+// docs/ENVIRONMENT.md: Contract Model's canonical alphabetical variable
 // ordering means this projection's output isn't byte-identical to
 // generateDocumentation()'s direct-call output for this schema (see
 // projections/config-reference.mjs's own doc comment). Regression

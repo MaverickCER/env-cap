@@ -5,19 +5,19 @@ import {
   readOnlyMembraneError,
 } from "../../src/evidence/define-projection.js"
 
-// `.toThrow(someString)` is a SUBSTRING match, not exact equality -- every
+// `.toThrow(someString)` is a SUBSTRING match, not exact equality: every
 // string contains "" as a substring, so `.toThrow("")` trivially passes
 // regardless of what actually threw, defeating the whole point of pinning
 // the exact message (a StringLiteral mutant collapsing the message to ""
 // would sail through unnoticed). Catching directly and asserting exact
 // equality closes that gap.
 // The literal message text is hardcoded here, NOT derived by calling
-// `readOnlyMembraneError()` from inside the assertion -- doing that would
+// `readOnlyMembraneError()` from inside the assertion: doing that would
 // compare the (possibly-mutated) thrown message against the SAME
 // (identically-mutated) function's own output, trivially "matching" no
 // matter what the message actually says.
 const READ_ONLY_MESSAGE =
-  "EvidenceModel is read-only inside a projector -- a projection must be a pure function of its evidence argument. See ADR 0032."
+  "EvidenceModel is read-only inside a projector. A projection must be a pure function of its evidence argument. See ADR 0032."
 
 function expectReadOnlyThrow(fn: () => unknown): void {
   expect(fn).toThrow(TypeError)
@@ -257,7 +257,7 @@ describe("defineEvidenceProjection", () => {
   it("reports source paths sorted alphabetically, not in read order", () => {
     const projection = defineEvidenceProjection({
       // Reads "finding" (a field that alphabetically sorts LAST) before
-      // "contract" (which sorts before it) -- if `readPaths()` returned
+      // "contract" (which sorts before it): if `readPaths()` returned
       // paths in read order rather than sorted, this would come back
       // ["finding", "contract"], not the alphabetical order asserted below.
       value: (evidence) => {
@@ -272,7 +272,7 @@ describe("defineEvidenceProjection", () => {
 
   it("dedupes repeated reads of the same field path within one projector", () => {
     const projection = defineEvidenceProjection({
-      // Reads evidence.contract twice -- should only be recorded once.
+      // Reads evidence.contract twice: should only be recorded once.
       value: (evidence) => evidence.contract.schemaVersion + evidence.contract.contracts.length,
     })
     const { sources } = projection.project(makeEvidenceModel())
@@ -314,7 +314,7 @@ describe("defineEvidenceProjection", () => {
 
   it("does not record a path for a leading null value (guards the recursive wrap of a null field)", () => {
     // No EvidenceModel field is ever actually null in practice (this
-    // codebase uses `| undefined` for "absent", never `| null`) -- this
+    // codebase uses `| undefined` for "absent", never `| null`): this
     // exercises wrap()'s defensive null branch directly, the same way
     // deep-freeze.test.ts exercises deepFreeze(null).
     const evidenceWithNull = {

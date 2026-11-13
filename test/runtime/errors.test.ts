@@ -54,7 +54,7 @@ describe("EnvValidationError", () => {
     expect(withoutSource.message).toContain("Source:\npayments")
   })
 
-  it("never includes anything beyond variable/contract/source/message -- no documentation data reaches the runtime error", () => {
+  it("never includes anything beyond variable/contract/source/message: no documentation data reaches the runtime error", () => {
     // documentEnv() is build-time-only and never retained anywhere validateEnv()
     // could read it back out; VariableFailure has no field for it at all.
     const error = new EnvValidationError([failure({ message: "Value must be non-empty." })])
@@ -64,7 +64,7 @@ describe("EnvValidationError", () => {
 
   it("underlines the variable name with exactly as many dashes as it has, when longer than 3 characters", () => {
     const error = new EnvValidationError([failure({ variable: "A_LONG_VARIABLE_NAME" })])
-    // "A_LONG_VARIABLE_NAME" is 20 characters -- Math.max(20, 3) = 20, not
+    // "A_LONG_VARIABLE_NAME" is 20 characters: Math.max(20, 3) = 20, not
     // Math.min(20, 3) = 3, so this also kills a mutant that swaps max<->min.
     expect(error.message).toContain(`A_LONG_VARIABLE_NAME\n${"-".repeat(20)}\n`)
   })
@@ -86,7 +86,7 @@ describe("EnvValidationError", () => {
     ])
     expect(error.message).toContain("2 configuration errors found:\n\nA\n---\n")
     // The blank line that ends block "A" (before its own Source: line) and
-    // the blank line that separates block "A" from block "B" are adjacent --
+    // the blank line that separates block "A" from block "B" are adjacent;
     // this only holds if `formatReport`'s own `.join("\n\n")` is real (a
     // `.join("")` mutant collapses it to a single blank line here instead).
     expect(error.message).toContain("Source:\npayments\n\nB\n---\n")
@@ -94,7 +94,7 @@ describe("EnvValidationError", () => {
 })
 
 describe("Error.captureStackTrace availability", () => {
-  // `Error.captureStackTrace` is a V8-only extension -- guarded with `?.()`
+  // `Error.captureStackTrace` is a V8-only extension: guarded with `?.()`
   // in every constructor above so a non-V8 engine still constructs the error
   // successfully, just without the trimmed stack trace. Deleting it here
   // simulates that engine directly, rather than trusting V8 (always present

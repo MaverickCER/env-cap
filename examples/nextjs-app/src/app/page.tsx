@@ -1,4 +1,4 @@
-// Side-effect import, first -- see route.ts's identical comment for why:
+// Side-effect import, first: see route.ts's identical comment for why:
 // this page is its own Turbopack chunk with its own bundled copy of
 // env-cap/env.public.schema.ts, so it needs its own validation trigger too.
 import "@/env"

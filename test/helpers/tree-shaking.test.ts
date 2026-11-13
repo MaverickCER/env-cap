@@ -9,7 +9,7 @@ import path from "node:path"
 /**
  * Verifies `@maverickcer/env-cap/helpers`'s two namespaces are independently
  * tree-shakeable by a downstream bundler, against the actual *built* file a
- * consumer would receive (not the source) -- the bug this guards against was
+ * consumer would receive (not the source): the bug this guards against was
  * specifically introduced by the build step (tsup/esbuild lowering
  * `export * as x from "./mod.js"` into a namespace-construction helper call
  * that a second, downstream bundler pass can't prove side-effect-free), so a
@@ -22,7 +22,7 @@ const projectRoot = path.resolve(here, "../..")
 const helpersDist = path.resolve(projectRoot, "dist/helpers.js")
 const distMissing = !existsSync(helpersDist)
 
-// Marker strings unique to one namespace's error messages -- proof the
+// Marker strings unique to one namespace's error messages: proof the
 // *other* namespace's code was actually eliminated, not just smaller.
 const PROCESSORS_ONLY_MARKERS = [
   "Expected a numeric value",

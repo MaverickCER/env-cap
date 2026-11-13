@@ -33,7 +33,7 @@ describe("buildSarifLog", () => {
     expect(log.$schema).toContain("sarif-schema-2.1.0.json")
     expect(log.runs).toHaveLength(1)
     expect(log.runs[0]?.results).toEqual([])
-    // No findings means no rules -- advertising rules that produced nothing
+    // No findings means no rules: advertising rules that produced nothing
     // makes a clean run look like it has unexplained silent rules.
     expect(log.runs[0]?.tool.driver.rules).toEqual([])
     expect(log.runs[0]?.tool.driver.name).toBe("env-cap")
@@ -83,7 +83,7 @@ describe("buildSarifLog", () => {
     expect(log.runs[0]?.results).toHaveLength(3)
   })
 
-  it("emits a region only when the finding actually carries a position -- never a fabricated line 1", () => {
+  it("emits a region only when the finding actually carries a position: never a fabricated line 1", () => {
     const withPosition: Finding = {
       ...CONTRACT_FINDING,
       code: "STALE_DYNAMIC_ACCESS_CITATION",
@@ -121,7 +121,7 @@ describe("buildSarifLog", () => {
     )
     expect(log.runs[0]?.results[0]?.locations).toBeUndefined()
     // A read through optional chaining can't tell "the key is absent" apart
-    // from "the key is present and set to `undefined`" -- this asserts the
+    // from "the key is present and set to `undefined`": this asserts the
     // stronger, `exactOptionalPropertyTypes`-motivated guarantee the source
     // comment describes: the key itself is never emitted, never set `undefined`.
     expect(log.runs[0]?.results[0]).not.toHaveProperty("locations")
@@ -185,7 +185,7 @@ describe("buildSarifLog", () => {
     ).toBe("docs/a%20b%23c%3Fd%25.md")
   })
 
-  it("round-trips through JSON unchanged -- the log is plain, serializable data", () => {
+  it("round-trips through JSON unchanged: the log is plain, serializable data", () => {
     const log = buildSarifLog(model([CONTRACT_FINDING]))
     expect(JSON.parse(JSON.stringify(log))).toEqual(log)
   })

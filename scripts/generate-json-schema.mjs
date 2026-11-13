@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Generates schemas/*.schema.json directly from their source types -- never
+// Generates schemas/*.schema.json directly from their source types: never
 // hand-authored, so a schema and the type it describes cannot silently drift
 // apart. Regenerated as part of `npm run verify`; each schema's own test
 // (e.g. test/build/json-schema.test.ts, test/build/contract-model-json-schema.test.ts)
@@ -16,7 +16,7 @@ import { createGenerator } from "ts-json-schema-generator"
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
 // TSDoc `{@link Target}`/`{@link Target|label}` tags are meant for TypeDoc to resolve into
-// hyperlinks (see typedoc.json) -- ts-json-schema-generator has no such resolution and would
+// hyperlinks (see typedoc.json): ts-json-schema-generator has no such resolution and would
 // otherwise emit the raw `{@link ...}` tag text verbatim into a schema's "description"
 // fields, which are read by external tools/humans with no TSDoc awareness.
 function stripLinkTags(value) {
@@ -40,7 +40,7 @@ function stripLinkTagsDeep(value) {
 }
 
 // One entry per published schema. Adding a new fact model's schema means
-// adding one entry here -- everything else (generation, writing, freshness
+// adding one entry here: everything else (generation, writing, freshness
 // checking) is shared.
 const TARGETS = [
   {
@@ -52,7 +52,7 @@ const TARGETS = [
     title: "env-cap --json report",
     description:
       "Machine-readable envelope emitted by `env-cap --json` (see README's --json section and ADR 0013). " +
-      "Generated from src/cli/json.ts's JsonReportPayload type -- never hand-authored.",
+      "Generated from src/cli/json.ts's JsonReportPayload type, never by hand.",
   },
   {
     name: "contract-model",
@@ -63,7 +63,7 @@ const TARGETS = [
     title: "env-cap Contract Model",
     description:
       "Canonical, versioned projection of every declared environment-variable contract, active or not " +
-      "(see ADR 0024, ADR 0025). Generated from src/build/contract-model.ts's ContractModel type -- never hand-authored.",
+      "(see ADR 0024, ADR 0025). Generated from src/build/contract-model.ts's ContractModel type, never by hand.",
   },
 ]
 

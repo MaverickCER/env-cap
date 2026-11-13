@@ -30,12 +30,12 @@ import {
 /**
  * Computes the full usage-scan surface: the local project root, plus (ADR
  * 0036) each allow-listed `packages` (ADR 0014) name whose schema was
- * successfully resolved -- reusing `origins`' already-resolved
- * `packageDir` (from `resolveAllowlistedPackages()`, already computed by
- * the caller for contract discovery, not re-resolved here) as a bounded
- * scan root, walked with the exact same `discoverFiles()` +
- * `SCAN_INCLUDE`/`defaultExclude()` policy the local root already uses --
- * never a naive, unbounded walk of the package's whole directory. Shared by
+ * successfully resolved. Each such package's `packageDir` becomes a bounded
+ * scan root. It is reused from `origins` (computed by
+ * `resolveAllowlistedPackages()` for contract discovery), not re-resolved
+ * here. That root is walked with the same `discoverFiles()` +
+ * `SCAN_INCLUDE`/`defaultExclude()` policy as the local root, never as a
+ * naive, unbounded walk of the package's whole directory. Shared by
  * `generateUsageReport()` and `generateEvidenceModel()` so both agree on
  * exactly the same scanned surface.
  */
@@ -45,7 +45,7 @@ export async function computeScanSurface(
   origins: ReadonlyMap<string, PackageOrigin>,
   fs: BuildFileSystem,
 ): Promise<{ scanFiles: string[]; scannedSurfaces: ScannedSurface[] }> {
-  // Deliberately broader than schema discovery -- usage can occur in any
+  // Deliberately broader than schema discovery: usage can occur in any
   // source file, not just `env.schema.ts` files. Not configurable (see ADR
   // 0010's "convention over configuration"). `discoverFiles`, not
   // `discoverSchemaFiles`: the schema-file sanity limit would reject any
@@ -63,7 +63,7 @@ export async function computeScanSurface(
 
   const seenPackageDirs = new Set<string>()
   for (const origin of origins.values()) {
-    if (seenPackageDirs.has(origin.packageDir)) continue // multiple resolved files can share one packageDir; scan it once
+    if (seenPackageDirs.has(origin.packageDir)) continue // Multiple resolved files can share one packageDir; scan it once.
     seenPackageDirs.add(origin.packageDir)
     const packageScanFiles = await discoverFiles({
       fs,
@@ -83,11 +83,11 @@ export async function computeScanSurface(
 
 /** Options for {@link generateUsageReport}. */
 export interface GenerateUsageReportOptions {
-  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability: `./build` never imports `node:fs` (ADR 0040). */
   fs: BuildFileSystem
   /** Directory glob patterns are resolved against. Defaults to `process.cwd()`. */
   root?: string | undefined
-  /** Schema-discovery glob, for the contract graph -- self-sufficient like the other two generator functions. */
+  /** Schema-discovery glob, for the contract graph: self-sufficient like the other two generator functions. */
   include?: string[] | undefined
   /** Glob patterns to exclude, for both schema discovery and the usage scan. Defaults to node_modules/dist/.git. */
   exclude?: string[] | undefined
@@ -108,10 +108,10 @@ export interface GenerateUsageReportOptions {
  * Public result of {@link generateUsageReport}.
  *
  * @remarks
- * Composed from the building-block types `usage-report.ts` (the renderer) owns, the same way
- * `GenerateDocumentationResult` composes from `docs.ts`'s `CatalogContract` --
- * keeps the renderer importable without its orchestrator (see
- * `RenderUsageReportOptions`'s own doc comment).
+ * Composed from the building-block types `usage-report.ts` (the renderer) owns. That mirrors how
+ * `GenerateDocumentationResult` composes from `docs.ts`'s `CatalogContract`. It keeps the
+ * renderer importable without its orchestrator (see `RenderUsageReportOptions`'s own doc
+ * comment).
  */
 export interface GenerateUsageReportResult extends RenderUsageReportOptions {
   /** Absolute path the report was written to, or `undefined` if `options.report` wasn't passed. */
@@ -126,18 +126,17 @@ export interface UsageComputation {
 
 /**
  * Builds the dependency graph and maps it into the public, ownership-framed
- * result. Never blocks -- see `RenderUsageReportOptions`'s finding fields'
- * own doc comments; a team that wants to gate CI on an ownership issue reads
- * `Finding[]` (the "ownership" family) from the persisted evidence artifact
- * and decides for itself. See ADR 0038.
+ * result. Never blocks: see the doc comments on `RenderUsageReportOptions`'s
+ * finding fields. A team that wants to gate CI on an ownership issue reads
+ * `Finding[]` (the "ownership" family) from the persisted evidence artifact.
+ * It then decides for itself. See ADR 0038.
  *
  * @remarks
  * This mapping is the actual API boundary: internal AST vocabulary
  * ("member accessed", "dynamic") becomes ownership vocabulary ("who owns
  * it", "who consumes it", "abandoned", "unresolved"). The result is a
- * renderer-agnostic domain model -- the same computed data a future JSON or
- * SARIF exporter would consume, not something coupled to the Markdown
- * renderer.
+ * renderer-agnostic domain model. A future JSON or SARIF exporter would
+ * consume the same data; it is not coupled to the Markdown renderer.
  */
 export async function computeUsage(
   root: string,
@@ -161,16 +160,16 @@ export async function computeUsage(
   const contractByIdentity = new Map<string, DiscoveredContract>()
   for (const contract of contracts)
     contractByIdentity.set(`${contract.file}#${contract.exportName}`, contract)
-  // Contract-level default owner only -- correct for a contract-level
-  // finding (dependencyOwnership, abandonedContracts), which has no
-  // specific variable to consider a per-variable override for.
+  // Contract-level default owner only. That is correct for a contract-level
+  // finding (dependencyOwnership, abandonedContracts): it has no specific
+  // variable whose own override could apply.
   //
-  // `file`/`exportName` always come from `graph.contracts`, which `buildDependencyGraph()` builds 1:1
+  // `file`/`exportName` always come from `graph.contracts`. `buildDependencyGraph()` builds that 1:1
   // from this same `contracts` array, so the lookup cannot miss.
   const ownerFor = (file: string, exportName: string): string | undefined =>
     mustGet(contractByIdentity, `${file}#${exportName}`).owner
   // A specific variable's *effective* owner (its own override, falling back
-  // to the contract default) -- see ADR 0028. Used only for
+  // to the contract default): see ADR 0028. Used only for
   // unconsumedOwnedVariables below, the one finding type that names a
   // specific variable.
   const effectiveOwnerFor = (file: string, exportName: string, key: string): string | undefined => {
@@ -202,11 +201,11 @@ export async function computeUsage(
   )
 
   // Every `dynamicAccess` citation for this variable that's currently
-  // stale/missing -- the confidence signal `renderUsageReport()` shows
+  // stale/missing: the confidence signal `renderUsageReport()` shows
   // alongside "unconsumed"/"indeterminate" (ADR 0038). A variable with a
-  // *fresh* assertion never reaches here at all (`deriveOwnershipFindings()`
-  // already routed it into `asserted` instead), so every citation found by
-  // this lookup is, by construction, one env-cap can no longer vouch for.
+  // *fresh* assertion never reaches here (`deriveOwnershipFindings()` routed
+  // it into `asserted` instead). So every citation this lookup finds is, by
+  // construction, one env-cap can no longer vouch for.
   const staleOrMissingCitationsFor = (
     contractName: string,
     file: string,
@@ -261,7 +260,7 @@ export async function computeUsage(
 
   // Assertion positions are already root-relative by citation construction
   // (a `dynamicAccess` entry is a developer-authored relative path), unlike
-  // `dynamicAccessSites` above -- no relativizing needed here.
+  // `dynamicAccessSites` above: no relativizing needed here.
   const asserted: AssertedDynamicAccessFinding[] = findings.asserted.map((f) => ({
     contractName: f.contractName,
     key: f.key,
@@ -291,23 +290,23 @@ export async function writeUsageReport(
 ): Promise<void> {
   const source = renderUsageReport(computed)
   await fs.mkdir(path.dirname(reportPath), { recursive: true })
-  // `source` is always a plain string (renderUsageReport()'s return type) --
-  // fs.writeFile defaults a string write to utf8 regardless of the encoding
-  // arg, so "utf8" vs "" is unobservable. Same established equivalence as
+  // `source` is always a plain string (renderUsageReport()'s return type).
+  // fs.writeFile writes a string as utf8 whatever the encoding arg, so
+  // "utf8" vs "" is unobservable. Same established equivalence as
   // evidence-cache.ts/evidence-fingerprint.ts/env-example.ts's own writes.
   await fs.writeFile(reportPath, source, "utf8")
 }
 
 /**
  * Build-time only. Answers who owns each contract, which features depend on
- * it, and what the blast radius is if it changes -- the mirror image of
- * {@link generateEnvManifest}'s "safer migrations" story: a schema that was never
- * wired up, or was abandoned mid-removal, shows up here instead of sitting
- * unnoticed.
+ * it, and what the blast radius is if it changes. It is the mirror image of
+ * {@link generateEnvManifest}'s "safer migrations" story. A schema that was
+ * never wired up, or was abandoned mid-removal, shows up here instead of
+ * sitting unnoticed.
  *
  * @remarks
  * This is an additional, separate artifact, not a replacement for
- * {@link generateDocumentation}'s Catalog -- the two serve different audiences
+ * {@link generateDocumentation}'s Catalog: the two serve different audiences
  * (see ADR 0010).
  *
  * @throws {EnvUsageAnalysisError} If `report.location` escapes `root`.

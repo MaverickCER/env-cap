@@ -19,7 +19,7 @@ export interface Todo {
 // request, never at module-evaluation time. That's not just style: Next.js
 // imports this module (transitively, via the API route) during its own
 // build-time "collect page data" step, in a worker process where
-// instrumentation.ts's register() hasn't necessarily run yet -- a
+// instrumentation.ts's register() hasn't necessarily run yet; a
 // module-top-level read hit env-cap's own EnvNotReadyError there for real
 // during development of this example (the contract mechanically refusing an
 // unvalidated read, working exactly as designed, just in a context this

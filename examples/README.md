@@ -31,7 +31,7 @@ CI's `examples` job runs every example against the freshly built package:
 | `enterprise-platform` | `npm run typecheck`, `npm run test:evidence`, `npm start`, `npm run check` | `test/examples/enterprise-platform.test.ts` |
 | `nextjs-app`          | `npm run build`                                                            | The job step itself                         |
 
-The job also re-runs the root README's demo against `application` (`npm run verify:readme-example`). It runs on every pull request. The branch ruleset does not yet require it, so a red `examples` job does not block a merge on its own.
+The job also re-runs the root README's demo against `application` (`npm run verify:readme-example`). It runs on every pull request, and `required` waits for it, so a red `examples` job blocks a merge.
 
 ## Looking for something specific?
 

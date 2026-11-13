@@ -1,17 +1,17 @@
 /**
  * The declared governance-metadata field set every pipeline-stage contract and
- * variable type carries -- `owner` through `metadata`. The field names and types
- * are identical at every stage (parse -> link -> contract-model -> docs); only
- * the surrounding context differs (a `parse`-stage value is "statically resolved
- * from a string literal, or `undefined`"; a `link`/`contract-model`-stage value
- * is "from the linked `documentEnv()` call, or `undefined`"). This is the single
+ * variable type carries: `owner` through `metadata`. The field names and types
+ * are identical at every stage (parse -> link -> contract-model -> docs). Only
+ * the surrounding context differs. A `parse`-stage value is "statically resolved
+ * from a string literal, or `undefined`". A `link`/`contract-model`-stage value
+ * is "from the linked `documentEnv()` call, or `undefined`". This is the single
  * source of truth for the shape; each stage interface `extends` it.
  *
  * `metadata` is the open bag for keys `env-cap` has no named concept for (ADR
  * 0037); `dataResidency`/`auditRequired`/`legalBasis`/`purpose`/`retention` are
  * presence-only governance facts, never verified.
  *
- * Internal -- not re-exported from the public `.` barrel.
+ * Internal: not re-exported from the public `.` barrel.
  */
 export interface EnvGovernanceFields {
   readonly owner: string | undefined
@@ -27,7 +27,7 @@ export interface EnvGovernanceFields {
 
 /**
  * Copies exactly the `EnvGovernanceFields` out of a value that carries
- * them -- for projecting one pipeline stage's contract/variable into the next
+ * them: for projecting one pipeline stage's contract/variable into the next
  * (`link` -> `contract-model` -> `docs` catalog, ...) without re-listing all
  * nine fields at every hop.
  */

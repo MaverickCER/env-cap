@@ -1,10 +1,10 @@
 // Build-time script. Run via `npm run project:inventory`. Never imported by
 // application code.
 //
-// Doesn't self-compare against generateEnvArtifacts()'s docs.catalog --
+// Doesn't self-compare against generateEnvArtifacts()'s docs.catalog (
 // two documented, non-bug divergences (see projections/inventory.mjs's own
 // doc comment): Contract Model's `.file` is root-relative and
-// POSIX-separated (portable, serializable -- ADR 0025), while
+// POSIX-separated (portable, serializable) ADR 0025), while
 // DiscoveredContract's is an absolute filesystem path; and variable
 // ordering is Contract Model's canonical alphabetical order, not the
 // schema's original declaration order (same divergence as

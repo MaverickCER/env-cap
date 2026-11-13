@@ -9,8 +9,8 @@ import {
 } from "../../../support/example-runner.js"
 
 /**
- * missing-env-var is deliberately, permanently broken -- unlike every other
- * fixture in this file's cohort -- to fix one specific failure mode in
+ * missing-env-var is deliberately, permanently broken (unlike every other
+ * fixture in this file's cohort) to fix one specific failure mode in
  * place: a required variable (STRIPE_KEY) missing from the committed `.env`.
  * Static discovery never reads `.env` values (ADR 0002), so `generate:env`
  * itself still succeeds and every artifact still golden-compares; only
@@ -47,7 +47,7 @@ describe(EXAMPLE, () => {
   )
 
   it.skipIf(!installed)(
-    "generated artifacts match their golden expected/ copies (generation succeeds -- only the runtime validateEnv() call fails)",
+    "generated artifacts match their golden expected/ copies (generation succeeds: only the runtime validateEnv() call fails)",
     async () => {
       runScript(EXAMPLE_DIR, "generate:env")
       await compareGoldenArtifacts(EXAMPLE_DIR, ARTIFACTS)

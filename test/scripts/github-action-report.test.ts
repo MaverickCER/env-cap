@@ -12,7 +12,7 @@ import {
   collectOwnershipFindings,
   renderAnnotations,
   renderMarkdownSummary,
-  // report.mjs itself stays plain, dependency-free JS (ADR 0013 decision 7) --
+  // report.mjs itself stays plain, dependency-free JS (ADR 0013 decision 7):
   // types come from the hand-written sibling report.d.mts, checked here.
 } from "../../scripts/github-action/report.mjs"
 import type { Finding, FindingLike, ReportResult } from "../../scripts/github-action/report.d.mts"
@@ -40,7 +40,7 @@ describe("collectManifestFindings", () => {
   })
 })
 
-// Finding Model fixture helper -- `collectDocumentationFindings`/
+// Finding Model fixture helper: `collectDocumentationFindings`/
 // `collectOwnershipFindings` now read `evidence.finding.findings` (ADR
 // 0038's Finding Model), not the removed `result.docs`/`result.usage`
 // shapes (ADR 0046). See the "real CLI invocation" describe block below for
@@ -104,7 +104,7 @@ describe("collectDocumentationFindings", () => {
     expect(findings[0]?.level).toBe("notice")
   })
 
-  it("filters out ownership-family findings -- only 'documentation' passes through", () => {
+  it("filters out ownership-family findings: only 'documentation' passes through", () => {
     const findings = collectDocumentationFindings({
       finding: { findings: [finding({ family: "ownership", code: "ABANDONED_CONTRACT" })] },
     })
@@ -227,7 +227,7 @@ describe("classifyFindings", () => {
   })
 
   it("silently ignores an unrecognized extra top-level field on the payload rather than breaking", () => {
-    // Deliberately widened past ReportResult's declared shape -- this proves
+    // Deliberately widened past ReportResult's declared shape: this proves
     // the *runtime* tolerates an extra field a future schemaVersion might
     // add (ADR 0013 decision 5), which is exactly the case ReportResult's
     // own type can't express without losing the excess-property check that
@@ -383,7 +383,7 @@ describe("renderAnnotations", () => {
   })
 })
 
-// Local, dependency-free path join for the tests above -- avoids importing
+// Local, dependency-free path join for the tests above: avoids importing
 // "node:path" purely to build POSIX fixture paths independent of the host OS.
 function path_join(...segments: string[]): string {
   return segments.join("/").replace(/\/+/g, "/")
@@ -455,13 +455,13 @@ describe("buildRotationAlert", () => {
 
 // The test class that would have caught the original regression: every test
 // above feeds a hand-built, synthetic `evidence`/`docs`/`usage` object
-// straight into report.mjs's pure functions -- which stays valuable for
+// straight into report.mjs's pure functions; which stays valuable for
 // covering each branch cheaply, but proves nothing about whether a REAL
 // `env-cap --json` invocation can actually produce a payload shaped that
 // way. The old `result.docs`/`result.usage`-reading version of this file
 // passed exactly this kind of synthetic-fixture test suite right up until
 // `--docs`/`--ownership` were removed from the CLI (ADR 0046) and those
-// fields silently stopped being populated by any real invocation -- nothing
+// fields silently stopped being populated by any real invocation: nothing
 // here would have failed. This describes block runs the real, in-process
 // `main()` (the same packaged CLI entry point the Action itself shells out
 // to) against a real fixture schema, with `--evidence --json` (the Action's
@@ -489,7 +489,7 @@ describe("report.mjs against a real `env-cap --json` payload (not a synthetic fi
     // One contract with, deliberately, all three finding families a real
     // Action run cares about: an undocumented variable (documentation), a
     // never-imported contract (ownership/abandoned), and an already-expired
-    // secret (documentation/lifecycle) -- no consumer file is written at all,
+    // secret (documentation/lifecycle); no consumer file is written at all,
     // so STRIPE_KEY is also unconsumed.
     await write(
       "features/payments/env.schema.ts",
@@ -542,14 +542,14 @@ documentEnv(schema, {
     await main()
 
     const result = JSON.parse(writes.join("")) as ReportResult
-    // Sanity: this is a real envelope with a real, populated evidence field --
+    // Sanity: this is a real envelope with a real, populated evidence field;
     // not a hand-built stand-in for one.
     expect(result.evidence?.finding?.findings.length).toBeGreaterThan(0)
 
     const findings = classifyFindings(result)
     expect(findings.some((f) => f.message.includes("UNDOCUMENTED_VAR"))).toBe(true)
     expect(findings.some((f) => f.message.includes("payments") && f.level === "warning")).toBe(true)
-    // The already-expired STRIPE_KEY is escalated to "error" -- proves
+    // The already-expired STRIPE_KEY is escalated to "error": proves
     // annotationLevel()'s EXPIRED special-case survives the real Finding
     // Model round-trip, not just a hand-built fixture shaped to hit it.
     expect(findings.some((f) => f.message.includes("STRIPE_KEY") && f.level === "error")).toBe(true)
@@ -564,7 +564,7 @@ documentEnv(schema, {
     expect(alert.action === "open" && alert.title).toContain("expired")
   })
 
-  it("evidence is entirely absent from the payload when --evidence isn't passed -- reporting degrades to manifest-only, exactly as action.yml documents", async () => {
+  it("evidence is entirely absent from the payload when --evidence isn't passed: reporting degrades to manifest-only, exactly as action.yml documents", async () => {
     process.argv = [
       "node",
       "env-cap",
@@ -580,7 +580,7 @@ documentEnv(schema, {
     const result = JSON.parse(writes.join("")) as ReportResult
     expect(result.evidence).toBeUndefined()
     // No documentation/ownership finding leaks through when evidence is
-    // absent -- classifyFindings() falls back to manifest findings alone
+    // absent: classifyFindings() falls back to manifest findings alone
     // (empty here: this fixture has no compatibility conflict).
     expect(classifyFindings(result)).toEqual([])
     expect(collectDocumentationFindings(result.evidence)).toEqual([])

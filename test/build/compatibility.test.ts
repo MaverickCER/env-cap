@@ -149,7 +149,7 @@ describe("detectCompatibilityIssues", () => {
     expect(issues[0]?.files).toEqual(["/repo/a/env.schema.ts", "/repo/b/env.schema.ts"])
     expect(issues[0]?.reason).toBe(
       '"aEnv" and "bEnv" both declare a processor for this variable with different implementations. ' +
-        "Return types could not be statically verified -- add explicit return type annotations, or " +
+        "Return types could not be statically verified. Add explicit return type annotations, or " +
         "confirm they produce equivalent output.",
     )
   })
@@ -196,7 +196,7 @@ describe("detectCompatibilityIssues", () => {
     expect(issues[0]?.files).toEqual(["/repo/a/env.schema.ts", "/repo/b/env.schema.ts"])
     expect(issues[0]?.reason).toBe(
       '"aEnv" and "bEnv" both declare a validator for this variable with different implementations. ' +
-        "Validator logic cannot be statically compared -- confirm they enforce compatible rules.",
+        "Validator logic cannot be statically compared. Confirm they enforce compatible rules.",
     )
   })
 
@@ -222,7 +222,7 @@ describe("detectCompatibilityIssues", () => {
     expect(detectCompatibilityIssues([a, b])).toHaveLength(0)
   })
 
-  it("sorts issues by variable key, not discovery order -- a later-declared key that sorts alphabetically first must still come first", () => {
+  it("sorts issues by variable key, not discovery order: a later-declared key that sorts alphabetically first must still come first", () => {
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [
       makeVariable({ key: "Z_VAR", hasProcessor: true, processorReturnType: "string" }),
       makeVariable({ key: "A_VAR", hasProcessor: true, processorReturnType: "string" }),
@@ -429,7 +429,7 @@ describe("detectCompatibilityIssues", () => {
       expect(detectCompatibilityIssues([a, b])).toHaveLength(0)
     })
 
-    it("never fires when only one side (or neither) is documented -- nothing meaningful to compare", () => {
+    it("never fires when only one side (or neither) is documented: nothing meaningful to compare", () => {
       const documented = makeContract("/repo/a/env.schema.ts", "aEnv", [
         makeVariable({ key: "SHARED", documented: true, description: "Documented side" }),
       ])
@@ -506,13 +506,13 @@ describe("detectDuplicateVariableShapes", () => {
     const issues = detectDuplicateVariableShapes([a, b])
     expect(issues).toHaveLength(1)
     expect(issues[0]?.code).toBe("DUPLICATE_VARIABLE_SHAPE_ACROSS_CONTRACTS")
-    // Never blocking, under any flag -- see the function's own doc comment.
+    // Never blocking, under any flag: see the function's own doc comment.
     expect(issues[0]?.severity).toBe("info")
     expect(issues[0]?.variable).toBe("A_TIMEOUT / B_TIMEOUT")
     expect(issues[0]?.files).toEqual(["/repo/a/env.schema.ts", "/repo/b/env.schema.ts"])
     expect(issues[0]?.reason).toBe(
       '"A_TIMEOUT" (aEnv) and "B_TIMEOUT" (bEnv) declare an identical shape (type number, processor: ' +
-        "yes, validator: yes). Informational only -- they may be the same underlying value modelled " +
+        "yes, validator: yes). Informational only: they may be the same underlying value modelled " +
         "twice, or two unrelated values that happen to look alike. Nothing is required.",
     )
   })
@@ -526,7 +526,7 @@ describe("detectDuplicateVariableShapes", () => {
     const issues = detectDuplicateVariableShapes([a, b])
     expect(issues[0]?.reason).toBe(
       '"A_TIMEOUT" (aEnv) and "B_TIMEOUT" (bEnv) declare an identical shape (type number, processor: ' +
-        "no, validator: no). Informational only -- they may be the same underlying value modelled " +
+        "no, validator: no). Informational only: they may be the same underlying value modelled " +
         "twice, or two unrelated values that happen to look alike. Nothing is required.",
     )
   })
@@ -546,7 +546,7 @@ describe("detectDuplicateVariableShapes", () => {
     expect(detectDuplicateVariableShapes([a, b])).toEqual([])
   })
 
-  it("does not flag a pair that differs ONLY in hasProcessor -- valueType and hasValidator both match", () => {
+  it("does not flag a pair that differs ONLY in hasProcessor: valueType and hasValidator both match", () => {
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [
       makeVariable({
         key: "A_TIMEOUT",
@@ -571,7 +571,7 @@ describe("detectDuplicateVariableShapes", () => {
     expect(detectDuplicateVariableShapes([a, b])).toEqual([])
   })
 
-  it("never infers a valueType from defaultValue when hasDefault is false -- a variable with no default stays unknown even if defaultValue is (implausibly) populated", () => {
+  it("never infers a valueType from defaultValue when hasDefault is false: a variable with no default stays unknown even if defaultValue is (implausibly) populated", () => {
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [
       makeVariable({ key: "A_THING", hasDefault: false, defaultValue: { ok: true, value: 5 } }),
     ])
@@ -579,7 +579,7 @@ describe("detectDuplicateVariableShapes", () => {
       makeVariable({ key: "B_THING", hasDefault: true, defaultValue: { ok: true, value: 10 } }),
     ])
     // Both would resolve to valueType "number" if `hasDefault` weren't
-    // actually consulted -- must NOT match, since "a" is genuinely unknown.
+    // actually consulted: must NOT match, since "a" is genuinely unknown.
     expect(detectDuplicateVariableShapes([a, b])).toEqual([])
   })
 
@@ -588,7 +588,7 @@ describe("detectDuplicateVariableShapes", () => {
       makeVariable({ key, hasDefault: true, defaultValue: { ok: false } })
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [unresolvedDefault("A_THING")])
     const b = makeContract("/repo/b/env.schema.ts", "bEnv", [unresolvedDefault("B_THING")])
-    // Both stay "unknown" -- an "unknown" shape never matches, including
+    // Both stay "unknown": an "unknown" shape never matches, including
     // against another identically-unknown one (see the dedicated test for
     // that rule below). If this ever wrongly resolved to a real type (e.g.
     // "undefined", from reading `.value` off an `{ok:false}` variant), the
@@ -608,7 +608,7 @@ describe("detectDuplicateVariableShapes", () => {
   })
 
   it('never flags an "unknown" shape, even against another identically-unknown one', () => {
-    // No processorReturnType and no statically-resolvable default -- the type
+    // No processorReturnType and no statically-resolvable default: the type
     // is genuinely unknown, and is never inferred from processor source text.
     const unknown = (key: string): DiscoveredVariable =>
       makeVariable({ key, hasProcessor: true, processorSource: "(v) => transform(v)" })
@@ -617,7 +617,7 @@ describe("detectDuplicateVariableShapes", () => {
     expect(detectDuplicateVariableShapes([a, b])).toEqual([])
   })
 
-  it("exempts contracts in an exclusive group -- interchangeable alternatives are meant to look alike", () => {
+  it("exempts contracts in an exclusive group: interchangeable alternatives are meant to look alike", () => {
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [numberShaped("A_TIMEOUT")], {
       exclusiveGroup: "database",
     })
@@ -627,7 +627,7 @@ describe("detectDuplicateVariableShapes", () => {
     expect(detectDuplicateVariableShapes([a, b])).toEqual([])
   })
 
-  it("exempts inactive contracts -- an unwired contract is not a live duplication", () => {
+  it("exempts inactive contracts: an unwired contract is not a live duplication", () => {
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [numberShaped("A_TIMEOUT")])
     const b = makeContract("/repo/b/env.schema.ts", "bEnv", [numberShaped("B_TIMEOUT")], {
       active: false,
@@ -643,7 +643,7 @@ describe("detectDuplicateVariableShapes", () => {
     expect(detectDuplicateVariableShapes([a])).toEqual([])
   })
 
-  it("still flags a matching pair sharing the same contractName but declared in different files -- the file/contractName skip-guard needs BOTH to match, not just one", () => {
+  it("still flags a matching pair sharing the same contractName but declared in different files: the file/contractName skip-guard needs BOTH to match, not just one", () => {
     const a = makeContract("/repo/a/env.schema.ts", "sharedName", [numberShaped("A_TIMEOUT")])
     const b = makeContract("/repo/b/env.schema.ts", "sharedName", [numberShaped("B_TIMEOUT")])
     const issues = detectDuplicateVariableShapes([a, b])
@@ -657,7 +657,7 @@ describe("detectDuplicateVariableShapes", () => {
     expect(issues).toHaveLength(1)
   })
 
-  it("never flags the same key across contracts -- that is detectCompatibilityIssues()'s concern", () => {
+  it("never flags the same key across contracts: that is detectCompatibilityIssues()'s concern", () => {
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [numberShaped("TIMEOUT")])
     const b = makeContract("/repo/b/env.schema.ts", "bEnv", [numberShaped("TIMEOUT")])
     expect(detectDuplicateVariableShapes([a, b])).toEqual([])
@@ -676,7 +676,7 @@ describe("detectDuplicateVariableShapes", () => {
     ])
   })
 
-  it("sorts declarations by key before pairing -- discovered in reverse order, pairs still come out alphabetically", () => {
+  it("sorts declarations by key before pairing: discovered in reverse order, pairs still come out alphabetically", () => {
     const z = makeContract("/repo/z/env.schema.ts", "zEnv", [numberShaped("Z_TIMEOUT")])
     const b = makeContract("/repo/b/env.schema.ts", "bEnv", [numberShaped("B_TIMEOUT")])
     const a = makeContract("/repo/a/env.schema.ts", "aEnv", [numberShaped("A_TIMEOUT")])
@@ -689,13 +689,13 @@ describe("detectDuplicateVariableShapes", () => {
     ])
   })
 
-  it("sorts by contractName when key is the same and by file when key and contractName both match -- the full tiebreak chain, exercised in reverse", () => {
-    // Two pairs of SAME-key (so no cross-key match at all -- these exist
+  it("sorts by contractName when key is the same and by file when key and contractName both match: the full tiebreak chain, exercised in reverse", () => {
+    // Two pairs of SAME-key (so no cross-key match at all (these exist
     // purely to prove `declarations.sort()`'s own tiebreak chain runs in the
     // right order internally); assert indirectly via a THIRD, differently-
     // shaped key that matches only one specific declaration, to observe
     // which declaration ends up adjacent to it after sorting is irrelevant
-    // here -- instead, directly probe the sort by making contractName/file
+    // here) instead, directly probe the sort by making contractName/file
     // the only distinguishing dimension across DIFFERENT keys.
     const zContractSameKeyShapeA = makeContract("/repo/z/env.schema.ts", "zEnv", [
       numberShaped("SHARED"),
@@ -703,7 +703,7 @@ describe("detectDuplicateVariableShapes", () => {
     const aContractSameKeyShapeB = makeContract("/repo/a/env.schema.ts", "aEnv", [
       numberShaped("SHARED"),
     ])
-    // Different key, same shape as both -- pairs with whichever "SHARED"
+    // Different key, same shape as both: pairs with whichever "SHARED"
     // declaration sorts first once contractName breaks the key tie.
     const other = makeContract("/repo/other/env.schema.ts", "otherEnv", [
       numberShaped("OTHER_TIMEOUT"),
@@ -714,8 +714,8 @@ describe("detectDuplicateVariableShapes", () => {
       aContractSameKeyShapeB,
       other,
     ])
-    // "aEnv" sorts before "zEnv" by contractName once both declare "SHARED"
-    // -- so the first cross-key pair formed must be "OTHER_TIMEOUT /
+    // "aEnv" sorts before "zEnv" by contractName once both declare "SHARED":
+    // so the first cross-key pair formed must be "OTHER_TIMEOUT /
     // SHARED" (declarations.sort() places aEnv's SHARED before zEnv's).
     expect(issues.map((i) => i.variable)).toEqual([
       "OTHER_TIMEOUT / SHARED",
@@ -739,7 +739,7 @@ describe("detectDuplicateVariableShapes", () => {
     const b = makeContract("/repo/b/env.schema.ts", "bEnv", [
       makeVariable({ key: "B_URL", hasProcessor: true, processorReturnType: "URL" }),
     ])
-    // A third whose only type evidence is a `string` default -- "string" is
+    // A third whose only type evidence is a `string` default: "string" is
     // not "URL", so it must not match either of the two above.
     const c = makeContract("/repo/c/env.schema.ts", "cEnv", [
       makeVariable({

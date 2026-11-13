@@ -8,7 +8,7 @@ import { isFileExistsError, runInitCommand } from "../../src/cli/init.js"
 // install a spy directly on `writeFileSync` (`Cannot redefine property`).
 // Mocking the module instead gives us a `vi.fn()`-wrapped `writeFileSync`
 // that defaults to the real implementation, so every other test in this file
-// (which just writes real fixture files) keeps working unmodified -- only a
+// (which just writes real fixture files) keeps working unmodified: only a
 // test that opts in via `mockImplementationOnce` sees different behavior,
 // and only for that one call. Same established pattern as
 // test/build/generate-env-artifacts.test.ts's `node:fs/promises` mock.
@@ -24,8 +24,8 @@ vi.mock("node:fs", async (importOriginal) => {
 // test runs in a throwaway directory. Mocking `process.cwd()` itself, not
 // a real `process.chdir()`: the latter throws `ERR_WORKER_UNSUPPORTED_OPERATION`
 // under any worker-thread-based test runner (Stryker's own vitest-runner
-// included, unlike this project's default `vitest run` pool) -- a Node.js
-// platform restriction, not a vitest quirk -- confirmed directly (`npm run
+// included, unlike this project's default `vitest run` pool) (a Node.js
+// platform restriction, not a vitest quirk) confirmed directly (`npm run
 // mutation` aborted its whole dry run on this file before this fix). Same
 // technique this codebase's own test/build/usage-generate.test.ts (and
 // siblings) already use for the identical reason.
@@ -94,7 +94,7 @@ describe("runInitCommand", () => {
     expect(existsSync(path.join(tmp, "scripts/generate-env.mjs"))).toBe(true)
   })
 
-  it("never overwrites an existing file -- reports it as skipped, exit 0", () => {
+  it("never overwrites an existing file: reports it as skipped, exit 0", () => {
     writePackageJson()
     writeFileSync(path.join(tmp, "env.schema.ts"), "// mine\n")
 
@@ -176,7 +176,7 @@ describe("runInitCommand", () => {
   })
 
   it("-h prints usage and exits 0 without scaffolding", () => {
-    // Isolates `rest.includes("-h")` from `rest.includes("--help")` --
+    // Isolates `rest.includes("-h")` from `rest.includes("--help")`:
     // `rest` here contains neither the literal string "--help" nor "".
     writePackageJson()
 
@@ -208,7 +208,7 @@ describe("runInitCommand", () => {
       "",
       "Next:",
       "  1. Generate the manifest + docs:  node scripts/generate-env.mjs",
-      '     Requires "typescript" (>=5) in your project -- it\'s how env-cap parses',
+      '     Requires "typescript" (>=5) in your project: it\'s how env-cap parses',
       "     env.schema.ts by static analysis. Add it if you don't already have it:",
       "     npm install --save-dev typescript",
       "  2. Validate once at app startup:",
@@ -219,7 +219,7 @@ describe("runInitCommand", () => {
       "",
       "  3. Read validated values through the contract:  exampleEnv.EXAMPLE_API_URL",
       "",
-      "env-cap init edited no package.json script -- add one if you want, e.g.",
+      "env-cap init edited no package.json script. Add one if you want, e.g.",
       '  "generate:env": "node scripts/generate-env.mjs"',
     ].join("\n")
     expect(out.join("")).toBe(`${expected}\n`)
@@ -237,7 +237,7 @@ describe("runInitCommand", () => {
   })
 
   // Exact `.toBe()` against the full rendered report kills every
-  // StringLiteral mutant in `renderReport()`'s text in one shot -- any
+  // StringLiteral mutant in `renderReport()`'s text in one shot: any
   // character change breaks an exact match. Two scenarios together exercise
   // both the "Created" and "Skipped" blocks, and both branches of the
   // manifestImport ternary (root placement here; src/ placement below).
@@ -256,7 +256,7 @@ describe("runInitCommand", () => {
       "",
       "Next:",
       "  1. Generate the manifest + docs:  node scripts/generate-env.mjs",
-      '     Requires "typescript" (>=5) in your project -- it\'s how env-cap parses',
+      '     Requires "typescript" (>=5) in your project: it\'s how env-cap parses',
       "     env.schema.ts by static analysis. Add it if you don't already have it:",
       "     npm install --save-dev typescript",
       "  2. Validate once at app startup:",
@@ -267,7 +267,7 @@ describe("runInitCommand", () => {
       "",
       "  3. Read validated values through the contract:  exampleEnv.EXAMPLE_API_URL",
       "",
-      "env-cap init edited no package.json script -- add one if you want, e.g.",
+      "env-cap init edited no package.json script. Add one if you want, e.g.",
       '  "generate:env": "node scripts/generate-env.mjs"',
     ].join("\n")
     expect(out.join("")).toBe(`${expected}\n`)
@@ -292,7 +292,7 @@ describe("runInitCommand", () => {
       "",
       "Next:",
       "  1. Generate the manifest + docs:  node scripts/generate-env.mjs",
-      '     Requires "typescript" (>=5) in your project -- it\'s how env-cap parses',
+      '     Requires "typescript" (>=5) in your project: it\'s how env-cap parses',
       "     env.schema.ts by static analysis. Add it if you don't already have it:",
       "     npm install --save-dev typescript",
       "  2. Validate once at app startup:",
@@ -303,7 +303,7 @@ describe("runInitCommand", () => {
       "",
       "  3. Read validated values through the contract:  exampleEnv.EXAMPLE_API_URL",
       "",
-      "env-cap init edited no package.json script -- add one if you want, e.g.",
+      "env-cap init edited no package.json script. Add one if you want, e.g.",
       '  "generate:env": "node scripts/generate-env.mjs"',
     ].join("\n")
     expect(out.join("")).toBe(`${expected}\n`)
@@ -324,8 +324,8 @@ describe("runInitCommand", () => {
       "  scripts/generate-env.mjs a script that generates the manifest + docs artifacts",
       "",
       "Never overwrites an existing file, never runs anything, never edits",
-      "package.json. Everything else -- generating artifacts, wiring validateEnv()",
-      "into startup -- is printed as a next step. Run generation afterwards with",
+      "package.json. Generating artifacts and wiring validateEnv() into startup",
+      "are printed as next steps. Run generation afterwards with",
       "`node scripts/generate-env.mjs` or `npx env-cap --location <path>`.",
     ].join("\n")
     expect(out.join("")).toBe(`${expected}\n`)
@@ -335,7 +335,7 @@ describe("runInitCommand", () => {
     writePackageJson()
 
     // Two args (not one) so `rest.join(" ")` is distinguishable from a
-    // mutated `rest.join("")` -- a single-element array joins identically
+    // mutated `rest.join("")`: a single-element array joins identically
     // either way.
     const code = runInitCommand(["--bogus", "value"])
 
@@ -349,8 +349,8 @@ describe("runInitCommand", () => {
       "  scripts/generate-env.mjs a script that generates the manifest + docs artifacts",
       "",
       "Never overwrites an existing file, never runs anything, never edits",
-      "package.json. Everything else -- generating artifacts, wiring validateEnv()",
-      "into startup -- is printed as a next step. Run generation afterwards with",
+      "package.json. Generating artifacts and wiring validateEnv() into startup",
+      "are printed as next steps. Run generation afterwards with",
       "`node scripts/generate-env.mjs` or `npx env-cap --location <path>`.",
     ].join("\n")
     expect(err.join("")).toBe(
@@ -364,14 +364,14 @@ describe("runInitCommand", () => {
     runInitCommand([])
 
     const expected = [
-      "// Starter env-cap capability contract -- expand it: add your real variables,",
+      "// Starter env-cap capability contract. Expand it: add your real variables,",
       "// split into per-capability files (e.g. features/<name>/env.schema.ts), or",
       "// keep everything here. env-cap discovers every **/env.schema.ts by default.",
       "//",
-      "// createEnv() reads only default/processor/validator/context -- the fields",
+      "// createEnv() reads only default/processor/validator/context: the fields",
       "// validateEnv() uses at runtime. documentEnv() is a build-time-only marker",
       "// that feeds the generated docs and ownership report; it is inert at runtime.",
-      "// Keep the object passed to both a static literal -- env-cap resolves it by",
+      "// Keep the object passed to both a static literal. env-cap resolves it by",
       "// static analysis and never executes this file.",
       'import { createEnv, documentEnv } from "@maverickcer/env-cap"',
       "",

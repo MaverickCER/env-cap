@@ -17,8 +17,8 @@ import {
  *  - `validateEnv()` succeeds against both contracts together, and the
  *    generated checkout session flow runs
  *  - every generated artifact (manifest at `src/env.manifest.ts`, not
- *    `src/generated/...` -- this example's own choice) byte-for-byte
- *    matches its `expected/` golden copy -- no `docs/OWNERSHIP.md`, since
+ *    `src/generated/...` (this example's own choice) byte-for-byte
+ *    matches its `expected/` golden copy) no `docs/OWNERSHIP.md`, since
  *    this script never requests a `usage` pass
  */
 const EXAMPLE = "paypal-consumer"

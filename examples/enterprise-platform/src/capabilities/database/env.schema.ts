@@ -1,7 +1,7 @@
 import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
- * Deliberately hand-written processors/validators, not `@maverickcer/env-cap/helpers` --
+ * Deliberately hand-written processors/validators, not `@maverickcer/env-cap/helpers`:
  * this flagship exercises every public surface of the package except `helpers` (see
  * examples/enterprise-platform/README.md), so every capability schema writes its own.
  */
@@ -43,7 +43,7 @@ documentEnv(databaseSchema, {
       sensitivity: "credential",
       required: true,
       purpose: "Store and retrieve matter, task, and user records.",
-      legalBasis: "Contractual necessity -- the service cannot function without its database.",
+      legalBasis: "Contractual necessity: the service cannot function without its database.",
       retention: "Connection string itself is never persisted outside the deployment's secret store.",
       auditRequired: true,
       metadata: {

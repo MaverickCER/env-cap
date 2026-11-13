@@ -20,7 +20,7 @@ export interface OwnershipDependencyEntry {
   /** Number of variables declared in this contract's schema. */
   readonly variableCount: number
   /** Files coupled to this contract (imported it, referenced it, or read a
-   *  member from it) -- contract-level "who depends on this," NOT proof any
+   *  member from it): contract-level "who depends on this," NOT proof any
    *  specific variable was read. Blast radius if this contract changes is
    *  `consumers.length`, computed by callers/renderers on demand rather than
    *  stored redundantly here. */
@@ -36,7 +36,7 @@ export interface AbandonedContractFinding {
   /** Contract-level default owner, if set. */
   readonly owner: string | undefined
 }
-/** A contract reachable only through an unresolved barrel re-export -- can't be proven abandoned or consumed. */
+/** A contract reachable only through an unresolved barrel re-export: can't be proven abandoned or consumed. */
 export interface UnresolvedConsumerFinding {
   /** Resolved display name (see {@link DiscoveredContract.contractName}). */
   readonly contractName: string
@@ -55,19 +55,19 @@ export interface UnconsumedOwnedVariableFinding {
   readonly key: string
   /**
    * Every `dynamicAccess` citation for this variable that's currently
-   * `"stale"` or `"missing"` (empty when none exist -- see ADR 0037).
-   * Empty is the *strongest* "looks genuinely unused" signal: no developer
-   * has ever claimed otherwise. A non-empty list means someone specifically
-   * claimed dynamic access here once and that claim can no longer be
-   * verified -- worth a human check before deleting, not a stronger reason
-   * to trust "unconsumed." Exposed as the raw citations, not a collapsed
+   * `"stale"` or `"missing"` (empty when none exist: see ADR 0037).
+   * Empty is the *strongest* "looks unused" signal: no developer has ever
+   * claimed otherwise. A non-empty list means someone specifically claimed
+   * dynamic access here once, and that claim can no longer be verified. That
+   * is worth a human check before deleting, not a stronger reason to trust
+   * "unconsumed." The list holds the raw citations, not a collapsed
    * `high`/`low` label, matching this codebase's "show the receipt" pattern
-   * (ADR 0036/0037) -- a reader can judge confidence from the actual
-   * evidence rather than trusting a derived summary. See ADR 0038.
+   * (ADR 0036/0037). A reader can judge confidence from the actual evidence
+   * rather than trusting a derived summary. See ADR 0038.
    */
   readonly staleOrMissingCitations: readonly DynamicAccessCitationProblem[]
 }
-/** A variable accessed only via dynamic (computed) property access -- usage cannot be determined statically. */
+/** A variable accessed only via dynamic (computed) property access: usage cannot be determined statically. */
 export interface IndeterminateOwnershipFinding {
   /** Resolved display name (see {@link DiscoveredContract.contractName}). */
   readonly contractName: string
@@ -75,12 +75,12 @@ export interface IndeterminateOwnershipFinding {
   readonly key: string
   /** Human-readable explanation of why usage couldn't be determined. */
   readonly reason: string
-  /** Every AST-observed dynamic-access site backing `reason`, structured -- see ADR 0036. */
+  /** Every AST-observed dynamic-access site backing `reason`, structured: see ADR 0036. */
   readonly dynamicAccessSites: readonly SourcePosition[]
   /** See {@link UnconsumedOwnedVariableFinding.staleOrMissingCitations}. */
   readonly staleOrMissingCitations: readonly DynamicAccessCitationProblem[]
 }
-/** A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `"fresh"` developer-declared `dynamicAccess` citation -- the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037. */
+/** A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `"fresh"` developer-declared `dynamicAccess` citation: the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037. */
 export interface AssertedDynamicAccessFinding {
   /** Resolved display name (see {@link DiscoveredContract.contractName}). */
   readonly contractName: string
@@ -93,7 +93,7 @@ export interface AssertedDynamicAccessFinding {
 }
 
 /** Everything {@link renderUsageReport} needs to render the Dependency &
- *  Ownership Report -- deliberately independent of (not derived from)
+ *  Ownership Report: deliberately independent of (not derived from)
  *  `GenerateUsageReportResult` in `generate-usage.js`, the same way
  *  `RenderDocsOptions` in `docs.ts` doesn't derive from
  *  `GenerateDocumentationResult`. `generate-usage.ts` composes its own
@@ -104,7 +104,7 @@ export interface RenderUsageReportOptions {
   readonly dependencyOwnership: readonly OwnershipDependencyEntry[]
   /** Contracts never imported anywhere in the scanned repository. */
   readonly abandonedContracts: readonly AbandonedContractFinding[]
-  /** Advisory only, never gates `onOwnershipIssue` -- a contract only
+  /** Advisory only, never gates `onOwnershipIssue`: a contract only
    *  reaches here when an ambiguous barrel re-export makes "abandoned" or
    *  "consumed" both unprovable. */
   readonly unresolvedConsumers: readonly UnresolvedConsumerFinding[]
@@ -112,15 +112,15 @@ export interface RenderUsageReportOptions {
   readonly unconsumedOwnedVariables: readonly UnconsumedOwnedVariableFinding[]
   /** Variables accessed only via dynamic (computed) property access. */
   readonly indeterminate: readonly IndeterminateOwnershipFinding[]
-  /** Variables a developer has re-acknowledged via `dynamicAccess`, freshly -- see ADR 0037. */
+  /** Variables a developer has re-acknowledged via `dynamicAccess`, freshly: see ADR 0037. */
   readonly asserted: readonly AssertedDynamicAccessFinding[]
   /** Schema-discovery parse warnings plus, since ADR 0014, any `packages`
-   *  resolution failures -- surfaced here too (not just from
+   *  resolution failures: surfaced here too (not just from
    *  `generateEnvManifest`/`generateDocumentation`) so a team relying only
    *  on `--ownership` output still learns when a cross-package contract
    *  failed to resolve. */
   readonly parseWarnings: readonly ParseWarning[]
-  /** Every surface actually scanned for usage -- see ADR 0036. Named explicitly next to `unconsumedOwnedVariables` so "no consumer found" is never read as a stronger claim than what was actually searched. */
+  /** Every surface actually scanned for usage: see ADR 0036. Named explicitly next to `unconsumedOwnedVariables` so "no consumer found" is never read as a stronger claim than what was actually searched. */
   readonly scannedSurfaces: readonly ScannedSurface[]
 }
 
@@ -153,7 +153,7 @@ function renderAbandoned(findings: readonly AbandonedContractFinding[]): string[
   const lines = [
     "## Abandoned ownership",
     "",
-    "Contracts never imported anywhere in the scanned repository -- a feature's schema outliving the feature.",
+    "Contracts never imported anywhere in the scanned repository: a feature's schema outliving the feature.",
     "",
     "| Contract | Owner | File |",
     "|---|---|---|",
@@ -169,7 +169,7 @@ function renderUnresolvedConsumers(findings: readonly UnresolvedConsumerFinding[
   const lines = [
     "## Unresolved consumers (barrel re-exports)",
     "",
-    "Contracts reachable only through an unresolved `export * from` barrel re-export -- cannot be proven abandoned or consumed. Advisory only; never fails a build.",
+    "Contracts reachable only through an unresolved `export * from` barrel re-export. They cannot be proven abandoned or consumed. Advisory only; never fails a build.",
     "",
   ]
   for (const f of sortedByContractName(findings))
@@ -178,7 +178,7 @@ function renderUnresolvedConsumers(findings: readonly UnresolvedConsumerFinding[
   return lines
 }
 
-/** `"none"` if `citations` is empty (rendered `--`), else the citations themselves -- so a reader sees the actual stale/missing claim, not a collapsed confidence label. */
+/** `"none"` if `citations` is empty (rendered `--`), else the citations themselves: so a reader sees the actual stale/missing claim, not a collapsed confidence label. */
 function formatStaleOrMissingCitations(citations: readonly DynamicAccessCitationProblem[]): string {
   if (citations.length === 0) return "--"
   return citations
@@ -204,7 +204,7 @@ function renderUnconsumedOwned(
     "",
     `Searched: ${surfaces}.`,
     "",
-    'A blank Stale/missing citations cell is the strongest "looks genuinely unused" signal -- no developer has ever claimed otherwise. A non-blank cell means someone specifically claimed dynamic access here via `dynamicAccess`, and that claim can no longer be verified (ADR 0037) -- check with them before deleting.',
+    'A blank Stale/missing citations cell is the strongest "looks unused" signal: no developer has ever claimed otherwise. A non-blank cell means someone specifically claimed dynamic access here via `dynamicAccess`, and that claim can no longer be verified (ADR 0037). Check with them before deleting.',
     "",
     "| Variable | Contract | Owner | Stale/missing citations |",
     "|---|---|---|---|",
@@ -222,7 +222,7 @@ function renderIndeterminate(findings: readonly IndeterminateOwnershipFinding[])
   const lines = [
     "## Indeterminate (dynamic access)",
     "",
-    "Dynamic (computed) property access was observed -- usage cannot be determined statically. Never guessed at.",
+    "Dynamic (computed) property access was observed, so usage cannot be determined statically. Never guessed at.",
     "",
     "| Variable | Contract | Reason | Stale/missing citations |",
     "|---|---|---|---|",
@@ -235,7 +235,7 @@ function renderIndeterminate(findings: readonly IndeterminateOwnershipFinding[])
   return lines
 }
 
-/** `"Per developers, this data point is dynamically accessed at <citations>."`, one clause per assertion -- never a bare "acknowledged", so the exact cited positions are always legible directly in the rendered report. */
+/** `"Per developers, this data point is dynamically accessed at <citations>."`, one clause per assertion: never a bare "acknowledged", so the exact cited positions are always legible directly in the rendered report. */
 function formatAssertions(assertions: readonly DynamicAccessAssertion[]): string {
   const sites = assertions.map((a) => `${a.file}:${a.line}:${a.column}`).join(", ")
   return `Per developers, this data point is dynamically accessed at ${sites}.`
@@ -246,7 +246,7 @@ function renderAsserted(findings: readonly AssertedDynamicAccessFinding[]): stri
   const lines = [
     "## Asserted (developer-acknowledged dynamic access)",
     "",
-    "Variables env-cap's own scan would otherwise flag as unconsumed or indeterminate, but a developer has cited exactly where the dynamic access happens via `dynamicAccess`. The raw static status is shown alongside the citation, never hidden behind it -- a citation is a re-acknowledgment, not proof.",
+    "Variables env-cap's own scan would otherwise flag as unconsumed or indeterminate, but a developer has cited exactly where the dynamic access happens via `dynamicAccess`. The raw static status is shown alongside the citation, never hidden behind it. A citation is a re-acknowledgment, not proof.",
     "",
     "| Variable | Contract | Static status | Developer assertion |",
     "|---|---|---|---|",
@@ -275,7 +275,7 @@ function renderParseWarnings(warnings: readonly ParseWarning[]): string[] {
 /**
  * Renders the Dependency & Ownership Report: who owns each variable, which
  * features consume each contract, and what the blast radius is if it
- * changes -- structured around exactly those three questions, never generic
+ * changes; structured around exactly those three questions, never generic
  * "dead code"/"unused symbol" language.
  */
 export function renderUsageReport(computed: RenderUsageReportOptions): string {

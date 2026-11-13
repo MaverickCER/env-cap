@@ -26,7 +26,7 @@ if (envExample?.writtenPath) {
 }
 
 // This is the whole point of this example: WEBHOOK_URL is documented
-// differently by "notifications" and "audit-log" -- always a warning, never
+// differently by "notifications" and "audit-log"; always a warning, never
 // an error, unless ENV_CAP_STRICT escalates it via onIncompatibility: "throw"
 // above (see generate:env:strict).
 if (result.manifest?.warnings.length) {
@@ -38,7 +38,7 @@ if (result.manifest?.warnings.length) {
 }
 
 // Evidence change-tracking since the committed evidence artifact
-// (docs/env.evidence.json) was last written -- see ADR 0038.
+// (docs/env.evidence.json) was last written: see ADR 0038.
 const changes = result.evidence.change.manifest;
 const total =
   changes.addedContracts.length + changes.addedVariables.length +

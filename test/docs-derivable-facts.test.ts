@@ -2,12 +2,19 @@ import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
+import { parseJobs } from "./_ipc/ci-jobs.js"
+import { renderEnvExample } from "../src/build/env-example.js"
+import { generatedBanner } from "../src/build/generated-banner.js"
 
 /**
  * Facts that can be derived must not be typed into prose, where they go stale: how many ADRs exist, the
  * version a report was produced by. And a code fence carries only a language, not editor attributes.
  */
-const root = path.resolve(import.meta.dirname, "..")
+// Mutation testing runs this file from a `.stryker-tmp/sandbox-<id>/` copy, which git ignores and whose
+// sources are instrumented. Documents and sources are read from the original tree.
+const sandbox = `${path.sep}.stryker-tmp${path.sep}`
+const checkout = path.resolve(import.meta.dirname, "..")
+const root = checkout.includes(sandbox) ? checkout.slice(0, checkout.indexOf(sandbox)) : checkout
 const documents = execFileSync("git", ["ls-files", "*.md"], { cwd: root, encoding: "utf8" })
   .split("\n")
   .filter(Boolean)
@@ -164,5 +171,149 @@ describe("numbers in documentation match the gates", () => {
       "the guard only means something while a document says it",
     ).toBeGreaterThan(0)
     expect(Object.keys(pkg.dependencies ?? {}).length).toBe(1)
+  })
+})
+
+/**
+ * The Node versions the documentation says CI tests are the `verify` job's matrix in ci.yml, and the
+ * informational one is `verify-current`'s. Both are read from the workflow, so a matrix change fails here
+ * until every sentence that quotes it follows.
+ */
+describe("documented Node versions match the CI matrix", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8")
+  const jobBlock = (id: string): string => {
+    const start = workflow.indexOf(`\n  ${id}:\n`)
+    if (start === -1) throw new Error(`ci.yml has no ${id} job`)
+    const rest = workflow.slice(start + id.length + 5)
+    const end = rest.search(/\n {2}[a-z0-9-]+:\n/)
+    return end === -1 ? rest : rest.slice(0, end)
+  }
+  const majors = (text: string): string[] =>
+    [...text.matchAll(/(\d+)\.x/g)].map((match) => match[1] ?? "")
+  const tested = majors(/node-version:\s*\[([^\]]*)\]/.exec(jobBlock("verify"))?.[1] ?? "")
+  const preview = majors(/node-version:\s*(\S+)/.exec(jobBlock("verify-current"))?.[1] ?? "")
+  const spoken = (versions: readonly string[]): string =>
+    versions.length < 2
+      ? versions.join("")
+      : `${versions.slice(0, -1).join(", ")} and ${versions.at(-1) ?? ""}`
+
+  it("reads at least two tested versions and one informational version", () => {
+    expect(tested.length).toBeGreaterThan(1)
+    expect(preview).toHaveLength(1)
+  })
+
+  it("quotes the verify matrix in every sentence that lists the tested Node versions", () => {
+    const list = /\b(?:Node(?:\.js)?|CI tests) ((?:\d+, )*\d+ and \d+)\b/g
+    const lines = offending(new RegExp(list.source))
+    expect(lines.length, "the guard only means something while documents quote it").toBeGreaterThan(
+      4,
+    )
+    const wrong = lines.filter((line) =>
+      [...line.matchAll(list)].some((match) => match[1] !== spoken(tested)),
+    )
+    expect(wrong).toEqual([])
+  })
+
+  it("names the verify-current version wherever a document says which Node version runs informationally", () => {
+    const lines = offending(/\bNode(?:\.js)? \d+ runs\b/)
+    expect(lines.length).toBeGreaterThan(0)
+    const wrong = lines.filter((line) =>
+      [...line.matchAll(/\bNode(?:\.js)? (\d+) runs\b/g)].some((match) => match[1] !== preview[0]),
+    )
+    expect(wrong).toEqual([])
+  })
+})
+
+/**
+ * Prose says which CI jobs block a merge through `required`. The `needs` list of the `required` job in
+ * ci.yml is the source, so a job named in such a sentence must be in it, and no sentence may call such a
+ * job non-blocking.
+ */
+describe("documented merge-blocking jobs match the required job in ci.yml", () => {
+  const jobs = parseJobs(readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8"))
+  const jobIds = new Set(jobs.map((job) => job.id))
+  const waitedFor = new Set(jobs.find((job) => job.id === "required")?.needs ?? [])
+  const namedJobs = (line: string): string[] =>
+    [...line.matchAll(/`([a-z0-9-]+)`/g)]
+      .map((match) => match[1] ?? "")
+      .filter((id) => jobIds.has(id) && id !== "required")
+
+  it("reads a required job with a non-empty needs list", () => {
+    expect(waitedFor.size).toBeGreaterThan(5)
+  })
+
+  it("names only jobs in required.needs in a sentence about what `required` waits for", () => {
+    const lines = offending(/`required`(?: check| job)? waits for/)
+    const named = lines.flatMap(namedJobs)
+    expect(
+      named.length,
+      "the guard only means something while documents name jobs",
+    ).toBeGreaterThan(3)
+    expect(lines.filter((line) => namedJobs(line).some((id) => !waitedFor.has(id)))).toEqual([])
+  })
+
+  it("names a job id in every sentence about what `required` waits for", () => {
+    const waitsFor = /`required`(?: check| job)? (?:also )?waits for/
+    const unnamed = offending(waitsFor).flatMap((line) =>
+      line
+        .split(/(?<=[.!?])\s+(?=[A-Z`*(])/)
+        .filter((sentence) => waitsFor.test(sentence) && namedJobs(sentence).length === 0),
+    )
+    expect(unnamed).toEqual([])
+  })
+
+  it("lists in CODE_REVIEW.md exactly the jobs in required.needs, and every other job as outside it", () => {
+    const review = readFileSync(path.join(root, "CODE_REVIEW.md"), "utf8").split("\n")
+    const waitsLine = review.find((line) => line.includes("`required` waits for"))
+    const outsideLine = review.find((line) => line.includes("outside `required`"))
+    expect(new Set(namedJobs(waitsLine ?? ""))).toEqual(waitedFor)
+    const outside = [...jobIds].filter((id) => id !== "required" && !waitedFor.has(id))
+    expect(outside.length, "the guard only means something while a job is outside").toBeGreaterThan(
+      0,
+    )
+    expect(new Set(namedJobs(outsideLine ?? ""))).toEqual(new Set(outside))
+  })
+
+  it("never calls a job in required.needs non-blocking", () => {
+    const lines = offending(/non-blocking|not yet (?:merge-)?block/i)
+    expect(lines.filter((line) => namedJobs(line).some((id) => waitedFor.has(id)))).toEqual([])
+  })
+})
+
+/**
+ * Documentation that names or shows the generated-file banner must show the one the generators write.
+ * The marker comes from `src/build/generated-banner.ts` (backed by `src/_ipc/generated-banner.ts`),
+ * and the `.env.example` header from `renderEnvExample`, so a changed banner fails here first.
+ */
+describe("documented generated-file banners match the generators", () => {
+  const read = (file: string): string => readFileSync(path.join(root, file), "utf8")
+  const regenerate = "REGENERATE"
+  const marker = generatedBanner("ts", regenerate)
+    .replace(/^\/\/ /, "")
+    .replace(`. ${regenerate}`, "")
+  const envExampleHeader = renderEnvExample([]).split("\n")[0] ?? ""
+
+  it("derives a non-empty marker and .env.example header", () => {
+    expect(marker).toMatch(/^GENERATED FILE/)
+    expect(envExampleHeader).toMatch(/^# /)
+  })
+
+  it("names both real banners in AGENTS.md", () => {
+    const agents = read("AGENTS.md")
+    expect(agents).toContain(`\`${marker}\``)
+    expect(agents).toContain(`\`${envExampleHeader}\``)
+  })
+
+  it("shows the real manifest banner in the fixture READMEs' sample output", () => {
+    for (const file of [
+      "test/integration/positive/enterprise/paypal-consumer/README.md",
+      "test/integration/positive/enterprise/tsconfig-aliases-consumer/README.md",
+    ]) {
+      expect(read(file), file).toContain(generatedBanner("ts"))
+    }
+  })
+
+  it("never shows a banner the generators do not write", () => {
+    expect(offending(/AUTO-GENERATED FILE\.|DO NOT EDIT\b/)).toEqual([])
   })
 })

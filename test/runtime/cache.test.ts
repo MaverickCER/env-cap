@@ -73,7 +73,7 @@ describe("resetCache", () => {
 
   it("leaves contract values untouched if they were never tracked in contractIds", () => {
     // setContractValues/setContractError can in principle be called directly
-    // without registering the id in contractIds -- resetCache only clears
+    // without registering the id in contractIds: resetCache only clears
     // what validateEnv() tracked, by design.
     const id = Symbol("cache-test-untracked")
     setContractValues(id, Object.freeze({ A: 1 }))

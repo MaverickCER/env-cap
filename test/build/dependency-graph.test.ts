@@ -32,7 +32,7 @@ async function write(relativePath: string, content: string): Promise<string> {
 const readFile = (filePath: string) => fs.readFile(filePath, "utf8")
 
 // No test in this file (outside the ADR 0014/0023-specific describe blocks
-// below) exercises cross-package discovery or tsconfig alias resolution --
+// below) exercises cross-package discovery or tsconfig alias resolution:
 // `packages: []`/`tsconfigPaths: undefined` means resolveImportSpecifier's
 // package/alias fallbacks are never invoked, so one shared, never-populated
 // context is safe to reuse everywhere else.
@@ -76,12 +76,12 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.imported).toBe(true)
     expect(contract.consumingFiles).toEqual([consumerFile])
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
     expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("member-access")
-    // `warnings` is currently never populated by this function -- pinned so
+    // `warnings` is currently never populated by this function: pinned so
     // any future accidental non-empty default is caught.
     expect(graph.warnings).toEqual([])
   })
@@ -104,7 +104,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
     expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("used")
     expect(contract.hasDynamicAccess).toBe(false)
@@ -134,11 +134,11 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.variables.get("STRIPE_KEY")?.positions.map((p) => p.line)).toEqual([2, 3])
   })
 
-  it("sorts a variable's access positions by file, not scan order -- a later-scanned file that sorts alphabetically first must still come first", async () => {
+  it("sorts a variable's access positions by file, not scan order: a later-scanned file that sorts alphabetically first must still come first", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
@@ -161,14 +161,14 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.variables.get("STRIPE_KEY")?.positions.map((p) => p.file)).toEqual([
       aConsumer,
       zConsumer,
     ])
   })
 
-  it("sorts consumingFiles and dynamicAccessSites, not scan order -- multiple files, alphabetically-last scanned first", async () => {
+  it("sorts consumingFiles and dynamicAccessSites, not scan order: multiple files, alphabetically-last scanned first", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
@@ -190,12 +190,12 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.consumingFiles).toEqual([aConsumer, zConsumer])
     expect(contract.dynamicAccessSites.map((s) => s.file)).toEqual([aConsumer, zConsumer])
   })
 
-  it("sorts ambiguousBarrelFiles, not scan order -- multiple barrel-forwarding consumers, alphabetically-last scanned first", async () => {
+  it("sorts ambiguousBarrelFiles, not scan order: multiple barrel-forwarding consumers, alphabetically-last scanned first", async () => {
     const unrelatedFile = await write(
       "unrelated/env.schema.ts",
       `export const unrelatedEnv = createEnv({ UNRELATED_KEY: {} }, { name: "unrelated" });`,
@@ -218,7 +218,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.ambiguousBarrelFiles).toEqual([aConsumer, zConsumer])
   })
 
@@ -240,7 +240,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
     expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("dynamic-access")
     expect(contract.variables.get("STRIPE_KEY")?.positions).toEqual([])
@@ -266,15 +266,15 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.hasDynamicAccess).toBe(true)
     // STRIPE_KEY was also directly member-accessed, so it stays proven "used".
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
     // WEBHOOK_SECRET has no member access anywhere, but dynamic access exists
-    // on this contract -- must be "indeterminate", never "unconsumed".
+    // on this contract: must be "indeterminate", never "unconsumed".
     expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
     // The dynamic-access site itself is retained, not just collapsed into
-    // the boolean (ADR 0036) -- `paymentsEnv[key]` is on line 4.
+    // the boolean (ADR 0036): `paymentsEnv[key]` is on line 4.
     expect(contract.dynamicAccessSites).toEqual([{ file: consumerFile, line: 4, column: 1 }])
 
     const findings = deriveOwnershipFindings(graph)
@@ -314,11 +314,11 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     const findings = deriveOwnershipFindings(graph)
 
     expect(findings.indeterminate[0]?.reason).toBe(
-      `Dynamic (computed) property access was observed on "paymentsEnv" -- cannot determine whether "WEBHOOK_SECRET" is read. Searched: application, package:@acme/shared. Dynamic access observed at: ${consumerFile}:3:1, ${consumerFile}:5:1.`,
+      `Dynamic (computed) property access was observed on "paymentsEnv", so whether "WEBHOOK_SECRET" is read cannot be determined. Searched: application, package:@acme/shared. Dynamic access observed at: ${consumerFile}:3:1, ${consumerFile}:5:1.`,
     )
   })
 
-  it("a variable with a fresh dynamicAccess assertion is reported asserted, never unconsumedOwned/indeterminate -- both for a status: unconsumed and a status: indeterminate variable, and status: used is unaffected", async () => {
+  it("a variable with a fresh dynamicAccess assertion is reported asserted, never unconsumedOwned/indeterminate, for both a status: unconsumed and a status: indeterminate variable; status: used is unaffected", async () => {
     // Two contracts: "dynamic" has dynamic access observed on it (so its
     // otherwise-untouched variable would be indeterminate); "quiet" has none
     // at all (so its untouched variable would be unconsumed). Isolating them
@@ -342,7 +342,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         `dynamicEnv.STRIPE_KEY;`,
         `dynamicEnv[key];`,
         // `quietEnv` is imported but never referenced past the import
-        // itself, on purpose -- a genuine "would be unconsumed" case. A
+        // itself, on purpose: a genuine "would be unconsumed" case. A
         // bare reference (`quietEnv;`) would itself now be an escape site
         // (ADR 0039) and turn this into a "would be indeterminate" case
         // instead, collapsing the very distinction this test exists to
@@ -431,7 +431,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         ],
       }),
     ])
-    // STRIPE_KEY is status "used" (real member access) -- a fresh assertion
+    // STRIPE_KEY is status "used" (real member access): a fresh assertion
     // on an already-proven variable is neither a problem nor an "asserted"
     // entry; it's simply irrelevant, matching Design 7's real intent (the
     // assertion only ever needs to explain away an *absence* of proof).
@@ -461,7 +461,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     expect(graph.contracts[0]!.variables.get("STRIPE_KEY")?.evidence).toBe("no-access")
   })
 
-  it("contract-level consumer vs. variable-level access are independent: a bare reference (passed as an argument) proves coupling but escapes per-variable analysis -- indeterminate, never a false unconsumed (ADR 0039)", async () => {
+  it("contract-level consumer vs. variable-level access are independent: a bare reference (passed as an argument) proves coupling but escapes per-variable analysis, so it is indeterminate, never a false unconsumed (ADR 0039)", async () => {
     const schemaFile = await write(
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
@@ -479,13 +479,13 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     // Contract-level: this file is a proven consumer (coupling exists).
     expect(contract.imported).toBe(true)
     expect(contract.consumingFiles).toEqual([consumerFile])
     // Variable-level: `paymentsEnv` was genuinely read (passed to
     // `initialize`), but this single-file scan can't attribute that read to
-    // any specific key -- "indeterminate," never a false "unconsumed"
+    // any specific key; "indeterminate," never a false "unconsumed"
     // (which would claim certainty the scanner doesn't have). See ADR 0039.
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
     expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("escape")
@@ -538,7 +538,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
     )
-    // Directly imported elsewhere -- `imported` is already true by the time
+    // Directly imported elsewhere: `imported` is already true by the time
     // pass 2 runs, so it must be skipped rather than gaining an
     // ambiguousBarrelFiles entry.
     const otherFile = await write(
@@ -550,7 +550,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       `import { otherEnv } from "./other/env.schema.js";\notherEnv.OTHER_KEY;`,
     )
     // Never imported anywhere, and its exportName doesn't match the
-    // barrel-forwarded name below -- must be skipped on the name check.
+    // barrel-forwarded name below: must be skipped on the name check.
     const unrelatedFile = await write(
       "unrelated/env.schema.ts",
       `export const unrelatedEnv = createEnv({ UNRELATED_KEY: {} }, { name: "unrelated" });`,
@@ -573,12 +573,12 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     expect(findings.unresolvedConsumers).toEqual([
       expect.objectContaining({ contractName: "payments" }),
     ])
-    // "other" was already imported directly -- not abandoned, not ambiguous.
+    // "other" was already imported directly: not abandoned, not ambiguous.
     expect(graph.contracts.find((c) => c.contractName === "other")?.ambiguousBarrelFiles).toEqual(
       [],
     )
     // "unrelated" was never imported and its name doesn't match the barrel
-    // forward -- genuinely abandoned, not ambiguous.
+    // forward: genuinely abandoned, not ambiguous.
     expect(findings.abandoned).toEqual([expect.objectContaining({ contractName: "unrelated" })])
   })
 
@@ -587,7 +587,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
     )
-    // Directly imported first -- `imported` is already true by the time
+    // Directly imported first: `imported` is already true by the time
     // pass 2 examines this SAME binding name again through the barrel path
     // below.
     const directConsumer = await write(
@@ -664,7 +664,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     const findings = deriveOwnershipFindings(graph)
 
     expect(findings.unresolvedConsumers[0]?.reason).toBe(
-      `Not directly imported anywhere, but 2 file(s) import "paymentsEnv" through a specifier that resolves to a file containing an unresolved "export * from" re-export -- cannot determine whether this contract is forwarded by it. Files: ${aConsumer}, ${zConsumer}.`,
+      `Not directly imported anywhere, but 2 file(s) import "paymentsEnv" through a specifier that resolves to a file containing an unresolved "export * from" re-export, so whether this contract is forwarded by it cannot be determined. Files: ${aConsumer}, ${zConsumer}.`,
     )
   })
 
@@ -673,8 +673,8 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
     )
-    // A plain, non-barrel file that happens to export a same-named binding
-    // -- not a contract, and not reached through any wildcard re-export.
+    // A plain, non-barrel file that happens to export a same-named binding:
+    // not a contract, and not reached through any wildcard re-export.
     const plainFile = await write(
       "plain.ts",
       `export const paymentsEnv = "not actually a contract";`,
@@ -694,7 +694,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     const findings = deriveOwnershipFindings(graph)
 
     // The real "payments" contract was never actually imported through any
-    // barrel -- must stay genuinely abandoned, not falsely rescued into
+    // barrel: must stay genuinely abandoned, not falsely rescued into
     // unresolvedConsumers by the same-named plain binding.
     expect(findings.abandoned).toEqual([expect.objectContaining({ contractName: "payments" })])
     expect(findings.unresolvedConsumers).toEqual([])
@@ -746,7 +746,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     )
     const findings = deriveOwnershipFindings(graph)
 
-    // The generated file is excluded from the scan entirely -- the contract
+    // The generated file is excluded from the scan entirely: the contract
     // it re-exports must still show up as abandoned, not falsely "used".
     expect(findings.abandoned).toEqual([expect.objectContaining({ contractName: "payments" })])
   })
@@ -833,7 +833,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
     )
 
     // The consumer imports the *backup* file, an exact-path match against a
-    // different (undiscovered) contract -- the real contract must not be
+    // different (undiscovered) contract: the real contract must not be
     // credited with this usage.
     expect(graph.contracts[0]!.imported).toBe(false)
   })
@@ -856,7 +856,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       context,
     )
 
-    const contract = graph.contracts[0]! // this test's own fixture -- always present
+    const contract = graph.contracts[0]! // this test's own fixture: always present
     expect(contract.imported).toBe(true) // the import itself still counts as coupling
     expect(contract.variables.get("STRIPE_KEY")?.status).toBe("unconsumed")
   })
@@ -866,7 +866,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
     )
-    // No bare reference to `paymentsEnv` past the import, on purpose --
+    // No bare reference to `paymentsEnv` past the import, on purpose:
     // that alone would now be an escape site (ADR 0039) and produce
     // "indeterminate," muddying this test's actual point: the string
     // literal's contents must never be parsed for identifiers at all.
@@ -943,9 +943,9 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
   })
 
   describe("cross-package contracts (ADR 0014, Experimental)", () => {
-    it("a contract resolved via an allow-listed package, bare-imported by a local consumer, is marked imported -- never abandoned", async () => {
+    it("a contract resolved via an allow-listed package, bare-imported by a local consumer, is marked imported: never abandoned", async () => {
       // Real package.json + require.resolve()-reachable layout, the same
-      // shape resolvePackageSchemaFile() expects -- see resolve-package-schema.test.ts
+      // shape resolvePackageSchemaFile() expects: see resolve-package-schema.test.ts
       // for the resolver's own unit tests; this proves the load-bearing
       // wiring into buildDependencyGraph specifically: without it, this
       // contract would show up as abandoned, since Pass 1 could never
@@ -987,7 +987,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       )
       const findings = deriveOwnershipFindings(graph)
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.imported).toBe(true)
       expect(contract.consumingFiles).toEqual([consumerFile])
       expect(contract.variables.get("API_KEY")?.status).toBe("used")
@@ -996,7 +996,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
   })
 
   describe("tsconfig path alias resolution (ADR 0023, Experimental)", () => {
-    it("a contract declared under an aliased path, imported by a local consumer via the alias, is marked imported -- never abandoned", async () => {
+    it("a contract declared under an aliased path, imported by a local consumer via the alias, is marked imported: never abandoned", async () => {
       await write(
         "tsconfig.json",
         JSON.stringify({
@@ -1039,12 +1039,12 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       )
       const findings = deriveOwnershipFindings(graph)
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.imported).toBe(true)
       expect(contract.consumingFiles).toEqual([consumerFile])
       expect(contract.variables.get("ALIAS_KEY")?.status).toBe("used")
       expect(findings.abandoned).toEqual([])
-      // Not just "not abandoned" -- ALIAS_KEY was actually member-accessed
+      // Not just "not abandoned": ALIAS_KEY was actually member-accessed
       // (`aliasEnv.ALIAS_KEY` above), so it must never show up as
       // unconsumed or indeterminate either. Both come from the same
       // per-variable status computed off the same alias-resolved import, so
@@ -1055,7 +1055,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
   })
 
   describe("local dataflow escapes (ADR 0039): destructuring/aliasing shapes this scan can't fully follow widen to indeterminate, never a false unconsumed", () => {
-    it("a destructured key is proven used; a bare reference to the same contract elsewhere widens every OTHER not-otherwise-accessed variable to indeterminate -- a proven member access always wins over an escape on the same key", async () => {
+    it("a destructured key is proven used; a bare reference to the same contract elsewhere widens every OTHER not-otherwise-accessed variable to indeterminate: a proven member access always wins over an escape on the same key", async () => {
       const schemaFile = await write(
         "payments/env.schema.ts",
         `export const paymentsEnv = createEnv({ STRIPE_KEY: {}, WEBHOOK_SECRET: {} }, { name: "payments" });`,
@@ -1073,11 +1073,11 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
       expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
       expect(contract.variables.get("WEBHOOK_SECRET")?.evidence).toBe("escape")
-      // An escape-indeterminate variable carries no access positions -- nothing was ever member-accessed.
+      // An escape-indeterminate variable carries no access positions: nothing was ever member-accessed.
       expect(contract.variables.get("WEBHOOK_SECRET")?.positions).toEqual([])
       expect(contract.escapeSites).toEqual([
         { file: consumerFile, line: 3, column: 5, via: "reference" },
@@ -1091,7 +1091,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       expect(findings.indeterminate[0]?.reason).toBe(
         `Contract "paymentsEnv" is used in a way this scanner's local dataflow analysis cannot ` +
           `follow (a rest binding, nested destructuring, a computed key, an ambiguous alias, or the ` +
-          `contract passed/referenced directly) -- cannot determine whether "WEBHOOK_SECRET" is read. ` +
+          `contract passed/referenced directly), so whether "WEBHOOK_SECRET" is read cannot be determined. ` +
           `Searched: application. Escaped at: ${consumerFile}:3:5 (reference).`,
       )
     })
@@ -1114,11 +1114,11 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
       expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
-      // The escape site's `via` is threaded through from the scanner verbatim
-      // -- a rest binding, not the generic "reference".
+      // The escape site's `via` is threaded through from the scanner verbatim:
+      // a rest binding, not the generic "reference".
       expect(contract.escapeSites).toEqual([
         { file: consumerFile, line: 2, column: 21, via: "rest" },
       ])
@@ -1172,14 +1172,14 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.imported).toBe(true)
       expect(contract.consumingFiles).toEqual([consumerFile])
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
       expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("member-access")
     })
 
-    it("a chained alias (`const b = a`) widens the not-otherwise-accessed keys of the contract to indeterminate -- the second hop is never followed", async () => {
+    it("a chained alias (`const b = a`) widens the not-otherwise-accessed keys of the contract to indeterminate: the second hop is never followed", async () => {
       const schemaFile = await write(
         "payments/env.schema.ts",
         `export const paymentsEnv = createEnv({ STRIPE_KEY: {}, WEBHOOK_SECRET: {} }, { name: "payments" });`,
@@ -1197,7 +1197,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("used")
       expect(contract.variables.get("WEBHOOK_SECRET")?.status).toBe("indeterminate")
       expect(contract.escapeSites).toEqual([
@@ -1205,7 +1205,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       ])
     })
 
-    it("sorts a contract's escapeSites by file, not scan order -- a later-scanned file that sorts alphabetically first still comes first", async () => {
+    it("sorts a contract's escapeSites by file, not scan order: a later-scanned file that sorts alphabetically first still comes first", async () => {
       const schemaFile = await write(
         "payments/env.schema.ts",
         `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
@@ -1214,7 +1214,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         "z-consumer.ts",
         `import { paymentsEnv } from "./payments/env.schema.js";\nuse(paymentsEnv);`,
       )
-      // Two escape sites in ONE file, on different lines -- exercises the
+      // Two escape sites in ONE file, on different lines: exercises the
       // same-file line tiebreak in the sort comparator too.
       const aConsumer = await write(
         "a-consumer.ts",
@@ -1230,7 +1230,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.escapeSites).toEqual([
         { file: aConsumer, line: 2, column: 5, via: "reference" },
         { file: aConsumer, line: 3, column: 7, via: "reference" },
@@ -1248,7 +1248,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
       )
     })
 
-    it("a let-declared local is never tracked as an alias -- its own bare read of the import still proves coupling and escapes to indeterminate, and the local's own later property access is invisible to the scan", async () => {
+    it("a let-declared local is never tracked as an alias: its own bare read of the import still proves coupling and escapes to indeterminate, and the local's own later property access is invisible to the scan", async () => {
       const schemaFile = await write(
         "payments/env.schema.ts",
         `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
@@ -1266,7 +1266,7 @@ describe("buildDependencyGraph / deriveOwnershipFindings", () => {
         context,
       )
 
-      const contract = graph.contracts[0]! // this test's own fixture -- always present
+      const contract = graph.contracts[0]! // this test's own fixture: always present
       expect(contract.imported).toBe(true)
       expect(contract.variables.get("STRIPE_KEY")?.status).toBe("indeterminate")
       expect(contract.variables.get("STRIPE_KEY")?.evidence).toBe("escape")

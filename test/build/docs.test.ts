@@ -241,7 +241,7 @@ describe("renderDocs", () => {
     expect(docs).toContain(
       "⚠️ **Undocumented.** No `documentEnv()` call is linked to this contract.",
     )
-    // Exactly one blank line separates "Source: ..." from the callout -- not
+    // Exactly one blank line separates "Source: ..." from the callout; not
     // an unexpected extra line of junk text where that blank should be.
     expect(docs).toContain(
       "Source: `orphan/env.schema.ts`\n\n> ⚠️ **Undocumented.** No `documentEnv()` call is linked to this contract.",
@@ -319,7 +319,7 @@ describe("renderDocs", () => {
         file: "a/env.schema.ts",
         exportName: "aEnv",
         contractName: "a",
-        // SHARED is duplicated (both a and b declare it); ONLY_A is not --
+        // SHARED is duplicated (both a and b declare it); ONLY_A is not:
         // the mix needed to distinguish `.some(len>1)` from `.every(len>1)`.
         variables: [makeVariable({ key: "SHARED" }), makeVariable({ key: "ONLY_A" })],
       })
@@ -332,14 +332,14 @@ describe("renderDocs", () => {
       const docs = renderDocs([a, b], options())
 
       expect(docs).toContain("## Dependency graph")
-      // hasDuplicates: true -- the TOC link must actually appear.
+      // hasDuplicates: true; the TOC link must actually appear.
       expect(docs).toContain("- [Dependency graph](#dependency-graph)")
       const graph = docs.slice(
         docs.indexOf("## Dependency graph"),
         docs.indexOf("## Security review"),
       )
       expect(graph).toContain("`SHARED`")
-      // Both locations joined into ONE cell with ", " -- not just present
+      // Both locations joined into ONE cell with ", ": not just present
       // separately anywhere in the section.
       expect(graph).toContain(
         "a (`a/env.schema.ts`)](#a-shared), [b (`b/env.schema.ts`)](#b-shared)",
@@ -401,11 +401,11 @@ describe("renderDocs", () => {
 
       expect(lifecycle).toMatch(/EXPIRED.*expired \d+d ago/)
       expect(lifecycle).toMatch(/EXPIRING_SOON.*14d remaining/)
-      // FAR_OUT is outside the window -- its row shows the plain date with no annotation.
+      // FAR_OUT is outside the window: its row shows the plain date with no annotation.
       expect(lifecycle).toMatch(/FAR_OUT`\]\(#[^)]+\) \| -- \| 2027-01-01 \|/)
     })
 
-    it("includes a row for a variable with only an owner (no expiresAt/refreshInstructions), and one with only refreshInstructions -- each showing '--' for the columns it doesn't set", async () => {
+    it("includes a row for a variable with only an owner (no expiresAt/refreshInstructions), and one with only refreshInstructions: each showing '--' for the columns it doesn't set", async () => {
       const contract = makeContract({
         file: "x/env.schema.ts",
         exportName: "xEnv",
@@ -430,7 +430,7 @@ describe("renderDocs", () => {
         variables: [
           // NOW + 30 days exactly, with expiringWithinDays: 30.
           makeVariable({ key: "AT_BOUNDARY", expiresAt: "2026-01-31" }),
-          // NOW exactly -- 0 days remaining, not yet expired.
+          // NOW exactly: 0 days remaining, not yet expired.
           makeVariable({ key: "TODAY", expiresAt: "2026-01-01" }),
         ],
       })
@@ -511,7 +511,7 @@ describe("renderDocs", () => {
 
   describe("change summary", () => {
     it("reports 'No changes.' (not omitted) when there is no previous content to diff against", async () => {
-      // Not "omitted" -- see computeChangeSummary()'s docstring in docs.ts: a
+      // Not "omitted": see computeChangeSummary()'s docstring in docs.ts: a
       // first-ever report must already be a fixed point under self-feeding
       // (checkEnvArtifacts()/ADR 0016 always re-renders using whatever is
       // currently on disk as previousContent), and this is the only phrasing
@@ -554,7 +554,7 @@ describe("renderDocs", () => {
       const docs = renderDocs([contract], options({ previousContent: previous }))
       expect(docs).toContain("## Changes since last report")
       expect(docs).toContain("**Added:** `B`")
-      // Nothing was removed or commented-out -- those lines must be absent,
+      // Nothing was removed or commented-out: those lines must be absent,
       // not merely present-but-empty.
       expect(docs).not.toContain("**Removed:**")
       expect(docs).not.toContain("**No longer required")
@@ -579,7 +579,7 @@ describe("renderDocs", () => {
           makeContract({
             file: "x/env.schema.ts",
             exportName: "xEnv",
-            // Declared in reverse-alphabetical order -- the sort must reorder them.
+            // Declared in reverse-alphabetical order: the sort must reorder them.
             variables: [
               makeVariable({ key: "A" }),
               makeVariable({ key: "Z_KEY" }),
@@ -616,14 +616,14 @@ describe("renderDocs", () => {
       expect(docs).toContain("**Removed:** `B`")
       expect(docs).not.toContain("**Added:**")
       expect(docs).not.toContain("**No longer required")
-      // Exactly one blank line separates the changes summary from the TOC --
+      // Exactly one blank line separates the changes summary from the TOC:
       // not an unexpected extra line of junk text.
       expect(docs).toContain("**Removed:** `B`\n\n## Table of contents")
     })
 
     it("sorts multiple Removed keys alphabetically regardless of prior heading order", async () => {
       // renderCatalog() sorts a CONTRACT's own variables before rendering, so
-      // a single contract's heading order can never be un-sorted -- two
+      // a single contract's heading order can never be un-sorted: two
       // contracts, ordered by CONTRACT name (not by their own variable's
       // key), is the only way to get a genuinely non-alphabetical heading
       // SEQUENCE in the rendered text for extractPreviouslyDocumentedKeys()
@@ -686,7 +686,7 @@ describe("renderDocs", () => {
     })
 
     it("sorts multiple 'no longer required' keys alphabetically regardless of prior heading order", async () => {
-      // Same reasoning as the Removed-sort test above -- two contracts,
+      // Same reasoning as the Removed-sort test above: two contracts,
       // ordered by CONTRACT name, so the PREVIOUS render's heading sequence
       // is genuinely non-alphabetical for extractPreviouslyActiveKeys() to
       // parse back out of order.
@@ -737,7 +737,7 @@ describe("renderDocs", () => {
         variables: [makeVariable({ key: "A" })],
       })
 
-      // First report where A is already inactive -- nothing "just changed" here.
+      // First report where A is already inactive: nothing "just changed" here.
       const firstReport = renderDocs([dormant], options())
 
       // Regenerating against that same still-dormant state should report no changes,
@@ -847,7 +847,7 @@ describe("renderDocs", () => {
       })
       const docs = renderDocs([contract], options())
       // Sliced to the contract-level fields specifically (before the first
-      // variable heading) -- the variable's own `effectiveAuditRequired`
+      // variable heading): the variable's own `effectiveAuditRequired`
       // fallback would ALSO render "Audit required: no" from the SAME
       // contract value, at a different source line, which could mask a
       // mutant on the contract-level ternary specifically if checked
@@ -960,7 +960,7 @@ describe("renderDocs", () => {
       expect(docs).toContain("Validation contexts describe when validation participates")
     })
 
-    it("shows the disclaimer when only SOME variables (across contracts) declare a context, not all -- distinguishes `.some()` from `.every()` at both levels", () => {
+    it("shows the disclaimer when only SOME variables (across contracts) declare a context, not all: distinguishes `.some()` from `.every()` at both levels", () => {
       const withContext = makeContract({
         file: "a/env.schema.ts",
         exportName: "aEnv",
@@ -1050,7 +1050,7 @@ describe("renderDocs", () => {
 
     it("assigns distinct, collision-free anchors when two different contracts share the same display name and variable key", () => {
       // `name` (contractName) is a free-form label, not required to be
-      // unique -- two contracts both documented as "alpha" with the same
+      // unique: two contracts both documented as "alpha" with the same
       // variable key produce identical `${contractName}-${key}` base text,
       // the exact collision AnchorRegistry exists to disambiguate.
       const contractA = makeContract({
@@ -1130,7 +1130,7 @@ describe("extractPreviouslyDocumentedKeys", () => {
 })
 
 describe("extractPreviouslyActiveKeys", () => {
-  it("excludes a heading appearing before any '- Active:' marker at all -- the initial state defaults to inactive, not active", () => {
+  it("excludes a heading appearing before any '- Active:' marker at all: the initial state defaults to inactive, not active", () => {
     const keys = extractPreviouslyActiveKeys("### `ORPHAN_KEY`\n\nsome text\n")
     expect(keys).toEqual(new Set())
   })
@@ -1205,7 +1205,7 @@ describe("computeExpiringEntries", () => {
   })
 
   it("includes an entry exactly AT the expiringWithinDays boundary, for both contract- and variable-level expiresAt", () => {
-    // NOW + 30 days exactly, with expiringWithinDays: 30 -- the `<=` boundary.
+    // NOW + 30 days exactly, with expiringWithinDays: 30; the `<=` boundary.
     const contract = makeContract({
       file: "x/env.schema.ts",
       exportName: "xEnv",
@@ -1325,7 +1325,7 @@ describe("computeSecurityReviewCounters", () => {
       variables: [
         makeVariable({ key: "REQUIRED", required: true }),
         makeVariable({ key: "REFRESHABLE", refreshInstructions: "Rotate it." }),
-        makeVariable({ key: "OWNED_BY_CONTRACT" }), // falls back to contract.owner -- not "no owner"
+        makeVariable({ key: "OWNED_BY_CONTRACT" }), // falls back to contract.owner, not "no owner"
         makeVariable({ key: "TRULY_UNOWNED", owner: undefined }),
       ],
     })
@@ -1359,7 +1359,7 @@ describe("computeSecurityReviewCounters", () => {
 })
 
 describe("buildCatalog", () => {
-  it("carries the same descriptive content as the generated Markdown, keyed by variable name -- every CatalogContract/CatalogVariable field, exactly", () => {
+  it("carries the same descriptive content as the generated Markdown, keyed by variable name: every CatalogContract/CatalogVariable field, exactly", () => {
     const contract = makeContract({
       file: "features/payments/env.schema.ts",
       exportName: "paymentsEnv",
@@ -1469,7 +1469,7 @@ describe("buildCatalog", () => {
     expect(entry.variables["A"]!.owner).toBe("contract-owner")
   })
 
-  it("resolves sensitivity the same way owner does -- variable override wins, contract is the fallback", () => {
+  it("resolves sensitivity the same way owner does: variable override wins, contract is the fallback", () => {
     const contract = makeContract({
       file: "x/env.schema.ts",
       exportName: "xEnv",
@@ -1495,7 +1495,7 @@ describe("buildCatalog", () => {
           required: true,
           documented: true,
           // An author's documentEnv() metadata field literally named
-          // "documented"/"required" -- must never clobber the real booleans.
+          // "documented"/"required": must never clobber the real booleans.
           metadata: { documented: "definitely not", required: "also not" },
         }),
       ],
@@ -1561,7 +1561,7 @@ describe("normalizeDocsForComparison", () => {
     const a = normalizeDocsForComparison("- Already expired: 0\n- Expiring within 30 days: 1\n")
     const b = normalizeDocsForComparison("- Already expired: 3\n- Expiring within 30 days: 7\n")
     expect(a).toBe(b)
-    // The configured window (30) is not date-relative -- must survive normalization untouched.
+    // The configured window (30) is not date-relative: must survive normalization untouched.
     expect(a).toContain("Expiring within 30 days: N")
   })
 
@@ -1571,7 +1571,7 @@ describe("normalizeDocsForComparison", () => {
   })
 })
 
-describe("normalizeDocsForComparison -- exact patterns", () => {
+describe("normalizeDocsForComparison: exact patterns", () => {
   it("replaces the whole generation-timestamp line, and only a line that is exactly that", () => {
     expect(normalizeDocsForComparison("_Generated 2026-01-02T03:04:05.000Z_")).toBe(
       "_Generated <normalized-for-comparison>_",

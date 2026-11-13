@@ -11,7 +11,7 @@ export interface CheckoutSession {
 }
 
 /**
- * Placeholder for the PayPal Orders API -- no real network call, no real
+ * Placeholder for the PayPal Orders API: no real network call, no real
  * PayPal integration. Reads its own capability's validated contract directly,
  * exactly as feature-folder business logic would.
  */

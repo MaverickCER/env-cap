@@ -1,28 +1,24 @@
 #!/usr/bin/env node
 // Turns an `env-cap --json` report into GitHub PR annotations, a job-summary
-// table, and a sticky PR comment. Plain Node, no dependencies -- matches
-// `ci/size-budgets.mjs`'s dependency-free convention, and every GitHub
-// interaction goes through the preinstalled `gh` CLI rather than octokit.
+// table and a sticky PR comment. It is plain Node with no dependencies, like
+// `ci/size-budgets.mjs`. Every GitHub call goes through the preinstalled `gh`
+// CLI, not octokit.
 //
-// Split into one small collector per section of the `env-cap --json` payload
-// (manifest/evidence/error), composed by `classifyFindings()`, so a future
-// field added to that payload means adding one line to the relevant
-// collector rather than touching a shared switch statement.
+// One small collector reads each section of the `--json` payload (manifest,
+// evidence, error), and `classifyFindings()` composes them. A new payload
+// field then needs one line in one collector, not a shared switch statement.
 //
-// Documentation/ownership/rotation-alert reporting reads `result.evidence`
-// (the persisted EvidenceModel's Finding/Lifecycle/Contract/Ownership/
-// Dependency models -- ADR 0038), not `result.docs`/`result.usage`.
-// `--docs`/`--ownership` were removed from the `env-cap` CLI (ADR 0046);
-// `result.docs`/`result.usage` can never be populated by a CLI invocation
-// again, so reading them here would make this reporting permanently silent
-// regardless of `args` -- exactly the regression this file used to have
-// (caught only by review, since the old tests fed synthetic `docs`/`usage`
-// objects no real CLI run could ever produce; see
-// test/scripts/github-action-report.test.ts's own real-CLI test for the fix
-// to that gap). `result.evidence` requires `--evidence` in `args` (see
-// action.yml's own description) -- Finding/Lifecycle Model are always
-// computed regardless of CLI flags (ADR 0038), but only *included* in the
-// `--json` envelope when `--evidence` was requested.
+// Documentation, ownership and rotation-alert reporting reads
+// `result.evidence` (the persisted EvidenceModel's Finding, Lifecycle,
+// Contract, Ownership and Dependency models: ADR 0038). It never reads
+// `result.docs`/`result.usage`: the CLI has no `--docs`/`--ownership` flags
+// (ADR 0046), so a CLI run never fills them. Reading them would leave this
+// report silent for every `args`. The real-CLI test in
+// test/scripts/github-action-report.test.ts guards this, because synthetic
+// `docs`/`usage` objects cannot. `result.evidence` requires `--evidence` in
+// `args` (see action.yml's own description). The CLI always computes the
+// Finding and Lifecycle models (ADR 0038), but the `--json` envelope
+// includes them only when `--evidence` was requested.
 
 import { execFileSync } from "node:child_process"
 import { appendFileSync, readFileSync } from "node:fs"
@@ -43,18 +39,16 @@ export function collectManifestFindings(manifest) {
   return findings
 }
 
-// Finding Model codes this Action deliberately reports LOUDER or QUIETER
-// than `Finding.severity` alone would suggest -- both distinctions predate
-// the move to Finding Model and are preserved here verbatim:
-//  - EXPIRED: Finding Model itself keeps this "warning" (ADR 0038:
-//    documentation gaps never block generation), but a secret that has
-//    ALREADY expired earns a red "error" annotation in a human's PR view --
-//    a UX choice about urgency, not a change to what blocks a build.
+// Finding Model codes this Action reports louder or quieter than
+// `Finding.severity` suggests. Both choices predate the Finding Model and are kept:
+//  - EXPIRED: the Finding Model keeps it a "warning" (ADR 0038: documentation
+//    gaps never block generation). A secret that has already expired still
+//    earns a red "error" annotation in the PR view. That is about urgency; it
+//    does not change what blocks a build.
 //  - UNRESOLVED_CONSUMER / INDETERMINATE_OWNERSHIP: "we don't know" states
-//    (an ambiguous barrel re-export, a dynamic property access) -- never
-//    escalated, even by `--strict-ownership` (see generate-env-artifacts.ts),
-//    so this Action doesn't escalate them either; downgraded to "notice"
-//    rather than left at Finding Model's own "warning".
+//    (an ambiguous barrel re-export, a dynamic property access). Even
+//    `--strict-ownership` never escalates them (see generate-env-artifacts.ts),
+//    so this Action lowers them to "notice" instead of "warning".
 const ERROR_CODES = new Set(["EXPIRED"])
 const NOTICE_CODES = new Set(["UNRESOLVED_CONSUMER", "INDETERMINATE_OWNERSHIP"])
 
@@ -66,11 +60,10 @@ function annotationLevel(finding) {
 }
 
 /**
- * A `Finding.location`'s file, whichever of the three `EvidenceReference`
- * variants it is -- `"contract"`/`"ownership"` carry `file` (possibly
- * undefined -- a finding can be genuinely fileless, e.g. an unconsumed
- * owned variable, identified by contract+key alone); `"change"` (drift
- * findings, only ever present from a `--check` run) carries `path` instead.
+ * A `Finding.location`'s file, for each of the three `EvidenceReference`
+ * variants. `"contract"` and `"ownership"` carry `file`, which may be
+ * undefined: an unconsumed owned variable is identified by contract and key
+ * alone. `"change"` (drift findings, only from a `--check` run) carries `path`.
  * @param {{ model: string, file?: string, path?: string }} [location]
  * @returns {string | undefined}
  */
@@ -125,8 +118,8 @@ export function classifyFindings(result) {
 
 /**
  * Looks up a variable's `metadata` bag (the Contract Model's open extension
- * point, ADR 0037 -- e.g. a `compliance` tag) so the summary can enrich a
- * row without re-deriving anything -- a rendering nicety, not required for
+ * point, ADR 0037: e.g. a `compliance` tag) so the summary can enrich a
+ * row without re-deriving anything: a rendering nicety, not required for
  * correctness.
  * @param {unknown} evidence
  * @param {string | undefined} file
@@ -144,7 +137,7 @@ function findMetadata(evidence, file, exportName, key) {
 /**
  * Joins the Ownership Model (per-contract `owner`) with the Dependency
  * Model (per-contract `consumingFiles`, this Action's "blast radius") by
- * contract identity (`file`+`exportName`) -- the same join
+ * contract identity (`file`+`exportName`): the same join
  * `usage-report.ts`'s now-CLI-unreachable `dependencyOwnership` field used
  * to do internally.
  * @param {unknown} evidence
@@ -240,7 +233,7 @@ export function renderMarkdownSummary(result) {
 /**
  * `file` values coming out of the CLI are relative to *its own* `--root`
  * (`cliRoot`, i.e. `working-directory`), not necessarily the Action's
- * checkout root (`workspaceRoot`) -- the two only coincide when
+ * checkout root (`workspaceRoot`): the two only coincide when
  * `working-directory: .`. `path.resolve(cliRoot, file)` is correct whether
  * `file` was already absolute or root-relative to `cliRoot` (see the CLI's
  * documented file-path inconsistency, ADR 0013).
@@ -257,12 +250,10 @@ export function renderAnnotations(findings, cliRoot, workspaceRoot) {
 
 /**
  * Decides what a rotation-alert GitHub issue should say, from the Lifecycle
- * Model's `expiring` list (`result.evidence.lifecycle.expiring` -- same
- * shape, same field names, as the CLI's own former `docs.documentation
- * .expiringSoon`) -- no network access, so this is directly unit-testable
- * (unlike upsertRotationIssue/closeRotationIssueIfOpen below, which call
- * `gh` and follow report.mjs's existing convention of leaving gh-invoking
- * functions unexported/untested, same as upsertComment()/listComments() today).
+ * Model's `expiring` list (`result.evidence.lifecycle.expiring`). It makes no
+ * network call, so it is unit-tested. upsertRotationIssue and
+ * closeRotationIssueIfOpen below call `gh`, so like upsertComment and
+ * listComments they stay unexported and untested.
  * @param {unknown} result
  * @returns {{ action: "close" } | { action: "open", title: string, body: string }}
  */
@@ -400,7 +391,7 @@ function main() {
   } catch (error) {
     // A malformed/missing result file means the `npx env-cap --json` step
     // itself failed to produce valid output (package resolution failure,
-    // network error, ...) -- surface that plainly instead of letting a raw
+    // network error, ...): surface that plainly instead of letting a raw
     // SyntaxError/ENOENT stack trace be this Action's only diagnostic.
     const message = error instanceof Error ? error.message : String(error)
     process.stderr.write(
@@ -459,7 +450,7 @@ function main() {
   }
 }
 
-// Same direct-run guard as src/cli/index.ts -- importing this module from a
+// Same direct-run guard as src/cli/index.ts: importing this module from a
 // test must never have the side effect of running main().
 const isDirectRun =
   process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href

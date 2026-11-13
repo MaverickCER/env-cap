@@ -2,10 +2,10 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * This application's own local capability contract, organized through this
- * example's own "@/*" tsconfig path alias (ADR 0023) -- the same way
+ * example's own "@/*" tsconfig path alias (ADR 0023): the same way
  * @examples/tsconfig-aliases organizes its own contract, just in a
  * different project. src/app.ts imports this alongside `paymentsEnv`,
- * installed as an ordinary package dependency (ADR 0014) -- see README.md.
+ * installed as an ordinary package dependency (ADR 0014): see README.md.
  */
 const schema = {
   BILLING_WEBHOOK_SECRET: {

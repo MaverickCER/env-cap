@@ -15,7 +15,7 @@ const distMissing = !existsSync(cliDist)
 
 describe("published JSON Schema: freshness", () => {
   // ts-json-schema-generator runs a real TypeScript program/type-check over
-  // src/cli/json.ts's whole type graph -- inherently slower than a typical
+  // src/cli/json.ts's whole type graph: inherently slower than a typical
   // unit test, and slow enough under v8 coverage instrumentation's overhead
   // plus full-suite parallel resource contention to exceed even vitest.config.ts's
   // raised global 20000ms testTimeout. Kept as its own explicit override,
@@ -89,7 +89,7 @@ documentEnv(schema, { owner: "payments-team", variables: { STRIPE_KEY: { descrip
 `,
       )
 
-      // No prior generation -- "missing" findings, checkResult.ok: false.
+      // No prior generation: "missing" findings, checkResult.ok: false.
       const payload = runCli([
         "--root",
         fixtureRoot,

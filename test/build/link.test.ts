@@ -42,7 +42,7 @@ afterEach(async () => {
   await fs.rm(fixtureRoot, { recursive: true, force: true })
 })
 
-describe("linkFiles -- a variable declared in two contracts", () => {
+describe("linkFiles: a variable declared in two contracts", () => {
   const shipped = `
     import { createEnv, documentEnv } from "@maverickcer/env-cap";
     const shippedSchema = { TOKEN: { default: "", validator: () => true }, ONLY_THERE: { default: "" } };
@@ -172,7 +172,7 @@ describe("linkFiles", () => {
 
   it("reads each discovered file exactly once, even when it's ALSO the cross-file import target of another discovered file's documentEnv call", async () => {
     // schemaFile is pre-analyzed once in the discoveredFiles pre-pass, then
-    // resolved AGAIN as docsFile's import target during linking -- the
+    // resolved AGAIN as docsFile's import target during linking: the
     // second lookup must hit `getAnalysis()`'s own cache, not re-read the
     // file from disk.
     const schemaFile = await write(
@@ -425,7 +425,7 @@ describe("linkFiles", () => {
 
   it("two UNRELATED inline schema literals in the same file (one createEnv, one documentEnv) never coincidentally correlate with each other", async () => {
     // Each inline literal's identity is derived from its own AST node
-    // position -- if that were ever collapsed to a constant, two separate
+    // position: if that were ever collapsed to a constant, two separate
     // inline literals in the same file would collide and wrongly link.
     const file = await write(
       "unrelated-inline/env.schema.ts",
@@ -439,10 +439,10 @@ describe("linkFiles", () => {
     expect(result.contracts[0]?.owner).toBeUndefined()
   })
 
-  it("labels a documentEnv() inline schema's own warnings with the exact \"documentEnv() call\" context label -- distinct from createEnv's own label", async () => {
+  it("labels a documentEnv() inline schema's own warnings with the exact \"documentEnv() call\" context label: distinct from createEnv's own label", async () => {
     // A spread element inside the inline schema literal argument triggers
     // extractSchemaVariables()'s "Skipped a non-static schema entry in
-    // \"<contextLabel>\"" warning -- the one place `resolveSchema`'s own
+    // \"<contextLabel>\"" warning: the one place `resolveSchema`'s own
     // "documentEnv() call" label (passed only for a documentEnv ref, never
     // a createEnv one) is actually observable.
     const file = await write(
@@ -458,7 +458,7 @@ describe("linkFiles", () => {
     // `parseSchemaFile()`'s own warning for an unexported call is pushed
     // during parsing, completely independent of `linkFiles`'s own
     // createEnv/documentEnv correlation loops (an unexported call is
-    // `continue`d before ever being added to `createEnvCalls`) -- the ONLY
+    // `continue`d before ever being added to `createEnvCalls`): the ONLY
     // path this warning can reach `result.warnings` through is the final
     // `for (const analysis of analysisCache.values())` sweep.
     const file = await write(
@@ -478,7 +478,7 @@ describe("linkFiles", () => {
 
   it("rejects with the internal map-utils invariant error when a discovered file can't be read", async () => {
     // getAnalysis()'s own read failure leaves the file uncached (see
-    // link.ts's comment on mustGet) -- the outer createEnvCalls/
+    // link.ts's comment on mustGet): the outer createEnvCalls/
     // documentEnvCalls loops then call mustGet() on that same file and
     // throw, rather than silently dropping it. Exercises both getAnalysis's
     // catch branch and map-utils.ts's own invariant throw, neither hit by
@@ -520,7 +520,7 @@ describe("linkFiles", () => {
 
     // helperFile exists on disk (so resolveImportSpecifier's fs.stat-based
     // resolution succeeds) but this reader specifically fails to read it,
-    // simulating e.g. a permission error -- distinct from the "nonexistent
+    // simulating e.g. a permission error: distinct from the "nonexistent
     // file" case already covered above.
     const readExceptHelper = (filePath: string) =>
       filePath === helperFile

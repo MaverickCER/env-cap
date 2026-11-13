@@ -4,7 +4,7 @@
 //
 //   1. The build-time scanner (`@maverickcer/env-cap/build`) runs from BOTH its ESM and CJS entry
 //      points. TypeScript 7 ships no programmatic compiler API, so under a 7 root the scanner has to
-//      fall back to the bundled `@typescript/typescript6` (src/build/typescript.ts) -- the case no
+//      fall back to the bundled `@typescript/typescript6` (src/build/typescript.ts): the case no
 //      unit test can reach, because it needs a real TypeScript 7 root in `node_modules`.
 //   2. The shipped `.d.ts` files type-check in a consumer under `moduleResolution: nodenext`,
 //      `strict` and full library checking (no `skipLibCheck`), every entry point but `./eslint-plugin`
@@ -47,7 +47,7 @@ const tarball = path.join(
 )
 
 // The scanner, run from both entry formats over every committed `env.schema.ts` fixture (the example
-// applications and the integration fixtures -- 23 files, from one-liners to multi-call schemas with
+// applications and the integration fixtures: 23 files, from one-liners to multi-call schemas with
 // documentation metadata). Each TypeScript root writes what it found, and the three outputs must be
 // byte-identical: TypeScript 5, 6 and the bundled 6 under a 7 root parse the same corpus the same way.
 const scanScript = `import { createRequire } from "node:module"
@@ -62,8 +62,8 @@ for (const [label, build] of [["esm", esm], ["cjs", cjs]]) {
   for (const file of Object.keys(fixtures).sort()) {
     const result = build.parseSchemaFile("/repo/" + file, fixtures[file])
     if (result.createEnvCalls.length === 0) throw new Error(label + ": no createEnv call found in " + file)
-    // The raw result carries AST nodes (circular, with parents): an inline schema literal is kept as its
-    // source text, an identifier reference as the plain record it already is.
+    // The raw result holds AST nodes, which are circular through their parents. So an inline schema literal
+    // is kept as its source text, and an identifier reference as the plain record it already is.
     const call = (c) => ({
       schema: c.schemaRef.kind === "literal" ? { kind: "literal", text: c.schemaRef.node.getText() } : c.schemaRef,
       call: c.node.getText(),

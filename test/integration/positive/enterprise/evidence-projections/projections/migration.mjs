@@ -4,13 +4,13 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  * The "Configuration Migration" reference projection (plan Phase 23).
  *
  * No existing report type or `@maverickcer/env-cap/build` renderer anchors
- * this one -- flagged as such in the plan itself. This implements the
+ * this one: flagged as such in the plan itself. This implements the
  * rename-correlation-checklist interpretation: for every variable rename
- * Change Model correlated from an authored `renamedFrom` (ADR 0029/0030 --
+ * Change Model correlated from an authored `renamedFrom` (ADR 0029/0030;
  * never guessed from name similarity), a concrete, actionable instruction
  * ("update your `.env` and any code reading `process.env.OLD_KEY`
  * directly"). Also lists variables removed *without* a matching rename
- * correlation -- a real migration signal Change Model already carries
+ * correlation: a real migration signal Change Model already carries
  * (`manifest.removedVariables` minus whatever `renamedVariables` explains),
  * distinct from a rename: something a consumer needs to stop referencing
  * entirely, not update to a new name.

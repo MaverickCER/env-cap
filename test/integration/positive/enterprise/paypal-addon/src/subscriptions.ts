@@ -9,7 +9,7 @@ export interface Subscription {
   status: "APPROVAL_PENDING";
 }
 
-/** Placeholder for the PayPal Subscriptions API -- no real network call. */
+/** Placeholder for the PayPal Subscriptions API: no real network call. */
 export async function createSubscription(input: CreateSubscriptionInput): Promise<Subscription> {
   console.log(
     `[paypal-addon] creating subscription for plan "${input.planId}" using client ${paypalEnv.PAYPAL_CLIENT_ID}`,

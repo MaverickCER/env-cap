@@ -102,7 +102,7 @@ describe("detectExclusiveGroupIssues", () => {
     expect(issues.every((issue) => issue.severity === "error")).toBe(true)
   })
 
-  it("orders issues by group name, alphabetically -- not by declaration/discovery order", () => {
+  it("orders issues by group name, alphabetically: not by declaration/discovery order", () => {
     const make = (group: string) =>
       makeContract({
         file: `/repo/${group}-a/env.schema.ts`,
@@ -118,7 +118,7 @@ describe("detectExclusiveGroupIssues", () => {
         exclusiveGroup: group,
       })
 
-    // Declared "zebra" group first, "database" group second -- the reverse
+    // Declared "zebra" group first, "database" group second: the reverse
     // of alphabetical order.
     const issues = detectExclusiveGroupIssues([
       make("zebra"),
@@ -150,7 +150,7 @@ describe("detectExclusiveGroupIssues", () => {
     expect(issue.variable).toBe('Exclusive group "database"')
     expect(issue.reason).toBe(
       '"postgres" and "mongo" are both active and both declare exclusiveGroup ' +
-        '"database" -- only one active contract per exclusive group is allowed. Set active: false on ' +
+        '"database". Only one active contract per exclusive group is allowed. Set active: false on ' +
         "whichever one isn't in use.",
     )
   })

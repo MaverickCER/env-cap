@@ -103,7 +103,7 @@ describe("buildOwnershipModel", () => {
     expect(model.contracts.map((c) => c.file)).toEqual(["a/env.schema.ts", "z/env.schema.ts"])
   })
 
-  it("resolves each variable's effective owner -- its own override, falling back to the contract's", () => {
+  it("resolves each variable's effective owner: its own override, falling back to the contract's", () => {
     const contract = makeContract({
       file: "/repo/a/env.schema.ts",
       exportName: "aEnv",

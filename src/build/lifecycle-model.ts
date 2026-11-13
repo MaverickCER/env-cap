@@ -5,44 +5,44 @@ import type { ExpiringEntry } from "./docs.js"
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 
 /**
- * The fifth of env-cap's seven canonical fact models (ADR 0024) -- every
+ * The fifth of env-cap's seven canonical fact models (ADR 0024): every
  * contract and variable's lifecycle data (expiry, deprecation, rename
- * correlation), promoting `ExpiringEntry`/`computeExpiringEntries()`
- * (already a good precedent -- real, exported, reused across `renderDocs()`
- * and `generate-documentation.ts`) into a canonical, versioned shape
- * alongside the new deprecation/rename fields. See ADR 0029.
+ * correlation). It promotes `ExpiringEntry`/`computeExpiringEntries()` into a
+ * canonical, versioned shape alongside the new deprecation/rename fields.
+ * Those were already real, exported, and reused across `renderDocs()` and
+ * `generate-documentation.ts`. See ADR 0029.
  *
  * As of schema version 3, this also carries NIST SP 800-53 IA-5 rotation
  * data (`authenticatorType`/`rotationPeriod`/`lastRotatedAt`/
- * `rotationTriggerEvents`) and a computed `rotationStatus` per variable --
- * see `computeRotationStatus()` below for the compliance-status judgment
- * call, and the `rotation-log` example generator (peer to `generate-docs/`)
- * for the first real consumer.
+ * `rotationTriggerEvents`) and a computed `rotationStatus` per variable.
+ * See `computeRotationStatus()` below for the compliance-status judgment
+ * call. The `rotation-log` example generator (peer to `generate-docs/`) is
+ * the first real consumer.
  */
 
-/** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
+/** Bump only when a reader could misinterpret the new shape: same discipline every other canonical model's `schemaVersion` follows. */
 export const LIFECYCLE_MODEL_SCHEMA_VERSION = 3
 
 /**
- * One variable's computed NIST SP 800-53 IA-5 rotation status (a policy-window judgement) --
+ * One variable's computed NIST SP 800-53 IA-5 rotation status (a policy-window judgement):
  * see `computeRotationStatus()` for exactly how it's derived. Always present
- * on a `LifecycleModelVariable` (never `undefined`) since a variable with
- * literally nothing lifecycle-relevant set never reaches this model at all
- * (`hasLifecycleData()` below) -- `"undeclared"` is itself the honest value
- * for "reached this model for some other lifecycle reason (e.g. `deprecated`)
- * but declares none of the four rotation-specific fields."
+ * on a `LifecycleModelVariable` (never `undefined`). A variable with nothing
+ * lifecycle-relevant set never reaches this model (`hasLifecycleData()`
+ * below). So `"undeclared"` is the honest value for "reached this model for
+ * another lifecycle reason (e.g. `deprecated`) but declares none of the four
+ * rotation-specific fields".
  *
  * This is a policy-window judgement from the declared metadata ("within the declared
- * rotation period"), never a statement that any control is met or that a rotation
- * happened; env-cap never checks a declaration against reality. The 1.0 release
- * renames the value `"compliant"` to `"withinPolicy"` for that reason.
+ * rotation period"). It never states that any control is met or that a rotation
+ * happened. env-cap never checks a declaration against reality. Renaming the value
+ * `"compliant"` would be a breaking change, so it can only happen in a major release.
  */
 export type RotationComplianceStatus = "compliant" | "overdue" | "expired" | "undeclared"
 
 /**
  * One variable's lifecycle data (expiry, deprecation, rename correlation).
  *
- * @see {@link ContractModelVariable} -- this same declared variable's canonical starting point.
+ * @see {@link ContractModelVariable}: this same declared variable's canonical starting point.
  */
 export interface LifecycleModelVariable {
   readonly key: string
@@ -51,9 +51,9 @@ export interface LifecycleModelVariable {
   readonly deprecated: boolean | undefined
   readonly deprecatedReason: string | undefined
   readonly removeBy: string | undefined
-  /** The previous variable name this one renames, if set -- see `ManifestChangeReport`'s rename correlation (ADR 0029/0030). */
+  /** The previous variable name this one renames, if set: see `ManifestChangeReport`'s rename correlation (ADR 0029/0030). */
   readonly renamedFrom: string | undefined
-  /** Descriptive retention policy (e.g. "delete after 90 days") -- a policy statement, never computed or parsed, deliberately independent of `expiresAt`'s actual temporal constraint. See ADR 0035. */
+  /** Descriptive retention policy (e.g. "delete after 90 days"): a policy statement, never computed or parsed, deliberately independent of `expiresAt`'s actual temporal constraint. See ADR 0035. */
   readonly retention: string | undefined
   /** See {@link runtime.VariableDocs.authenticatorType}. */
   readonly authenticatorType: string | undefined
@@ -63,13 +63,13 @@ export interface LifecycleModelVariable {
   readonly lastRotatedAt: string | undefined
   /** See {@link runtime.VariableDocs.rotationTriggerEvents}. */
   readonly rotationTriggerEvents: readonly string[] | undefined
-  /** Computed, not stored -- see {@link RotationComplianceStatus} and `computeRotationStatus()`. */
+  /** Computed, not stored: see {@link RotationComplianceStatus} and `computeRotationStatus()`. */
   readonly rotationStatus: RotationComplianceStatus
 }
 
 /** One contract's own lifecycle data plus every variable of its that has at least one lifecycle field set. See {@link LifecycleModelVariable} for the per-variable shape. */
 export interface LifecycleModelContract {
-  /** Root-relative, POSIX-separated -- matches `ContractModelContract.file`. */
+  /** Root-relative, POSIX-separated: matches `ContractModelContract.file`. */
   readonly file: string
   readonly exportName: string
   readonly contractName: string
@@ -78,23 +78,23 @@ export interface LifecycleModelContract {
   readonly deprecatedReason: string | undefined
   /** See {@link LifecycleModelVariable.retention}. */
   readonly retention: string | undefined
-  /** Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`, `authenticatorType`, `rotationPeriod`, `lastRotatedAt`, `rotationTriggerEvents`) -- same "only what's relevant" scope `renderLifecycleReport()` already uses for its rows. */
+  /** Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`, `authenticatorType`, `rotationPeriod`, `lastRotatedAt`, `rotationTriggerEvents`). `renderLifecycleReport()` uses the same "only what's relevant" scope for its rows. */
   readonly variables: readonly LifecycleModelVariable[]
 }
 
-/** The versioned, JSON-serializable root of the Lifecycle Model -- see this module's own doc comment for the full picture. */
+/** The versioned, JSON-serializable root of the Lifecycle Model: see this module's own doc comment for the full picture. */
 export interface LifecycleModel {
   readonly schemaVersion: typeof LIFECYCLE_MODEL_SCHEMA_VERSION
   /** Only contracts with at least one lifecycle-relevant field set, at the contract level or on at least one variable. */
   readonly contracts: readonly LifecycleModelContract[]
   /**
    * Every contract-/variable-level `expiresAt` within the configured window,
-   * soonest-first -- see `computeExpiringEntries()`. `file` is root-relative
-   * and POSIX-separated here, matching `LifecycleModelContract.file`/every
-   * other canonical model -- unlike `ExpiringEntry`'s own doc comment, which
-   * describes its shape in `computeExpiringEntries()`'s other direct
-   * consumers (e.g. `DocumentationFindings.expiringSoon`), where `file`
-   * stays the absolute path `renderDocs()` itself expects.
+   * soonest-first: see `computeExpiringEntries()`. `file` is root-relative
+   * and POSIX-separated here, matching `LifecycleModelContract.file` and
+   * every other canonical model. `ExpiringEntry`'s own doc comment describes
+   * a different case: `computeExpiringEntries()`'s other direct consumers
+   * (e.g. `DocumentationFindings.expiringSoon`). There `file` stays the
+   * absolute path `renderDocs()` itself expects.
    */
   readonly expiring: readonly ExpiringEntry[]
 }
@@ -111,7 +111,7 @@ function hasLifecycleData(variable: DiscoveredVariable): boolean {
   )
 }
 
-/** Just the four rotation-specific fields -- broken out from {@link hasLifecycleData} since `computeRotationStatus()` needs the exact same "declares at least one" test to decide between `"undeclared"` and a real status. */
+/** Just the four rotation-specific fields, broken out from {@link hasLifecycleData}. `computeRotationStatus()` needs the same "declares at least one" test to decide between `"undeclared"` and a real status. */
 function hasRotationData(variable: {
   readonly authenticatorType: string | undefined
   readonly rotationPeriod: string | undefined
@@ -128,7 +128,7 @@ function hasRotationData(variable: {
 
 const MS_PER_DAY = 86_400_000
 
-/** Whole days per approximate calendar unit, used only by {@link parseRotationPeriodDays} -- see that function's own doc comment for why an approximation is an accepted tradeoff here. */
+/** Whole days per approximate calendar unit, used only by {@link parseRotationPeriodDays}. That function's doc comment says why an approximation is acceptable here. */
 const DAYS_PER_WEEK = 7
 const DAYS_PER_MONTH = 30
 const DAYS_PER_YEAR = 365
@@ -139,33 +139,34 @@ const DAYS_PER_YEAR = 365
  *
  * @remarks
  * `rotationPeriod` is documented (`runtime/document.ts`) as an organization-defined string much
- * like `retention` -- but unlike `retention`, which is *never* parsed (a pure policy statement),
- * `computeRotationStatus()` genuinely needs a numeric due date to compare against `now`. This
- * function is the one place that tension is resolved: it recognizes two small, common, unambiguous
- * grammars (a plain "<n> <unit>" -- singular/plural/abbreviated, case-insensitive, with or without
- * a space, e.g. "90 days"/"90day"/"12weeks" -- and ISO 8601's calendar-duration form, date
- * components only (`PnYnMnD`, no `T`/time-of-day component since a rotation period is never
- * meaningfully finer than a day; bare `"P"` is not a duration) rather than attempting to parse
- * arbitrary prose ("quarterly", "every other release", ...) -- an org whose policy string doesn't
- * fit either grammar still has it stored and rendered verbatim everywhere else, it just can't feed
- * a computed due date, and `computeRotationStatus()` fails closed (`"overdue"`) rather than
- * guessing at one. Month/year are calendar approximations (30/365 days) -- acceptable for a
- * rotation-window signal, not precise enough for anything billing/calendar-accurate.
+ * like `retention`. But `retention` is *never* parsed (a pure policy statement), while
+ * `computeRotationStatus()` needs a numeric due date to compare against `now`. This function is
+ * the one place that tension is resolved. It recognizes two small, common, unambiguous grammars
+ * and does not attempt to parse arbitrary prose ("quarterly", "every other release", ...):
  *
- * A computed total of zero days (e.g. "0 days", "P0D", "P0Y0M0D" -- the digit grammar can't
- * produce a *negative* total, but zero is reachable) is treated the same as an unparseable
- * string, not a real duration: it returns `undefined` rather than `0`, so `computeRotationStatus()`
- * falls into its own "declared but unverifiable" fail-closed path (`"overdue"`) instead of computing
- * a degenerate due date equal to `lastRotatedAt` itself -- a nonsensical "rotate every zero days"
- * policy should read as un-computable, not silently produce a technically-correct-but-meaningless
- * due date.
+ * - a plain "<n> <unit>": singular/plural/abbreviated, case-insensitive, with or without a
+ *   space, e.g. "90 days"/"90day"/"12weeks";
+ * - ISO 8601's calendar-duration form, date components only (`PnYnMnD`). There is no
+ *   `T`/time-of-day component, since a rotation period is never meaningfully finer than a day.
+ *   A bare `"P"` is not a duration.
+ *
+ * A policy string that fits neither grammar is still stored and rendered verbatim everywhere
+ * else. It just can't feed a computed due date, and `computeRotationStatus()` fails closed
+ * (`"overdue"`) rather than guessing at one. Month/year are calendar approximations (30/365 days).
+ * That is acceptable for a rotation-window signal, but not for anything billing/calendar-accurate.
+ *
+ * A computed total of zero days (e.g. "0 days", "P0D", "P0Y0M0D") is treated the same as an
+ * unparseable string, not a real duration. The digit grammar can't produce a *negative* total,
+ * but zero is reachable. It returns `undefined` rather than `0`. `computeRotationStatus()` then
+ * takes its "declared but unverifiable" fail-closed path (`"overdue"`) instead of computing a
+ * degenerate due date equal to `lastRotatedAt` itself. A nonsensical "rotate every zero days"
+ * policy should read as un-computable, not produce a technically-correct-but-meaningless due date.
  *
  * Both patterns are inlined at their `.exec()` call site, deliberately not hoisted to a
- * module-level `const` -- same precedent as `source-position.ts`'s `parsePositionCitation()`: a
- * module-level regex literal is a load-time-only ("static") mutation target, which Stryker's own
- * `perTest` coverage analysis can't attribute to a specific covering test (see this package's own
- * `stryker.config.mjs`), while an inline literal is re-evaluated -- and so mutation-tested -- on
- * every call.
+ * module-level `const` (as in `source-position.ts`'s `parsePositionCitation()`). A module-level
+ * regex literal is a load-time-only ("static") mutation target. Stryker's `perTest` coverage
+ * analysis can't attribute it to a specific covering test (see `stryker.config.mjs`). An inline
+ * literal is re-evaluated, and so mutation-tested, on every call.
  */
 export function parseRotationPeriodDays(value: string): number | undefined {
   const trimmed = value.trim()
@@ -174,7 +175,7 @@ export function parseRotationPeriodDays(value: string): number | undefined {
   if (plain) {
     const amount = Number(plain[1])
     // A zero amount ("0 days", "0w", ...) is rejected below, alongside the ISO branch's
-    // identical `total > 0` guard -- see this function's own doc comment for why.
+    // identical `total > 0` guard: see this function's own doc comment for why.
     if (amount > 0) {
       // Group 2 is mandatory in the pattern, so it is always captured when `plain` matched.
       const unit = String(plain[2]).toLowerCase()
@@ -200,9 +201,9 @@ export function parseRotationPeriodDays(value: string): number | undefined {
   }
 
   // Unlike the plain-form branch above, there's no separate "did anything match at all" guard
-  // here -- a bare "P" (no `Y`/`M`/`D` component at all) leaves `iso[1]`/`iso[2]`/`iso[3]` all
-  // `undefined`, each folds to `0` below, and the `total > 0` check just below already rejects
-  // that (same as any other zero total) -- a dedicated presence check would be pure dead weight.
+  // here. A bare "P" (no `Y`/`M`/`D` component) leaves `iso[1]`/`iso[2]`/`iso[3]` all
+  // `undefined`, and each folds to `0` below. The `total > 0` check just below already rejects
+  // that, like any other zero total, so a dedicated presence check would be dead weight.
   const iso = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?$/i.exec(trimmed)
   if (iso) {
     const years = iso[1] === undefined ? 0 : Number(iso[1])
@@ -220,39 +221,40 @@ export function parseRotationPeriodDays(value: string): number | undefined {
  * relative to `now`.
  *
  * @remarks
- * **The judgment call this function makes** (IA-5's main statement itself only says "change or
- * refresh authenticators [by an organization-defined period] or when [organization-defined events]
- * occur" -- it doesn't define how a *pre-existing* `expiresAt` and a *new* `rotationPeriod`/
- * `lastRotatedAt` pair should interact when both are declared on the same variable):
+ * **The judgment call this function makes.** IA-5's main statement only says "change or refresh
+ * authenticators [by an organization-defined period] or when [organization-defined events]
+ * occur". It doesn't define how a *pre-existing* `expiresAt` and a *new* `rotationPeriod`/
+ * `lastRotatedAt` pair interact when both are declared on the same variable. This function
+ * decides:
  *
- * - No rotation field declared at all (`hasRotationData()` false) -> `"undeclared"`. Not an error --
- *   most variables aren't authenticators, and saying nothing about rotation is the common, correct
+ * - No rotation field declared at all (`hasRotationData()` false) -> `"undeclared"`. Not an error.
+ *   Most variables aren't authenticators. Saying nothing about rotation is the common, correct
  *   case, not a violation to report.
- * - `expiresAt` is treated as authoritative and checked first, independent of everything else: if
- *   it's a valid date already in the past, the status is `"expired"`, full stop. Rationale: `expiresAt`
- *   is a pre-existing, often externally-imposed hard deadline (an API key's own issuer-enforced
- *   expiry, a certificate's NotAfter) -- once that date passes, the value has *literally* stopped
- *   being valid, which is categorically worse than merely being overdue for an internal policy
- *   rotation, and no internal rotation record can retroactively un-expire it.
- * - Otherwise, if `rotationPeriod` is declared, it's checked against `lastRotatedAt`: both present,
- *   both parseable (see `parseRotationPeriodDays()`), *and* `lastRotatedAt` no later than `now` ->
- *   compute `lastRotatedAt + rotationPeriod` and compare to `now` (`"overdue"` if that due date has
- *   passed, else `"compliant"`). Any other case with `rotationPeriod` declared -- `lastRotatedAt`
- *   missing, either value not statically parseable, or `lastRotatedAt` itself in the future (a
- *   rotation can't have happened yet, so trusting it would let a bad timestamp manufacture false
- *   compliance) -- fails closed to `"overdue"`: IA-5 asks for evidence a rotation actually happened
- *   on schedule, and a declared obligation that can't be shown to have been met is reported as
- *   non-compliant rather than silently passed as compliant.
- * - Otherwise (rotation metadata declared -- `authenticatorType` and/or `lastRotatedAt` and/or
- *   `rotationTriggerEvents` -- but no `rotationPeriod` and no past-due `expiresAt`) -> `"compliant"`:
- *   nothing here states a time-based obligation this variable could be failing to meet.
+ * - `expiresAt` is treated as authoritative and checked first, independent of everything else. If
+ *   it's a valid date already in the past, the status is `"expired"`, full stop. The reason:
+ *   `expiresAt` is a pre-existing, often externally-imposed hard deadline (an API key's own
+ *   issuer-enforced expiry, a certificate's NotAfter). Once that date passes, the value has
+ *   *literally* stopped being valid. That is categorically worse than being overdue for an internal policy rotation,
+ *   and no internal rotation record can retroactively un-expire it.
+ * - Otherwise, if `rotationPeriod` is declared, it's checked against `lastRotatedAt`. The good
+ *   case: both present, both parseable (see `parseRotationPeriodDays()`), *and* `lastRotatedAt` no
+ *   later than `now`. Then compute `lastRotatedAt + rotationPeriod` and compare to `now`. The
+ *   status is `"overdue"` if that due date has passed, else `"compliant"`. Any other case with
+ *   `rotationPeriod` declared fails closed to `"overdue"`. That covers `lastRotatedAt` missing,
+ *   either value not statically parseable, or `lastRotatedAt` in the future. A future rotation
+ *   can't have happened yet. Trusting it would let a bad timestamp manufacture false compliance. IA-5 asks for evidence a rotation
+ *   happened on schedule. A declared obligation that can't be shown to have been met is reported
+ *   as non-compliant rather than silently passed as compliant.
+ * - Otherwise -> `"compliant"`. Here rotation metadata is declared (`authenticatorType` and/or
+ *   `lastRotatedAt` and/or `rotationTriggerEvents`), with no `rotationPeriod` and no past-due
+ *   `expiresAt`. Nothing states a time-based obligation this variable could be failing to meet.
  *
  * `rotationTriggerEvents` (the event-based trigger) deliberately never changes the returned status
- * by itself: env-cap has no way to observe whether a listed event (a suspected compromise, a
- * personnel change, ...) actually occurred, so treating its mere presence as either compliant or
- * overdue would be fabricating a signal. It's presence-only evidence that the event-based half of
- * IA-5's two-trigger model was at least *declared* -- a generator can and should still surface it,
- * just never fold it into this computed status.
+ * by itself. env-cap cannot observe whether a listed event (a suspected compromise, a personnel
+ * change, ...) actually occurred. Treating its mere presence as either compliant or overdue would
+ * fabricate a signal. It's presence-only evidence that the event-based half of IA-5's
+ * two-trigger model was at least *declared*. A generator should still surface it, but never fold
+ * it into this computed status.
  */
 export function computeRotationStatus(
   variable: {
@@ -273,10 +275,10 @@ export function computeRotationStatus(
   if (variable.rotationPeriod !== undefined) {
     const lastRotated = parseIsoDate(String(variable.lastRotatedAt))
     const periodDays = parseRotationPeriodDays(variable.rotationPeriod)
-    // `lastRotated` must be no later than `now` -- a rotation timestamped in the future hasn't
-    // actually happened yet, so trusting it here would let a bad/clock-skewed value manufacture
-    // false compliance (a due date computed from a future `lastRotated` is always further in the
-    // future, so it would otherwise always read as "compliant" no matter how implausible).
+    // `lastRotated` must be no later than `now`. A rotation timestamped in the future hasn't
+    // happened yet, so trusting it would let a bad/clock-skewed value manufacture false
+    // compliance. A due date computed from a future `lastRotated` is always further in the
+    // future, so it would always read as "compliant", no matter how implausible.
     // Falling through treats it exactly like any other unverifiable `lastRotatedAt`: fail closed.
     if (
       lastRotated !== undefined &&

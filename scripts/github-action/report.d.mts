@@ -1,16 +1,14 @@
-// Hand-written type declaration for report.mjs, kept as plain, dependency-free
-// JS at runtime (see ADR 0013 decision 7 -- report.mjs has no dependency on
-// src/cli/json.ts's types). This file exists purely so the test suite
-// (test/scripts/github-action-report.test.ts) gets real type-checking
-// instead of treating every import as `any`; it is not shipped (outside
-// `files` in package.json) and never affects the published package's types.
+// Hand-written types for report.mjs, which stays plain, dependency-free JS at
+// runtime (ADR 0013 decision 7: it does not import src/cli/json.ts's types).
+// They give test/scripts/github-action-report.test.ts real type-checking
+// instead of `any`. This file sits outside package.json `files`, so it never
+// ships and never changes the published types.
 //
-// Deliberately minimal, structural types -- just the fields each function
-// actually reads, not the full GenerateEnvManifestResult/etc. shapes -- since
-// that's report.mjs's real (duck-typed) contract and it's what test fixtures
-// naturally construct. Per ADR 0013, report.mjs and the JSON contract are
-// already coupled by convention, not a shared type; this file is the same
-// kind of manually-kept-in-sync duplication, just for local type-checking.
+// The types are minimal and structural: only the fields each function reads,
+// not the full GenerateEnvManifestResult shapes. That is report.mjs's real,
+// duck-typed contract, and it is what the test fixtures build. Per ADR 0013,
+// report.mjs and the JSON output agree by convention, not through a shared
+// type. This file is the same kind of hand-synced copy, for type-checking only.
 
 export interface Finding {
   readonly level: "error" | "warning" | "notice"
@@ -29,15 +27,12 @@ export interface ManifestSection {
   readonly warnings: readonly IssueLike[]
 }
 
-// Structural, duck-typed mirrors of the relevant slices of `EvidenceModel`
-// (`src/build/evidence-model.ts` and the six canonical fact models it
-// assembles -- ADR 0024/0038), not the full generated types: only the
-// fields report.mjs's own (duck-typed) contract actually reads. `result
-// .evidence` is `--json`'s own copy of the exact same persisted evidence
-// artifact `--evidence <path>` writes to disk (ADR 0038), present only when
-// `--evidence` was passed to the CLI (see action.yml's own `args`
-// description) -- `result.docs`/`result.usage` no longer exist at all:
-// `--docs`/`--ownership` were removed from the CLI (ADR 0046).
+// Structural mirrors of only the `EvidenceModel` slices that report.mjs reads
+// (`src/build/evidence-model.ts`, ADR 0024 and ADR 0038). `result.evidence` is
+// `--json`'s copy of the evidence file `--evidence <path>` writes (ADR 0038).
+// It is present only when the CLI ran with `--evidence` (see the `args`
+// description in action.yml). There is no `result.docs` or `result.usage`:
+// the CLI has no `--docs` or `--ownership` flags (ADR 0046).
 export interface FindingLocationLike {
   readonly model: "contract" | "ownership" | "change"
   readonly file?: string | undefined
@@ -102,7 +97,7 @@ interface DependencyModelLike {
 
 export interface EvidenceSection {
   // Each field is optional, matching report.mjs's own `evidence?.field ?? []`
-  // defensive handling -- a partial payload is exactly as valid as a full one.
+  // defensive handling: a partial payload is exactly as valid as a full one.
   readonly finding?: FindingModelLike
   readonly lifecycle?: LifecycleModelLike
   readonly contract?: ContractModelLike
@@ -117,7 +112,7 @@ export interface ErrorSection {
 }
 
 export interface ReportResult {
-  // Optional -- classifyFindings() never reads it, and renderMarkdownSummary()
+  // Optional: classifyFindings() never reads it, and renderMarkdownSummary()
   // only ever checks `result?.ok === false`, which is safely false when absent.
   readonly ok?: boolean
   readonly manifest?: ManifestSection

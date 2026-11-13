@@ -8,7 +8,7 @@ export interface NotificationEmail {
 }
 
 /**
- * Sends via Resend when RESEND_API_KEY is set; otherwise logs to console --
+ * Sends via Resend when RESEND_API_KEY is set; otherwise logs to console:
  * "declared, gracefully degraded," genuinely exercised (not merely
  * documented) by both branches in the service's own test.
  */

@@ -18,7 +18,7 @@ console.log(`Wrote manifest: ${result.manifest?.outputPath}`);
 console.log(`Wrote docs: ${result.docs?.docsPath}`);
 console.log(`Discovered ${result.manifest?.contracts.length ?? 0} contract(s).`);
 
-// .env.example is regenerated and overwritten directly on every run here --
+// .env.example is regenerated and overwritten directly on every run here:
 // it's a live, always-current teaching artifact, not something meant to be
 // hand-merged. See the "onExisting" option (README's CLI section).
 const envExample = result.docs?.envExample;
@@ -40,8 +40,8 @@ if (result.manifest?.warnings.length) {
 }
 
 // Manifest change-tracking since the committed snapshot (env.manifest.snapshot.json)
-// was last written -- see ADR 0021. Lives on the Change Model
-// (result.evidence.change.manifest), not on result.manifest itself --
+// was last written: see ADR 0021. Lives on the Change Model
+// (result.evidence.change.manifest), not on result.manifest itself:
 // GenerateEnvManifestResult has no changes field of its own.
 const changes = result.evidence?.change?.manifest;
 if (changes) {

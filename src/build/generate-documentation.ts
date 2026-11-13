@@ -19,7 +19,7 @@ import type { BuildFileSystem } from "./types.js"
 
 /** Options for {@link generateDocumentation}. */
 export interface GenerateDocumentationOptions {
-  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability: `./build` never imports `node:fs` (ADR 0040). */
   fs: BuildFileSystem
   /** Project root schema discovery is relative to. Defaults to `process.cwd()`. */
   root?: string | undefined
@@ -37,7 +37,7 @@ export interface GenerateDocumentationOptions {
   expiringWithinDays?: number | undefined
   /**
    * Also emit a `.env.example`-style file, relative to `root`. `onExisting`
-   * controls what happens when a file already exists there -- defaults to
+   * controls what happens when a file already exists there: defaults to
    * `"keep-sibling"` (never overwrites; see `EnvExampleOnExisting` and
    * `EnvExampleResult`).
    */
@@ -58,7 +58,7 @@ export interface GenerateDocumentationOptions {
   liveExpirationDates?: LiveExpirationDates | undefined
 }
 
-/** Everything {@link generateDocumentation} found that isn't fully documented or up to date -- never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the "documentation" family) from the persisted evidence artifact and decides for itself. See ADR 0038. */
+/** Everything {@link generateDocumentation} found that isn't fully documented or up to date: never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the "documentation" family) from the persisted evidence artifact and decides for itself. See ADR 0038. */
 export interface DocumentationFindings {
   /** Contracts with no linked `documentEnv()` call at all. */
   readonly undocumentedContracts: readonly {
@@ -87,7 +87,7 @@ export interface DocumentationFindings {
   }[]
   /** Variables whose `expiresAt` falls within the configured window. */
   readonly expiringSoon: readonly ExpiringEntry[]
-  /** Contract- or variable-level `sensitivity` values outside {@link STANDARD_SENSITIVITY_LEVELS}. Advisory only -- the declared level is always honored verbatim; this exists purely so vocabulary drift across a repo stays visible. */
+  /** Contract- or variable-level `sensitivity` values outside {@link STANDARD_SENSITIVITY_LEVELS}. Advisory only: the declared level is always honored verbatim; this exists purely so vocabulary drift across a repo stays visible. */
   readonly nonstandardSensitivityLevels: readonly NonstandardSensitivityEntry[]
   /** `documentEnv()` calls that couldn't be statically linked to a schema. */
   readonly unresolvedLinks: readonly {
@@ -107,7 +107,7 @@ export interface GenerateDocumentationResult {
   /** Root-relative summary of every discovered contract, active or not. */
   readonly contracts: readonly DiscoveredContractSummary[]
   /** Same descriptive content as the generated Markdown Catalog, reshaped for
-   *  programmatic consumers -- see `buildCatalog()` in `docs.ts`. */
+   *  programmatic consumers: see `buildCatalog()` in `docs.ts`. */
   readonly catalog: readonly CatalogContract[]
   /** Parse-time warnings collected across every analyzed file (including allow-listed package resolution). */
   readonly parseWarnings: readonly ParseWarning[]
@@ -130,9 +130,9 @@ function standardSensitivityLevels(): string[] {
  * `string` (see {@link runtime.VariableDocs.sensitivity}), any value is
  * honored verbatim, and nothing here ever drops or rewrites a declared level.
  * A level outside this set only produces a non-blocking
- * `NONSTANDARD_SENSITIVITY_LEVEL` finding, so a team that deliberately runs
- * its own vocabulary sees one advisory line rather than silent data loss --
- * and a team that meant to write `"secret"` and typo'd `"secrets"` finds out.
+ * `NONSTANDARD_SENSITIVITY_LEVEL` finding. A team that deliberately runs its
+ * own vocabulary sees one advisory line rather than silent data loss. A team
+ * that meant to write `"secret"` and typo'd `"secrets"` finds out.
  */
 export const STANDARD_SENSITIVITY_LEVELS: ReadonlySet<string> = new Set(standardSensitivityLevels())
 
@@ -153,7 +153,7 @@ export interface NonstandardSensitivityEntry {
  * in declaration order (contract first, then its own variables by key).
  *
  * @remarks
- * A variable's *own* declared level only -- never the contract-inherited one
+ * A variable's *own* declared level only: never the contract-inherited one
  * `effectiveSensitivity()` would resolve to. Reporting the inherited value
  * would fire this same finding once per variable on a contract that already
  * produced its own contract-level entry, turning one real vocabulary
@@ -192,23 +192,23 @@ export interface DocumentationComputation {
   readonly contractSummaries: readonly DiscoveredContractSummary[]
   readonly catalog: readonly CatalogContract[]
   readonly documentation: DocumentationFindings
-  /** `ContractModel`'s own projection of the same contracts, built once here and reused by `writeDocumentation()` -- the shape `renderDocs()` itself takes (ADR 0038). */
+  /** `ContractModel`'s own projection of the same contracts, built once here and reused by `writeDocumentation()`: the shape `renderDocs()` itself takes (ADR 0038). */
   readonly contractModelContracts: readonly ContractModelContract[]
 }
 
-/** Root-relative, POSIX-separated -- `RenderDocsOptions`'s own convention, matching `ContractModel`'s `file`. Exported so `check-artifacts.ts`'s drift check can convert the same `documentation.undocumentedContracts`/`undocumentedVariables` fields for its own `renderDocs()` call, identically. Delegates to `displayPath()` so this can never disagree with the `ContractModel` `file` values it's matched against by identity. */
+/** Root-relative, POSIX-separated: `RenderDocsOptions`'s own convention, matching `ContractModel`'s `file`. Exported so `check-artifacts.ts`'s drift check can convert the same `documentation.undocumentedContracts`/`undocumentedVariables` fields for its own `renderDocs()` call, identically. Delegates to `displayPath()` so this can never disagree with the `ContractModel` `file` values it's matched against by identity. */
 export function relativizeRef<T extends { file: string }>(root: string, ref: T): T {
   return { ...ref, file: displayPath(root, ref.file) }
 }
 
 /**
- * Pure -- no I/O. Computes undocumented/stale/expiring findings against an
- * already-discovered contract graph (active and inactive alike -- docs
- * document everything, unlike the manifest). Never blocks -- see
+ * Pure: no I/O. Computes undocumented/stale/expiring findings against an
+ * already-discovered contract graph (active and inactive alike: docs
+ * document everything, unlike the manifest). Never blocks: see
  * `DocumentationFindings`'s own doc comment. Shared by the standalone
  * `generateDocumentation()` and `generate-env-artifacts.ts` (which also
  * reuses this same call for Finding Model's documentation-family findings,
- * ADR 0038 -- one computation, not two).
+ * ADR 0038: one computation, not two).
  */
 export function computeDocumentation(
   root: string,
@@ -249,7 +249,7 @@ export async function writeDocumentation(
   try {
     previousContent = await fs.readFile(docsPath, "utf8")
   } catch {
-    // Empty -- `previousContent` already starts `undefined`; re-assigning
+    // Empty: `previousContent` already starts `undefined`; re-assigning
     // it here is a no-op (no BlockStatement mutant on a trailing `{}`).
   }
 
@@ -279,10 +279,10 @@ export async function writeDocumentation(
 
 /**
  * Build-time only. Discovers and links `env.schema.ts` files (same static
- * analysis as {@link generateEnvManifest}) and writes the rich Markdown "Catalog" --
- * every variable, its description, default, processor/validator flags,
- * owner, and expiry -- the single onboarding reference application
- * developers use to see what configuration a feature needs and how to set
+ * analysis as {@link generateEnvManifest}) and writes the rich Markdown
+ * "Catalog": every variable, its description, default, processor/validator
+ * flags, owner, and expiry. Application developers use it as the single
+ * onboarding reference for what configuration a feature needs and how to set
  * it up. Optionally also writes a reconciling `.env.example`.
  *
  * @remarks

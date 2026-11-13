@@ -19,7 +19,7 @@ import {
 
 /** Options for {@link assembleProject}. */
 export interface AssembleProjectOptions {
-  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability: `./build` never imports `node:fs` (ADR 0040). */
   readonly fs: BuildFileSystem
   readonly root: string
   readonly include: readonly string[]
@@ -30,34 +30,33 @@ export interface AssembleProjectOptions {
 
 /**
  * Everything downstream model-building and artifact-rendering needs from one
- * discovery+link pass: the linked contract graph, the import-resolution
- * context every later resolution call (`computeScanSurface()`,
- * `buildDependencyModel()`, ...) must reuse to agree with `linkResult`, and a
- * shared file-read cache so a file matched by more than one later pass'
- * glob (e.g. a schema file also matched by the usage pass' broader
- * `SCAN_INCLUDE`) is only ever read from disk once.
+ * discovery+link pass. It holds the linked contract graph and the
+ * import-resolution context. Every later resolution call
+ * (`computeScanSurface()`, `buildDependencyModel()`, ...) must reuse that
+ * context to agree with `linkResult`. It also holds a shared file-read cache,
+ * so a file matched by more than one later pass' glob is read from disk once
+ * (e.g. a schema file also matched by the usage pass' broader `SCAN_INCLUDE`).
  */
 export interface AssembledProject {
   readonly root: string
   readonly readFileCached: (filePath: string) => Promise<string>
   readonly linkResult: LinkResult
   readonly context: ImportResolutionContext
-  /** Keyed by resolved file path -- see `resolveAllowlistedPackages()`. */
+  /** Keyed by resolved file path: see `resolveAllowlistedPackages()`. */
   readonly origins: ReadonlyMap<string, PackageOrigin>
   readonly packageWarnings: readonly ParseWarning[]
   readonly tsconfigWarnings: readonly ParseWarning[]
 }
 
 /**
- * The one shared discovery+link pass every orchestrator needs -- local +
+ * The one shared discovery+link pass every orchestrator needs: local +
  * allow-listed-package schema discovery, tsconfig path-alias resolution, and
- * cross-file linking, exactly once. Extracted from what `computeArtifacts()`
+ * cross-file linking, exactly once. `computeArtifacts()`
  * (`generate-env-artifacts.ts`) and `generateEvidenceModel()`
- * (`generate-evidence.ts`) each used to run independently, so the two
- * orchestrators can never silently drift into scanning the same source tree
- * twice -- the same "shared discovery, computed once" principle ADR 0011
- * already established for manifest/docs/usage, now shared with evidence
- * assembly too.
+ * (`generate-evidence.ts`) both call it, so the two orchestrators can never
+ * drift into scanning the same source tree twice. This is ADR 0011's "shared
+ * discovery, computed once" principle for manifest/docs/usage, extended to
+ * evidence assembly.
  */
 export async function assembleProject(options: AssembleProjectOptions): Promise<AssembledProject> {
   const { fs, root, include, exclude, packages = [], tsconfig } = options

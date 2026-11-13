@@ -47,7 +47,7 @@ afterEach(async () => {
 })
 
 describe("computeSourceFingerprint", () => {
-  it("changes when an allow-listed package's own schema file content changes -- package files really feed the hash, not silently dropped", async () => {
+  it("changes when an allow-listed package's own schema file content changes: package files really feed the hash, not silently dropped", async () => {
     await writeJson("node_modules/@fixtures/pkg/package.json", {
       name: "@fixtures/pkg",
       envCap: { schema: "./src/env.schema.ts" },
@@ -74,10 +74,10 @@ describe("computeSourceFingerprint", () => {
     expect(first).toBe(second)
   })
 
-  it("is independent of the order allow-listed packages are discovered in -- the merged file list is sorted before hashing, not hashed in discovery order", async () => {
+  it("is independent of the order allow-listed packages are discovered in: the merged file list is sorted before hashing, not hashed in discovery order", async () => {
     // `packageFiles`'s own order mirrors `options.packages`'s array order
     // (`resolveAllowlistedPackages()` resolves via `Promise.all` over that
-    // same array) -- two packages, requested in opposite orders, would feed
+    // same array): two packages, requested in opposite orders, would feed
     // the running hash their file/content pairs in opposite sequence if the
     // merged list were never sorted, producing two DIFFERENT digests for
     // the exact same underlying source tree.
@@ -140,24 +140,24 @@ describe("computeSourceFingerprint", () => {
     expect(after).not.toBe(before)
   })
 
-  it("folds in a distinct '(unreadable)' marker for a file the walk found but can't read by hash time -- exactly as if it had real content literally equal to that marker", async () => {
-    // Same filename, same file SET either way -- the only variable is
+  it("folds in a distinct '(unreadable)' marker for a file the walk found but can't read by hash time: exactly as if it had real content literally equal to that marker", async () => {
+    // Same filename, same file SET either way: the only variable is
     // whether the read succeeds. Comparing against a REAL file containing
     // the literal marker text (rather than trying to replicate the whole
-    // `allFiles` set -- which also picks up the beforeEach fixture's own
-    // schema file via the usage-scan surface, not just `include` -- by
+    // `allFiles` set (which also picks up the beforeEach fixture's own
+    // schema file via the usage-scan surface, not just `include`) by
     // hand) isolates exactly the one thing under test: an unreadable file
     // is hashed AS IF its content were "(unreadable)". An empty catch, or
     // one that hashes "" instead, would both be indistinguishable from a
-    // no-op given hashing an empty string adds zero bytes -- so this also
+    // no-op given hashing an empty string adds zero bytes: so this also
     // proves the marker isn't silently dropped.
     //
     // A `readFile` override (rather than `fs.chmod(path, 0o000)` on a real
     // file) is what actually simulates "found by the glob walk but can't be
     // read by hash time" here: permission bits are enforced by the OS, and
     // a CI runner isn't guaranteed to enforce them the same way a real
-    // developer machine does (confirmed: this exact mutation -- the
-    // `"(unreadable)"` -> `""` literal below -- genuinely failed this test
+    // developer machine does (confirmed: this exact mutation (the
+    // `"(unreadable)"` -> `""` literal below) genuinely failed this test
     // locally under `chmod 0o000`, yet still reported Survived in CI,
     // because the real GitHub Actions runner's `readFile` didn't throw for
     // a 0-permission file the way it does locally). Throwing from the
@@ -177,7 +177,7 @@ describe("computeSourceFingerprint", () => {
       include,
     })
 
-    // Real read this time -- no `throwingFs` override -- so this is the
+    // Real read this time (no `throwingFs` override) so this is the
     // genuine hash of a file whose real, on-disk content is the literal
     // marker text, the ground truth `unreadableFingerprint` above must match.
     await write("solo/unreadable.ts", "(unreadable)")

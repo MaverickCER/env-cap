@@ -1,11 +1,11 @@
 import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
- * The "Configuration Lifecycle" reference projection (plan Phase 19) --
+ * The "Configuration Lifecycle" reference projection (plan Phase 19) (
  * "absorbs Expiration + Deprecation into one projection." Lifecycle Model
  * (ADR 0029) already unifies both concerns structurally (every contract/
  * variable that has *any* lifecycle data set, plus a pre-computed
- * `expiring` list) -- this projection's own job is filtering that into two
+ * `expiring` list)) this projection's own job is filtering that into two
  * clearly-named, flat views a consumer doesn't have to derive themselves:
  * everything expiring soon (already computed, passed through unchanged),
  * and everything deprecated (filtered here, since Lifecycle Model doesn't
@@ -13,7 +13,7 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  *
  * Like `docs.ts`'s private `renderLifecycleReport()` (never re-exported,
  * same boundary as `renderUsageReport()`/`buildCatalog()`), this doesn't
- * reproduce Markdown -- it produces the data a consumer's own renderer,
+ * reproduce Markdown: it produces the data a consumer's own renderer,
  * dashboard, or compliance export needs.
  */
 export const lifecycleProjection = defineEvidenceProjection({

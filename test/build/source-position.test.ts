@@ -26,13 +26,13 @@ describe("parsePositionCitation", () => {
     })
   })
 
-  it("rejects trailing garbage after the column -- the whole string must match, not just a suffix", () => {
+  it("rejects trailing garbage after the column: the whole string must match, not just a suffix", () => {
     expect(parsePositionCitation("src/env.ts:12:5extra")).toBeUndefined()
     expect(parsePositionCitation("src/env.ts:12:5 ")).toBeUndefined()
     expect(parsePositionCitation("src/env.ts:12:5\n")).toBeUndefined()
   })
 
-  it("rejects a citation preceded by a newline -- `.` doesn't span it, so without the `^` anchor forcing the match to start at index 0, the regex engine would otherwise just retry from the next line and still match", () => {
+  it("rejects a citation preceded by a newline: `.` doesn't span it, so without the `^` anchor forcing the match to start at index 0, the regex engine would otherwise just retry from the next line and still match", () => {
     expect(parsePositionCitation("\nsrc/env.ts:12:5")).toBeUndefined()
   })
 

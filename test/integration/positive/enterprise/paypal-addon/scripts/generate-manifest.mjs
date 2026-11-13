@@ -2,7 +2,7 @@
 //
 // Generates this package's own contract/docs/.env.example in isolation, so
 // paypal-addon's environment contract is documented and browsable even
-// without an app installing it -- see paypal-consumer for the
+// without an app installing it: see paypal-consumer for the
 // combined generation that discovers this contract alongside a consumer's
 // own, across the package boundary.
 import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
@@ -23,7 +23,7 @@ console.log(`Wrote manifest: ${result.manifest?.outputPath}`);
 console.log(`Wrote docs: ${result.docs?.docsPath}`);
 console.log(`Discovered ${result.manifest?.contracts.length ?? 0} contract(s).`);
 
-// .env.example is regenerated and overwritten directly on every run here --
+// .env.example is regenerated and overwritten directly on every run here:
 // it's a live, always-current teaching artifact, not something meant to be
 // hand-merged. See the "onExisting" option (README's CLI section).
 const envExample = result.docs?.envExample;
@@ -45,7 +45,7 @@ if (result.manifest?.warnings.length) {
 }
 
 // Evidence change-tracking since the committed evidence artifact
-// (docs/env.evidence.json) was last written -- see ADR 0038.
+// (docs/env.evidence.json) was last written: see ADR 0038.
 const changes = result.evidence.change.manifest;
 const total =
   changes.addedContracts.length + changes.addedVariables.length +

@@ -12,12 +12,12 @@ let anonymousCount = 0
  * @remarks
  * `createEnv` is runtime-only: `processor`/`validator`/`default` are the
  * whole vocabulary, because they're the only fields {@link validateEnv} actually
- * reads. Documentation -- description, ownership, lifecycle, category, and
- * everything else that only exists to generate docs -- lives in a separate
+ * reads. Documentation (description, ownership, lifecycle, category, and
+ * everything else that only exists to generate docs) lives in a separate
  * {@link documentEnv} call (see `document.ts`), which is entirely optional and
  * never required for this to work.
  *
- * @returns An {@link EnvContract} exposing one read-only getter per key -- there is no
+ * @returns An {@link EnvContract} exposing one read-only getter per key: there is no
  * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a
  * key throws until {@link validateEnv} has run successfully for the runtime this contract
  * was passed to.
@@ -42,10 +42,10 @@ export function createEnv<S extends EnvSchema>(
         if (error) throw error
         const values = getContractValues(internals.id)
         // Checking key presence, not just `values` presence, matters once
-        // validation contexts exist: a variable whose context didn't match
+        // validation contexts exist. A variable whose context didn't match
         // this run's activeContexts is never written into `values` (see
-        // validate.ts), so it must throw exactly like an unvalidated
-        // contract, not silently resolve to `undefined`.
+        // validate.ts). It must throw exactly like an unvalidated contract,
+        // not silently resolve to `undefined`.
         if (!values || !Object.prototype.hasOwnProperty.call(values, key)) {
           throw new EnvNotReadyError(name, key)
         }

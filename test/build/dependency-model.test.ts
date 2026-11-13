@@ -289,7 +289,7 @@ describe("buildDependencyModel", () => {
     expect(model.scannedSurfaces).toEqual(surfaces)
   })
 
-  it("builds the inverse consumers index -- one entry per consuming file, listing every contract it reads", async () => {
+  it("builds the inverse consumers index: one entry per consuming file, listing every contract it reads", async () => {
     const paymentsSchema = await write(
       "payments/env.schema.ts",
       `export const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`,
@@ -321,7 +321,7 @@ describe("buildDependencyModel", () => {
         ],
       },
     ])
-    // The top-level model.contracts list is ALSO sorted -- discovered here
+    // The top-level model.contracts list is ALSO sorted: discovered here
     // in payments-then-database order (declaration order passed to
     // `discover()` above), but the real, alphabetical order is the reverse.
     expect(model.contracts.map((c) => c.contractName)).toEqual(["database", "payments"])
@@ -331,7 +331,7 @@ describe("buildDependencyModel", () => {
     // `byFile` is populated by iterating `modelContracts` (sorted by
     // CONTRACT identity: schema file, then export name) and appending each
     // contract's own already-sorted `consumingFiles`. So the map's
-    // insertion order tracks contract identity, not consumer file name --
+    // insertion order tracks contract identity, not consumer file name:
     // deliberately mismatched here (the a-schema contract's consumer sorts
     // LAST by file name, the z-schema contract's consumer sorts FIRST) so
     // only the final `.sort((a, b) => a.file.localeCompare(b.file))` itself,
@@ -385,15 +385,13 @@ describe("buildDependencyModel", () => {
   })
 })
 
-// D7 (plan Verification): a small fixture with the three access states the
-// plan specifically calls for -- one member-accessed variable, one untouched
-// variable, one accessed only via a computed `env[key]` -- with its
-// generated positions checked against ground truth hand-counted from the
-// raw source text below, not only asserted against itself. Hand count (each
-// line 1-indexed, each column 1-indexed):
+// A small fixture with three access states: one member-accessed variable, one
+// untouched variable, and one read only via a computed `env[key]`. Its
+// positions are checked against a hand count of the source below, not only
+// against itself. Lines and columns are 1-indexed:
 //   line 4: `console.log(paymentsEnv.STRIPE_KEY);`
 //           "console.log(" is 12 characters, so `paymentsEnv` starts at
-//           column 13 -- positionOf() reports the PropertyAccessExpression
+//           column 13; positionOf() reports the PropertyAccessExpression
 //           node's own start, i.e. `paymentsEnv.STRIPE_KEY` as a whole.
 //   line 5: `console.log(webhookEnv[key]);`
 //           same "console.log(" prefix, so `webhookEnv[key]` (the
@@ -455,7 +453,7 @@ describe("DependencyModel positions vs. hand-counted ground truth (plan Verifica
 })
 
 // D7: an explicit schema/version compatibility proof for the ADR 0036 shape
-// change (`lines` -> `positions`, schema version 1 -> 2) -- a real public-
+// change (`lines` -> `positions`, schema version 1 -> 2); a real public-
 // model change, not a cosmetic one, so it gets its own dedicated assertion
 // rather than relying on the tests above alone.
 describe("DependencyModel schema/version compatibility (ADR 0036)", () => {

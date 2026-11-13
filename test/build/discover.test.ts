@@ -140,10 +140,10 @@ describe("discoverSchemaFiles", () => {
     expect(files[0]).toContain("payments")
   })
 
-  it("prunes a directory matched by a trailing-slash, directory-only exclude pattern -- distinct from the file-level exclude filter, which a pattern with no trailing content after the slash can never match", async () => {
+  it("prunes a directory matched by a trailing-slash, directory-only exclude pattern: distinct from the file-level exclude filter, which a pattern with no trailing content after the slash can never match", async () => {
     // "features/experimental/" (trailing slash, nothing after) can only ever
     // match the directory-pruning check's own `${relativeDir}/`-suffixed
-    // string -- it can't match a real file path (which never ends in "/"),
+    // string: it can't match a real file path (which never ends in "/"),
     // so this specifically exercises the directory-level prune, not the
     // file-level `included = files.filter(...)` exclude check the other
     // exclude tests above already cover.
@@ -161,11 +161,11 @@ describe("discoverSchemaFiles", () => {
     expect(files[0]).toContain("payments")
   })
 
-  it("sorts by full relative path, not just directory-walk order -- a '-' sibling can sort before a directory whose name it's a prefix of", async () => {
+  it("sorts by full relative path, not just directory-walk order: a '-' sibling can sort before a directory whose name it's a prefix of", async () => {
     // readdir returns entries already alphabetized by bare name on this
     // filesystem ("database" < "database-legacy"), so the walk visits
     // "database/" before "database-legacy/" and would append their contents
-    // in that same order -- but "-" (0x2D) sorts *before* "/" (0x2F), so as
+    // in that same order: but "-" (0x2D) sorts *before* "/" (0x2F), so as
     // full relative paths "database-legacy/env.schema.ts" actually precedes
     // "database/env.schema.ts". Only a real string sort on the final list
     // (not walk order) gets this right.
@@ -196,7 +196,7 @@ describe("discoverSchemaFiles", () => {
     expect(files).toEqual([])
   })
 
-  it("returns exactly the files it walked, with no extra entries -- the accumulator starts genuinely empty", async () => {
+  it("returns exactly the files it walked, with no extra entries: the accumulator starts genuinely empty", async () => {
     await touch("features/payments/env.schema.ts")
     const files = await discoverSchemaFiles({
       fs: nodeBuildFs,
@@ -223,7 +223,7 @@ describe("discoverSchemaFiles", () => {
     expect(files[0]).toContain("payments")
   }, 5000)
 
-  it("does not include a file symlink as a discovered file -- entry.isFile() reflects lstat semantics (the symlink itself), not the followed target", async () => {
+  it("does not include a file symlink as a discovered file: entry.isFile() reflects lstat semantics (the symlink itself), not the followed target", async () => {
     await touch("features/payments/env.schema.ts")
     await fs.symlink(
       path.join(root, "features/payments/env.schema.ts"),
@@ -243,8 +243,8 @@ describe("discoverSchemaFiles", () => {
 })
 
 // ADR 0040: `src/build/**` depends on the `BuildFileSystem` *contract*, not on
-// `node:fs`. Running the exact same discovery against a `Map`-backed fake --
-// no real disk anywhere -- is the proof: if `discover.ts` reached for
+// `node:fs`. Running the exact same discovery against a `Map`-backed fake (
+// no real disk anywhere) is the proof: if `discover.ts` reached for
 // `node:fs` itself, these would not pass.
 describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
   const memRoot = path.normalize("/project")
@@ -282,7 +282,7 @@ describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
     expect(files).toEqual([])
   })
 
-  it('throws a fast, actionable error instead of proceeding when "include" matches far more files than any legitimate single project -- the common real cause is a misconfigured/fallen-back "root", not a real 1000+-contract project', async () => {
+  it('throws a fast, actionable error instead of proceeding when "include" matches far more files than any legitimate single project (the common real cause is a misconfigured or fallen-back "root", not a real 1000+-contract project)', async () => {
     const seeded: Record<string, string> = {}
     for (let i = 0; i < 1001; i++) {
       seeded[`${memRoot}/features/feature-${String(i)}/env.schema.ts`] = "// contract\n"
@@ -299,7 +299,7 @@ describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
     ).rejects.toThrow(/found 1001 files matching "include".*sanity limit/)
   })
 
-  it("does not throw at exactly the sanity limit (1000 matched files) -- the limit is a ceiling on legitimate scale, not a one-off-tighter boundary", async () => {
+  it("does not throw at exactly the sanity limit (1000 matched files): the limit is a ceiling on legitimate scale, not a one-off-tighter boundary", async () => {
     const seeded: Record<string, string> = {}
     for (let i = 0; i < 1000; i++) {
       seeded[`${memRoot}/features/feature-${String(i)}/env.schema.ts`] = "// contract\n"
@@ -320,7 +320,7 @@ describe("discoverSchemaFiles against an in-memory BuildFileSystem", () => {
 describe("discoverFiles", () => {
   const memRoot = path.normalize("/project")
 
-  it("has no file-count limit -- it backs the usage scan, which walks every source file", async () => {
+  it("has no file-count limit: it backs the usage scan, which walks every source file", async () => {
     const seeded: Record<string, string> = {}
     for (let i = 0; i < 1001; i++) {
       seeded[`${memRoot}/src/module-${String(i)}.ts`] = "export {}\n"

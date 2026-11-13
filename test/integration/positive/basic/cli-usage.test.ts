@@ -12,14 +12,14 @@ import {
 
 /**
  * cli-usage verifies the packaged `env-cap` binary itself, not just the
- * library functions `test/cli/*.test.ts` already cover in-process --
+ * library functions `test/cli/*.test.ts` already cover in-process:
  * basic-node's exact contract, but every `package.json` script here
  * invokes `node_modules/.bin/env-cap` directly instead of calling
  * `generateEnvArtifacts()` from a custom `.mjs` script. This file verifies:
  *  - the real CLI's three modes (normal write, `--check`, `--json`) each
  *    produce output byte-for-byte matching their `expected/cli/*` golden
  *    copies (after normalizing this example's own absolute path and
- *    `--check`'s path-length-dependent column padding -- see
+ *    `--check`'s path-length-dependent column padding; see
  *    `normalizeExampleCliOutput`), proving the packaged `bin` entry
  *    resolves and behaves exactly as documented
  *  - the artifacts it writes are byte-for-byte identical to what every
@@ -30,10 +30,10 @@ const EXAMPLE = "cli-usage"
 const EXAMPLE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), EXAMPLE)
 // docs/ENVIRONMENT.md, docs/OWNERSHIP.md, and .env.example are no longer
 // producible through the CLI at all (--docs/--ownership/--env-example were
-// removed -- see specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md),
-// so this fixture -- whose entire point is "every package.json script here
+// removed: see specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md),
+// so this fixture: whose entire point is "every package.json script here
 // invokes the packaged env-cap binary directly, no wrapper script" (see
-// README.md) -- now only demonstrates what the CLI itself can still
+// README.md): now only demonstrates what the CLI itself can still
 // produce: the manifest and the persisted evidence artifact.
 const ARTIFACTS = [
   "src/generated/env.manifest.ts",
@@ -72,7 +72,7 @@ describe(EXAMPLE, () => {
     "generate:env:json emits a --json envelope matching its golden report.json, compared as parsed JSON so key ordering can't cause spurious failures",
     async () => {
       // Path-substitution only here, not normalizeExampleCliOutput's
-      // whitespace-collapsing -- JSON has no --check-style column padding to
+      // whitespace-collapsing: JSON has no --check-style column padding to
       // worry about, and blindly collapsing runs of spaces could corrupt a
       // real string value that happens to contain one.
       const actual = normalizeExampleJsonOutput(

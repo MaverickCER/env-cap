@@ -2,14 +2,14 @@
 // application code.
 //
 // Unlike every other example, this one calls the standalone generator
-// functions -- generateEnvManifest(), generateDocumentation(),
-// generateUsageReport(), generateEvidenceModel() -- separately, instead of
+// functions (generateEnvManifest(), generateDocumentation(),
+// generateUsageReport(), generateEvidenceModel()) separately, instead of
 // one combined generateEnvArtifacts() call. See README.md for the real
 // trade-off this demonstrates: four independent discovery/link passes
 // instead of one shared pass (ADR 0011), and distinct error types instead
 // of one aggregated EnvProjectGenerationError. `generateEnvManifest()`
 // itself no longer tracks change-history (ADR 0038 moved that to the
-// persisted evidence artifact) -- this script writes that artifact itself,
+// persisted evidence artifact): this script writes that artifact itself,
 // by hand, exactly as `generateEnvArtifacts()`'s own `evidence` option
 // would, to keep demonstrating the same four facts a combined call gives.
 import {
@@ -25,7 +25,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-// Same override every other example with a centralized src/env.ts needs --
+// Same override every other example with a centralized src/env.ts needs:
 // default discovery is ["**/env.schema.ts"], and this contract lives at
 // src/env.ts instead.
 const include = ["src/env.ts"];
@@ -41,8 +41,8 @@ if (manifestResult.warnings.length) {
   }
 }
 
-// Matches generateEnvManifest()/generateEnvArtifacts()'s own DEFAULT_EXCLUDE
-// -- not itself re-exported (Private tier), so named explicitly here.
+// Matches generateEnvManifest()/generateEnvArtifacts()'s own DEFAULT_EXCLUDE:
+// not itself re-exported (Private tier), so named explicitly here.
 const exclude = ["**/node_modules/**", "**/dist/**", "**/.git/**"];
 
 const evidencePath = path.resolve(root, "docs/env.evidence.json");

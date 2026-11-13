@@ -2,10 +2,10 @@
  * Every error type here is constructed only from: the variable name, the
  * declaring contract's name, the failure kind, and a message string that the
  * *developer's own* processor/validator produced. Raw or processed environment
- * values are never read into an error -- see the Security section in the README.
+ * values are never read into an error: see the Security section in the README.
  *
  * Documentation (description, owner, etc.) never appears here, even when a
- * {@link documentEnv} call exists for this variable -- `documentEnv` is
+ * {@link documentEnv} call exists for this variable: `documentEnv` is
  * build-time-only and its data is never retained anywhere {@link validateEnv}
  * could read it back out. This is a deliberate consequence of keeping the
  * runtime minimal, not an oversight.
@@ -49,11 +49,11 @@ function formatReport(failures: readonly VariableFailure[]): string {
 
 /**
  * Thrown by {@link validateEnv} when one or more variables fail processing or
- * validation. Aggregates every failure across every contract in the batch --
+ * validation. Aggregates every failure across every contract in the batch:
  * the caller sees the whole picture in one error, not one-at-a-time.
  *
  * @remarks
- * `code` is a stable, Stable-tier discriminant for programmatic handling --
+ * `code` is a stable, Stable-tier discriminant for programmatic handling:
  * prefer it over `.name`/`instanceof` when a message-independent switch is needed.
  */
 export class EnvValidationError extends Error {
@@ -75,7 +75,7 @@ export class EnvValidationError extends Error {
  * {@link validateEnv} has completed successfully for it.
  *
  * @remarks
- * `code` is a stable, Stable-tier discriminant for programmatic handling --
+ * `code` is a stable, Stable-tier discriminant for programmatic handling:
  * prefer it over `.name`/`instanceof` when a message-independent switch is needed.
  */
 export class EnvNotReadyError extends Error {

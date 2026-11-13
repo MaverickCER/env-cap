@@ -5,7 +5,7 @@ import type { InferEnvValue } from "../../src/runtime/types.js"
 /**
  * Type-level pins for the generic inference rules described in the README:
  * processor return type wins, else the default's type, else `string`.
- * These never run any code -- `expectTypeOf` assertions are checked by `tsc`.
+ * These never run any code: `expectTypeOf` assertions are checked by `tsc`.
  */
 describe("InferEnvValue / EnvContract generic inference", () => {
   it("infers the processor's return type when a processor is present", () => {
@@ -35,7 +35,7 @@ describe("InferEnvValue / EnvContract generic inference", () => {
   })
 
   it("propagates through createEnv's return type end-to-end", () => {
-    // `typeof contract.PORT` is a type query -- erased at compile time, so this
+    // `typeof contract.PORT` is a type query: erased at compile time, so this
     // never actually invokes the property getter (which would throw before
     // validateEnv() has run). `contract` itself is intentionally only ever
     // used in type position below, to verify createEnv()'s inference
@@ -56,7 +56,7 @@ describe("InferEnvValue / EnvContract generic inference", () => {
     // `EnvSchema`/`InferEnvValue`'s `EnvDefinition<any>` bound (src/runtime/types.ts) is a
     // documented zod/trpc-style variance workaround that should never leak into what a
     // consumer's `strict: true` project actually sees. `toEqualTypeOf` alone doesn't fully
-    // pin this down -- `any` is bidirectionally assignable with everything, so an
+    // pin this down: `any` is bidirectionally assignable with everything, so an
     // accidental `any` could still pass a naive equality check. `.not.toBeAny()` is the
     // explicit assertion that closes that gap.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the constant exists only so its type can be asserted

@@ -1,11 +1,11 @@
 import type { CompatibilityIssue, GenerateEnvArtifactsResult } from "../build/index.js"
-// Imported from the leaf module, not the `../build/index.js` barrel: pulling
-// in the barrel here would eagerly load its full build-time surface --
-// (indirectly) `typescript`, an optional peer dependency -- just to read a
-// version string, for EVERY CLI invocation this module is part of
-// (including `env-cap init` and `env-cap --help`, neither of which touches
-// build-time analysis at all). See the identical fix, and its regression
-// test, on src/cli/index.ts's own former static `../build/index.js` import.
+// Imported from the leaf module, not the `../build/index.js` barrel. The
+// barrel eagerly loads its full build-time surface, including (indirectly)
+// `typescript`, an optional peer dependency. Loading it to read a version
+// string would cost EVERY CLI invocation this module is part of, including
+// `env-cap init` and `env-cap --help`, which never touch build-time analysis.
+// src/cli/index.ts imports the barrel lazily for the same reason, and
+// test/cli/init-no-build-import.test.ts guards that.
 import { readToolVersion } from "../build/tool-version.js"
 
 /**
@@ -17,28 +17,28 @@ import { readToolVersion } from "../build/tool-version.js"
 
 /** Bump only when a consumer written for the previous version could
  *  misinterpret the new payload (a field changes type/meaning, or is
- *  removed) -- NOT for every additive field. See ADR 0013. */
+ *  removed): NOT for every additive field. See ADR 0013. */
 export const JSON_SCHEMA_VERSION = 1
 
-// One version source, shared with the `./build` entry -- `readToolVersion()`
+// One version source, shared with the `./build` entry: `readToolVersion()`
 // returns `tsup`'s build-time constant, so the CLI never reads its own
 // manifest at runtime. See ADR 0040.
 const TOOL_VERSION: string = readToolVersion()
 
 /**
- * Which passes this invocation actually asked for -- recorded explicitly so a
+ * Which passes this invocation actually asked for: recorded explicitly so a
  * consumer never has to infer intent from which top-level keys happen to be
  * present.
  *
  * @remarks
- * Without this, `"manifest": undefined` is genuinely ambiguous: it could mean
- * "no `--location` was passed" or "the manifest pass ran and produced
- * nothing," and telling those apart required knowing which CLI flags the run
- * was invoked with -- information the envelope itself never carried. A CI step
+ * Without this, `"manifest": undefined` is ambiguous: it could mean "no
+ * `--location` was passed" or "the manifest pass ran and produced nothing."
+ * Telling those apart would require the CLI flags the run was invoked with,
+ * which the envelope itself never carries. A CI step
  * gating on "did the docs pass run?" would otherwise have to reconstruct the
  * command line. `evidence` records the request specifically (the model itself
  * is always computed, per ADR 0038, but only *included* in this envelope on
- * request -- see `JsonSuccessPayload.evidence`).
+ * request: see `JsonSuccessPayload.evidence`).
  */
 export interface JsonRequestedPasses {
   /** `--location` was passed. */
@@ -57,13 +57,13 @@ export interface JsonSuccessPayload extends Omit<GenerateEnvArtifactsResult, "ev
   readonly kind: "env-cap-report"
   readonly toolVersion: string
   readonly ok: true
-  /** Which passes this invocation requested -- always present, so "not requested" is never confused with "computed empty." See {@link JsonRequestedPasses}. */
+  /** Which passes this invocation requested: always present, so "not requested" is never confused with "computed empty." See {@link JsonRequestedPasses}. */
   readonly requested: JsonRequestedPasses
-  /** Present only when the caller actually requested `--evidence` --
+  /** Present only when the caller requested `--evidence`.
    *  `GenerateEnvArtifactsResult.evidence` itself is always populated (ADR
-   *  0038, "free to compute, always real"), but the `--json` envelope omits
-   *  it by default so an ordinary `--location`/`--docs`/`--ownership` report
-   *  doesn't silently grow by the full evidence model every time. */
+   *  0038, "free to compute, always real"). The `--json` envelope omits it by
+   *  default so an ordinary `--location` report doesn't silently grow by the
+   *  full evidence model every time. */
   readonly evidence?: GenerateEnvArtifactsResult["evidence"]
   /** Present only when invoked with --check. Governs --check's own pass/fail
    *  exit code, independent of this envelope's top-level `ok` (which keeps
@@ -100,12 +100,12 @@ function hasIssues(error: unknown): error is { issues: readonly CompatibilityIss
 /**
  * Wraps a completed {@link generateEnvArtifacts} result in the `--json`
  * success envelope. `includeEvidence` (default `false`) controls whether
- * `result.evidence` -- always populated on `result` itself, per ADR 0038 --
+ * `result.evidence` (always populated on `result` itself, per ADR 0038)
  * is actually included in the envelope; the CLI passes `true` only when the
  * caller requested `--evidence`.
  *
  * `requested` is supplied by the caller rather than inferred from `result`'s
- * own populated keys -- inferring it would reproduce exactly the ambiguity
+ * own populated keys: inferring it would reproduce exactly the ambiguity
  * this field exists to remove (see {@link JsonRequestedPasses}). It defaults
  * to deriving each pass from whether its result is present, which is correct
  * for a normal generate run and keeps this callable from a test without
@@ -170,7 +170,7 @@ export function serializeFailure(error: unknown): JsonErrorPayload {
 }
 
 /**
- * The complete `--json` envelope shape, success or failure -- the target
+ * The complete `--json` envelope shape, success or failure: the target
  * type the published JSON Schema (`schemas/env-cap-report.schema.json`,
  * `npm run schema`) is generated from. See ADR 0019.
  */

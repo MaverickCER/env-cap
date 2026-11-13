@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 /**
  * Exercises the module-level `if (isDirectRun) { main().catch(...) }` guard
- * at the bottom of src/cli/index.ts -- the only way to hit it from vitest is
+ * at the bottom of src/cli/index.ts: the only way to hit it from vitest is
  * to make a *fresh* import of the module see `process.argv[1]` equal to its
  * own real (symlink-free) on-disk path before the module's top level runs,
  * since `isDirectRun` is computed once, at import time. Isolated into its own
@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
  * static `import { main }` bindings the rest of the cli test suite relies on.
  *
  * An unknown flag makes `parseArgs()` throw synchronously inside `main()`,
- * so `main().catch()` fires almost immediately -- fast and deterministic,
+ * so `main().catch()` fires almost immediately: fast and deterministic,
  * no real generation work involved.
  */
 
@@ -44,7 +44,7 @@ describe("module auto-run guard (isDirectRun)", () => {
     await import("../../src/cli/index.js")
 
     // `vi.waitFor`'s own default poll timeout (1000ms) is an independent
-    // clock from this file's `testTimeout` (vitest.config.ts, 20_000ms) --
+    // clock from this file's `testTimeout` (vitest.config.ts, 20_000ms):
     // raised globally specifically because spawned/dynamically-imported work
     // routinely clears Vitest's short defaults in isolation but blows past
     // them under full-suite parallel resource contention. Left at its
@@ -80,7 +80,7 @@ describe("module auto-run guard (isDirectRun)", () => {
   })
 
   it("stringifies a non-Error rejection value via String(error), not error.message", async () => {
-    // Every real throw inside src/cli/index.ts is a genuine Error instance --
+    // Every real throw inside src/cli/index.ts is a genuine Error instance:
     // to reach the `String(error)` side of the catch handler's ternary at
     // all, generateEnvArtifacts() itself has to be the one to reject with a
     // non-Error value, which only a mock can force.
@@ -103,7 +103,7 @@ describe("module auto-run guard (isDirectRun)", () => {
       // Same reasoning as the sibling `vi.waitFor` above: this path also
       // dynamically re-imports the real (unmocked) `../build/index.js`
       // barrel fresh on every run (`vi.resetModules()` defeats the module
-      // cache), which is real, variable-cost work -- match the poll window
+      // cache), which is real, variable-cost work; match the poll window
       // to this file's already-justified `testTimeout` budget instead of
       // the unrelated 1000ms default.
       await vi.waitFor(() => {

@@ -47,15 +47,15 @@ describe("createEnv", () => {
     expect(firstMessage).not.toBe(secondMessage)
   })
 
-  it("defines the custom-inspect symbol as non-enumerable -- it doesn't leak into a shallow copy of the contract", () => {
-    // An empty schema -- spreading the contract below reads every enumerable
+  it("defines the custom-inspect symbol as non-enumerable: it doesn't leak into a shallow copy of the contract", () => {
+    // An empty schema: spreading the contract below reads every enumerable
     // own property (including any schema-key getter), and this test isn't
     // about those; a real key would throw EnvNotReadyError before
     // validateEnv() runs.
     const contract = createEnv({}, { name: "non-enumerable-test" })
     const inspectSymbol = Symbol.for("nodejs.util.inspect.custom")
     expect(Object.getOwnPropertySymbols(contract)).toContain(inspectSymbol)
-    // Object spread copies enumerable own properties, symbol keys included --
+    // Object spread copies enumerable own properties, symbol keys included:
     // a non-enumerable symbol property is the one thing that distinguishes
     // it from a plain copy.
     const spread = { ...contract }
@@ -77,7 +77,7 @@ describe("createEnv", () => {
     expect(String(contract)).toBe('EnvContract("redact-test")')
   })
 
-  it("redacts via util.inspect() directly -- the actual mechanism console.log uses", async () => {
+  it("redacts via util.inspect() directly: the actual mechanism console.log uses", async () => {
     const contract = createEnv({ SECRET: { processor: (v) => String(v) } }, { name: "redact-test" })
     await validateEnv({ values: { SECRET: "sk_live_should_not_appear" }, manifest: [contract] })
 
@@ -135,8 +135,8 @@ describe("createEnv", () => {
     expect(() => contract.DATABASE_URL).toThrow(EnvNotReadyError)
   })
 
-  it("only accepts name/source -- documentation fields live on documentEnv, not here", async () => {
-    // CreateEnvOptions has no active/exclusiveGroup/category/metadata anymore --
+  it("only accepts name/source: documentation fields live on documentEnv, not here", async () => {
+    // CreateEnvOptions has no active/exclusiveGroup/category/metadata anymore:
     // this is a type-level guarantee (see types.test.ts), exercised here just
     // to confirm the minimal runtime option set still works end-to-end.
     const contract = createEnv(

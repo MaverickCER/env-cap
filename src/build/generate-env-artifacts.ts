@@ -54,7 +54,7 @@ import type { BuildFileSystem } from "./types.js"
 
 /** Options for {@link generateEnvArtifacts}. */
 export interface GenerateEnvArtifactsOptions {
-  /** The filesystem capability, shared across every requested pass -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability, shared across every requested pass: `./build` never imports `node:fs` (ADR 0040). */
   fs: BuildFileSystem
   /** Directory glob patterns are resolved against, shared across every requested pass. Defaults to `process.cwd()`. */
   root?: string | undefined
@@ -92,34 +92,34 @@ export interface GenerateEnvArtifactsOptions {
     | undefined
   /**
    * Where to write the persisted evidence artifact (the full, literal
-   * `EvidenceModel`, plus a paired `.fingerprint` sidecar -- see
+   * `EvidenceModel`, plus a paired `.fingerprint` sidecar: see
    * `evidence-cache.ts`), e.g. `docs/env.evidence.json`, relative to `root`.
-   * Independent of `manifest.location` -- requesting this needs no other
+   * Independent of `manifest.location`: requesting this needs no other
    * pass, and generating a manifest never requires it. `EvidenceModel`
-   * itself is always computed regardless of this option (ADR 0038, "free to
-   * compute, always real") and always returned as `result.evidence`; this
-   * option controls only whether it's also written to disk. Omitted:
-   * nothing is written, `result.evidence` is still populated.
+   * itself is always computed (ADR 0038, "free to compute, always real") and
+   * always returned as `result.evidence`. This option controls only whether
+   * it's also written to disk. Omitted: nothing is written, and
+   * `result.evidence` is still populated.
    */
   evidence?: { location: string } | false | undefined
   /**
    * Escalates every warning-severity `"documentation"`-family finding
    * (undocumented contracts/variables, stale doc entries, expiring/expired
-   * entries, unresolvable `documentEnv()` links) into a blocking error, so a
-   * run with any of them writes nothing and throws. Defaults to `"warn"` --
-   * ADR 0038's stance, unchanged: documentation gaps never block by default.
+   * entries, unresolvable `documentEnv()` links) into a blocking error. A
+   * run with any of them then writes nothing and throws. Defaults to
+   * `"warn"`: per ADR 0038, documentation gaps never block by default.
    *
    * @remarks
    * Scoped deliberately narrowly, unlike `manifest.onIncompatibility`, which
    * gates only the compatibility family. `"info"`-severity findings are never
-   * escalated by either -- see `Finding.severity`.
+   * escalated by either: see `Finding.severity`.
    */
   onUndocumented?: "warn" | "throw" | undefined
   /**
    * Escalates every warning-severity `"ownership"`-family finding (abandoned
    * contracts, unresolved consumers, unconsumed owned variables,
    * indeterminate ownership, stale/missing `dynamicAccess` citations) into a
-   * blocking error. Defaults to `"warn"` -- see {@link onUndocumented}.
+   * blocking error. Defaults to `"warn"`: see {@link onUndocumented}.
    */
   onOwnershipIssue?: "warn" | "throw" | undefined
   /**
@@ -141,7 +141,7 @@ export interface GenerateEnvArtifactsResult {
   readonly docs: GenerateDocumentationResult | undefined
   /** Set only when `options.usage` wasn't `false`. */
   readonly usage: GenerateUsageReportResult | undefined
-  /** Always populated, regardless of `options.evidence` -- see that option's own doc comment. */
+  /** Always populated, regardless of `options.evidence`: see that option's own doc comment. */
   readonly evidence: EvidenceModel
 }
 
@@ -149,7 +149,7 @@ export interface GenerateEnvArtifactsResult {
  * Every intermediate value both the write path (`generateEnvArtifacts()`
  * below) and the drift-check path (`checkEnvArtifacts()` in
  * `check-artifacts.ts`) need, computed exactly once. Internal/Private tier
- * per `VERSIONING.md` -- not re-exported from `./index.ts`.
+ * per `VERSIONING.md`: not re-exported from `./index.ts`.
  */
 export interface ComputeArtifactsResult {
   readonly root: string
@@ -175,7 +175,7 @@ export interface ComputeArtifactsResult {
         readonly envExamplePath: string | undefined
       }
     | undefined
-  /** Always computed -- Finding Model needs it regardless of whether a `docs` pass was itself requested. See ADR 0038. */
+  /** Always computed: Finding Model needs it regardless of whether a `docs` pass was itself requested. See ADR 0038. */
   readonly docsComputed: DocumentationComputation
   readonly docsContracts: readonly DiscoveredContract[]
   /** Set only when a usage pass was requested; `reportPath` only when it also asked for a report file. */
@@ -188,7 +188,7 @@ export interface ComputeArtifactsResult {
         readonly reportPath: string | undefined
       }
     | undefined
-  /** Always computed -- Finding Model needs it regardless of whether a `usage` pass was itself requested. See ADR 0038. */
+  /** Always computed: Finding Model needs it regardless of whether a `usage` pass was itself requested. See ADR 0038. */
   readonly usageComputed: UsageComputation
   readonly evidencePath: string | undefined
   readonly evidence: EvidenceModel
@@ -201,20 +201,20 @@ export interface ComputeArtifactsResult {
 
 /**
  * Adapts every warning-severity finding of one family into the
- * `CompatibilityIssue` shape `blocking`/`EnvProjectGenerationError` speak, so
- * `--strict-docs`/`--strict-ownership` fail through exactly the same path
- * `--strict` already does rather than inventing a second failure mode.
+ * `CompatibilityIssue` shape `blocking`/`EnvProjectGenerationError` speak.
+ * So `--strict-docs`/`--strict-ownership` fail through the same path as
+ * `--strict`, with no second failure mode.
  *
  * @remarks
  * `"info"` findings are filtered out unconditionally and can never be
- * escalated by any flag -- they're observations, not gaps (see
- * `Finding.severity`). `"error"` findings are excluded too: those already
- * block on their own, via the manifest pass, and re-adding them here would
- * report the same violation twice in one error message. `code` is left unset
- * -- `CompatibilityIssueCode` is that check family's own closed vocabulary,
+ * escalated by any flag: they're observations, not gaps (see
+ * `Finding.severity`). `"error"` findings are excluded too. They already
+ * block on their own, via the manifest pass. Re-adding them here would
+ * report the same violation twice in one error message. `code` is left unset:
+ * `CompatibilityIssueCode` is that check family's own closed vocabulary,
  * and a `FindingCode` from another family is not a member of it.
  */
-/** @internal Exported for direct unit coverage -- reached through `generateEnvArtifacts()`'s `--strict-docs`/`--strict-ownership` flags in production, but its filter/mapping logic isn't independently observable through that path alone (every mutant on it still needs a real `computeArtifacts()` call, discovery included, to reach it). */
+/** @internal Exported for direct unit coverage: reached through `generateEnvArtifacts()`'s `--strict-docs`/`--strict-ownership` flags in production, but its filter/mapping logic isn't independently observable through that path alone (every mutant on it still needs a real `computeArtifacts()` call, discovery included, to reach it). */
 export function escalatedFindings(
   findings: readonly Finding[],
   family: FindingFamily,
@@ -229,8 +229,8 @@ export function escalatedFindings(
     }))
 }
 
-/** The variable a finding is about, or a `"(contract) <name>"` label when it's contract-level -- matching `CompatibilityIssue.variable`'s own documented convention.
- * @internal Exported for direct unit coverage -- see {@link escalatedFindings}'s own doc comment for why. */
+/** The variable a finding is about, or a `"(contract) <name>"` label when it's contract-level: matching `CompatibilityIssue.variable`'s own documented convention.
+ * @internal Exported for direct unit coverage: see {@link escalatedFindings}'s own doc comment for why. */
 export function findingSubject(finding: Finding): string {
   const location = finding.location
   if (location.model === "change") return `(artifact) ${location.path}`
@@ -239,8 +239,8 @@ export function findingSubject(finding: Finding): string {
   return `(contract) ${name ?? "unknown"}`
 }
 
-/** Every file a finding names, as `CompatibilityIssue.files` -- empty when its location carries none (an ownership finding about a variable, which names no single file).
- * @internal Exported for direct unit coverage -- see {@link escalatedFindings}'s own doc comment for why. */
+/** Every file a finding names, as `CompatibilityIssue.files`: empty when its location carries none (an ownership finding about a variable, which names no single file).
+ * @internal Exported for direct unit coverage: see {@link escalatedFindings}'s own doc comment for why. */
 export function findingFiles(finding: Finding): string[] {
   const location = finding.location
   if (location.model === "change") return [location.path]
@@ -258,18 +258,18 @@ export function requestedPass<T extends object>(option: T | false | undefined): 
 
 /**
  * Runs schema discovery, linking, and every requested pass's pure `compute*()`
- * step -- but never writes anything to disk. Throws `EnvProjectGenerationError`
- * immediately if any requested output location escapes `root` (same
- * fail-fast-before-any-work guarantee `generateEnvArtifacts()` has always
- * given); otherwise returns every intermediate value without itself checking
- * `blocking` findings, so callers (the write path below, and `--check`'s
- * `checkEnvArtifacts()`) each decide when to throw on those.
+ * step: but never writes anything to disk. Throws `EnvProjectGenerationError`
+ * immediately if any requested output location escapes `root`, the same
+ * fail-fast-before-any-work guarantee `generateEnvArtifacts()` gives.
+ * Otherwise returns every intermediate value without checking `blocking`
+ * findings. Each caller (the write path below, and `--check`'s
+ * `checkEnvArtifacts()`) decides when to throw on those.
  *
  * @remarks
  * The six canonical fact models (Contract/Dependency/Ownership/Lifecycle/
  * Finding/Change -> `EvidenceModel`) are composed on every call,
- * unconditionally, reusing the exact same builders `generateEvidenceModel()`
- * calls -- not a second implementation of the same assembly. See ADR 0038.
+ * unconditionally. They reuse the builders `generateEvidenceModel()` calls,
+ * so there is no second implementation of the same assembly. See ADR 0038.
  */
 export async function computeArtifacts(
   options: GenerateEnvArtifactsOptions,
@@ -284,8 +284,8 @@ export async function computeArtifacts(
   const evidenceOptions = requestedPass(options.evidence)
 
   const pathIssues: CompatibilityIssue[] = []
-  // A location that escapes `root` is recorded and the run throws below, before anything uses the
-  // returned value -- the raw location is only a placeholder that keeps the result a plain `string`.
+  // A location that escapes `root` is recorded, and the run throws below before anything uses the
+  // returned value. The raw location is only a placeholder that keeps the result a plain `string`.
   const resolveOutput = (location: string, label: string): string => {
     const result = resolveWithinRoot(root, location, label, "generateEnvArtifacts")
     if (result.ok) return result.resolved
@@ -315,8 +315,8 @@ export async function computeArtifacts(
     : undefined
 
   // Fail fast, before any discovery/parsing work and before any file is
-  // written -- same atomicity guarantee `generateEnvManifest()` etc. give
-  // standalone, now widened across every requested pass at once.
+  // written. This is the atomicity guarantee `generateEnvManifest()` etc.
+  // give standalone, applied across every requested pass at once.
   if (pathIssues.length > 0) throw new EnvProjectGenerationError(pathIssues)
 
   const { readFileCached, linkResult, context, origins, packageWarnings, tsconfigWarnings } =
@@ -331,19 +331,18 @@ export async function computeArtifacts(
   const generatedAt = new Date()
   const activeContracts = linkResult.contracts.filter((c) => c.active)
 
-  // Invoked at most once regardless of how many passes below end up wanting
-  // live-resolved expiry data -- Lifecycle Model (always built, ADR 0038)
-  // and the docs pass (when requested) both read from this same result
-  // rather than each triggering their own call.
+  // Invoked at most once, however many passes below want live-resolved
+  // expiry data. Lifecycle Model (always built, ADR 0038) and the docs pass
+  // (when requested) both read this one result instead of each calling it.
   const liveExpirationContracts = options.liveExpirationDates
     ? await resolveLiveExpirationDates(linkResult.contracts, options.liveExpirationDates)
     : linkResult.contracts
   const docsContracts = docsTarget ? liveExpirationContracts : linkResult.contracts
 
-  // Manifest is the one pass that still blocks (ADR 0009's provable
-  // exclusive-group/compatibility errors) -- docs/ownership never do (ADR
-  // 0038: a team that wants to gate CI on either reads `Finding[]` from the
-  // evidence artifact and decides for itself).
+  // Manifest is the one pass that blocks (ADR 0009's provable
+  // exclusive-group/compatibility errors). Docs/ownership never do (ADR
+  // 0038). A team that wants to gate CI on either reads `Finding[]` from the
+  // evidence artifact and decides for itself.
   const blocking: CompatibilityIssue[] = []
   const manifest = manifestTarget && {
     ...manifestTarget,
@@ -351,13 +350,8 @@ export async function computeArtifacts(
   }
   if (manifest) blocking.push(...manifest.computed.blocking)
 
-  // Computed unconditionally, once each -- Finding Model (part of the
-  // always-built EvidenceModel) needs both regardless of whether a `docs`/
-  // `usage` pass was itself requested, so this is never a second,
-  // differently-parameterized call the way it used to be when
-  // `onUndocumented`/`onOwnershipIssue` still existed (both computations are
-  // now free of any throw-severity parameter, so there's exactly one shape
-  // of result to compute, shared by both the artifact and Finding Model).
+  // Computed once each, always: the Finding Model inside the EvidenceModel
+  // needs both, whether or not a `docs` or `usage` artifact was requested.
   const docsComputed = computeDocumentation(
     root,
     { ...linkResult, contracts: liveExpirationContracts },
@@ -438,10 +432,10 @@ export async function computeArtifacts(
   })
 
   // Docs/ownership findings never block by default (ADR 0038). `--strict-docs`
-  // / `--strict-ownership` opt one family in at a time, reusing Finding Model
-  // as the single source of what each family contains rather than
-  // re-enumerating the finding types here -- a family that later gains a code
-  // is covered automatically.
+  // / `--strict-ownership` opt one family in at a time. Finding Model stays
+  // the single source of what each family contains; the types are not
+  // re-enumerated here. So a family that later gains a code is covered
+  // automatically.
   if (options.onUndocumented === "throw")
     blocking.push(...escalatedFindings(finding.findings, "documentation"))
   if (options.onOwnershipIssue === "throw")
@@ -481,10 +475,10 @@ export async function computeArtifacts(
 
 /**
  * Orchestrates {@link generateEnvManifest}/{@link generateDocumentation}/
- * {@link generateUsageReport}, plus the persisted evidence artifact, by
- * composing their shared private compute/write pipeline directly, running
- * schema discovery+linking exactly once regardless of how many outputs are
- * requested -- an orchestrator, not a new analysis engine (see ADR 0011).
+ * {@link generateUsageReport}, plus the persisted evidence artifact. It
+ * composes their shared private compute/write pipeline directly. Schema
+ * discovery+linking runs exactly once, however many outputs are requested.
+ * It is an orchestrator, not a new analysis engine (see ADR 0011).
  *
  * @remarks
  * Two distinct atomicity guarantees, not one:
@@ -495,8 +489,8 @@ export async function computeArtifacts(
  *    begin, each `fs.writeFile` is independent. A real I/O failure partway
  *    through (disk full, permissions changed mid-run) can leave some
  *    artifacts on disk and not others. Transactional (temp-file + rename)
- *    writes across all three artifacts were considered and rejected as
- *    disproportionate machinery for a rare failure mode -- see ADR 0011.
+ *    writes across all three artifacts are not used. They would be
+ *    disproportionate machinery for a rare failure mode: see ADR 0011.
  *
  * @throws {EnvProjectGenerationError} If any requested output location escapes `root`, or if any requested pass reports a blocking finding.
  */

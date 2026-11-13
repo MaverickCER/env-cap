@@ -2,7 +2,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * This contract is imported only through the "@/*" tsconfig path alias
- * declared in this example's own tsconfig.json -- never through a relative
+ * declared in this example's own tsconfig.json: never through a relative
  * import (see src/server.ts). Without ADR 0023's alias resolution, env-cap's
  * Dependency & Ownership Report would misreport this contract as
  * "abandoned" (never imported anywhere), even though src/server.ts plainly

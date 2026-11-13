@@ -17,7 +17,7 @@ import { resolveWithinRoot } from "./resolution/resolve-within-root.js"
 
 /** Options for {@link generateEnvManifest}. */
 export interface GenerateEnvManifestOptions {
-  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability: `./build` never imports `node:fs` (ADR 0040). */
   fs: BuildFileSystem
   /** Directory glob patterns are resolved against. Defaults to `process.cwd()`. */
   root?: string | undefined
@@ -41,7 +41,7 @@ export interface GenerateEnvManifestOptions {
    * whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.
    * `"@/lib/env.schema.js"`) encountered during static analysis, so a contract or consumer
    * reached only through an alias isn't misreported as abandoned/unresolved. Defaults to
-   * `"tsconfig.json"` at `root` -- on automatically, no opt-in required, since (unlike
+   * `"tsconfig.json"` at `root`: on automatically, no opt-in required, since (unlike
    * `packages`) this never crosses a trust/versioning boundary: every resolved file is
    * already local, already-trusted project source. Pass `false` to disable entirely. See
    * ADR 0023.
@@ -69,14 +69,13 @@ export interface GenerateEnvManifestResult {
 
 /**
  * Default value for {@link GenerateEnvManifestOptions.include}. A function
- * (not a bare module-level `const`) so every call gets its own fresh array
- * -- a shared literal used from many files (`evidence-cache.ts`,
+ * (not a bare module-level `const`) so every call gets its own fresh array.
+ * A shared literal used from many files (`evidence-cache.ts`,
  * `generate-documentation.ts`, `generate-evidence.ts`,
- * `generate-env-artifacts.ts`, `generate-usage.ts`) is a covered-static
- * mutant magnet under Stryker's `coverageAnalysis: perTest` +
- * `ignoreStatic: true` (a mutant on module-load code that's still referenced
- * by a test is run anyway and falsely reported "Survived") -- see this
- * drive's memory for the fully-documented limitation.
+ * `generate-env-artifacts.ts`, `generate-usage.ts`) attracts covered-static
+ * mutants under Stryker's `coverageAnalysis: perTest` + `ignoreStatic: true`.
+ * A mutant on module-load code that a test still references is run anyway
+ * and falsely reported "Survived".
  */
 export function defaultInclude(): string[] {
   return ["**/env.schema.ts"]
@@ -86,11 +85,11 @@ export function defaultExclude(): string[] {
   return [
     // `discoverSchemaFiles()`'s own walk (`discover.ts`) hardcodes skipping
     // a directory literally named "node_modules" or ".git" via its own
-    // `isAlwaysSkippedDirName()` check, regardless of `exclude` -- it never
+    // `isAlwaysSkippedDirName()` check, regardless of `exclude`: it never
     // even descends into either to test a glob pattern against it. These
     // two entries are provably redundant (kept for readers/tooling that
     // inspect `exclude` directly, and as defense if that hardcoding ever
-    // changes) -- hand-verified: emptying both and running the full
+    // changes). Hand-verified: emptying both and running the full
     // `vitest run` leaves all 1243 tests passing.
     "**/node_modules/**",
     "**/dist/**",
@@ -106,12 +105,12 @@ export interface ManifestComputation {
 }
 
 /**
- * Pure -- no I/O. Runs compatibility (0005) and exclusive-group (0009,
+ * Pure: no I/O. Runs compatibility (0005) and exclusive-group (0009,
  * always-error, never gated by `onIncompatibility`) checks against an
  * already-discovered contract graph and applies the `onIncompatibility` gate.
  * Shared by the standalone `generateEnvManifest()` (which discovers its own
  * graph) and `generate-env-artifacts.ts` (which discovers once and reuses it across
- * manifest/docs/usage) -- see ADR 0011.
+ * manifest/docs/usage): see ADR 0011.
  */
 export function computeManifest(
   root: string,
@@ -129,7 +128,7 @@ export function computeManifest(
   const compatibilityErrors = compatibilityIssues.filter((issue) => issue.severity === "error")
   // `--strict` (`onIncompatibility: "throw"`) escalates warnings only.
   // `"info"` issues are observations, never gaps, and are excluded from
-  // `blocking` under every setting -- see `detectDuplicateVariableShapes()`.
+  // `blocking` under every setting: see `detectDuplicateVariableShapes()`.
   const blocking =
     onIncompatibility === "throw"
       ? compatibilityIssues.filter((issue) => issue.severity !== "info")
@@ -151,7 +150,7 @@ export async function writeManifest(
 ): Promise<void> {
   const manifestSource = renderManifest(activeContracts, outputPath)
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
-  // `manifestSource` is always a plain string -- fs.writeFile defaults a
+  // `manifestSource` is always a plain string: fs.writeFile defaults a
   // string write to utf8 regardless of the encoding arg, so "utf8" vs "" is
   // unobservable. Same established equivalence as generate-usage.ts's own
   // `writeUsageReport()`/evidence-cache.ts/env-example.ts's writes.
@@ -167,7 +166,7 @@ export async function writeManifest(
  *
  * @remarks
  * Never call this at application startup or import it from
- * runtime code -- wire it into an npm script, a bundler plugin, or a CI
+ * runtime code: wire it into an npm script, a bundler plugin, or a CI
  * step instead.
  *
  * @throws {EnvManifestGenerationError} If `location` escapes `root`, or if a blocking compatibility/exclusive-group issue is found.
@@ -180,7 +179,7 @@ export async function generateEnvManifest(
   const exclude = options.exclude ?? defaultExclude()
 
   // Fail fast, before any discovery/parsing work and before any file is
-  // written -- generation is atomic, same as a compatibility-issue failure.
+  // written: generation is atomic, same as a compatibility-issue failure.
   const locationResult = resolveWithinRoot(
     root,
     options.location,

@@ -1,7 +1,7 @@
 import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
- * The "Configuration Drift" reference projection (plan Phase 22) -- "maps
+ * The "Configuration Drift" reference projection (plan Phase 22) ("maps
  * existing ArtifactCheckFinding/check-artifacts.ts drift data through the
  * projection API." Unlike every projection before it, this one's data
  * genuinely can't come from `EvidenceModel` alone: drift is "does the
@@ -9,7 +9,7 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  * and `EvidenceModel` is a snapshot of *discovered* reality, never a
  * comparison against previously-written output (`checkEnvArtifacts()`
  * does its own separate discovery pass specifically to read and compare
- * against committed files -- see ADR 0016).
+ * against committed files) see ADR 0016).
  *
  * `artifactCheckFindings` is a factory parameter, the same pattern
  * `config-reference.mjs`'s `expiringWithinDays` already establishes for
@@ -17,8 +17,8 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  * `(evidence) => T` signature (ADR 0032) has no room for." A real caller
  * runs `checkEnvArtifacts()` (or `--check`) itself and passes the result in
  * (see scripts/project-drift.mjs, which also relativizes
- * `ArtifactCheckFinding.path` there -- it's documented as absolute, and
- * `root` is available at that call site but not inside this projection) --
+ * `ArtifactCheckFinding.path` there (it's documented as absolute, and
+ * `root` is available at that call site but not inside this projection))
  * this projection's own job is reshaping the result, and correlating it
  * with `evidence.change` to note when drift is plausibly explained by a
  * schema change that hasn't been regenerated into the committed artifact

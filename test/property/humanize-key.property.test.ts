@@ -5,7 +5,7 @@ import { humanizeKey } from "../../src/build/humanize-key.js"
 // Metadata keys are identifiers: letters and digits.
 const identifier = fc.stringMatching(/^[A-Za-z0-9]{0,24}$/)
 
-describe("humanizeKey -- property-based", () => {
+describe("humanizeKey: property-based", () => {
   it("never throws, whatever string it is given", () => {
     fc.assert(
       fc.property(fc.string({ unit: "binary" }), (key) => typeof humanizeKey(key) === "string"),
@@ -13,7 +13,7 @@ describe("humanizeKey -- property-based", () => {
     )
   })
 
-  it("only inserts spaces and capitalises the first letter -- nothing else about the key changes", () => {
+  it("only inserts spaces and capitalises the first letter: nothing else about the key changes", () => {
     fc.assert(
       fc.property(identifier, (key) => {
         const result = humanizeKey(key)

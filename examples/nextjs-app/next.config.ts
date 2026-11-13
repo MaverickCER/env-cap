@@ -1,32 +1,24 @@
-// Deliberately does NOT import "./src/env.ts" here. Verified empirically
-// (not assumed): Next.js's next.config.ts loader (next/dist/build/next-
-// config-ts/transpile-config.js) transpiles only this one file via SWC, then
-// `require()`s whatever it imports as plain, already-compiled JS -- it does
-// not transpile a further TypeScript import graph. Attempting it fails with
-// `Cannot find module './src/env.js'` even though the .ts source is right
-// there. scripts/validate-env.ts (run via `tsx`, which -- unlike Next's
-// config loader -- resolves the whole TS import graph) is the real
-// build-time gate instead; see the "build" script in package.json and that
-// file's own comment. instrumentation.ts's register() (which does import
-// "./src/env.ts") covers the `next dev`/`next start` server-startup path,
-// which next.config.ts's own load can't gate either way -- config loading
-// happens before a server instance exists.
+// This file does not import "./src/env.ts". Next.js's next.config.ts loader
+// (next/dist/build/next-config-ts/transpile-config.js) transpiles only this
+// file with SWC, then `require()`s its imports as compiled JS. A TypeScript
+// import fails with `Cannot find module './src/env.js'`.
+//
+// Two other files gate the environment instead. scripts/validate-env.ts runs
+// under `tsx`, which resolves the whole TypeScript import graph; the "build"
+// script in package.json runs it. instrumentation.ts's register() imports
+// "./src/env.ts" and covers `next dev` and `next start`. Config loading
+// happens before a server exists, so this file could not gate startup anyway.
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  // env-cap's runtime tracks "has validateEnv() run yet" in module-level
-  // state (src/runtime/registry.ts). Without this, Turbopack/webpack code-
-  // splits `env-cap` into a separate bundled copy per chunk (the
-  // instrumentation chunk, the API route chunk, the page/SSR chunk), each
-  // getting its OWN independent copy of that state -- so
-  // instrumentation.ts's validateEnv() call marks ITS copy's contracts
-  // ready while every other chunk's copy still throws EnvNotReadyError.
-  // Confirmed empirically: removing this line reproduces exactly that
-  // failure under `next start`. `serverExternalPackages` opts a package out
-  // of bundling entirely for server code, so every chunk resolves the same
-  // `require("@maverickcer/env-cap")` through Node's own module cache instead -- a real
-  // singleton again, the same guarantee a plain Node script already gets for
-  // free.
+  // env-cap's runtime keeps "has validateEnv() run yet" in module-level state
+  // (src/runtime/registry.ts). Without this setting, Turbopack and webpack
+  // bundle a separate copy of env-cap into each chunk: instrumentation, API
+  // route and page. instrumentation.ts's validateEnv() call then marks only its own
+  // copy ready, and every other chunk throws EnvNotReadyError. Removing this
+  // line reproduces that failure under `next start`. `serverExternalPackages`
+  // keeps the package out of server bundles, so every chunk shares one copy
+  // through Node's module cache.
   serverExternalPackages: ["@maverickcer/env-cap"],
 }
 

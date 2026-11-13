@@ -6,7 +6,7 @@ import { EnvProjectGenerationError } from "../../src/build/errors.js"
 import { main } from "../../src/cli/index.js"
 
 // Real, end-to-end exercise of main()'s stdout-formatting path (roughly
-// src/cli/index.ts lines 109-229) -- test/cli/index.test.ts only covers
+// src/cli/index.ts lines 109-229): test/cli/index.test.ts only covers
 // parseArgs(), and test/cli/bin.test.ts only spawns the built CLI for
 // --help/error/exit-code cases, so the manifest/docs summary formatting
 // below was never actually exercised by any test.
@@ -65,7 +65,7 @@ afterEach(async () => {
   await fs.rm(fixtureRoot, { recursive: true, force: true })
 })
 
-describe("main() -- real --location run", () => {
+describe("main(): real --location run", () => {
   it("prints the manifest-written summary, in the CLI's actual format", async () => {
     process.argv = [
       "node",
@@ -84,11 +84,11 @@ describe("main() -- real --location run", () => {
     expect(output).toContain(path.join(fixtureRoot, "src/generated/env.manifest.ts"))
     expect(output).toContain("Discovered 1 contract(s).")
 
-    // No parse warnings in this clean fixture -- the ⚠ banner (gated on
+    // No parse warnings in this clean fixture: the ⚠ banner (gated on
     // totalWarnings > 0) must not print.
     expect(output).not.toContain("⚠")
 
-    // --evidence was not passed -- neither the "Wrote evidence:" line nor
+    // --evidence was not passed: neither the "Wrote evidence:" line nor
     // the evidence-changes section (both gated on `if (args.evidence)`)
     // should print.
     expect(output).not.toContain("Wrote evidence:")
@@ -100,9 +100,9 @@ describe("main() -- real --location run", () => {
   })
 })
 
-describe("main() -- real --evidence-only run (no --location)", () => {
+describe("main(): real --evidence-only run (no --location)", () => {
   it("skips the warning banner and manifest summary, and still prints the evidence line, when result.manifest is undefined", async () => {
-    // `--location` is the only thing that ever populates `result.manifest` --
+    // `--location` is the only thing that ever populates `result.manifest`:
     // an `--evidence`-only invocation (the CLI's other valid non-`--json`
     // entry point per the "at least one of --location or --evidence"
     // guard) leaves it `undefined`, exercising the `result.manifest?.` and
@@ -121,17 +121,17 @@ describe("main() -- real --evidence-only run (no --location)", () => {
 
     const output = writes.join("")
 
-    // No "Wrote manifest: "/"Discovered N contract(s)." -- printManifestSummary()
+    // No "Wrote manifest: "/"Discovered N contract(s)."; printManifestSummary()
     // never runs when result.manifest is undefined.
     expect(output).not.toContain("Wrote manifest: ")
     expect(output).not.toContain("Discovered")
 
-    // The warning banner is gated on result.manifest?.parseWarnings.length --
+    // The warning banner is gated on result.manifest?.parseWarnings.length:
     // with no manifest, this must stay silent rather than throwing on the
     // optional chain or misreading a mutated `?? 0` as some other count.
     expect(output).not.toContain("⚠")
 
-    // --evidence was passed -- this line is independent of --location.
+    // --evidence was passed: this line is independent of --location.
     // (Printed as the arg's own relative path, not joined against fixtureRoot.)
     expect(output).toContain("Wrote evidence: docs/env.evidence.json")
 
@@ -141,10 +141,10 @@ describe("main() -- real --evidence-only run (no --location)", () => {
   })
 })
 
-describe("main() -- unresolved/dropped-schema warning banner", () => {
+describe("main(): unresolved/dropped-schema warning banner", () => {
   it("prints a leading ⚠ banner, before the manifest summary, when a createEnv() call can't be statically resolved", async () => {
     // A dynamically-constructed schema (createEnv(buildSchema())) can't be
-    // statically resolved -- per the README/ADR 0002, this produces a parse
+    // statically resolved: per the README/ADR 0002, this produces a parse
     // warning instead of silently guessing.
     await write(
       "features/dynamic/env.schema.ts",
@@ -176,7 +176,7 @@ export const dynamicEnv = createEnv(buildSchema(), { name: "dynamic" });
   })
 })
 
-describe("main() -- --check", () => {
+describe("main(): --check", () => {
   it("exits 0 and reports everything up to date against a clean, already-generated fixture", async () => {
     process.argv = [
       "node",
@@ -230,7 +230,7 @@ describe("main() -- --check", () => {
     const before = await fs.readFile(manifestPath, "utf8")
 
     // A whole new contract changes manifest.ts's output (a list of imported
-    // contracts) -- a new variable on the existing contract alone would not.
+    // contracts): a new variable on the existing contract alone would not.
     await write(
       "features/notifications/env.schema.ts",
       `import { createEnv, documentEnv } from "@maverickcer/env-cap";
@@ -264,7 +264,7 @@ documentEnv(schema, { owner: "platform-team", variables: { SLACK_WEBHOOK: { desc
   })
 })
 
-describe("main() -- --json wiring", () => {
+describe("main(): --json wiring", () => {
   it("emits a parseable ok:true JSON report on success", async () => {
     process.argv = [
       "node",
@@ -322,20 +322,20 @@ describe("main() -- --json wiring", () => {
   })
 })
 
-describe("main() -- --help", () => {
+describe("main(): --help", () => {
   it("prints HELP_TEXT and exits 0, without touching any generation path", async () => {
     process.argv = ["node", "env-cap", "--help"]
 
     await main()
 
     const output = writes.join("")
-    expect(output).toContain("env-cap - generate a manifest")
+    expect(output).toContain("env-cap: from your env.schema.ts contracts, write the manifest")
     expect(output).toContain("Usage:")
     expect(process.exitCode).toBe(0)
   })
 })
 
-describe("main() -- none of --location/--evidence given", () => {
+describe("main(): none of --location/--evidence given", () => {
   it("prints HELP_TEXT and exits 1 without --json", async () => {
     process.argv = ["node", "env-cap", "--root", fixtureRoot]
 
@@ -361,7 +361,7 @@ describe("main() -- none of --location/--evidence given", () => {
   })
 })
 
-describe("main() -- --check --json success", () => {
+describe("main(): --check --json success", () => {
   it("emits a parseable ok:true JSON report with an additive checkResult when nothing is stale", async () => {
     process.argv = [
       "node",
@@ -441,7 +441,7 @@ documentEnv(schema, { owner: "platform-team", variables: { SLACK_WEBHOOK: { desc
   })
 })
 
-describe("main() -- --check --strict throws on a real blocking incompatibility", () => {
+describe("main(): --check --strict throws on a real blocking incompatibility", () => {
   async function writeConflictingFixture(): Promise<void> {
     await write(
       "features/check-broken-a/env.schema.ts",
@@ -499,7 +499,7 @@ describe("main() -- --check --strict throws on a real blocking incompatibility",
   })
 })
 
-describe("main() -- normal-flow non--json error propagation", () => {
+describe("main(): normal-flow non--json error propagation", () => {
   it("propagates the raw error via a bare throw when --json was not passed", async () => {
     await write(
       "features/propagation-a/env.schema.ts",
@@ -557,7 +557,7 @@ describe("main() -- normal-flow non--json error propagation", () => {
   })
 })
 
-describe("main() -- --exclude and --package flow through to generateEnvArtifacts()", () => {
+describe("main(): --exclude and --package flow through to generateEnvArtifacts()", () => {
   it("--exclude narrows discovery and --package (an unresolvable name) surfaces as a harmless parse warning", async () => {
     await write(
       "features/wpe-excluded/env.schema.ts",
@@ -592,7 +592,7 @@ describe("main() -- --exclude and --package flow through to generateEnvArtifacts
   })
 })
 
-describe("main() -- --tsconfig/--no-tsconfig flow through to generateEnvArtifacts() (ADR 0023, Experimental)", () => {
+describe("main(): --tsconfig/--no-tsconfig flow through to generateEnvArtifacts() (ADR 0023, Experimental)", () => {
   beforeEach(async () => {
     await write(
       "tsconfig.json",
@@ -609,7 +609,7 @@ describe("main() -- --tsconfig/--no-tsconfig flow through to generateEnvArtifact
   })
 
   // `--ownership` no longer exists (ADR 0046), so ownership findings are no
-  // longer visible in the CLI's human-readable stdout -- the dependency-
+  // longer visible in the CLI's human-readable stdout: the dependency-
   // ownership engine (Finding Model's "ownership" family, ADR 0038) still
   // runs unconditionally regardless of any CLI flag, so this now reads it
   // off the `--evidence --json` envelope instead of the removed
@@ -639,7 +639,7 @@ describe("main() -- --tsconfig/--no-tsconfig flow through to generateEnvArtifact
     expect(findingCodes(writes.join(""))).not.toContain("ABANDONED_CONTRACT")
   })
 
-  it("--no-tsconfig disables alias resolution -- the same contract is now reported abandoned", async () => {
+  it("--no-tsconfig disables alias resolution: the same contract is now reported abandoned", async () => {
     process.argv = [
       "node",
       "env-cap",
@@ -659,7 +659,7 @@ describe("main() -- --tsconfig/--no-tsconfig flow through to generateEnvArtifact
   })
 })
 
-describe("main() -- manifest.warnings (compatibility warnings, non-strict)", () => {
+describe("main(): manifest.warnings (compatibility warnings, non-strict)", () => {
   it("prints the compatibility-warning section when two contracts declare the same variable with differing, unannotated processors", async () => {
     await write(
       "features/warn-a/env.schema.ts",
@@ -689,7 +689,7 @@ describe("main() -- manifest.warnings (compatibility warnings, non-strict)", () 
   })
 })
 
-describe("main() -- evidence changes since the last persisted snapshot (ADR 0038)", () => {
+describe("main(): evidence changes since the last persisted snapshot (ADR 0038)", () => {
   it("reports everything as added on the first run, and 'No changes.' on an immediate rerun against the same source", async () => {
     const location = "src/generated/changes.manifest.ts"
     const evidence = "docs/changes.evidence.json"
@@ -751,7 +751,7 @@ documentEnv(schema, {
   owner: "payments-team",
   variables: {
     // \`description\` drops to unset (was "Stripe secret key.") and
-    // \`sensitivity\` goes from unset to defined -- exercises BOTH sides of
+    // \`sensitivity\` goes from unset to defined: exercises BOTH sides of
     // formatFieldChanges()'s "previous ?? \\"unset\\""/"current ?? \\"unset\\""
     // fallback in one field-change list, and (being two field changes on the
     // same variable) its ", "-joined output too.
@@ -777,7 +777,7 @@ documentEnv(schema, {
 // `src/cli/index.ts`, so the describe blocks that used to exercise them
 // through a real `main()` run (env-example reconciliation formatting,
 // doc.undocumentedContracts/staleDocEntries/expiringSoon/unresolvedLinks,
-// and the --ownership output block) were removed too -- that rendering
+// and the --ownership output block) were removed too; that rendering
 // logic is gone from the CLI, not just untested. The underlying computation
 // (`computeDocumentation()`/`computeUsage()`, which still run
 // unconditionally inside `generateEnvArtifacts()` for Finding Model, ADR
@@ -790,9 +790,9 @@ documentEnv(schema, {
 // The default fixture (see beforeEach) always has an undocumented variable
 // (UNDOCUMENTED_VAR) and a contract nothing imports, so it produces both a
 // documentation-family and an ownership-family warning without any extra
-// setup -- exactly what these two scoped flags gate on.
-describe("main() -- --strict-docs / --strict-ownership", () => {
-  // `--docs`/`--ownership` no longer exist as CLI flags (ADR 0046) -- every
+// setup: exactly what these two scoped flags gate on.
+describe("main(): --strict-docs / --strict-ownership", () => {
+  // `--docs`/`--ownership` no longer exist as CLI flags (ADR 0046): every
   // case below now drives the always-computed documentation/ownership
   // findings (Finding Model, ADR 0038) through `--location` alone, exactly
   // like the pre-existing "bare --strict" case below already did.
@@ -863,7 +863,7 @@ describe("main() -- --strict-docs / --strict-ownership", () => {
     ).rejects.toThrow()
   })
 
-  it("--strict-docs leaves ownership findings alone, and vice versa -- the two scoped flags are independent", async () => {
+  it("--strict-docs leaves ownership findings alone, and vice versa: the two scoped flags are independent", async () => {
     process.argv = [
       "node",
       "env-cap",
@@ -888,7 +888,7 @@ describe("main() -- --strict-docs / --strict-ownership", () => {
     ]
     // Before ADR 0044, bare --strict gated the compatibility family only, so
     // this same fixture's documentation/ownership warnings did not block it.
-    // Now it does -- "strict" means every provable-error family, matching
+    // Now it does: "strict" means every provable-error family, matching
     // data-cap's own bare --strict.
     await expect(main()).rejects.toThrow(/UNDOCUMENTED_VARIABLE|ABANDONED_CONTRACT/)
   })
@@ -908,9 +908,9 @@ describe("main() -- --strict-docs / --strict-ownership", () => {
   })
 })
 
-describe("main() -- init subcommand dispatch", () => {
+describe("main(): init subcommand dispatch", () => {
   it("routes `init` (first positional token) to the scaffolder, not parseArgs", async () => {
-    // parseArgs() would throw "Unknown argument: init" -- reaching the init
+    // parseArgs() would throw "Unknown argument: init"; reaching the init
     // help text at all proves main() intercepted before parseArgs.
     process.argv = ["node", "env-cap", "init", "--help"]
 
@@ -921,14 +921,11 @@ describe("main() -- init subcommand dispatch", () => {
   })
 
   it("scaffolds into the current directory and exits 0", async () => {
-    // Mocks the `process.cwd` FUNCTION rather than calling the real
-    // `process.chdir()` -- the latter throws
-    // `ERR_WORKER_UNSUPPORTED_OPERATION` under a worker-thread-based test
-    // runner (Stryker's own vitest-runner included) -- a Node.js platform
-    // restriction, confirmed directly (`npm run mutation` aborted its whole
-    // dry run on this file before this fix). Same technique this
-    // codebase's own test/build/usage-generate.test.ts (and siblings)
-    // already use for the identical reason.
+    // Mocks the `process.cwd` function instead of calling `process.chdir()`,
+    // which throws `ERR_WORKER_UNSUPPORTED_OPERATION` under a worker-thread test
+    // runner such as Stryker's vitest-runner (`npm run mutation` aborted its dry
+    // run on this file before). test/build/usage-generate.test.ts and its
+    // siblings use the same technique for the same reason.
     process.argv = ["node", "env-cap", "init"]
     await fs.mkdir(fixtureRoot, { recursive: true })
     await fs.writeFile(path.join(fixtureRoot, "package.json"), '{"name": "demo"}')
@@ -945,7 +942,7 @@ describe("main() -- init subcommand dispatch", () => {
     process.argv = ["node", "env-cap", "--help"]
     await main()
     const output = writes.join("")
-    expect(output).toContain("generate a manifest and/or a persisted evidence artifact")
+    expect(output).toContain("an evidence file (owners, expiry dates, usage), or both")
     expect(output).not.toContain("Usage: env-cap init\n\nScaffolds")
   })
 })

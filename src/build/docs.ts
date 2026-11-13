@@ -20,7 +20,7 @@ import {
 import { mustGet } from "./map-utils.js"
 import { groupVariablesByOwner } from "./reference-projections.js"
 
-/** Identifies a contract with no linked `documentEnv()` call at all. `file`'s absolute-vs-relative convention depends on where a given instance comes from -- see the specific field using this type (`DocumentationFindings.undocumentedContracts` is absolute; `RenderDocsOptions.undocumentedContracts` must be root-relative, matching the `ContractModel`-shaped `contracts` it's compared against). */
+/** Identifies a contract with no linked `documentEnv()` call at all. Whether `file` is absolute or relative depends on the field using this type. `DocumentationFindings.undocumentedContracts` is absolute. `RenderDocsOptions.undocumentedContracts` must be root-relative, matching the `ContractModel`-shaped `contracts` it's compared against. */
 export interface UndocumentedContractRef {
   readonly file: string
   /** The contract's exported binding name. */
@@ -52,13 +52,13 @@ export interface ExpiringEntry {
 export interface RenderDocsOptions {
   /** How many days out counts as "expiring soon" in the lifecycle report and security review. */
   readonly expiringWithinDays: number
-  /** Contracts with no linked `documentEnv()` call at all. `file` must be root-relative, POSIX-separated -- matching `contracts`' own `ContractModel` convention, since this is matched against it by identity. */
+  /** Contracts with no linked `documentEnv()` call at all. `file` must be root-relative, POSIX-separated: matching `contracts`' own `ContractModel` convention, since this is matched against it by identity. */
   readonly undocumentedContracts: readonly UndocumentedContractRef[]
   /** Schema variables with no matching entry in their contract's linked documentation. Only how many there are is rendered (the security-review counter), so `file` is not matched against anything. */
   readonly undocumentedVariables: readonly UndocumentedVariableRef[]
   /** Timestamp rendered into the header and used for expiry/days-remaining math. */
   readonly generatedAt: Date
-  /** Content already at `docs.location`, if any -- used only for the "changes since last report" summary. */
+  /** Content already at `docs.location`, if any: used only for the "changes since last report" summary. */
   readonly previousContent: string | undefined
 }
 
@@ -66,7 +66,7 @@ export interface RenderDocsOptions {
  * Parses `expiresAt` as a real date.
  *
  * @remarks
- * Malformed strings are silently ignored (return `undefined`) rather than throwing -- same
+ * Malformed strings are silently ignored (return `undefined`) rather than throwing: same
  * "warn/skip, never guess" policy as the rest of the generator. Exported so `live-expirations.ts`
  * can validate live override values against the exact same rule used for static `expiresAt`.
  */
@@ -77,8 +77,8 @@ export function parseIsoDate(value: string): Date | undefined {
 
 /**
  * An `expiresAt` that is set and parses as a date, together with that date. A missing value reads as
- * the text "undefined", which does not parse, so it is skipped exactly like any other invalid value
- * and needs no separate check.
+ * the text "undefined", which does not parse. So it is skipped like any other invalid value and
+ * needs no separate check.
  */
 function parseExpiry(expiresAt: string | undefined): { raw: string; date: Date } | undefined {
   const raw = String(expiresAt)
@@ -88,12 +88,12 @@ function parseExpiry(expiresAt: string | undefined): { raw: string; date: Date }
 
 const MS_PER_DAY = 86_400_000
 
-/** Days from `now` until `date`; negative when `date` is already in the past. The one place this arithmetic lives -- every wall-clock-relative computation in this file goes through it. */
+/** Days from `now` until `date`; negative when `date` is already in the past. The one place this arithmetic lives: every wall-clock-relative computation in this file goes through it. */
 function daysRemainingFrom(date: Date, now: Date): number {
   return Math.ceil((date.getTime() - now.getTime()) / MS_PER_DAY)
 }
 
-/** The minimal shape {@link computeExpiringEntries} needs -- structural, not pinned to `DiscoveredContract`, so the exact same rule serves both `LinkResult`'s absolute-path contracts (`generate-documentation.ts`'s `documentation.expiringSoon`, Stable tier) and `ContractModel`'s root-relative ones, whichever a caller already has on hand. */
+/** The minimal shape {@link computeExpiringEntries} needs. It is structural, not pinned to `DiscoveredContract`, so one rule serves both kinds of contract. Those are `LinkResult`'s absolute-path contracts (`generate-documentation.ts`'s `documentation.expiringSoon`, Stable tier) and `ContractModel`'s root-relative ones. */
 interface ExpiryBearingContract {
   readonly file: string
   readonly exportName: string
@@ -148,7 +148,7 @@ export function computeExpiringEntries(
  * Same data `renderCatalog()` renders to Markdown for one variable, reshaped for JSON/
  * programmatic consumers instead of prose.
  *
- * @see `ContractModelVariable` (`contract-model.ts`) -- this same declared variable's canonical
+ * @see `ContractModelVariable` (`contract-model.ts`): this same declared variable's canonical
  * starting point. Plain reference, not `{@link}`: this type is intentionally not part of the
  * public surface (see `typedoc.json`'s `intentionallyNotExported`).
  */
@@ -162,9 +162,9 @@ interface CatalogVariable extends EnvGovernanceFields {
   readonly processorReturnType: string | undefined
   readonly hasValidator: boolean
   readonly documented: boolean
-  /** The variable's declared validation context, if any -- see ADR 0022. Participation data, not documentation: describes when `validateEnv()` processes this variable, not who may access it or what a bundler includes. */
+  /** The variable's declared validation context, if any: see ADR 0022. Participation data, not documentation: describes when `validateEnv()` processes this variable, not who may access it or what a bundler includes. */
   readonly context: string | undefined
-  /** The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See ADR 0037. */
+  /** The `evidence` sub-object from this variable's linked documentation: re-verified every run, unlike every declared-only field above. See ADR 0037. */
   readonly evidence: DiscoveredVariableEvidence | undefined
 }
 
@@ -176,7 +176,7 @@ export interface CatalogContract extends EnvGovernanceFields {
   readonly documented: boolean
   readonly category: string | undefined
   readonly exclusiveGroup: string | undefined
-  /** Keyed by variable name -- unique within one contract (a schema
+  /** Keyed by variable name: unique within one contract (a schema
    *  object-literal property name), unlike `contractName` at the top level. */
   readonly variables: Readonly<Record<string, CatalogVariable>>
 }
@@ -228,11 +228,10 @@ export function buildCatalog(contracts: readonly ContractModelContract[]): Catal
 }
 
 // Every module-level regex pattern in this file is inlined at its one call
-// site, not a shared `const` -- Stryker marks a module-level regex literal
-// `static: true` (evaluated once at import time), which produces a false
-// "Survived" on a mutant that's genuinely, heavily test-covered (the same
-// limitation already fixed for `cli/index.ts`'s dispatch tables/`HELP_TEXT`
-// and `parse.ts`'s `ENV_KEY_PATTERN` this same drive).
+// site, not a shared `const`. Stryker marks a module-level regex literal
+// `static: true` (evaluated once at import time). That produces a false
+// "Survived" on a mutant that tests do cover. `cli/index.ts`'s dispatch
+// tables/`HELP_TEXT` and `parse.ts`'s `ENV_KEY_PATTERN` avoid it the same way.
 
 /** Every variable key that appeared as a catalog heading in a previously-generated docs file. Exported for testing. */
 export function extractPreviouslyDocumentedKeys(previousContent: string): Set<string> {
@@ -246,11 +245,11 @@ export function extractPreviouslyDocumentedKeys(previousContent: string): Set<st
 
 /**
  * Every variable key that was documented under an *active* contract in a
- * previously-generated docs file -- walks the same `- Active: yes/no`
- * marker `renderCatalog` always emits immediately after each `## <contract>`
- * heading, so a key already inactive last time (a permanently-dormant
- * contract, e.g. behind an unused feature flag) is excluded even though it
- * still appears as a `### \`KEY\`` heading. Exported for testing.
+ * previously-generated docs file. It walks the `- Active: yes/no` marker
+ * `renderCatalog` always emits right after each `## <contract>` heading. So a
+ * key already inactive last time is excluded (a permanently-dormant contract,
+ * e.g. behind an unused feature flag). It is excluded even though it still
+ * appears as a `### \`KEY\`` heading. Exported for testing.
  */
 export function extractPreviouslyActiveKeys(previousContent: string): Set<string> {
   const keys = new Set<string>()
@@ -263,8 +262,8 @@ export function extractPreviouslyActiveKeys(previousContent: string): Set<string
     }
     const headingMatch = /^### `([A-Za-z_][A-Za-z0-9_]*)`$/.exec(line)
     // The capture group is mandatory in the pattern (no `?`), so a
-    // successful match always captures it -- noUncheckedIndexedAccess can't
-    // see that invariant through RegExpExecArray's numeric index signature.
+    // successful match always captures it. TypeScript's noUncheckedIndexedAccess
+    // can't see that invariant through RegExpExecArray's numeric index signature.
     const key = headingMatch?.[1]
     if (key !== undefined && currentContractActive) {
       keys.add(key)
@@ -283,27 +282,23 @@ interface ChangeSummary {
  * Added = newly discovered since last report. Removed = previously
  * documented, no longer discovered at all. Commented = backed by an *active*
  * contract last report, still discovered, but no longer backed by any active
- * contract -- i.e. a fresh active-to-inactive transition, not merely "still
- * inactive." A key already inactive/commented last time is excluded so a
+ * contract. That is a fresh active-to-inactive transition, not merely "still
+ * inactive". A key already inactive/commented last time is excluded. So a
  * permanently-dormant contract's variable isn't reported as a change on
- * every single regeneration.
+ * every regeneration.
  *
- * `previousContent === undefined` (no prior report exists at all -- a true
- * first-ever generation) is treated the same as "nothing changed" (every
- * field empty), not as "no summary at all" the way an earlier version of
- * this function did. That earlier behavior omitted the whole "Changes since
- * last report" section on a first run -- but `checkEnvArtifacts()` (ADR
- * 0016) always re-renders using whatever is *currently on disk* as
- * `previousContent`, including a file this very function just wrote. For
- * `--check` to ever agree with a real write, `renderDocs()` must be a fixed
- * point under that self-feeding: regenerating with a file's own content as
- * `previousContent` must reproduce that same file byte-for-byte. Omitting
- * the section on first write broke exactly that -- the first real write
- * had no section, but feeding that same file back in as `previousContent`
- * produces a real (all-empty, "No changes.") summary, since this function
- * only ever re-parses the Catalog's own `### \`KEY\`` headings, never the
- * Changes section's own prior text. Rendering "No changes." immediately,
- * even on a first-ever report, is the only phrasing that round-trips.
+ * `previousContent === undefined` means no prior report exists (a first-ever
+ * generation). It is treated as "nothing changed" (every field empty), not as
+ * "no summary at all". `checkEnvArtifacts()` (ADR 0016) always re-renders
+ * with whatever is *currently on disk* as `previousContent`. That includes a
+ * file this function just wrote. For `--check` to agree with a real write,
+ * `renderDocs()` must be a fixed point under that self-feeding. Regenerating
+ * with a file's own content as `previousContent` must reproduce that file
+ * byte-for-byte. A first write without the section would fail that. Feeding
+ * it back in produces a real (all-empty, "No changes.") summary. This
+ * function only re-parses the Catalog's own `### \`KEY\`` headings, never
+ * the Changes section's prior text. So rendering "No changes." even on a
+ * first-ever report is the only phrasing that round-trips.
  */
 function computeChangeSummary(
   contracts: readonly ContractModelContract[],
@@ -332,8 +327,8 @@ function computeChangeSummary(
 }
 
 function slugify(text: string): string {
-  // The first replace folds every run of non-identifier characters (dashes included) into a single
-  // `-`, so at most one dash can sit at either end for the second to strip.
+  // The first replace folds every run of non-identifier characters (dashes included) into one `-`.
+  // So at most one dash sits at either end, for the second replace to strip.
   return (
     text
       .toLowerCase()
@@ -342,7 +337,7 @@ function slugify(text: string): string {
   )
 }
 
-/** Assigns each heading a stable, collision-free anchor -- duplicate variable names across contracts (a supported feature) would otherwise collide on a heading-derived anchor. */
+/** Assigns each heading a stable, collision-free anchor: duplicate variable names across contracts (a supported feature) would otherwise collide on a heading-derived anchor. */
 class AnchorRegistry {
   private readonly used = new Map<string, number>()
   private readonly assigned = new Map<object, string>()
@@ -378,9 +373,7 @@ function sortedContracts(contracts: readonly ContractModelContract[]): ContractM
   return [...contracts].sort((a, b) => a.contractName.localeCompare(b.contractName))
 }
 
-// ---------------------------------------------------------------------------
-// Section 0 -- header, change summary, table of contents
-// ---------------------------------------------------------------------------
+// Section 0: header, change summary, table of contents.
 
 function renderHeader(
   contracts: readonly ContractModelContract[],
@@ -439,9 +432,7 @@ function renderHeader(
   return lines
 }
 
-// ---------------------------------------------------------------------------
-// Section 1 -- comprehensive catalog
-// ---------------------------------------------------------------------------
+// Section 1: comprehensive catalog.
 
 function renderCatalog(
   contracts: readonly ContractModelContract[],
@@ -451,9 +442,9 @@ function renderCatalog(
   const lines: string[] = ["## Catalog", "", '<a id="catalog"></a>', ""]
   const undocumentedByIdentity = new Set(undocumented.map((u) => `${u.file}#${u.exportName}`))
 
-  // Only shown when at least one variable actually declares a context --
-  // keeps generated docs byte-identical for every project not using this
-  // feature, and avoids explaining a concept that doesn't appear below.
+  // Only shown when at least one variable declares a context. Docs stay
+  // byte-identical for every project without contexts, and never explain a
+  // concept that doesn't appear below.
   const usesValidationContexts = contracts.some((c) => c.variables.some((v) => v.context))
   if (usesValidationContexts) {
     lines.push(
@@ -540,15 +531,13 @@ function renderCatalog(
   return lines
 }
 
-// ---------------------------------------------------------------------------
-// Section 2 -- ownership matrix (omitted if nothing sets `owner`)
-// ---------------------------------------------------------------------------
+// Section 2: ownership matrix (omitted if nothing sets `owner`).
 
 /**
  * Groups via the same `groupVariablesByOwner()` the public
- * `ownershipSummary` reference projection uses (`reference-projections.ts`),
- * so env-cap's own rendered matrix and the projection a consumer reads are
- * the same grouping by construction, not two implementations kept in sync by
+ * `ownershipSummary` reference projection uses (`reference-projections.ts`).
+ * So env-cap's rendered matrix and the projection a consumer reads are the
+ * same grouping by construction, not two implementations kept in sync by
  * hand. Only the link/label formatting below is this renderer's own.
  */
 function renderOwnershipMatrix(
@@ -585,9 +574,7 @@ function renderOwnershipMatrix(
   return lines
 }
 
-// ---------------------------------------------------------------------------
-// Section 3 -- dependency graph (one row per unique variable name)
-// ---------------------------------------------------------------------------
+// Section 3: dependency graph (one row per unique variable name).
 
 function renderDependencyGraph(
   contracts: readonly ContractModelContract[],
@@ -634,9 +621,7 @@ function renderDependencyGraph(
   return { lines, hasDuplicates }
 }
 
-// ---------------------------------------------------------------------------
-// Section 4 -- lifecycle report
-// ---------------------------------------------------------------------------
+// Section 4: lifecycle report.
 
 function renderLifecycleReport(
   contracts: readonly ContractModelContract[],
@@ -684,9 +669,7 @@ function renderLifecycleReport(
   return { lines, hasLifecycle: true }
 }
 
-// ---------------------------------------------------------------------------
-// Section 5 -- security review
-// ---------------------------------------------------------------------------
+// Section 5: security review.
 
 /** Every number the security review reports, as structured data instead of only rendered Markdown text. */
 export interface SecurityReviewCounters {
@@ -709,11 +692,9 @@ export interface SecurityReviewCounters {
  * Computes every number `renderSecurityReview()` reports, as real data.
  *
  * @remarks
- * Previously this arithmetic lived entirely inside the renderer as closure
- * locals that only ever became interpolated Markdown text -- no exported
- * type backed any of it, so nothing downstream (the `--json` envelope, a CI
- * gate, a future Finding Model adapter) could consume it as data. Extracted
- * so it can be reused wherever these facts are needed, not just prose.
+ * An exported type backs these numbers. So consumers other than the
+ * rendered Markdown can read them as data: the `--json` envelope, a CI gate,
+ * a future Finding Model adapter.
  */
 export function computeSecurityReviewCounters(
   contracts: readonly ContractModelContract[],
@@ -809,22 +790,19 @@ function renderSecurityReview(
   ]
 }
 
-// ---------------------------------------------------------------------------
-
 /**
- * Renders the full docs artifact: header + change summary + table of
- * contents, then the comprehensive catalog, ownership matrix (if used),
- * dependency graph, lifecycle report, and a security review.
+ * Renders the full docs artifact. It opens with a header, change summary and
+ * table of contents. Then come the catalog, ownership matrix (if used),
+ * dependency graph, lifecycle report and security review.
  *
  * @remarks
  * Documents everything discovered, active or not, same scope as the catalog always
- * had. Fully regenerated every run -- unlike `.env.example`, nothing here is
+ * had. Fully regenerated every run: unlike `.env.example`, nothing here is
  * meant to be hand-edited, so there's no "never overwrite" behavior.
  *
- * `contracts` is `ContractModel`'s own shape (`file` root-relative and
- * POSIX-separated already, per that model's convention) -- there is no
- * separate `root` parameter to resolve against, unlike this function's
- * pre-ADR-0038 signature.
+ * `contracts` is `ContractModel`'s own shape, so `file` is already
+ * root-relative and POSIX-separated (ADR 0038). There is no separate `root`
+ * parameter to resolve against.
  */
 export function renderDocs(
   contracts: readonly ContractModelContract[],
@@ -864,17 +842,16 @@ export function renderDocs(
 }
 
 /**
- * Normalizes every wall-clock-relative substring `renderDocs()` can produce
- * -- not just the single `_Generated ..._` timestamp line, but also the
- * lifecycle report's `(**Xd remaining**)`/`(**expired Xd ago**)` annotations
- * and the security review's "Already expired"/"Expiring within N days"
- * counts -- so two renders of the *same* input, taken on different days,
- * compare equal. `check-artifacts.ts`'s drift comparison and the examples
- * golden-file test harness (`test/support/example-runner.ts`) both need
- * exactly this, not just the timestamp line alone: any contract with a near-term
- * `expiresAt` renders day-relative text that would otherwise make `--check`
- * (or a golden-file comparison) report false drift purely because real time
- * passed between generation and comparison.
+ * Normalizes every wall-clock-relative substring `renderDocs()` can produce,
+ * so two renders of the *same* input on different days compare equal. That
+ * covers the `_Generated ..._` timestamp line, the lifecycle report's
+ * `(**Xd remaining**)`/`(**expired Xd ago**)` annotations, and the security
+ * review's "Already expired"/"Expiring within N days" counts.
+ * `check-artifacts.ts`'s drift comparison and the examples golden-file test
+ * harness (`test/support/example-runner.ts`) both need all of it. A contract
+ * with a near-term `expiresAt` renders day-relative text. Without this,
+ * `--check` (or a golden-file comparison) would report false drift only
+ * because real time passed between generation and comparison.
  */
 export function normalizeDocsForComparison(content: string): string {
   return content

@@ -2,7 +2,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * Two secret-backed variables whose real expiration signal lives in AWS
- * Secrets Manager, not in this file -- see `live-expirations.ts`. The
+ * Secrets Manager, not in this file: see `live-expirations.ts`. The
  * `expiresAt` values set here are static fallbacks: what generated docs show
  * if `liveExpirationDates` is omitted, or if a given secret has no entry in
  * `live-expirations.ts`'s naming-convention map, or if describing it fails.
@@ -23,7 +23,7 @@ export const secretsEnv = createEnv(secretsSchema, {
   source: import.meta.url,
 });
 
-// documentEnv() is inert at runtime -- generateEnvArtifacts() reads this through
+// documentEnv() is inert at runtime: generateEnvArtifacts() reads this through
 // static analysis only, never by executing this file. The `expiresAt` values
 // below are placeholders; running
 // `npm run generate:env` with `liveExpirationDates` wired up (see

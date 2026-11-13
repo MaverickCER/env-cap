@@ -1,9 +1,9 @@
 # CLI usage example
 
-`examples/application`'s exact contract (`src/env.ts`, `src/server.ts`, `src/startup.ts` are all
-identical, minus `STRIPE_KEY`'s `expiresAt`/`refreshInstructions` -- see `src/env.ts`'s header
-comment for why), but generated entirely differently: every other example calls
-`generateEnvArtifacts()` from its own `scripts/generate-manifest.mjs`; this one has no such
+This example uses `examples/application`'s exact contract but generates it entirely differently.
+`src/env.ts`, `src/server.ts` and `src/startup.ts` are all identical, minus `STRIPE_KEY`'s
+`expiresAt`/`refreshInstructions` (see `src/env.ts`'s header comment for why). Every other example
+calls `generateEnvArtifacts()` from its own `scripts/generate-manifest.mjs`; this one has no such
 script at all. Every `package.json` script here invokes the packaged `env-cap` binary directly:
 
 ```
@@ -18,16 +18,19 @@ docs/
   env.evidence.json.fingerprint  <- generated, do not edit (content hash, see ADR 0038)
 ```
 
-There is no `scripts/` directory here on purpose -- which is also why this fixture only
-demonstrates the manifest and the persisted evidence artifact, not
-`docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md`/`.env.example`. Those three no longer have CLI flags at
-all (`--docs`/`--ownership`/`--env-example` were removed -- see [ADR
-0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)); every
-example that still generates them does so via a small `scripts/generate-docs/run.ts` calling
-`@maverickcer/env-cap/build` directly (see e.g. `examples/application/scripts/generate-docs`), which would
-defeat this fixture's own "no wrapper script" point if added here. What's left --
-`--location`/`--evidence`/`--check`/`--json` -- is exactly the CLI surface ADR 0046 kept, so this
-fixture is, if anything, a purer demonstration of it now.
+There is no `scripts/` directory here on purpose. That is also why this fixture only demonstrates
+the manifest and the persisted evidence artifact, not `docs/ENVIRONMENT.md`/`docs/OWNERSHIP.md`/
+`.env.example`:
+
+- Those three no longer have CLI flags at all. `--docs`/`--ownership`/`--env-example` were removed
+  (see
+  [ADR 0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)).
+- Every example that still generates them does so via a small `scripts/generate-docs/run.ts` calling
+  `@maverickcer/env-cap/build` directly (see e.g. `examples/application/scripts/generate-docs`).
+  Adding one here would defeat this fixture's own "no wrapper script" point.
+
+What's left (`--location`/`--evidence`/`--check`/`--json`) is exactly the CLI surface ADR 0046 kept.
+This fixture is, if anything, a purer demonstration of it now.
 
 ## Run it
 
@@ -57,10 +60,11 @@ npm run generate:env:json
 
 ## Why this example exists
 
+This example proves the installable CLI path end-to-end. The packaged `bin` entry resolves, and its
+output is byte-for-byte identical to what the equivalent library call would produce.
+
 `generateEnvArtifacts()` (and the standalone `generateEnvManifest()`/`generateDocumentation()`/
 `generateUsageReport()`) are all usable as plain library calls, which is what every other example
 here does. But `env-cap` also ships as an installable CLI binary (`npx env-cap`, or a
-`package.json` script like the ones above) -- for a team that would rather wire generation into
-`package.json` directly than maintain a custom `.mjs` orchestration script. This example proves
-that path end-to-end: the packaged `bin` entry resolves, and its output is byte-for-byte
-identical to what the equivalent library call would produce.
+`package.json` script like the ones above). That serves a team that would rather wire generation
+into `package.json` directly than maintain a custom `.mjs` orchestration script.

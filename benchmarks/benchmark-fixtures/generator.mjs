@@ -1,4 +1,4 @@
-// Deterministic fixture generation -- a pure function of tier + contract
+// Deterministic fixture generation: a pure function of tier + contract
 // index + variable index, zero Math.random()/timestamps anywhere below.
 // `fixtureSeed: "deterministic-index-v1"` names this strategy explicitly;
 // `GENERATOR_VERSION` bumps only when generation semantics intentionally
@@ -10,11 +10,11 @@
 //
 // - "buildtime": realistic, varied processors/validators (a JSON-credential
 //   shape for every size)
-//   as literal TypeScript source text -- AST-parsing cost genuinely depends
+//   as literal TypeScript source text; AST-parsing cost genuinely depends
 //   on source-text volume and variety, and build tooling never executes
 //   this (ADR 0002), so realism here costs nothing at measurement time.
 // - "runtime": identical counts, but every variable gets a trivial identity
-//   processor and no validator -- see ../README.md's "Runtime fixture
+//   processor and no validator; see ../README.md's "Runtime fixture
 //   design" section for why. Written as plain `.mjs`, not `.ts`, so no
 //   transpilation step sits between "process starts" and "createEnv runs."
 
@@ -120,7 +120,7 @@ function renderBuildtimeContract(contractName, variables) {
 /**
  * Writes `<outputDir>/contract-<n>/env.schema.ts` for every contract in
  * a project of `variables` variables. `docsStyle` ("minimal" | "heavy") controls documentation
- * payload size only -- see `documentation-payload`'s benchmark.
+ * payload size only: see `documentation-payload`'s benchmark.
  */
 export async function generateBuildtimeFixtures({
   outputDir,
@@ -169,10 +169,10 @@ function renderRuntimeContract(contractName, varCount, globalIndexStart) {
 
 /**
  * Writes `<outputDir>/contract-<n>/env.contract.mjs` (plain JS, identity
- * processors, no validators, no documentEnv -- see "Runtime fixture design")
- * plus a barrel `index.mjs` re-exporting every contract, so a single
- * `import()` of the barrel triggers every contract module's evaluation --
- * mirroring a real app importing its whole generated manifest at once.
+ * processors, no validators, no documentEnv; see "Runtime fixture design")
+ * plus a barrel `index.mjs` re-exporting every contract. One `import()` of
+ * the barrel evaluates every contract module, as a real app does when it
+ * imports its whole generated manifest.
  */
 export async function generateRuntimeFixtures({ outputDir, variables }) {
   const sizes = uniformContractSizes(variables)

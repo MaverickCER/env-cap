@@ -20,14 +20,14 @@ const realVersion = (JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as { v
 /**
  * A `toMatchSnapshot` property-matcher argument: `toolVersion` legitimately varies with the
  * package's own version, so every snapshot test below matches it against `expect.any(String)`
- * instead of hardcoding today's literal version -- immune to every future version bump.
+ * instead of hardcoding today's literal version; immune to every future version bump.
  * `expect.any()` (vitest's asymmetric matcher) is inherently `any`-typed; sharing one constant
  * keeps that single, justified suppression in one place instead of at each call site.
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- see this constant's own doc comment above.
 const IGNORE_TOOL_VERSION = { toolVersion: expect.any(String) }
 
-/** Minimal, structurally-valid `EvidenceModel` -- every sub-model empty. Real content isn't the point of these envelope-shape tests. */
+/** Minimal, structurally-valid `EvidenceModel`: every sub-model empty. Real content isn't the point of these envelope-shape tests. */
 const EMPTY_EVIDENCE: EvidenceModel = {
   schemaVersion: 1,
   provenance: { generatedAt: "2026-01-01T00:00:00.000Z", toolVersion: "0.0.0", commit: undefined },
@@ -178,7 +178,7 @@ describe("serializeSuccess", () => {
     expect(payload.usage).toBeUndefined()
   })
 
-  it("omits evidence by default, even when result.evidence is populated (it always is -- ADR 0038)", () => {
+  it("omits evidence by default, even when result.evidence is populated (it always is: ADR 0038)", () => {
     const payload = serializeSuccess(FULL_RESULT)
     expect(payload.evidence).toBeUndefined()
     expect("evidence" in payload).toBe(false)
@@ -244,19 +244,19 @@ describe("serializeFailure", () => {
     expect(payload.error.issues).toBeUndefined()
   })
 
-  it("handles a thrown null without crashing -- typeof null === 'object', but it must not be read as one", () => {
+  it("handles a thrown null without crashing: typeof null === 'object', but it must not be read as one", () => {
     const payload = serializeFailure(null)
     expect(payload.error.issues).toBeUndefined()
   })
 
   it("never treats a non-object value as carrying .issues, even one with an .issues array attached", () => {
-    // Functions can carry arbitrary own properties -- this is the one
+    // Functions can carry arbitrary own properties: this is the one
     // realistic way to construct a genuinely non-"object"-typed value
     // (`typeof fn === "function"`) that still has an `.issues` array, to
     // isolate the `typeof error === "object"` check from the
     // `Array.isArray` one.
     const fn = (): void => {
-      /* never called -- only its own .issues property matters here */
+      /* never called: only its own .issues property matters here */
     }
     Object.assign(fn, { issues: ["not really an issue"] })
     const payload = serializeFailure(fn)
@@ -288,7 +288,7 @@ describe("serializeFailure", () => {
   })
 })
 
-describe("serializeSuccess -- requested", () => {
+describe("serializeSuccess: requested", () => {
   it("always records which passes were requested, so absent is never confused with empty", () => {
     const payload = serializeSuccess(
       { manifest: undefined, docs: undefined, usage: undefined },
@@ -296,7 +296,7 @@ describe("serializeSuccess -- requested", () => {
       false,
       { manifest: true, docs: true, usage: false, evidence: false },
     )
-    // Every result is absent, yet two passes were genuinely requested -- the
+    // Every result is absent, yet two passes were genuinely requested: the
     // exact case that was previously indistinguishable from "not requested."
     expect(payload.requested).toEqual({
       manifest: true,
@@ -324,7 +324,7 @@ describe("serializeSuccess -- requested", () => {
     expect(serializeSuccess(FULL_RESULT, undefined, false).requested.evidence).toBe(false)
   })
 
-  it("keeps requested independent of checkResult -- a --check run still reports its passes", () => {
+  it("keeps requested independent of checkResult: a --check run still reports its passes", () => {
     const payload = serializeSuccess(
       { manifest: undefined, docs: undefined, usage: undefined },
       { ok: false, stale: ["docs"] },

@@ -2,9 +2,9 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * The capability whose required variable this example's committed .env
- * deliberately omits (see .env -- STRIPE_KEY is absent, not just blank).
+ * deliberately omits (see .env: STRIPE_KEY is absent, not just blank).
  * There is no `required` flag anywhere in env-cap's runtime vocabulary
- * (see specs/architecture.md) -- requiredness is expressed the same way it
+ * (see specs/architecture.md): requiredness is expressed the same way it
  * is everywhere else in this codebase: a validator that rejects an empty
  * value.
  */

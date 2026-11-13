@@ -2,14 +2,14 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Change Impact A (--since history)" reference
- * projection (plan Phase 24) -- absorbs the audit's "Audit Trail" report
+ * projection (plan Phase 24): absorbs the audit's "Audit Trail" report
  * type. Scoped to "since the one committed manifest snapshot" (already
- * supported by Change Model), not true N-run history -- the plan's own
+ * supported by Change Model), not true N-run history: the plan's own
  * guidance, since a real multi-run audit trail is new scope beyond ADR
  * 0021's single-snapshot design, not something to invent here.
  *
  * A thin reshape of `evidence.change` (already the full since-the-snapshot
- * diff) plus one human-readable `summary` line -- no new derivation logic,
+ * diff) plus one human-readable `summary` line: no new derivation logic,
  * every field comes straight from Change Model (ADR 0024/0030).
  */
 export const auditTrailProjection = defineEvidenceProjection({

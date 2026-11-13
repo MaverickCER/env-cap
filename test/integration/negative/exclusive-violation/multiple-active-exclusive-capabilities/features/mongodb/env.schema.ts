@@ -2,16 +2,16 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 import { processors } from "@maverickcer/env-cap/helpers";
 
 /**
- * Shipped dormant (active: false, now set via documentEnv -- see below) so a
+ * Shipped dormant (active: false, now set via documentEnv (see below) so a
  * team can switch to Mongo later by flipping this to true and postgres's to
- * false -- without vendoring new code or losing template updates.
+ * false) without vendoring new code or losing template updates.
  * generateEnvManifest() enforces that at most one member of the "database"
  * exclusiveGroup is ever active, so enabling this without disabling postgres
  * is a build-time error, not a silent double-wire.
  *
  * While inactive, this contract is excluded from the generated contract
  * entirely: neither of its variables is required by validateEnv(), and
- * reading mongoEnv.DATABASE_URL throws EnvNotReadyError -- exactly the
+ * reading mongoEnv.DATABASE_URL throws EnvNotReadyError; exactly the
  * signal you want if application code still references a backend nobody
  * selected. See src/app.ts, which only ever imports the active backend.
  */

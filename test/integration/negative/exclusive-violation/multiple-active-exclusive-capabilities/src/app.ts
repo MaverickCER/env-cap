@@ -2,7 +2,7 @@ import "./startup.js"; // side-effect import: throws and halts startup if valida
 
 // Never reached in this example: both postgres and mongodb ship active: true
 // while sharing exclusiveGroup "database" (see both schemas), so
-// generate:env -- which "start" always runs first -- fails at the manifest
+// generate:env (which "start" always runs first) fails at the manifest
 // step before src/startup.js's validateEnv() ever runs, let alone this
 // module's own top-level code. See README.md.
 import { postgresEnv } from "../features/postgres/env.schema.js";

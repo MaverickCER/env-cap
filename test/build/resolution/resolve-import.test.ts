@@ -31,7 +31,7 @@ describe("resolveRelativeImport", () => {
     )
   })
 
-  it("falls back to the .tsx candidate when no .ts file exists -- the second candidate tried, not just the first", async () => {
+  it("falls back to the .tsx candidate when no .ts file exists: the second candidate tried, not just the first", async () => {
     const importingFile = await write("src/consumer.ts", "")
     await write("src/component.tsx", "export const x = 1;\n")
     expect(await resolveRelativeImport(importingFile, "./component.js", nodeBuildFs)).toBe(
@@ -40,7 +40,7 @@ describe("resolveRelativeImport", () => {
   })
 
   it("falls back to a directory's index.ts when no <name>.ts/.tsx file exists", async () => {
-    // "./widget.js" -- NOT "./widget/index.js" -- so `base` resolves to the
+    // "./widget.js" (NOT "./widget/index.js") so `base` resolves to the
     // "widget" directory itself, and only the 3rd candidate
     // (path.join(base, "index.ts")) can match; "./widget/index.js" would
     // instead hit the 1st candidate (`${base}.ts`) and prove nothing about
@@ -61,7 +61,7 @@ describe("resolveRelativeImport", () => {
   })
 
   it("strips only the specifier's OWN trailing extension, not an embedded one earlier in the path", async () => {
-    // "config.ts.old" -- an anchored `\.(js|jsx|ts|tsx)$` strips only the
+    // "config.ts.old": an anchored `\.(js|jsx|ts|tsx)$` strips only the
     // real trailing ".js"; an unanchored one matches the FIRST such
     // substring instead (inside "config.ts.old"), producing the wrong
     // candidate path entirely.
@@ -72,7 +72,7 @@ describe("resolveRelativeImport", () => {
     )
   })
 
-  it("returns undefined for a candidate that doesn't exist on disk -- fileExists really checks, doesn't just assume", async () => {
+  it("returns undefined for a candidate that doesn't exist on disk: fileExists really checks, doesn't just assume", async () => {
     const importingFile = await write("src/consumer.ts", "")
     expect(await resolveRelativeImport(importingFile, "./nowhere.js", nodeBuildFs)).toBeUndefined()
   })
@@ -83,8 +83,8 @@ describe("resolveRelativeImport", () => {
   })
 
   it("never even attempts resolution for a bare specifier, proven by a file that WOULD resolve if the ./../ guard were bypassed", async () => {
-    // A weaker version of this test could pass by coincidence -- nothing
-    // existing at the would-be-resolved path -- even with the guard
+    // A weaker version of this test could pass by coincidence (nothing
+    // existing at the would-be-resolved path) even with the guard
     // completely broken (the fallback candidate loop just finds nothing
     // either way). This one creates exactly that file, so only the guard
     // itself returning undefined FIRST (never reaching the candidate loop
@@ -94,7 +94,7 @@ describe("resolveRelativeImport", () => {
     expect(await resolveRelativeImport(importingFile, "some-package", nodeBuildFs)).toBeUndefined()
   })
 
-  it("resolves a ../parent.js specifier -- the other relative-prefix clause, not just ./", async () => {
+  it("resolves a ../parent.js specifier: the other relative-prefix clause, not just ./", async () => {
     const importingFile = await write("src/nested/consumer.ts", "")
     await write("src/parent.ts", "export const x = 1;\n")
     expect(await resolveRelativeImport(importingFile, "../parent.js", nodeBuildFs)).toBe(
@@ -104,7 +104,7 @@ describe("resolveRelativeImport", () => {
 })
 
 // `resolveImportSpecifier`'s own job is purely compositional (which
-// sub-resolver's result wins, and in what order) -- mocking the two
+// sub-resolver's result wins, and in what order): mocking the two
 // sub-resolvers it delegates to isolates that composition logic from their
 // own (already-tested-elsewhere) real filesystem/tsconfig behavior, and
 // avoids building a real tsconfig-alias + node_modules-package fixture just

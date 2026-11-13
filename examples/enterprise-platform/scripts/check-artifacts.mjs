@@ -1,16 +1,11 @@
-// The `--check` counterpart to generate-manifest.mjs -- see that script's
-// own "ADVANCED TIER" header for why this example keeps hand-written
-// scripts instead of calling the `env-cap` CLI directly (as `application`/
-// `team-service` do). `env-cap --check` alone stopped being able to verify
-// docs/ownership/env-example once `--docs`/`--ownership`/`--env-example`
-// were removed from the CLI surface (see
-// specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md);
-// this replaces the CLI-flag-based `check` script this example used to run,
-// with `@maverickcer/env-cap/build`'s exported `checkEnvArtifacts()` called with the
-// exact same options generate-manifest.mjs passes to `generateEnvArtifacts()`
-// -- one call verifies every artifact (manifest, docs, envExample, usage,
-// evidence) at once, matching this example's own existing "one call does
-// everything" style.
+// The `--check` counterpart to generate-manifest.mjs. That script's "ADVANCED
+// TIER" header says why this example keeps hand-written scripts instead of
+// calling the `env-cap` CLI, as `application` and `team-service` do. The CLI
+// checks only the manifest and the evidence file (ADR 0046). So this script
+// calls `checkEnvArtifacts()` from `@maverickcer/env-cap/build` with the same
+// options generate-manifest.mjs passes to `generateEnvArtifacts()`. One call
+// checks every file: the manifest, docs, `.env.example`, the ownership report
+// and the evidence file.
 import { checkEnvArtifacts } from "@maverickcer/env-cap/build";
 import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
 import path from "node:path";

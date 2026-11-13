@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Writes thin re-export shims for the .d.ts/.d.cts files tsup no longer
-// generates for the bundled entry points. tsup's own dts pipeline
+// Writes thin re-export shims for the .d.ts/.d.cts files of the bundled
+// entry points, because tsup does not generate them here. tsup's own dts pipeline
 // (rollup-plugin-dts) hardcodes declarationMap: false and can't produce
-// declaration maps -- see tsup.config.ts's `dts: false` comment and
+// declaration maps; see tsup.config.ts's `dts: false` comment and
 // tsconfig.build.json. Real per-file declarations (with working maps) are
 // emitted separately by `tsc -p tsconfig.build.json` into dist/.dts/,
 // mirroring src/'s structure; this script just points each package.json

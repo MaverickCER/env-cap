@@ -1,7 +1,7 @@
 // Build-time script. Run via `npm run project:ownership`. Never imported by
 // application code.
 //
-// Doesn't self-compare against generateUsageReport()'s own result -- same
+// Doesn't self-compare against generateUsageReport()'s own result: same
 // class of divergence documented for inventory.mjs/config-reference.mjs:
 // Contract Model orders contracts canonically (buildContractModel()'s own
 // deterministic-JSON ordering), not necessarily the scan-discovery order

@@ -3,7 +3,7 @@ import type { LiveExpirationDates } from "@maverickcer/env-cap/build";
 
 /**
  * Uses the default AWS credential provider chain (environment variables,
- * shared config/credentials files, ECS/EC2 instance role, ...) -- this
+ * shared config/credentials files, ECS/EC2 instance role, ...): this
  * example never hardcodes credentials, and auth is entirely the consumer's
  * responsibility. Swap this for whatever client construction your own AWS
  * setup requires (explicit region, assumed role, etc.).
@@ -29,15 +29,15 @@ const SECRET_NAME_BY_VARIABLE: Readonly<Record<string, string>> = {
  * Important: AWS Secrets Manager has no field that means "this secret
  * expires on this date." `NextRotationDate` (only present when
  * `RotationEnabled` is true) is "the latest date rotation will occur, but
- * not an approximate rotation date" per AWS's own documentation -- this
+ * not an approximate rotation date" per AWS's own documentation; this
  * example chooses to treat it as a useful expiration signal anyway (a secret
  * scheduled to rotate is, in practice, a secret whose current value has a
  * deadline), but that is an interpretation this example makes, not something
  * AWS Secrets Manager asserts. A secret with rotation disabled has no
- * `NextRotationDate` at all and is not represented by this callback -- see
+ * `NextRotationDate` at all and is not represented by this callback: see
  * this package's README for the full discussion.
  *
- * Only ever calls `DescribeSecretCommand` -- never `GetSecretValueCommand` or
+ * Only ever calls `DescribeSecretCommand`: never `GetSecretValueCommand` or
  * any other API that would expose secret contents. This callback returns
  * metadata only.
  */
@@ -58,7 +58,7 @@ export const liveExpirationDates: LiveExpirationDates = async (variableNames) =>
         // This example's own policy: log and fall back to the static
         // `expiresAt` for this one variable rather than failing the whole
         // generation run over one missing/renamed/inaccessible secret. A
-        // stricter consumer might prefer to let this throw instead -- see
+        // stricter consumer might prefer to let this throw instead: see
         // the README's "Error handling is a policy choice" section.
         console.warn(`liveExpirationDates: could not describe secret "${secretName}" for "${variableName}":`, error);
       }

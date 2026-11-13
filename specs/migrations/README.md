@@ -10,12 +10,12 @@ Migration does not require replacing your validation approach immediately. The r
 
 ## Guides
 
-- [From `dotenv`](from-dotenv.md) -- keep `dotenv` loading values, add capability-owned contracts on top.
-- [From raw `process.env`](from-process-env.md) -- replace scattered `process.env.X` access with owned, validated contracts.
-- [From a centralized environment schema](from-centralized-schema.md) -- split a single `env.ts`/`env.schema.ts` file into capability-owned schemas.
-- [From Zod](from-zod.md) -- keep Zod for validation, move ownership to capabilities.
-- [From envalid](from-envalid.md) -- keep envalid's validators, move ownership to capabilities.
-- [From t3-env](from-t3-env.md) -- keep t3-env's client/server split conceptually, replace the centralized object with capability-owned contracts.
+- [From `dotenv`](from-dotenv.md): keep `dotenv` loading values, add capability-owned contracts on top.
+- [From raw `process.env`](from-process-env.md): replace scattered `process.env.X` access with owned, validated contracts.
+- [From a centralized environment schema](from-centralized-schema.md): split a single `env.ts`/`env.schema.ts` file into capability-owned schemas.
+- [From Zod](from-zod.md): keep Zod for validation, move ownership to capabilities.
+- [From envalid](from-envalid.md): keep envalid's validators, move ownership to capabilities.
+- [From t3-env](from-t3-env.md): keep t3-env's client/server split conceptually, replace the centralized object with capability-owned contracts.
 
 ## Migration strategy
 

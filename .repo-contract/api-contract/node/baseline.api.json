@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "@maverickcer/env-cap!",
-  "docComment": "",
+  "docComment": "/**\n * The Node file system adapter for the build entry (`@maverickcer/env-cap/node`).\n *\n * `@maverickcer/env-cap/build` never imports `node:fs` (ADR 0040), so every generator takes the file\n * system as a required `fs` option. A Node build script passes `nodeBuildFileSystem`:\n * ```ts\n * import { generateEnvArtifacts } from \"@maverickcer/env-cap/build\"\n * import { nodeBuildFileSystem } from \"@maverickcer/env-cap/node\"\n *\n * await generateEnvArtifacts({ fs: nodeBuildFileSystem, root, manifest: { ... } })\n * ```\n *\n * Like `bin` and `./eslint-plugin`, this entry runs only in Node, and it is the one place the build\n * path loads `node:fs/promises`. In another runtime, implement the `BuildFileSystem` type that\n * `./build` exports instead.\n *\n * @packageDocumentation\n */\n",
   "name": "@maverickcer/env-cap",
   "preserveMemberOrder": false,
   "members": [

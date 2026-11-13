@@ -131,7 +131,7 @@ describe("renderManifest", () => {
     // Two collisions is not enough to distinguish `suffix += 1` from `suffix
     // -= 1`: both give `_1` for the second one. A THIRD contract with the
     // same exportName needs `_2`, which only the real increment produces
-    // (`-= 1` would try `_0`, `_-1`, `_-2`, ... -- also always missing from
+    // (`-= 1` would try `_0`, `_-1`, `_-2`, ... : also always missing from
     // `usedNames`, an infinite loop this test would hang on if reached, so
     // this doubles as a sanity check that never happens in practice).
     const contracts = [
@@ -250,7 +250,7 @@ describe("renderManifest", () => {
       const output = renderManifest(contracts, "/repo/src/generated/env.manifest.ts")
       expect(output).not.toContain("activeContexts")
       expect(output).not.toContain("validation context")
-      // Not just "no activeContexts text" -- genuinely NOTHING inserted
+      // Not just "no activeContexts text": genuinely NOTHING inserted
       // between the imports' trailing blank line and the manifest array
       // (an empty `[]` fallback, not a fallback array with any content).
       expect(output).toContain(

@@ -1,19 +1,16 @@
 /**
- * Optional convenience helpers for common processor/validator patterns.
- * Entirely separate from the core runtime -- `createEnv`/`validateEnv` have
- * no knowledge of this module and work identically without it.
+ * Optional processors and validators for common cases (`@maverickcer/env-cap/helpers`), such as
+ * `processors.toNumber()` and `validators.range(1, 65535)`.
  *
- * Usage: `processors.toNumber()`, `validators.range(1, 65535)`.
+ * A contract works the same without them: `createEnv` and `validateEnv` never import this module. Any
+ * function with the `Processor<T>` or `Validator<T>` shape plugs in the same way.
  *
- * Deliberately built from explicit named imports assembled into plain object
- * literals, not `export * as processors from "./processors.js"`. A bundler
- * (tsup/esbuild) lowers that `export * as` form into a namespace-construction
- * helper call it can't prove side-effect-free, which defeats tree-shaking in
- * a *second*, downstream bundling pass (a consumer's own bundler bundling
- * this already-bundled package): importing only `processors` would still
- * ship all of `validators`' code. A plain object literal of already-imported
- * bindings has no such call in the way, so `import { processors } from
- * "@maverickcer/env-cap/helpers"` alone drops `validators` entirely.
+ * The two objects are plain literals of named imports, not `export * as processors`. A bundler lowers
+ * `export * as` into a namespace helper call it cannot prove free of side effects. That call blocks
+ * tree-shaking in a consumer's own bundler, so importing `processors` alone would still ship
+ * `validators`. With plain literals, importing `processors` alone drops `validators` entirely.
+ *
+ * @packageDocumentation
  */
 import {
   base64,
@@ -73,7 +70,7 @@ import {
  * patterns (e.g. `processors.toNumber()`).
  *
  * @remarks
- * Naming matches `data-cap`'s `helpers.processors` -- but these
+ * Naming matches `data-cap`'s `helpers.processors`: but these
  * throw with a formatted `Error` message on invalid input, where data-cap's
  * silently return `undefined`. Do not assume the same failure mode when
  * moving between packages.
@@ -120,13 +117,13 @@ export const validators = {
   any,
   /** Passes when the date value is strictly before `date`. */
   before,
-  /** Identity wrapper for a hand-written `Validator<T>` -- no behavior change, just a fluent entry point alongside the other helpers. */
+  /** Identity wrapper for a hand-written `Validator<T>`: no behavior change, just a fluent entry point alongside the other helpers. */
   custom,
   /** Passes for a plausibly-shaped email address (`local@domain`). */
   email,
   /** Passes when the string ends with `suffix`. */
   endsWith,
-  /** Alias for `oneOf` -- passes when the value is one of the `allowed` values. */
+  /** Alias for `oneOf`: passes when the value is one of the `allowed` values. */
   enum: oneOf,
   /** Passes when the number is finite (rejects `Infinity`/`-Infinity`/`NaN`). */
   finite,
@@ -168,7 +165,7 @@ export const validators = {
   range,
   /** Runs the wrapped validator but replaces its failure message with `message`. */
   refine,
-  /** Alias for `matches` -- passes when the string matches `pattern`. */
+  /** Alias for `matches`: passes when the string matches `pattern`. */
   regex: matches,
   /** Passes when the value is defined and, unless `allowEmptyString` is set, non-empty. */
   required,
@@ -180,6 +177,6 @@ export const validators = {
   url: urlValidator,
   /** Passes when the string is a valid UUID of one of the given `versions` (default: any of 1-8). */
   uuid,
-  /** Shorthand for `uuid([version])` -- passes only for that exact UUID version. */
+  /** Shorthand for `uuid([version])`: passes only for that exact UUID version. */
   uuidVersion,
 }

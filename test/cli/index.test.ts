@@ -32,7 +32,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-/** Minimal-but-valid `ContractModelContract` fixture -- only `file`/`exportName`/`contractName` matter to `contractNameResolver()`/`writeEvidenceChanges()`, but every other field is required (each `T | undefined`, not optional) by the real interface. */
+/** Minimal-but-valid `ContractModelContract` fixture: only `file`/`exportName`/`contractName` matter to `contractNameResolver()`/`writeEvidenceChanges()`, but every other field is required (each `T | undefined`, not optional) by the real interface. */
 function fakeContract(overrides: Partial<ContractModelContract> = {}): ContractModelContract {
   return {
     file: "features/a/env.schema.ts",
@@ -153,9 +153,9 @@ describe("parseArgs", () => {
     const both = parseArgs(["--location", "out.ts", "--strict-docs", "--strict-ownership"])
     expect([both.strictDocs, both.strictOwnership]).toEqual([true, true])
 
-    // parseArgs keeps the three flags independent booleans -- --strict never
-    // sets strictDocs/strictOwnership itself. (Its broader escalation effect
-    // -- ADR 0044, --strict alone now escalates all three families -- lives
+    // parseArgs keeps the three flags independent booleans: --strict never
+    // sets strictDocs/strictOwnership itself. (Its broader escalation effect:
+    // ADR 0044, --strict alone now escalates all three families; lives
     // in artifactOptions' derived onUndocumented/onOwnershipIssue, not here.)
     const blanket = parseArgs(["--location", "out.ts", "--strict"])
     expect([blanket.strictDocs, blanket.strictOwnership]).toEqual([false, false])
@@ -177,7 +177,7 @@ describe("parseArgs", () => {
     expect(() => parseArgs(["--evidence"])).toThrow(/requires a value/)
   })
 
-  it("parses with none of --location/--evidence given -- parseArgs itself never enforces requiredness, main() does", () => {
+  it("parses with none of --location/--evidence given: parseArgs itself never enforces requiredness, main() does", () => {
     const args = parseArgs(["--strict"])
     expect(args.location).toBeUndefined()
     expect(args.evidence).toBeUndefined()
@@ -401,7 +401,7 @@ describe("requestedPasses", () => {
   })
 
   // `--docs`/`--ownership` no longer exist as CLI flags (ADR 0046), so
-  // `docs`/`usage` can never be `true` -- pinned explicitly here (not just
+  // `docs`/`usage` can never be `true`: pinned explicitly here (not just
   // implied by the `toEqual()` checks above, both of which happen to use a
   // `base` that never sets them) so a mutant flipping either hardcoded
   // `false` to `true` in `requestedPasses()` is still caught even against a
@@ -467,7 +467,7 @@ describe("artifactOptions", () => {
   // `--docs`/`--ownership` were removed from the CLI (ADR 0046):
   // `artifactOptions()` no longer has a `docs`/`ownership` source field on
   // `ParsedArgs` to read, so it never sets `docs`/`usage` on the options
-  // object it returns at all -- confirmed here via `in`, since a TypeScript
+  // object it returns at all; confirmed here via `in`, since a TypeScript
   // property-access check on the (inferred, docs/usage-less) return type
   // would fail to compile rather than assert anything at runtime.
   it("never sets docs/usage on the returned options object", () => {
@@ -495,7 +495,7 @@ describe("artifactOptions", () => {
     const strictOnly = artifactOptions({ ...base, strict: true })
     expect(strictOnly.onUndocumented).toBe("throw")
     expect(strictOnly.onOwnershipIssue).toBe("throw")
-    // Neither scoped flag itself flips true -- groupEscalates ORs `strict` in
+    // Neither scoped flag itself flips true: groupEscalates ORs `strict` in
     // at read time; parseArgs' own independence (tested above) is untouched.
     expect(base.strictDocs).toBe(false)
     expect(base.strictOwnership).toBe(false)
@@ -535,7 +535,7 @@ describe("printManifestSummary", () => {
           reason: "conflict",
           code: "PROCESSOR_SOURCE_CONFLICT",
         },
-        // No `code` at all -- exercises the `w.code ? ... : ""` ternary's
+        // No `code` at all: exercises the `w.code ? ... : ""` ternary's
         // other branch (an exclusive-group violation never sets one).
         { severity: "error", variable: 'Exclusive group "db"', files: [], reason: "both active" },
       ],
@@ -550,7 +550,7 @@ describe("printManifestSummary", () => {
   })
 })
 
-// directRunUrl() is exported purely for this direct-unit-test path -- see the
+// directRunUrl() is exported purely for this direct-unit-test path: see the
 // comment above its definition in src/cli/index.ts for why it exists at all
 // (npm's `.bin` symlink indirection). module-level `isDirectRun`/auto-run
 // behavior itself is exercised separately in test/cli/direct-run.test.ts,

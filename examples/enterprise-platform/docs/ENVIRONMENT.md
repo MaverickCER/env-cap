@@ -8,7 +8,7 @@
 
 _Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-11-12T00:13:12.479Z_
+_Generated 2026-11-13T21:32:20.841Z_
 
 ## Changes since last report
 
@@ -51,7 +51,7 @@ Signs and verifies staff session tokens (jose, HS256).
 - Sensitivity: secret
 - Required: yes
 - Purpose: Maintain authenticated staff sessions for access to confidential matter data.
-- Legal basis: Necessary for providing the service -- without a session, no staff member can be authenticated to view privileged case data.
+- Legal basis: Necessary for providing the service: without a session, no staff member can be authenticated to view privileged case data.
 - Retention: Rotated on security-team's own schedule; rotating invalidates every existing session.
 - Audit required: yes
 - Documentation: https://vault.internal/security-team/session-secret
@@ -89,7 +89,7 @@ MongoDB connection string for the case-tracker's primary database.
 - Sensitivity: credential
 - Required: yes
 - Purpose: Store and retrieve matter, task, and user records.
-- Legal basis: Contractual necessity -- the service cannot function without its database.
+- Legal basis: Contractual necessity: the service cannot function without its database.
 - Retention: Connection string itself is never persisted outside the deployment's secret store.
 - Audit required: yes
 - Documentation: https://www.mongodb.com/docs/manual/reference/connection-string/
@@ -125,7 +125,7 @@ Resend API key for sending case-update notification emails to staff. Unset: noti
 - Sensitivity: secret
 - Required: no
 - Purpose: Notify assigned staff when a matter or task they own changes.
-- Legal basis: Legitimate interest -- operational notifications, not marketing.
+- Legal basis: Legitimate interest: operational notifications, not marketing.
 - Documentation: https://resend.com/api-keys
 
 <a id="contract-oauth-github"></a>
@@ -136,7 +136,7 @@ Source: `src/capabilities/oauth-github/env.schema.ts`
 - Category: auth
 - Owner: security-team
 - Purpose: Let firm staff sign in with their existing GitHub-backed SSO identity, avoiding a second password to manage.
-- Legal basis: Legitimate interest -- reduces credential-sprawl risk for staff accessing confidential matter data.
+- Legal basis: Legitimate interest: reduces credential-sprawl risk for staff accessing confidential matter data.
 
 <a id="oauth-github-github_client_id"></a>
 ### `GITHUB_CLIENT_ID`
@@ -150,14 +150,14 @@ OAuth app client ID, registered in the firm's GitHub organization settings.
 - Sensitivity: credential
 - Required: yes
 - Purpose: Let firm staff sign in with their existing GitHub-backed SSO identity, avoiding a second password to manage.
-- Legal basis: Legitimate interest -- reduces credential-sprawl risk for staff accessing confidential matter data.
+- Legal basis: Legitimate interest: reduces credential-sprawl risk for staff accessing confidential matter data.
 - Retention: Rotated only if the GitHub OAuth app itself is recreated; not time-boxed.
 - Documentation: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
 
 <a id="oauth-github-github_client_secret"></a>
 ### `GITHUB_CLIENT_SECRET`
 
-OAuth app client secret -- must be rotated together with GITHUB_CLIENT_ID if the app is ever recreated.
+OAuth app client secret. It must be rotated together with GITHUB_CLIENT_ID if the app is ever recreated.
 
 - Default: no
 - Processor: no
@@ -166,7 +166,7 @@ OAuth app client secret -- must be rotated together with GITHUB_CLIENT_ID if the
 - Sensitivity: secret
 - Required: yes
 - Purpose: Let firm staff sign in with their existing GitHub-backed SSO identity, avoiding a second password to manage.
-- Legal basis: Legitimate interest -- reduces credential-sprawl risk for staff accessing confidential matter data.
+- Legal basis: Legitimate interest: reduces credential-sprawl risk for staff accessing confidential matter data.
 - Retention: Rotate immediately if ever exposed; otherwise on the same cadence as GITHUB_CLIENT_ID.
 - Audit required: yes
 - Documentation: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
@@ -199,7 +199,7 @@ Sentry DSN for error reporting. Unset: Sentry is never initialized; pino logging
 - Validator: no
 - Owner: platform-team
 - Sensitivity: credential
-- Legal basis: Legitimate interest -- operational error monitoring, not user tracking.
+- Legal basis: Legitimate interest: operational error monitoring, not user tracking.
 - Documentation: https://docs.sentry.io/product/sentry-basics/dsn-explainer/
 
 <a id="contract-storage"></a>
@@ -209,8 +209,8 @@ Source: `src/capabilities/storage/env.schema.ts`
 - Active: yes
 - Category: storage
 - Owner: compliance-team
-- Purpose: Store case-file attachments -- potentially privileged, client-confidential documents.
-- Legal basis: Attorney-client privilege and contractual necessity -- the firm must retain and produce case documents.
+- Purpose: Store case-file attachments (potentially privileged, client-confidential documents).
+- Legal basis: Attorney-client privilege and contractual necessity: the firm must retain and produce case documents.
 - Data residency: us-east-1
 
 <a id="storage-s3_access_key_id"></a>
@@ -224,8 +224,8 @@ Access key ID for the case-file attachment bucket.
 - Owner: compliance-team
 - Sensitivity: credential
 - Required: yes
-- Purpose: Store case-file attachments -- potentially privileged, client-confidential documents.
-- Legal basis: Attorney-client privilege and contractual necessity -- the firm must retain and produce case documents.
+- Purpose: Store case-file attachments (potentially privileged, client-confidential documents).
+- Legal basis: Attorney-client privilege and contractual necessity: the firm must retain and produce case documents.
 - Data residency: us-east-1
 - Audit required: yes
 - Documentation: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html
@@ -240,21 +240,21 @@ Bucket holding case-file attachments.
 - Validator: no
 - Owner: compliance-team
 - Required: yes
-- Purpose: Store case-file attachments -- potentially privileged, client-confidential documents.
-- Legal basis: Attorney-client privilege and contractual necessity -- the firm must retain and produce case documents.
+- Purpose: Store case-file attachments (potentially privileged, client-confidential documents).
+- Legal basis: Attorney-client privilege and contractual necessity: the firm must retain and produce case documents.
 - Data residency: us-east-1
 
 <a id="storage-s3_endpoint"></a>
 ### `S3_ENDPOINT`
 
-Override endpoint for a local/test S3-compatible server (s3rver). Unset in production -- the real AWS endpoint is used.
+Override endpoint for a local/test S3-compatible server (s3rver). Unset in production, where the real AWS endpoint is used.
 
 - Default: no
 - Processor: no
 - Validator: no
 - Owner: compliance-team
-- Purpose: Store case-file attachments -- potentially privileged, client-confidential documents.
-- Legal basis: Attorney-client privilege and contractual necessity -- the firm must retain and produce case documents.
+- Purpose: Store case-file attachments (potentially privileged, client-confidential documents).
+- Legal basis: Attorney-client privilege and contractual necessity: the firm must retain and produce case documents.
 - Data residency: us-east-1
 
 <a id="storage-s3_region"></a>
@@ -266,14 +266,14 @@ AWS region the bucket lives in.
 - Processor: yes
 - Validator: no
 - Owner: compliance-team
-- Purpose: Store case-file attachments -- potentially privileged, client-confidential documents.
-- Legal basis: Attorney-client privilege and contractual necessity -- the firm must retain and produce case documents.
+- Purpose: Store case-file attachments (potentially privileged, client-confidential documents).
+- Legal basis: Attorney-client privilege and contractual necessity: the firm must retain and produce case documents.
 - Data residency: us-east-1
 
 <a id="storage-s3_secret_access_key"></a>
 ### `S3_SECRET_ACCESS_KEY`
 
-Secret access key for the case-file attachment bucket -- gates access to potentially privileged client documents.
+Secret access key for the case-file attachment bucket. It gates access to potentially privileged client documents.
 
 - Default: no
 - Processor: no
@@ -281,8 +281,8 @@ Secret access key for the case-file attachment bucket -- gates access to potenti
 - Owner: compliance-team
 - Sensitivity: pii
 - Required: yes
-- Purpose: Store case-file attachments -- potentially privileged, client-confidential documents.
-- Legal basis: Attorney-client privilege and contractual necessity -- the firm must retain and produce case documents.
+- Purpose: Store case-file attachments (potentially privileged, client-confidential documents).
+- Legal basis: Attorney-client privilege and contractual necessity: the firm must retain and produce case documents.
 - Retention: Rotated quarterly per compliance-team's key-rotation schedule.
 - Data residency: us-east-1
 - Audit required: yes

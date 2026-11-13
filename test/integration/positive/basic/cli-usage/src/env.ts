@@ -2,16 +2,16 @@ import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap";
 import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
- * The same contract as `examples/application` -- deliberately, so the only
+ * The same contract as `examples/application`: deliberately, so the only
  * new concept this example teaches is *how generation is invoked*, not a
  * new schema-authoring feature. `examples/application` runs a custom
  * `scripts/generate-manifest.mjs` that calls `generateEnvArtifacts()`
- * directly; this example never does that -- every `package.json` script
+ * directly; this example never does that: every `package.json` script
  * here invokes the packaged `env-cap` CLI binary instead (see README.md).
  *
  * One deliberate difference from basic-node: STRIPE_KEY has no `expiresAt`/
- * `refreshInstructions` here. That's not the point this example is making --
- * `test/integration/positive/enterprise/aws-secrets-manager` already owns that teaching point -- and
+ * `refreshInstructions` here. That's not the point this example is making (
+ * `test/integration/positive/enterprise/aws-secrets-manager` already owns that teaching point) and
  * leaving it out keeps this example's CLI output (stdout, --json, --check)
  * fully deterministic for golden-file regression testing, with no
  * wall-clock-relative "Xd remaining" text to normalize.

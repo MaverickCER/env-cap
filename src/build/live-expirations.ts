@@ -4,13 +4,13 @@ import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 
 /**
  * Supplies expiration metadata from a live source (a secrets manager, an
- * internal inventory API, ...) as a post-discovery override -- the one
+ * internal inventory API, ...) as a post-discovery override: the one
  * sanctioned escape hatch from static-only `expiresAt`.
  *
  * @remarks
  * Invoked exactly once per generation run, from the orchestration layer, after AST discovery/
  * linking completes and before documentation is rendered. Never invoked
- * during AST parsing or runtime validation -- see ADR 0012 for why a
+ * during AST parsing or runtime validation: see ADR 0012 for why a
  * function embedded in a schema file itself was rejected instead.
  */
 export type LiveExpirationDates = (
@@ -19,7 +19,7 @@ export type LiveExpirationDates = (
 
 /**
  * Every unique variable key across every linked contract's `variables`.
- * Contract-level `expiresAt` is out of scope for override -- the callback is
+ * Contract-level `expiresAt` is out of scope for override: the callback is
  * keyed by variable name, not contract name.
  */
 export function collectVariableNames(contracts: readonly DiscoveredContract[]): string[] {
@@ -46,14 +46,14 @@ function overrideVariable(
 }
 
 /**
- * Applies `overrides` onto a fresh copy of `contracts` -- every contract and
+ * Applies `overrides` onto a fresh copy of `contracts`. Every contract and
  * every variable (and their nested `metadata`/`extra` records) is rebuilt
- * into a new object, never the original reference, so the returned structure
- * shares no mutable object identity with `contracts` at any depth.
+ * into a new object, never the original reference. The returned structure
+ * therefore shares no mutable object identity with `contracts` at any depth.
  *
  * @remarks
  * A key absent from `overrides`, or present but not a `parseIsoDate`-parseable
- * ISO-8601 string, leaves that variable's static `expiresAt` untouched --
+ * ISO-8601 string, leaves that variable's static `expiresAt` untouched:
  * same "warn/skip, never guess" policy the rest of the generator uses for
  * malformed data. Contract-level `expiresAt` is never touched; only
  * variable-level `expiresAt` is in scope for override.
@@ -70,16 +70,17 @@ export function applyLiveExpirationOverrides(
 }
 
 /**
- * Orchestration entry point -- the only place `liveExpirationDates` is ever invoked.
+ * Orchestration entry point: the only place `liveExpirationDates` is ever invoked.
  *
  * @remarks
  * No-ops (returns the exact same array reference, zero invocations)
  * when `liveExpirationDates` is undefined, which is what guarantees "omitted ->
- * behavior unchanged." Otherwise collects the unique discovered variable
- * names, invokes the callback exactly once, applies the result, and
- * deep-freezes the returned structure so it can never be mutated into
- * affecting `contracts` (used elsewhere, e.g. by the manifest/usage passes in
- * the same {@link generateEnvArtifacts} run) or anything else downstream.
+ * behavior unchanged." Otherwise it collects the unique discovered variable
+ * names, invokes the callback exactly once and applies the result. It
+ * deep-freezes the returned structure so no mutation of it can reach
+ * `contracts` or anything else downstream. `contracts` is used elsewhere too,
+ * e.g. by the manifest and usage passes in the same
+ * {@link generateEnvArtifacts} run.
  */
 export async function resolveLiveExpirationDates(
   contracts: readonly DiscoveredContract[],

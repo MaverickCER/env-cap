@@ -1,7 +1,7 @@
 // Build-time script. Run via `npm run generate:env`. Never imported by application code.
 //
 // Produces the manifest, .env.example, and docs via the *existing*,
-// already-tested generateEnvArtifacts() path -- this is the baseline every
+// already-tested generateEnvArtifacts() path: this is the baseline every
 // projection in scripts/project-*.mjs compares its own output against.
 import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
 import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
@@ -19,7 +19,7 @@ const result = await generateEnvArtifacts({ fs: nodeBuildFileSystem,
     envExample: { location: ".env.example", onExisting: "overwrite" },
   },
   // The baseline every scripts/project-*.mjs script's own `previousSnapshotLocation`
-  // reads back -- see ADR 0038.
+  // reads back: see ADR 0038.
   evidence: { location: "docs/env.evidence.json" },
 });
 

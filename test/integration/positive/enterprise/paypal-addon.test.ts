@@ -10,7 +10,7 @@ import { compareGoldenArtifacts, isInstalled, runScript } from "../../../support
  * browsable even without any consuming app installing it. See
  * paypal-consumer for the cross-package discovery half of this pair
  * (ADR 0014). This file verifies every generated artifact byte-for-byte
- * matches its `expected/` golden copy -- no `docs/OWNERSHIP.md`, since this
+ * matches its `expected/` golden copy: no `docs/OWNERSHIP.md`, since this
  * package's own generate script never requests a `usage` pass. No runtime
  * (`npm start`) assertion here: that's paypal-consumer's job, since
  * paypal-addon is a library, not an app with its own entry point.

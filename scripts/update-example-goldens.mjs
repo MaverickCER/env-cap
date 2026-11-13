@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Regenerates committed generated output from a fresh, real run.
-// Deliberately NOT part of `npm run verify`/CI -- for a real code change, this
+// Deliberately NOT part of `npm run verify`/CI: for a real code change, this
 // stays a human-invoked "I intentionally changed the output format, here's
 // the new output" step, so a regression can never get silently re-goldened.
 //
 // It IS invoked automatically by `npm run version` (`changeset version &&
-// examples:update-golden`), immediately after Changesets bumps the version --
+// examples:update-golden`), immediately after Changesets bumps the version;
 // safe specifically because a version-bump commit is, by Changesets' own
 // contract, never bundled with unrelated source changes: the only content
 // that can differ is package.json/CHANGELOG.md plus whatever these goldens
@@ -16,7 +16,7 @@
 //
 //  - FLAGSHIPS (`examples/*`) have no `expected/` mirror of env-cap's
 //    output. Their committed `docs/`, `.env.example`, and
-//    `src/generated/env.manifest.ts` *are* the golden -- a reader opening
+//    `src/generated/env.manifest.ts` *are* the golden: a reader opening
 //    the example sees the same bytes `test/examples/*.test.ts` asserts on,
 //    with no second copy that could quietly go stale. Regenerating one is
 //    just running its own generation script; there is nothing to copy.
@@ -26,7 +26,7 @@
 //    are behavioral fixtures with no human reader, where an explicit
 //    side-by-side diff of generator output is exactly the point.
 //
-// Mirrors (duplicates, deliberately -- this is a plain Node script, not
+// Mirrors (duplicates, deliberately: this is a plain Node script, not
 // TypeScript-aware, so it can't import src/build/docs.ts directly) the
 // normalization logic in src/build/docs.ts's normalizeDocsForComparison()
 // and test/support/example-runner.ts's normalizeExampleCliOutput()/
@@ -60,7 +60,7 @@ const STANDARD_ARTIFACTS = [
 // to the npm script that regenerates its own committed output. Two call the
 // `env-cap` CLI directly (`docs`); `enterprise-platform` keeps a
 // hand-written script (`generate:env`) because it does genuine custom
-// reporting -- see that script's own "ADVANCED TIER" header.
+// reporting: see that script's own "ADVANCED TIER" header.
 const FLAGSHIP_SCRIPTS = {
   application: "docs",
   "team-service": "docs",
@@ -68,10 +68,10 @@ const FLAGSHIP_SCRIPTS = {
 }
 
 // The twelve relocated behavioral fixtures, rooted at test/integration/, one
-// entry per fixture directory (path relative to root, not just a bare name --
+// entry per fixture directory (path relative to root, not just a bare name:
 // each lives at a different positive/negative/<category> location).
 // multiple-active-exclusive-capabilities is deliberately excluded from this
-// map -- by design, generate:env always fails there and nothing is ever
+// map: by design, generate:env always fails there and nothing is ever
 // successfully generated, so there is nothing to golden.
 const FIXTURES = {
   // The CLI writes only the manifest and the evidence artifact (ADR 0046): no docs, no .env.example.
@@ -160,7 +160,7 @@ function normalizeCliOutput(output, exampleDir) {
   return normalizeDocsForComparison(collapsedPadding)
 }
 
-// --silent suppresses only npm's own "> script\n> command\n" preamble --
+// --silent suppresses only npm's own "> script\n> command\n" preamble:
 // required for generate:env:json's captured output to be parseable JSON at
 // all, and keeps every other golden free of npm-version-dependent preamble
 // formatting too. See test/support/example-runner.ts's runNpmScript() docstring.
@@ -174,7 +174,7 @@ function run(exampleDir, script) {
 
 /**
  * Regenerates one flagship example's committed output in place, by running
- * its own generation script -- the same command its README tells a reader to
+ * its own generation script: the same command its README tells a reader to
  * run. Nothing is copied anywhere: the files it just wrote are the golden.
  */
 function regenerateFlagship(name, script) {

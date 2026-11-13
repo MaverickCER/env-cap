@@ -34,7 +34,7 @@ function freshCache(): Map<string, Promise<PackageSchemaResolutionResult>> {
 }
 
 /**
- * `nodeBuildFs` with one or more methods replaced -- the injectable
+ * `nodeBuildFs` with one or more methods replaced: the injectable
  * alternative to `vi.spyOn(fs, ...)` (ADR 0040: this code takes its
  * filesystem as a capability, so a test forcing an error path swaps the
  * capability instead of mocking the global `node:fs/promises` module).
@@ -89,7 +89,7 @@ beforeAll(async () => {
   await writeFile("outside.ts", "export const shouldNeverBeRead = true;\n")
 
   // "envCap.schema" is a symlink whose real target escapes the package
-  // directory -- must be rejected even though the declared path *string*
+  // directory: must be rejected even though the declared path *string*
   // never contains "..".
   await writeFile("escape-target/secret.ts", "export const shouldNeverBeRead = true;\n")
   await writeJson("node_modules/@fixtures/escape-symlink/package.json", {
@@ -107,7 +107,7 @@ beforeAll(async () => {
   )
 
   // "envCap.schema" is a symlink whose real target stays *inside* the
-  // package directory -- must be allowed (symlinks aren't rejected on
+  // package directory: must be allowed (symlinks aren't rejected on
   // sight; only an escaping real target is).
   await writeJson("node_modules/@fixtures/safe-symlink/package.json", {
     name: "@fixtures/safe-symlink",
@@ -136,7 +136,7 @@ beforeAll(async () => {
     "x".repeat(MAX_PACKAGE_SCHEMA_FILE_BYTES + 1),
   )
 
-  // Schema file exactly at the size cap -- must still be allowed (the cap is
+  // Schema file exactly at the size cap: must still be allowed (the cap is
   // "exceeding", not "at or exceeding").
   await writeJson("node_modules/@fixtures/exactly-at-cap/package.json", {
     name: "@fixtures/exactly-at-cap",
@@ -149,7 +149,7 @@ beforeAll(async () => {
     "x".repeat(MAX_PACKAGE_SCHEMA_FILE_BYTES),
   )
 
-  // "envCap.schema" is present but not a string (a number here) -- must be
+  // "envCap.schema" is present but not a string (a number here): must be
   // rejected the same as a wholly-absent field.
   await writeJson("node_modules/@fixtures/non-string-schema/package.json", {
     name: "@fixtures/non-string-schema",
@@ -159,7 +159,7 @@ beforeAll(async () => {
   await writeFile("node_modules/@fixtures/non-string-schema/index.js", "module.exports = {};\n")
 
   // Decoy nested package.json (no "name" field) between the main entry and
-  // the real root package.json -- the upward walk must not stop there. Only
+  // the real root package.json: the upward walk must not stop there. Only
   // reachable via the fallback path, so "exports" must omit "./package.json".
   await writeJson("node_modules/@fixtures/decoy-walk/package.json", {
     name: "@fixtures/decoy-walk",
@@ -180,7 +180,7 @@ beforeAll(async () => {
 
   // Main entry nested deep enough (more than PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT
   // levels) below the package's own package.json that the upward walk
-  // exhausts its iteration budget before ever reaching it -- must return
+  // exhausts its iteration budget before ever reaching it: must return
   // undefined (PACKAGE_NOT_FOUND) rather than loop forever or crash.
   await writeJson("node_modules/@fixtures/deep-nomatch/package.json", {
     name: "@fixtures/deep-nomatch",
@@ -206,7 +206,7 @@ beforeAll(async () => {
   await writeFile("node_modules/@fixtures/missing-file/index.js", "module.exports = {};\n")
 
   // "envCap.schema" resolves (after realpath) to a real directory rather
-  // than a regular file -- a directory can still be named with a ".ts"
+  // than a regular file: a directory can still be named with a ".ts"
   // suffix, so the extension check alone doesn't catch this.
   await writeJson("node_modules/@fixtures/schema-is-directory/package.json", {
     name: "@fixtures/schema-is-directory",
@@ -220,7 +220,7 @@ beforeAll(async () => {
   )
 
   // Package directory itself reached via a symlink (mimics pnpm's
-  // content-addressable store) -- the declared schema file must still
+  // content-addressable store): the declared schema file must still
   // resolve and pass the realpath containment check correctly.
   await writeJson(".store/symlinked-pkg-real/package.json", {
     name: "@fixtures/symlinked-pkg",
@@ -240,7 +240,7 @@ beforeAll(async () => {
 
   // Second package for cross-package "cycle" scenario: bare-imports the
   // first from within its own schema file's surrounding module (the schema
-  // file itself doesn't need to import anything for resolution purposes --
+  // file itself doesn't need to import anything for resolution purposes;
   // resolution is per-package-name and non-recursive by construction).
   await writeJson("node_modules/@fixtures/cycle-a/package.json", {
     name: "@fixtures/cycle-a",
@@ -304,7 +304,7 @@ describe("resolvePackageSchemaFile", () => {
     expect(result).toMatchObject({
       ok: false,
       code: "PACKAGE_NOT_FOUND",
-      reason: `Package "@fixtures/does-not-exist" listed in "packages" could not be resolved from "${fixtureRoot}" -- is it installed?`,
+      reason: `Package "@fixtures/does-not-exist" listed in "packages" could not be resolved from "${fixtureRoot}". Is it installed?`,
     })
   })
 
@@ -324,7 +324,7 @@ describe("resolvePackageSchemaFile", () => {
 
   it("reports FIELD_MISSING when envCap.schema is present but not a string", async () => {
     // Distinguishes the `typeof envCapField.schema === "string"` check from
-    // an unconditional pass-through -- a non-string schema value (present,
+    // an unconditional pass-through: a non-string schema value (present,
     // just the wrong type) must still be rejected exactly like an absent one.
     const result = await resolvePackageSchemaFile(
       "@fixtures/non-string-schema",
@@ -401,7 +401,7 @@ describe("resolvePackageSchemaFile", () => {
     })
   })
 
-  it("allows a schema file exactly at the size cap -- distinguishes > from >=", async () => {
+  it("allows a schema file exactly at the size cap: distinguishes > from >=", async () => {
     const result = await resolvePackageSchemaFile(
       "@fixtures/exactly-at-cap",
       fixtureRoot,
@@ -433,7 +433,7 @@ describe("resolvePackageSchemaFile", () => {
     expect(result).toMatchObject({
       ok: false,
       code: "PACKAGE_NOT_FOUND",
-      reason: `Package "@fixtures/deep-nomatch" listed in "packages" could not be resolved from "${fixtureRoot}" -- is it installed?`,
+      reason: `Package "@fixtures/deep-nomatch" listed in "packages" could not be resolved from "${fixtureRoot}". Is it installed?`,
     })
   })
 
@@ -486,7 +486,7 @@ describe("resolvePackageSchemaFile", () => {
     // Node's own module resolution needs to parse a package's package.json
     // just to locate anything inside it, so a package.json malformed enough
     // to reach this code's own JSON.parse can't be constructed as a package
-    // Node itself can resolve at all -- override the read this code does
+    // Node itself can resolve at all: override the read this code does
     // once it already has a resolved, Node-valid path in hand. Every OTHER
     // fixture in this file resolves via the real package.json on disk (see
     // `@fixtures/simple-pkg`'s own valid manifest), so an unconditional
@@ -507,7 +507,7 @@ describe("resolvePackageSchemaFile", () => {
   })
 
   it("reports MALFORMED_PACKAGE_JSON when the resolved package.json parses to something other than a JSON object", async () => {
-    // A bare JSON string, not `[]` -- isRecord()'s own `typeof value ===
+    // A bare JSON string, not `[]`: isRecord()'s own `typeof value ===
     // "object"` check does not exclude arrays, so this is the shape that
     // actually exercises the "not a JSON object" rejection.
     const packageJsonPath = path.join(fixtureRoot, "node_modules/@fixtures/simple-pkg/package.json")
@@ -524,7 +524,7 @@ describe("resolvePackageSchemaFile", () => {
     })
   })
 
-  it("reports MALFORMED_PACKAGE_JSON when the resolved package.json parses to null -- typeof null === 'object' too, isRecord's own null check must be doing real work", async () => {
+  it("reports MALFORMED_PACKAGE_JSON when the resolved package.json parses to null: typeof null === 'object' too, isRecord's own null check must be doing real work", async () => {
     const packageJsonPath = path.join(fixtureRoot, "node_modules/@fixtures/simple-pkg/package.json")
     const result = await resolvePackageSchemaFile(
       "@fixtures/simple-pkg",
@@ -597,7 +597,7 @@ describe("resolvePackageSchemaFile", () => {
       expect(result.origin.resolvedFile.endsWith("symlinked-pkg-real/src/env.schema.ts")).toBe(true)
   })
 
-  it("never calls fs.readdir -- resolution is bounded, not a directory treewalk", async () => {
+  it("never calls fs.readdir: resolution is bounded, not a directory treewalk", async () => {
     let readdirCalled = false
     const trackedFs = fsWithOverride({
       readdir: (...args: Parameters<BuildFileSystem["readdir"]>) => {
@@ -711,7 +711,7 @@ describe("resolvePackageImport", () => {
     expect(cache.size).toBe(0)
   })
 
-  it("returns undefined for a bare specifier not in the allowlist -- identical no-op to resolveRelativeImport", async () => {
+  it("returns undefined for a bare specifier not in the allowlist: identical no-op to resolveRelativeImport", async () => {
     const file = await resolvePackageImport(
       "@fixtures/simple-pkg",
       [],
@@ -733,7 +733,7 @@ describe("resolvePackageImport", () => {
     expect(file).toBeUndefined()
   })
 
-  it("returns undefined for a specifier that matches none of a NON-EMPTY allowlist -- distinguishes real matching from '.find() always matches'", async () => {
+  it("returns undefined for a specifier that matches none of a NON-EMPTY allowlist: distinguishes real matching from '.find() always matches'", async () => {
     const file = await resolvePackageImport(
       "@fixtures/completely-unrelated",
       ["@fixtures/simple-pkg"],
@@ -746,7 +746,7 @@ describe("resolvePackageImport", () => {
 
   it("does not treat a specifier that merely shares a prefix (no '/' subpath boundary) as a subpath match", async () => {
     // "@fixtures/simple-pkg-extra" starts with "@fixtures/simple-pkg" but not
-    // with "@fixtures/simple-pkg/" -- must not match.
+    // with "@fixtures/simple-pkg/": must not match.
     const file = await resolvePackageImport(
       "@fixtures/simple-pkg-extra",
       ["@fixtures/simple-pkg"],
@@ -759,7 +759,7 @@ describe("resolvePackageImport", () => {
 })
 
 describe("mergeLocalAndPackageFiles", () => {
-  it("deduplicates by realpath, not lexical path -- a locally-discovered symlink and its package-resolved realpath count once", async () => {
+  it("deduplicates by realpath, not lexical path: a locally-discovered symlink and its package-resolved realpath count once", async () => {
     const localSymlinkPath = path.join(
       fixtureRoot,
       "node_modules/@fixtures/safe-symlink/src/env.schema.ts",
@@ -791,13 +791,13 @@ describe("mergeLocalAndPackageFiles", () => {
     expect(merged).toHaveLength(2)
   })
 
-  it("never throws when a local file's own realpath fails -- falls back to the lexical path rather than dropping it", async () => {
+  it("never throws when a local file's own realpath fails: falls back to the lexical path rather than dropping it", async () => {
     const nonExistentLocal = path.join(fixtureRoot, "does-not-exist-on-disk.ts")
     const merged = await mergeLocalAndPackageFiles([nonExistentLocal], [], nodeBuildFs)
     expect(merged).toEqual([nonExistentLocal])
   })
 
-  it("keeps TWO distinct local files whose own realpath both fail -- the fallback must key the dedup set on each file's own path, not a shared value", async () => {
+  it("keeps TWO distinct local files whose own realpath both fail: the fallback must key the dedup set on each file's own path, not a shared value", async () => {
     // If the catch-block fallback (`real = file`) were ever skipped, `real`
     // would stay the SAME unassigned value across both iterations, and the
     // second nonexistent file would be wrongly deduped away as "already seen".

@@ -43,7 +43,7 @@ describe("parseSchemaFile", () => {
   it("treats a variable statement as exported when ANY of its (2+) modifiers is `export`, not only when EVERY modifier is", () => {
     // `declare` alongside `export` is semantically nonsensical for a const
     // WITH an initializer (never a real-world schema file), but the parser
-    // itself (this module never type-checks) accepts it fine -- exactly the
+    // itself (this module never type-checks) accepts it fine: exactly the
     // shape needed to distinguish `modifiers.some(isExport)` from
     // `modifiers.every(isExport)`, which agree on every single-modifier case.
     const source = `export declare const paymentsEnv = createEnv({ STRIPE_KEY: {} }, { name: "payments" });`
@@ -53,8 +53,8 @@ describe("parseSchemaFile", () => {
     expect(result.warnings).toHaveLength(0)
   })
 
-  it("does not treat a variable statement as exported just because it HAS a (non-empty) modifiers array -- every modifier must be checked, not just presence", () => {
-    // `declare` with no `export` -- a non-empty modifiers array containing
+  it("does not treat a variable statement as exported just because it HAS a (non-empty) modifiers array: every modifier must be checked, not just presence", () => {
+    // `declare` with no `export`: a non-empty modifiers array containing
     // NO ExportKeyword. Distinguishes `modifiers.some(m => m.kind ===
     // ExportKeyword)` from a collapsed `modifiers.some(() => true)`, which
     // would agree with the real check whenever modifiers is empty OR
@@ -100,7 +100,7 @@ describe("parseSchemaFile", () => {
     expect(result.documentEnvCalls).toHaveLength(0)
   })
 
-  it("never executes the file -- a throwing top-level statement does not throw during parsing", () => {
+  it("never executes the file: a throwing top-level statement does not throw during parsing", () => {
     const source = `
       throw new Error("this must never run during static analysis");
       export const dangerEnv = createEnv({ X: {} });
@@ -145,7 +145,7 @@ describe("parseSchemaFile", () => {
     expect(result.documentEnvCalls).toHaveLength(0)
   })
 
-  it("skips a destructuring top-level declaration -- its name is not a plain identifier binding", () => {
+  it("skips a destructuring top-level declaration: its name is not a plain identifier binding", () => {
     const source = `
       const { NODE_ENV } = process.env;
       export const paymentsEnv = createEnv({ X: {} });
@@ -230,7 +230,7 @@ describe("extractSchemaVariables", () => {
   }
 
   // These tests assert on processor/validator/default presence, never on
-  // `declaration` -- a shared placeholder source file (not the literal's own
+  // `declaration`: a shared placeholder source file (not the literal's own
   // real one) is deliberately good enough here; `link.ts`'s own tests are
   // where `declaration` positions are actually exercised against a real,
   // matching source file.
@@ -260,7 +260,7 @@ describe("extractSchemaVariables", () => {
     expect(stripeKey.hasProcessor).toBe(true)
     expect(stripeKey.processorReturnType).toBe("string")
     expect(stripeKey.hasValidator).toBe(true)
-    // STRIPE_KEY declares no `default` -- proves `hasDefault`'s own initial
+    // STRIPE_KEY declares no `default`: proves `hasDefault`'s own initial
     // value is genuinely `false`, not just never flipped to `true`.
     expect(stripeKey.hasDefault).toBe(false)
 
@@ -271,7 +271,7 @@ describe("extractSchemaVariables", () => {
     // PORT declares no `validator`.
     expect(port.hasValidator).toBe(false)
 
-    // No default/processor/validator at all -- every presence flag starts
+    // No default/processor/validator at all: every presence flag starts
     // (and stays) false.
     const bareVar = variables.find((v) => v.key === "BARE_VAR")!
     expect(bareVar.hasDefault).toBe(false)
@@ -402,7 +402,7 @@ describe("extractSchemaVariables", () => {
     expect(variables[0]?.processorReturnType).toBeUndefined()
   })
 
-  it("leaves processorReturnType undefined for a non-function expression that nonetheless carries a `.type` node (an `as` assertion) -- the function-shape guard, not just the `.type` presence check, is load-bearing", () => {
+  it("leaves processorReturnType undefined for a non-function expression that nonetheless carries a `.type` node (an `as` assertion): the function-shape guard, not just the `.type` presence check, is load-bearing", () => {
     const variables = extractSchemaVariables(
       literal(`{ STRIPE_KEY: { processor: someExternalFn as (v: unknown) => string } }`),
       "/repo/x.ts",
@@ -526,7 +526,7 @@ describe("extractSchemaVariables", () => {
 
   it('rejects a non-string context value that itself has a truthy `.length` (an array), distinguishing `evaluated.ok && typeof === "string"` from a collapsed `||`', () => {
     // An array is statically resolvable (ok: true) with a non-string typeof
-    // AND a real, positive `.length` -- the one shape that could slip past a
+    // AND a real, positive `.length`; the one shape that could slip past a
     // `||`-corrupted guard (which would let `ok: true` alone satisfy the
     // first two clauses) and still pass the trailing `.length > 0` check,
     // unlike a number or boolean (whose `.length` is `undefined`).
@@ -581,7 +581,7 @@ describe("extractContractDocs", () => {
     expect(docs.sensitivity).toBeUndefined()
     expect(docs.expiresAt).toBeUndefined()
     expect(docs.variables.size).toBe(0)
-    // No docsArg at all -- distinct from one present but malformed, which
+    // No docsArg at all: distinct from one present but malformed, which
     // DOES warn (see "warns when docsArg is present but not an inline object
     // literal" below).
     expect(warnings).toHaveLength(0)
@@ -697,13 +697,13 @@ describe("extractContractDocs", () => {
       warnings,
     )
     const dbUrl = docs.variables.get("DATABASE_URL")!
-    // The whole field is dropped, not just the bad element -- `rotationTriggerEvents` isn't
+    // The whole field is dropped, not just the bad element: `rotationTriggerEvents` isn't
     // per-entry-validated the way `evidence.dynamicAccess` is (there's no "malformed citation"
     // concept for a free-text event name), so a single wrong-typed entry invalidates the array.
     expect(dbUrl.rotationTriggerEvents).toBeUndefined()
   })
 
-  it("does not mistake a later string-array field (dataResidency) for rotationTriggerEvents -- each field's own fieldName check is independently load-bearing", async () => {
+  it("does not mistake a later string-array field (dataResidency) for rotationTriggerEvents: each field's own fieldName check is independently load-bearing", async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(
       objectLiteral(`{
@@ -918,7 +918,7 @@ describe("extractContractDocs", () => {
       "weird",
       warnings,
     )
-    // Honored exactly as written -- the standard-vocabulary check is a
+    // Honored exactly as written: the standard-vocabulary check is a
     // separate, non-blocking NONSTANDARD_SENSITIVITY_LEVEL finding
     // (`generate-documentation.ts`), never a parse-time drop.
     expect(docs.sensitivity).toBe("top-secret")
@@ -1061,7 +1061,7 @@ describe("extractContractDocs", () => {
   it("warns and ignores metadata when not a statically-resolvable object literal", async () => {
     const warnings: { file: string; message: string }[] = []
     // `null` is a statically-evaluable literal, so it reaches isRecord()
-    // rather than being rejected earlier by evaluateLiteral() -- exercising
+    // rather than being rejected earlier by evaluateLiteral(): exercising
     // isRecord's own "not an object" rejection.
     const docs = extractContractDocs(
       objectLiteral(`{ metadata: null }`),
@@ -1073,7 +1073,7 @@ describe("extractContractDocs", () => {
     expect(warnings.some((w) => w.message.includes('"metadata"'))).toBe(true)
   })
 
-  it('warns and ignores metadata when it\'s a statically-resolvable non-object primitive (e.g. a number) -- distinct from `null`, which is `typeof "object"` too', async () => {
+  it('warns and ignores metadata when it\'s a statically-resolvable non-object primitive (e.g. a number): distinct from `null`, which is `typeof "object"` too', async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(
       objectLiteral(`{ metadata: 123 }`),
@@ -1085,7 +1085,7 @@ describe("extractContractDocs", () => {
     expect(warnings.some((w) => w.message.includes('"metadata"'))).toBe(true)
   })
 
-  it("silently ignores (never warns on) contract-level fields with no dedicated warning branch when they're statically resolvable but wrong-typed -- each field's own `evaluated.ok && typeof value === ...` guard is independently load-bearing", async () => {
+  it("silently ignores (never warns on) contract-level fields with no dedicated warning branch when they're statically resolvable but wrong-typed: each field's own `evaluated.ok && typeof value === ...` guard is independently load-bearing", async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(
       objectLiteral(`{
@@ -1123,7 +1123,7 @@ describe("extractContractDocs", () => {
     expect(warnings.some((w) => w.message.includes('"variables"'))).toBe(true)
   })
 
-  it("ignores an unrecognized top-level docsArg key entirely -- never mistakes it for 'variables' (the last else-if in the chain)", async () => {
+  it("ignores an unrecognized top-level docsArg key entirely: never mistakes it for 'variables' (the last else-if in the chain)", async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(
       objectLiteral(`{ unknownTopLevelField: "test" }`),
@@ -1190,7 +1190,7 @@ describe("extractContractDocs", () => {
     expect(docs.variables.get("DATABASE_URL")?.description).toBe("y")
   })
 
-  it("silently skips (never warns on) per-variable fields that aren't statically evaluable or are wrong-typed, and never sweeps an unrecognized top-level key into metadata (ADR 0035 -- no more catch-all)", async () => {
+  it("silently skips (never warns on) per-variable fields that aren't statically evaluable or are wrong-typed, and never sweeps an unrecognized top-level key into metadata (ADR 0035: no more catch-all)", async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(
       objectLiteral(`{
@@ -1212,12 +1212,12 @@ describe("extractContractDocs", () => {
     expect(dbUrl.description).toBeUndefined()
     expect(dbUrl.required).toBeUndefined()
     // Neither "customFlag" nor "setup" is nested under a literal `metadata: {...}`
-    // key, so neither is captured anywhere -- unlike the pre-ADR-0035 catch-all,
+    // key, so neither is captured anywhere: unlike the pre-ADR-0035 catch-all,
     // an unrecognized top-level key is never swept up automatically anymore.
     expect(dbUrl.metadata).toBeUndefined()
   })
 
-  it("silently skips EVERY other per-variable field when it's statically resolvable but wrong-typed -- each field's own `fieldName === ... && typeof value === ...` guard is independently load-bearing", async () => {
+  it("silently skips EVERY other per-variable field when it's statically resolvable but wrong-typed: each field's own `fieldName === ... && typeof value === ...` guard is independently load-bearing", async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(
       objectLiteral(`{
@@ -1303,7 +1303,7 @@ describe("extractContractDocs", () => {
     })
   })
 
-  it("does not sweep an unrecognized per-variable field into `auditRequired`/`evidence` just because its value has the right shape -- each branch's `fieldName === ...` half is load-bearing, not only its type guard", async () => {
+  it("does not sweep an unrecognized per-variable field into `auditRequired`/`evidence` just because its value has the right shape: each branch's `fieldName === ...` half is load-bearing, not only its type guard", async () => {
     const warnings: { file: string; message: string }[] = []
     const docs = extractContractDocs(
       objectLiteral(`{

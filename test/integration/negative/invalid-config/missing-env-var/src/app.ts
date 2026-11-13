@@ -2,7 +2,7 @@ import "./startup.js"; // side-effect import: throws and halts startup if valida
 
 // Never reached in this example: the committed .env is missing payments'
 // required STRIPE_KEY, so validateEnv() above always throws an aggregated
-// EnvValidationError before this module's own top-level code runs -- not
+// EnvValidationError before this module's own top-level code runs; not
 // even databaseEnv.DATABASE_URL, which has nothing wrong with it, ever gets
 // read. That's the point: one deterministic startup boundary validates every
 // capability together, so a working contract doesn't get to run just because

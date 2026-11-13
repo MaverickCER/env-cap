@@ -5,7 +5,7 @@ import { processors } from "@maverickcer/env-cap/helpers";
  * The default of the two interchangeable database backends this boilerplate
  * ships (see mongodb/). `exclusiveGroup: "database"` (shared with mongodb,
  * set via documentEnv) means generateEnvManifest() rejects any build that
- * leaves both active at once -- the two are genuine alternatives, never
+ * leaves both active at once: the two are genuine alternatives, never
  * meant to run together.
  */
 const postgresSchema = {

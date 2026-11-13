@@ -15,7 +15,7 @@ const userSchema = new Schema<UserDocument>({
 });
 
 // Re-registering a model with the same name throws on hot reload (dev server
-// restarts trigger this module repeatedly) -- reuse the existing model when
+// restarts trigger this module repeatedly): reuse the existing model when
 // mongoose already has one registered.
 export const User: mongoose.Model<UserDocument> =
   (mongoose.models["User"] as mongoose.Model<UserDocument> | undefined) ??

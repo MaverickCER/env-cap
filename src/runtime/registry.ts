@@ -2,7 +2,7 @@ import type { ContractInternals } from "./types.js"
 
 /**
  * Private map from a contract object (returned by `createEnv`) to its internal
- * identity/schema. Not exported from the package -- this is the only place
+ * identity/schema. Not exported from the package: this is the only place
  * that ever associates a contract with its schema, so `validateEnv()`
  * cannot accidentally read across contracts.
  */

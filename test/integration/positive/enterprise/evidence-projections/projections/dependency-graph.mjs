@@ -1,19 +1,19 @@
 import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
- * The "Configuration Dependency" reference projection (plan Phase 20) --
+ * The "Configuration Dependency" reference projection (plan Phase 20):
  * where the DOT/Mermaid/JSON graph-export rendering ADR 0027 explicitly
  * deferred out of Dependency Model itself now lives, as pure rendering over
  * Dependency Model's data. Unlike every projection before it, this one has
  * no existing `@maverickcer/env-cap/build` renderer to reshape into at
- * all -- `dependency-model.ts`'s own module doc comment says as much
- * ("Graph-format rendering ... is deliberately not here -- that's
+ * all: `dependency-model.ts`'s own module doc comment says as much
+ * ("Graph-format rendering ... is deliberately not here: that's
  * presentation over this model's data, not the model itself"). This is
  * genuinely new rendering logic, not a thin reshape.
  *
  * Graph shape: one node per contract, one node per consuming file, one
  * directed edge per "this file consumes this contract" relationship
- * (`DependencyModel.consumers`, ADR 0027's inverse index -- built for
+ * (`DependencyModel.consumers`, ADR 0027's inverse index; built for
  * exactly this kind of use, not previously exposed as a render).
  */
 
@@ -44,7 +44,7 @@ function graphNodesAndEdges(evidence) {
 }
 
 function dotId(id) {
-  // Escape backslashes before quotes -- otherwise a backslash in `id` (e.g.
+  // Escape backslashes before quotes: otherwise a backslash in `id` (e.g.
   // a Windows-style path) isn't itself escaped, so it can combine with the
   // character that follows to break out of the DOT quoted-string context.
   return `"${id.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
@@ -65,7 +65,7 @@ function toDot(evidence) {
 }
 
 function mermaidId(id) {
-  // Mermaid node IDs can't contain most punctuation -- hash-free, readable
+  // Mermaid node IDs can't contain most punctuation: hash-free, readable
   // substitution is enough for this reference projection's own fixture
   // sizes; a consumer with adversarial file paths would want a real slug.
   return id.replace(/[^A-Za-z0-9_]/g, "_");

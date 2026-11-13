@@ -8,7 +8,7 @@
 
 _Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-11-12T00:13:10.142Z_
+_Generated 2026-11-13T21:32:17.859Z_
 
 ## Changes since last report
 
@@ -50,7 +50,7 @@ Signs and verifies user session cookies.
 - Sensitivity: secret
 - Expires: 2026-06-01
 - Setup instructions: Generate with `openssl rand -base64 32`; security-team keeps the canonical copy in the shared vault.
-- Refresh instructions: Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours.
+- Refresh instructions: Rotate via the vault, then redeploy. Existing sessions are invalidated on rotation, so schedule outside peak hours.
 - Required: yes
 
 <a id="contract-mongodb"></a>
@@ -76,7 +76,7 @@ MongoDB connection string.
 <a id="mongodb-mongodb_replica_set"></a>
 ### `MONGODB_REPLICA_SET`
 
-MongoDB replica set name -- no Postgres equivalent.
+MongoDB replica set name (no Postgres equivalent).
 
 - Default: yes
 - Processor: no
@@ -154,10 +154,10 @@ One row per unique variable name; more than one location means more than one fea
 
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
-| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-06-01 (**expired 164d ago**) | Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours. |
+| [`SESSION_SECRET`](#auth-session_secret) | security-team | 2026-06-01 (**expired 165d ago**) | Rotate via the vault, then redeploy. Existing sessions are invalidated on rotation, so schedule outside peak hours. |
 | [`DATABASE_URL`](#mongodb-database_url) | data-platform-team | -- | -- |
 | [`MONGODB_REPLICA_SET`](#mongodb-mongodb_replica_set) | data-platform-team | -- | -- |
-| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-07-01 (**expired 134d ago**) | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
+| [`DATABASE_URL`](#postgres-database_url) | security-team | 2026-07-01 (**expired 135d ago**) | security-team rotates this credential quarterly via the vault; data-platform-team just needs to redeploy after a rotation lands. |
 | [`DATABASE_PROVIDER`](#prisma-database_provider) | data-platform-team | -- | -- |
 
 ## Security review

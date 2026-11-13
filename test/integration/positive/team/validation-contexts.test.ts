@@ -7,7 +7,7 @@ import { compareGoldenArtifacts, isInstalled, runScript } from "../../../support
  * validation-contexts demonstrates ADR 0022: one schema/manifest, three
  * variables (LOG_LEVEL has no context; DATABASE_URL is context: "server";
  * PUBLIC_API_URL is context: "client"), validated by two separate entry
- * points -- `example:server` and `example:client` -- each its own process,
+ * points (`example:server` and `example:client`) each its own process,
  * each with a different activeContexts. This file verifies:
  *  - each script reads its own context's variable and the context-less one
  *  - each script's attempt to read the *other* context's variable throws

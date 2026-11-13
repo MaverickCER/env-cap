@@ -1,4 +1,4 @@
-// REFERENCE ONLY -- not part of this example's active code, and never
+// REFERENCE ONLY: not part of this example's active code, and never
 // discovered by generate-manifest.mjs (it only includes src/env.ts).
 //
 // This example intentionally uses one centralized schema at src/env.ts
@@ -13,8 +13,8 @@
  * this file needs to know these variables exist until it imports this export.
  *
  * The schema (createEnv) and its documentation (documentEnv) are split on
- * purpose: createEnv only ever sees processor/validator/default -- the
- * fields validateEnv() actually reads -- so nothing here is retained in
+ * purpose: createEnv only ever sees processor/validator/default (the
+ * fields validateEnv() actually reads) so nothing here is retained in
  * memory beyond what's needed to process the environment. documentEnv is a
  * no-op at runtime; it exists purely so `generateEnvManifest()` can build
  * the docs artifact, the ownership matrix, and the lifecycle report.
@@ -26,7 +26,7 @@
 //     validator: (value: string) =>
 //       ["stripe", "paypal"].includes(value) || `Unsupported payment provider "${value}".`,
 //   },
-//   // Declared independently by both payments and database (see ../database/env.schema.ts) --
+//   // Declared independently by both payments and database (see ../database/env.schema.ts);
 //   // not a conflict, see the root README's "Duplicate variables" section.
 //   LOG_LEVEL: {
 //     default: "info",

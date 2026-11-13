@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { EvidenceReference } from "../../src/build/evidence-reference.js"
 
-/** Exhaustive over every `model` variant -- if a new arm is ever added to `EvidenceReference` without updating this, `tsc` fails here first. */
+/** Exhaustive over every `model` variant: if a new arm is ever added to `EvidenceReference` without updating this, `tsc` fails here first. */
 function describeReference(ref: EvidenceReference): string {
   switch (ref.model) {
     case "contract":

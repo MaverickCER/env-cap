@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "@maverickcer/env-cap!",
-  "docComment": "",
+  "docComment": "/**\n * Build your own views of the evidence file (`@maverickcer/env-cap/evidence`).\n *\n * `defineEvidenceProjection()` declares a pure transform from an `EvidenceModel` to a shape you define:\n * a dashboard row, an inventory table or a CI comment. The projectors read the model\n * through a read-only membrane, and `.project()` also returns which model fields fed each output field\n * (ADR 0032). ADR 0031 explains why this is its own entry point.\n *\n * `generateEvidenceModel()` in `@maverickcer/env-cap/build` assembles the model at build time. This\n * module imports no Node module and no TypeScript compiler, and takes the `EvidenceModel` shape as a\n * type only. So a projection can run over a JSON-parsed evidence file outside Node; CI runs this\n * entry under Bun, Deno and a Web-globals bundle.\n *\n * @packageDocumentation\n */\n",
   "name": "@maverickcer/env-cap",
   "preserveMemberOrder": false,
   "members": [
@@ -191,7 +191,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!defineEvidenceProjection:function(1)",
-          "docComment": "/**\n * Declares a projection: a named, pure transform from the immutable\n * `EvidenceModel` to any consumer-defined output shape, built entirely from\n * `schema`'s independent per-field projector functions -- see ADR 0031/0032.\n *\n * env-cap's own reference projections (`.env.example`, Environment\n * Configuration Reference, Configuration Ownership, etc.) are built through\n * this exact function, with no privileged internal path -- a consumer's own\n * projection is a first-class citizen, not a lesser one.\n */\n",
+          "docComment": "/**\n * Declares a projection: a named, pure transform from the immutable\n * `EvidenceModel` to any consumer-defined output shape, built entirely from\n * `schema`'s independent per-field projector functions; see ADR 0031/0032.\n *\n * The reference projections env-cap ships (`.env.example`, Environment\n * Configuration Reference, Configuration Ownership, etc.) are built through\n * this exact function, with no privileged internal path. A consumer's own\n * projection is a first-class citizen, not a lesser one.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -272,7 +272,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!EvidenceModel:interface",
-          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one intentional exception to `src/build/`'s zero-\n * cross-folder-import rule: `src/evidence/` imports it with `import type`\n * only (fully erased at compile time under `verbatimModuleSyntax`), the same\n * shape as `helpers`' single sanctioned edge onto `runtime` -- see\n * `specs/architecture.md`. `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
+          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one intentional exception to `src/build/`'s zero-\n * cross-folder-import rule: `src/evidence/` imports it with `import type`\n * only (fully erased at compile time under `verbatimModuleSyntax`), the same\n * shape as `helpers`' single sanctioned edge onto `runtime`; see\n * `specs/architecture.md`. `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -518,7 +518,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!EvidenceProjection:interface",
-          "docComment": "/**\n * The function `defineEvidenceProjection()` returns. Callable directly for\n * the common case (`projection(evidence)` -> `T`); `.project()` returns the\n * same value alongside automatic provenance -- see ADR 0032.\n */\n",
+          "docComment": "/**\n * The function `defineEvidenceProjection()` returns. Callable directly for\n * the common case (`projection(evidence)` -> `T`); `.project()` returns the\n * same value alongside automatic provenance: see ADR 0032.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -603,7 +603,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@maverickcer/env-cap!EvidenceProjection#project:member(1)",
-              "docComment": "/**\n * Same computation as calling the projection directly, plus which `EvidenceModel` field paths fed each output key -- see {@link EvidenceProjectionResult}.\n */\n",
+              "docComment": "/**\n * Same computation as calling the projection directly, plus which `EvidenceModel` field paths fed each output key: see {@link EvidenceProjectionResult}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -830,7 +830,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!EvidenceProjector:type",
-          "docComment": "/**\n * A pure function from the full Evidence Model to one field of a\n * projection's output shape. Must not mutate `evidence` -- the membrane\n * `defineEvidenceProjection()` wraps it in enforces that at runtime, see\n * `createTrackingProxy()` below -- and must not perform I/O; env-cap can\n * enforce the read-only half of purity but not the \"no side effects\" half.\n */\n",
+          "docComment": "/**\n * A pure function from the full Evidence Model to one field of a\n * projection's output shape. Must not mutate `evidence` (the membrane\n * `defineEvidenceProjection()` wraps it in enforces that at runtime, see\n * `createTrackingProxy()` below) and must not perform I/O; env-cap can\n * enforce the read-only half of purity but not the \"no side effects\" half.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -878,7 +878,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!EvidenceProvenance:interface",
-          "docComment": "/**\n * Who/when/what produced a given `EvidenceModel` instance. Caller-supplied,\n * never ambient-detected -- `generateEvidenceModel()` never shells out to\n * `git` itself, mirroring ADR 0012's live-expiration-callback precedent.\n */\n",
+          "docComment": "/**\n * Who/when/what produced a given `EvidenceModel` instance. Caller-supplied,\n * never ambient-detected: `generateEvidenceModel()` never shells out to\n * `git` itself, mirroring ADR 0012's live-expiration-callback precedent.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

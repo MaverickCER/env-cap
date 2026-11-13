@@ -30,7 +30,7 @@ const fixtureRoot = path.resolve(here, "fixtures-generate-evidence")
 // passes `root: fixtureRoot` explicitly). Without this, a mutation to
 // generate-evidence.ts's `options.root ?? process.cwd()` default (line 101)
 // makes every call in this file scan the real, large repository checkout
-// instead of the 3-file fixture -- generateEvidenceModel's own doc comment
+// instead of the 3-file fixture: generateEvidenceModel's own doc comment
 // notes it already does two independent, redundant discovery passes per
 // call, so that cost multiplies across this file's many test cases into a
 // Stryker per-mutant timeout instead of the fast, assertion-based failure a
@@ -235,8 +235,8 @@ describe("generateEvidenceModel", () => {
     expect(addedNames).toEqual(["legacyEnv", "paymentsEnv"])
   })
 
-  it("Finding Model's exclusiveGroup check only considers ACTIVE contracts -- two ACTIVE contracts sharing a group IS flagged, an inactive one sharing a group is NOT", async () => {
-    // Three contracts sharing "database": two ACTIVE (a real violation --
+  it("Finding Model's exclusiveGroup check only considers ACTIVE contracts: two ACTIVE contracts sharing a group IS flagged, an inactive one sharing a group is NOT", async () => {
+    // Three contracts sharing "database": two ACTIVE (a real violation;
     // must survive `activeContracts` filtering down to just the active
     // set, or an over-eager filter that drops everything would silently
     // lose this finding) and one INACTIVE (must never itself contribute to
@@ -264,7 +264,7 @@ describe("generateEvidenceModel", () => {
     const violations = evidence.finding.findings.filter(
       (f) => f.code === "EXCLUSIVE_GROUP_VIOLATION",
     )
-    // Exactly one -- not the three pairwise violations (a-b, a-c, b-c) an
+    // Exactly one: not the three pairwise violations (a-b, a-c, b-c) an
     // unfiltered "every contract counts as active" would produce.
     expect(violations).toHaveLength(1)
     expect(violations[0]?.message).toContain("db-a")
@@ -272,9 +272,9 @@ describe("generateEvidenceModel", () => {
     expect(violations[0]?.message).not.toContain("db-c")
   })
 
-  it("never surfaces a dynamicAccess-citation finding for an INACTIVE contract's variable -- citation verification only considers active contracts, same filter as the exclusiveGroup check above", async () => {
+  it("never surfaces a dynamicAccess-citation finding for an INACTIVE contract's variable: citation verification only considers active contracts, same filter as the exclusiveGroup check above", async () => {
     // The cited file genuinely doesn't exist, so a real (unfiltered) check
-    // of this variable would report it "missing" -- the only observable
+    // of this variable would report it "missing": the only observable
     // proof the inactive contract's citation was never even looked at is
     // that no such finding appears at all.
     await write(
@@ -289,7 +289,7 @@ describe("generateEvidenceModel", () => {
     )
     // Citation verification (and therefore the active-contracts filter this
     // test targets) only runs at all when a previousSnapshotLocation is
-    // given -- see generate-evidence.ts's own `snapshotPath ? ... :
+    // given: see generate-evidence.ts's own `snapshotPath ? ... :
     // undefined` gate. A missing snapshot file is the normal first-run case
     // (evidence-snapshot.ts's own "reports 'missing' for a file that
     // doesn't exist" test).
@@ -325,10 +325,10 @@ describe("generateEvidenceModel", () => {
     }
   })
 
-  it("does not throw for data-quality findings -- errors surface as Finding data, not exceptions", async () => {
+  it("does not throw for data-quality findings: errors surface as Finding data, not exceptions", async () => {
     // The fixture's undocumented variable / abandoned contract / unconsumed
     // owned variable are all real findings (see the dedicated test above),
-    // yet generation must still succeed -- see generate-evidence.ts's own
+    // yet generation must still succeed: see generate-evidence.ts's own
     // module doc comment for why this differs from the other four generators.
     await expect(
       generateEvidenceModel({ fs: nodeBuildFs, root: fixtureRoot }),
@@ -349,13 +349,13 @@ describe.skipIf(distMissing)(
   "generateEvidenceModel against the built dist/build.js (requires `npm run build`)",
   () => {
     // Regression test: tsup bundles the ./build entry point into one flat
-    // dist/build.js directly under the package root, not dist/build/index.js
-    // -- unlike ./cli and ./eslint-plugin, which each preserve their own
+    // dist/build.js directly under the package root, not dist/build/index.js:
+    // unlike ./cli and ./eslint-plugin, which each preserve their own
     // subdirectory. A relative-path lookup for env-cap's own package.json
     // (provenance.toolVersion) that only accounts for source's directory
     // depth resolves to the wrong location once bundled, and previously threw
     // ENOENT for every consumer of *any* @maverickcer/env-cap/build export,
-    // not just generateEvidenceModel() -- this must be exercised against the
+    // not just generateEvidenceModel(): this must be exercised against the
     // real built file, not source, to actually catch that.
     it("resolves provenance.toolVersion without throwing", async () => {
       const built = (await import(distEntry)) as {

@@ -1,5 +1,16 @@
 # helpers
 
+Optional processors and validators for common cases (`@maverickcer/env-cap/helpers`), such as
+`processors.toNumber()` and `validators.range(1, 65535)`.
+
+A contract works the same without them: `createEnv` and `validateEnv` never import this module. Any
+function with the `Processor<T>` or `Validator<T>` shape plugs in the same way.
+
+The two objects are plain literals of named imports, not `export * as processors`. A bundler lowers
+`export * as` into a namespace helper call it cannot prove free of side effects. That call blocks
+tree-shaking in a consumer's own bundler, so importing `processors` alone would still ship
+`validators`. With plain literals, importing `processors` alone drops `validators` entirely.
+
 ## Variables
 
 ### processors
@@ -266,7 +277,7 @@ Trims surrounding whitespace from a string (coercing nullish values to `""` firs
 
 #### Remarks
 
-Naming matches `data-cap`'s `helpers.processors` -- but these
+Naming matches `data-cap`'s `helpers.processors`: but these
 throw with a formatted `Error` message on invalid input, where data-cap's
 silently return `undefined`. Do not assume the same failure mode when
 moving between packages.
@@ -417,9 +428,9 @@ Passes when the date value is strictly before `date`.
 custom: <T>(validator) => Validator<T>;
 ```
 
-Identity wrapper for a hand-written `Validator<T>` -- no behavior change, just a fluent entry point alongside the other helpers.
+Identity wrapper for a hand-written `Validator<T>`: no behavior change, just a fluent entry point alongside the other helpers.
 
-Identity wrapper for a hand-written `Validator<T>` -- no behavior change, just a fluent entry point alongside the other helpers.
+Identity wrapper for a hand-written `Validator<T>`: no behavior change, just a fluent entry point alongside the other helpers.
 
 ###### Type Parameters
 
@@ -477,7 +488,7 @@ Passes when the string ends with `suffix`.
 enum: <T>(allowed) => Validator<T> = oneOf;
 ```
 
-Alias for `oneOf` -- passes when the value is one of the `allowed` values.
+Alias for `oneOf`: passes when the value is one of the `allowed` values.
 
 Passes when the value is one of the `allowed` values.
 
@@ -906,7 +917,7 @@ Runs the wrapped validator but replaces its failure message with `message`.
 regex: (pattern, message?) => Validator<string> = matches;
 ```
 
-Alias for `matches` -- passes when the string matches `pattern`.
+Alias for `matches`: passes when the string matches `pattern`.
 
 Passes when the string matches `pattern`; `message` overrides the default failure text.
 
@@ -1015,9 +1026,9 @@ Passes when the string is a valid UUID of one of the given `versions` (default: 
 uuidVersion: (number) => Validator<string>;
 ```
 
-Shorthand for `uuid([version])` -- passes only for that exact UUID version.
+Shorthand for `uuid([version])`: passes only for that exact UUID version.
 
-Shorthand for `uuid([version])` -- passes only for that exact UUID version.
+Shorthand for `uuid([version])`: passes only for that exact UUID version.
 
 ###### Parameters
 

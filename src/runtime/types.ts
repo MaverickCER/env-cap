@@ -3,19 +3,18 @@
  *
  * These types are intentionally minimal: an `EnvDefinition` describes how to
  * turn one raw environment value into one typed, validated application
- * value. There is no `optional`/`required` flag anywhere in this file --
+ * value. There is no `optional`/`required` flag anywhere in this file:
  * requiredness is just a validator that rejects `undefined`/empty values.
  *
  * Documentation fields (description, owner, expiresAt, category, ...) live
- * entirely in {@link documentEnv} (see `document.ts`), not here -- this file is
+ * entirely in {@link documentEnv} (see `document.ts`), not here: this file is
  * the runtime's whole vocabulary, and every field in it is read by
  * `validate.ts`/`create.ts`/`errors.ts` at runtime. If a field is only ever
  * read by the generator, it belongs in `document.ts`, not here. `context` is
- * the one exception worth calling out: it's also read by the build package
- * for documentation display (see ADR 0022), but it belongs here rather than
- * in `documentEnv()` because `validate.ts` reads it too, to decide pipeline
- * participation -- the same bar `default`/`processor`/`validator` already
- * clear.
+ * the one exception. The build package also reads it for documentation
+ * display (see ADR 0022). It belongs here rather than in `documentEnv()`
+ * because `validate.ts` reads it too, to decide pipeline participation: the
+ * same bar `default`/`processor`/`validator` already clear.
  */
 
 /** The raw, unprocessed source of environment values (e.g. `process.env`, a resolved secrets bag). */
@@ -39,7 +38,7 @@ export type Validator<T> = (value: T, rawEnv: RawEnv) => true | string
  *
  * @remarks
  * The union is redundant at the type level (`unknown` alone already accepts a
- * function) -- it's kept because this type is public API, and collapsing it to bare `unknown`
+ * function). It's kept because this type is public API: collapsing it to bare `unknown`
  * would erase the one thing a reader of the generated `.d.ts` needs to learn here.
  */
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- `unknown | (() => unknown)` keeps the function form visible in the documented type
@@ -55,17 +54,17 @@ export interface EnvDefinition<T> {
   validator?: Validator<T>
   /**
    * The validation context this variable belongs to (e.g. `"server"`,
-   * `"production"`, `"worker"`) -- entirely application-defined; env-cap
+   * `"production"`, `"worker"`): entirely application-defined; env-cap
    * never interprets, detects, or infers this string. Omitted (the
    * default) means the variable participates in every {@link validateEnv}
    * run regardless of `activeContexts`. A variable belongs to at most one
-   * validation context -- see ADR 0022 for why this is a single `string`
-   * and not `string[]`; do not widen it to an array to let one variable
-   * join multiple contexts, that reintroduces the AND/OR ambiguity this
+   * validation context: see ADR 0022 for why this is a single `string`
+   * and not `string[]`. Do not widen it to an array to let one variable
+   * join multiple contexts. That reintroduces the AND/OR ambiguity this
    * design deliberately avoids.
    *
    * @remarks
-   * Validation contexts are a participation filter only -- not
+   * Validation contexts are a participation filter only: not
    * authentication, authorization, or a bundling/security boundary. See
    * ADR 0022's Formal Invariants.
    */
@@ -96,7 +95,7 @@ type UnwrapDefault<D> = D extends { default: infer Def }
  * default's type, else `string` (the shape raw process.env values naturally arrive in).
  *
  * @remarks
- * Same documented generic-bound variance workaround as {@link EnvSchema} above --
+ * Same documented generic-bound variance workaround as {@link EnvSchema} above:
  * `any` here is never surfaced to a consumer's inferred type.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the schema's value types are inferred where it is used, so the type argument is deliberately open
@@ -119,18 +118,18 @@ export interface ContractInternals<S extends EnvSchema = EnvSchema> {
 
 /**
  * The object returned by {@link createEnv}. Each key is a lazily-resolved getter backed by the
- * runtime cache -- there is no global env object, only per-feature contracts like this one.
+ * runtime cache: there is no global env object, only per-feature contracts like this one.
  *
  * @remarks
  * `toString()` is intersected in (rather than left to the ambient `Object.prototype`
  * declaration) because `create.ts` genuinely overrides it to return a redacted
- * `EnvContract("name")` representation, never resolved values -- see ADR 0006. Declaring
+ * `EnvContract("name")` representation, never resolved values: see ADR 0006. Declaring
  * it here means the type accurately describes what calling `String(contract)` returns.
  */
 export type EnvContract<S extends EnvSchema> = {
   readonly [K in keyof S]: InferEnvValue<S[K]>
 } & {
-  /** Returns the redacted `EnvContract("name")` representation, never resolved values -- see ADR 0006. */
+  /** Returns the redacted `EnvContract("name")` representation, never resolved values: see ADR 0006. */
   toString(): string
 }
 
@@ -146,7 +145,7 @@ export interface validateEnvOptions {
   /** The raw source of environment values, e.g. `process.env` or a resolved secrets bag. */
   values: RawEnv
   /**
-   * Every contract to validate -- typically the `contracts` array imported
+   * Every contract to validate: typically the `contracts` array imported
    * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them
    * in one call: {@link validateEnv} only ever initializes once per process, so
    * a second call returns the first call's cached result without
@@ -156,18 +155,18 @@ export interface validateEnvOptions {
   manifest: readonly EnvContract<any>[]
   /**
    * The validation contexts active for this run (e.g. `["server",
-   * "production"]`) -- entirely application-defined; env-cap never
+   * "production"]`): entirely application-defined; env-cap never
    * detects or infers these, the caller always computes and passes them
    * explicitly. A variable whose `context` isn't in this list is skipped
    * entirely (no default/processor/validator runs for it, and it stays in
    * its not-ready state, exactly as if this run had never happened for
-   * it) -- see ADR 0022. A variable with no `context` always participates,
+   * it): see ADR 0022. A variable with no `context` always participates,
    * regardless of what's passed here. Omitted (the default) behaves as an
    * empty list: only variables with no `context` participate.
    *
    * @remarks
-   * Not part of the validation cache's identity -- {@link validateEnv}
-   * remains one-shot per process exactly as before this option existed. A
+   * Not part of the validation cache's identity: {@link validateEnv}
+   * remains one-shot per process whatever this option holds. A
    * second call does not re-evaluate `activeContexts`; it returns the
    * first call's result outright. Different active contexts belong to
    * different processes (e.g. a server process and a browser bundle),
@@ -196,7 +195,7 @@ export interface CreateEnvOptions {
   /**
    * A short, stable label for this contract (e.g. "payments", "database").
    * Used in error messages. Defaults to an auto-generated anonymous label if
-   * omitted -- providing one is strongly recommended for readable validation
+   * omitted: providing one is strongly recommended for readable validation
    * errors.
    */
   name?: string
@@ -204,7 +203,7 @@ export interface CreateEnvOptions {
    * Pass `import.meta.url` here so validation errors point at the file that
    * declared the failing variable (e.g. "features/payments/env.schema.ts")
    * instead of just the short `name` label. There is no portable way for
-   * `createEnv` to discover its caller's module URL on its own -- this is
+   * `createEnv` to discover its caller's module URL on its own: this is
    * always correct and never goes stale, since it's supplied by the JS
    * engine rather than hand-typed.
    */

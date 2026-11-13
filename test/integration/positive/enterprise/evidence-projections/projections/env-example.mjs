@@ -7,7 +7,7 @@ import { toDiscoveredContracts } from "./lib/to-discovered-contracts.mjs";
  * wrapper: reshapes Contract Model + Lifecycle Model back into the
  * DiscoveredContract[]-compatible shape `renderEnvExample()` (also
  * `@maverickcer/env-cap/build`, entirely unchanged) already expects, then
- * calls it directly -- no new rendering logic lives here. See
+ * calls it directly; no new rendering logic lives here. See
  * `lib/to-discovered-contracts.mjs` (shared with every other projection
  * wrapping a `DiscoveredContract[]`-shaped renderer).
  */

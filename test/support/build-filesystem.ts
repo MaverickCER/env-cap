@@ -3,7 +3,7 @@ import type { BuildDirent, BuildFileSystem, BuildStats } from "../../src/build/t
 import { nodeBuildFileSystem } from "../../src/node/index.js"
 
 /**
- * The real `node:fs/promises`-backed {@link BuildFileSystem} for tests -- the
+ * The real `node:fs/promises`-backed {@link BuildFileSystem} for tests: the
  * exact adapter the package publishes as `@maverickcer/env-cap/node` (and the
  * `env-cap` CLI's own `fs` capability). Integration/golden tests that need
  * real disk behavior use this; importing it here also gives the published
@@ -29,7 +29,7 @@ function assertUtf8(encoding: string): "utf8" {
 }
 
 /**
- * A minimal in-memory {@link BuildFileSystem} -- a `Map<absolutePath,
+ * A minimal in-memory {@link BuildFileSystem}: a `Map<absolutePath,
  * content>`, no real disk. Proves `src/build/**` depends on the
  * `BuildFileSystem` *contract*, not on `node:fs` (ADR 0040). Not a full
  * POSIX emulator: it covers exactly the operations the build code performs,
@@ -83,7 +83,7 @@ export function createInMemoryBuildFs(seed: Record<string, string> = {}): InMemo
       files.set(path.normalize(p), data)
     },
     mkdir: async () => {
-      // Directories are implicit -- nothing to do.
+      // Directories are implicit, so there is nothing to do.
     },
     readdir: async (p) => {
       const dir = path.normalize(p).replace(/\/?$/, "/")

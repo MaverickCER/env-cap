@@ -4,7 +4,7 @@ Adopting `env-cap` costs a build step and a declaration per variable; it needs N
 
 ## What problem this solves
 
-Validation libraries answer one question: is this value well-formed? They do not say which team owns `STRIPE_WEBHOOK_SECRET`, what breaks if it disappears, or whether anything still reads it. `env-cap` lets each capability declare the variables it consumes. A build-time analysis then reports owners, expiry dates and declared variables that nothing reads.
+Validation libraries answer one question: is this value well-formed? They do not say which team owns `STRIPE_WEBHOOK_SECRET`, what breaks if it disappears, or whether anything still reads it. `env-cap` lets each feature or package declare the variables it reads in a contract. A build-time analysis then reports owners, expiry dates and declared variables that nothing reads.
 
 [`specs/migrations/README.md`](specs/migrations/README.md) compares it with each tool you may have, and says when not to switch.
 
@@ -22,7 +22,7 @@ Validation libraries answer one question: is this value well-formed? They do not
 ## What it needs
 
 - Node.js `>=22`. CI tests 22 and 24 in blocking jobs.
-- npm. pnpm, Yarn 1 and Yarn Berry are tested only for installing the tarball and importing every entry. That job does not yet block a merge.
+- npm. pnpm, Yarn 1 and Yarn Berry are tested only for installing the tarball and importing every entry. `required` waits for that job (`package-managers`), so a failure blocks a merge.
 - TypeScript `moduleResolution` set to `node16`, `nodenext` or `bundler` if you type-check against the subpath exports.
 - Your own TypeScript is optional. The build entry uses it when it is version 5 or 6, and the bundled TypeScript 6 otherwise.
 - Schemas written as static object literals. A schema built by a function, or a spread at the top of a schema object, produces a parse warning. A spread nested inside a variable's definition or its `documentEnv()` entry is skipped without one. Nothing is guessed.
@@ -66,13 +66,13 @@ Installing `@maverickcer/env-cap` installs 1 package directly, and whatever it d
 
 <!-- ipc:end dependencies -->
 
-**Supply chain.** A merge to `main` requires a pull request, resolved review threads, and the `contract` and `lint` checks. The ruleset and the `BranchProtection` check enforce that; admins can bypass, and no approving review is required. These gates run in the `contract` job:
+**Supply chain.** A merge to `main` requires a pull request, resolved review threads, and the `contract`, `lint` and `required` checks. The ruleset enforces that. The `BranchProtection` check fails if the ruleset stops requiring `contract` or `required`, or stops requiring resolved threads; it does not check `lint`. Admins can bypass, and no approving review is required. These gates run in the `contract` job:
 
 - Typecheck, lint, tests with coverage floors, zero surviving mutants, and size budgets.
 - Production dependency licences, `npm audit` and Socket alerts, each with a reviewed record when accepted.
 - An install-and-import of the packed tarball, for every entry except `./eslint-plugin`.
 
-Releases publish from CI over npm OIDC with a provenance attestation, so you can check that a version was built by this repository's workflow. The Bun and Deno runs, the examples and the package-manager smoke test run in CI but do not yet block a merge.
+Releases publish from CI over npm OIDC with a provenance attestation, so you can check that a version was built by this repository's workflow. The Bun and Deno runs, the examples and the package-manager smoke test run in CI. The required `required` check fails when any of them fails.
 
 ## Versioning, stability, and long-term support
 
@@ -98,13 +98,13 @@ The install includes the bundled TypeScript 6 compiler. No check measures its si
 
 ## Architectural decisions worth knowing before you adopt
 
-| Decision                                     | What it means for you                                                                                                             | ADR                                                                                                                              |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| No global `env` object                       | Each capability reads only the contract it owns                                                                                   | [0003](specs/decisions/0003-no-global-env-object.md)                                                                             |
-| One runtime, no `/client` or `/server` split | The same runtime entry serves server and browser code. Browser use is tested in a Web-globals VM, not a real browser              | [0004](specs/decisions/0004-no-client-server-package-split.md)                                                                   |
-| Warn, not throw, by default                  | No documentation or ownership finding fails a run until a team passes a `--strict*` flag                                          | [0005](specs/decisions/0005-warn-not-throw-by-default.md), [0044](specs/decisions/0044-strict-escalates-every-warning-family.md) |
-| Exclusive-group violations are always errors | Two active contracts in one exclusive group fail the build, whatever the flags                                                    | [0009](specs/decisions/0009-exclusive-groups-are-always-errors.md)                                                               |
-| `--json` output is versioned and additive    | New fields can appear in any release. A removed or changed field is meant to bump `schemaVersion`, but no check enforces that yet | [0013](specs/decisions/0013-json-output-is-a-versioned-mirror.md)                                                                |
+| Decision                                     | What it means for you                                                                                                                                                | ADR                                                                                                                              |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| No global `env` object                       | Each feature reads only the contract it owns                                                                                                                         | [0003](specs/decisions/0003-no-global-env-object.md)                                                                             |
+| One runtime, no `/client` or `/server` split | The same runtime entry serves server and browser code. Browser use is tested in a Web-globals VM, not a real browser                                                 | [0004](specs/decisions/0004-no-client-server-package-split.md)                                                                   |
+| Warn, not throw, by default                  | No documentation or ownership finding fails a run until a team passes a `--strict*` flag                                                                             | [0005](specs/decisions/0005-warn-not-throw-by-default.md), [0044](specs/decisions/0044-strict-escalates-every-warning-family.md) |
+| Exclusive-group violations are always errors | Two active contracts in one exclusive group fail the build, whatever the flags                                                                                       | [0009](specs/decisions/0009-exclusive-groups-are-always-errors.md)                                                               |
+| `--json` output is versioned and additive    | New fields can appear in any release. A removed, retyped or newly optional field must bump `schemaVersion`; `test/build/schema-version-bump.test.ts` fails otherwise | [0013](specs/decisions/0013-json-output-is-a-versioned-mirror.md)                                                                |
 
 The full list is in [`specs/architecture.md`](specs/architecture.md).
 
@@ -115,7 +115,7 @@ The full list is in [`specs/architecture.md`](specs/architecture.md).
 | Raw `process.env`                | [from-process-env.md](specs/migrations/from-process-env.md)               | The lowest-friction start; adds validation and ownership where there was none        |
 | `dotenv`                         | [from-dotenv.md](specs/migrations/from-dotenv.md)                         | `dotenv` still loads `.env` files; `env-cap` validates and documents what is in them |
 | `zod`-based validation           | [from-zod.md](specs/migrations/from-zod.md)                               | Keep Zod; adopt `env-cap` only if ownership, not validation, is the pain             |
-| `envalid`                        | [from-envalid.md](specs/migrations/from-envalid.md)                       | Similar validation; the difference is per-capability ownership                       |
+| `envalid`                        | [from-envalid.md](specs/migrations/from-envalid.md)                       | Similar validation; the difference is per-feature ownership                          |
 | `t3-env`                         | [from-t3-env.md](specs/migrations/from-t3-env.md)                         | Both are type-safe; `t3-env` centralizes and `env-cap` does not                      |
 | A hand-rolled centralized schema | [from-centralized-schema.md](specs/migrations/from-centralized-schema.md) | The closest fit for what this package changes                                        |
 
