@@ -12,7 +12,20 @@ import type { validateEnvOptions, validateEnvResult } from "./types.js"
  * @remarks
  * Idempotent: the first successful (or failed) call is authoritative for the life of the
  * process -- later calls return (or re-throw) that same outcome without re-running any
- * processor or validator. Concurrent in-flight calls share one underlying run.
+ * processor or validator. Concurrent in-flight calls share one underlying run. Call
+ * `resetEnvCache()` to validate again, for example between test scenarios.
+ *
+ * The record of validated values is frozen, but only one level deep: an object, array or `URL`
+ * a processor returns stays mutable. A failure message carries variable and contract names and
+ * the message your processor or validator produced, never the value itself.
+ *
+ * @example
+ * ```ts
+ * import { validateEnv } from "@maverickcer/env-cap"
+ * import { manifest } from "./generated/env.manifest"
+ *
+ * await validateEnv({ manifest, values: process.env })
+ * ```
  *
  * @throws {EnvValidationError} If any variable fails processing or validation.
  */

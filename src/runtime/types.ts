@@ -134,6 +134,14 @@ export type EnvContract<S extends EnvSchema> = {
   toString(): string
 }
 
+/**
+ * What {@link validateEnv} validates: the generated manifest, the raw values, and the active
+ * validation contexts.
+ *
+ * @remarks
+ * Only the first call in a process is used; later calls return its outcome, whatever options
+ * they pass. Call `resetEnvCache()` between runs in a test.
+ */
 export interface validateEnvOptions {
   /** The raw source of environment values, e.g. `process.env` or a resolved secrets bag. */
   values: RawEnv
@@ -176,6 +184,14 @@ export interface validateEnvResult {
   readonly variableCount: number
 }
 
+/**
+ * Options for {@link createEnv}: a display name for error messages and where the contract was
+ * declared.
+ *
+ * @remarks
+ * Purely for identification. Owners, descriptions and other documentation belong in
+ * `documentEnv()`.
+ */
 export interface CreateEnvOptions {
   /**
    * A short, stable label for this contract (e.g. "payments", "database").

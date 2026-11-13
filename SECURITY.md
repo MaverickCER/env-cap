@@ -1,270 +1,119 @@
 # Security policy
 
-This document defines the security boundaries and threat model for
-`env-cap`: what protections the package intentionally provides, what
-responsibilities remain with the application, and why those boundaries exist.
+env-cap's runtime refuses filesystem access, ambient environment reads, network access and values in errors. Each row below names the check that enforces a refusal and where it stops.
 
-For implementation details such as contract redaction, error handling,
-`.env.example` generation, and documentation handling, see the [Security
-section of the Guide](GUIDE.md#security-model). This document describes the policy
-those mechanisms enforce rather than duplicating their implementation details.
+The short version of each runtime rule, with its test, is in the [Guide's security model](GUIDE.md#security-model).
 
 ## Reporting a vulnerability
 
-Report suspected security vulnerabilities privately through a
-[GitHub security advisory](https://github.com/maverickcer/env-cap/security/advisories/new).
+Report a suspected vulnerability privately through a [GitHub security advisory](https://github.com/maverickcer/env-cap/security/advisories/new). Private vulnerability reporting is enabled on the repository.
 
-Alternatively, contact the maintainer through the contact information
-provided on the npm package page.
+You can also contact the maintainer at the address on the npm package page.
 
-Please do not create a public issue for a suspected vulnerability before it
-has been reviewed and triaged.
+Please do not open a public issue for a suspected vulnerability before it has been triaged.
 
 ## Disclosure
 
-Reports are handled in private until they can be disclosed without helping an attacker. A report is
-acknowledged, assessed and prioritised by severity, exploitability and impact; acknowledgement does not
-promise that it is accepted as a vulnerability or that a fix can be provided.
+This is maintainer policy, not a mechanism.
 
-When a fix is available, a security advisory is published on this repository naming the affected versions,
-the patched version, the severity, what a user can do if they cannot upgrade at once, and whether
-exploitation is known to have occurred. It does not publish a working exploit or details that expose other
-systems before their owners have had time to update. If a vulnerability is being exploited, or a fix cannot
-be released promptly, users are warned and given mitigations before the fix is complete. Resolved
-advisories stay public: a record of vulnerabilities handled openly is part of what this package asks you to
-trust.
+1. Reports are handled in private until disclosure no longer helps an attacker.
+2. A report is acknowledged, assessed, and prioritized by severity, exploitability and impact. Acknowledgement does not mean it is accepted or that a fix is possible.
+3. When a fix exists, an advisory on this repository names the affected and patched versions, the severity, the mitigations, and whether exploitation is known.
+4. An advisory never includes a working exploit.
+5. If a vulnerability is exploited, or a fix cannot ship promptly, users get mitigations before the fix.
+6. Resolved advisories stay public.
 
 ## Runtime security model
 
-The runtime package (`createEnv`, `validateEnv`, and imports from the package
-root) is intentionally limited to environment processing and validation. It
-does not attempt to become a secret-management platform.
+The runtime is the package root (`createEnv`, `validateEnv` and the rest). It processes and validates values you pass in; it is not a secret manager.
 
-The runtime does not:
+| The runtime does not                      | Enforced by                                                                                                                          | Where it blocks    | Limit                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------ |
+| Touch the filesystem                      | ESLint bans `node:fs` and `node:child_process` in `src/` outside `src/cli`; the `AmbientCapabilities` check scans the packed tarball | `lint`, `contract` | The tarball scan is textual and skips bundled dependencies                                 |
+| Read `process.env`                        | `AmbientCapabilities` allows `process.env` only in the CLI and the ESLint plugin; the browser-bundle test rejects `process.`         | `contract`         | Textual; `globalThis["process"]` would evade both                                          |
+| Import a Node module or use a Node global | `test/runtime/browser-bundle.test.ts` bundles the runtime for the browser and checks the output                                      | `contract`         | A third-party import would be bundled without failing the test                             |
+| Open a network connection                 | The `ipc/no-network` lint rule on env-cap's own `src/`                                                                               | `lint`, `contract` | Source lint only. It does not cover the bundled TypeScript compiler                        |
+| Show values when a contract is logged     | `test/runtime/create.test.ts`: `console.log`, `String()`, `JSON.stringify` and template interpolation print a redacted marker        | `contract`         | Spreading a contract or calling `Object.entries()` on it reads every value                 |
+| Put values in errors                      | `test/runtime/validate.test.ts`: errors carry variable names, contract names and your messages                                       | `contract`         | A message your own validator or processor builds from the value is passed through verbatim |
+| Store, fetch or rotate secrets            | No such code exists                                                                                                                  | None               | A statement about the source, not a check                                                  |
 
-- **Persist secrets.**
-  Resolved environment values exist only in memory. After successful
-  validation, values are frozen and retained for the lifetime of the process.
-  The runtime never writes secrets to disk, databases, external services, or
-  persistent storage.
+Three more runtime properties matter to a reviewer:
 
-- **Retrieve secrets.**
-  The package has no integrations with secret-management systems such as
-  HashiCorp Vault, AWS Secrets Manager, Azure Key Vault, or Google Secret
-  Manager. Applications are responsible for obtaining secrets through their
-  existing infrastructure and passing resolved values into:
-
-  ```ts
-  validateEnv({ values })
-  ```
-
-* **Manage secret lifecycle operations.**
-  There is no rotation engine, scheduler, command execution, or automated
-  refresh process. Fields such as `expiresAt` and refresh instructions from
-  `documentEnv()` are documentation metadata only. They are consumed by
-  generated artifacts and never executed by the runtime.
-
-* **Send telemetry.**
-  No package entry point (`.`, `./build`, or `./helpers`) performs network
-  requests or sends usage information.
-
-* **Log secret values.**
-  The library does not write logs or emit environment values. Validation
-  errors contain contract information, variable names, and messages produced
-  by user-provided processors or validators, but the library itself never
-  inserts raw or processed secret values into errors.
-
-* **Embed documentation metadata into runtime state.**
-  `documentEnv()` is intentionally inert during execution. Documentation
-  fields are only consumed by build-time static analysis and are not retained
-  by the runtime validation system.
-
-Runtime contracts intentionally contain only:
-
-- variable definitions required for processing (`default`, `processor`,
-  `validator`)
-- resolved, frozen values accessible through explicit property access
-- minimal identity information required for runtime errors
-
-Information that exists only for humans, operators, or generated artifacts
-belongs in `documentEnv()`. Responsibilities such as secret storage, rotation,
-telemetry, and access auditing belong to infrastructure outside this package.
+- **Values stay in memory.** The record of validated values is frozen and kept for the life of the process. The freeze is shallow: an object, array or `URL` a processor returns stays mutable.
+- **Documentation is inert.** `documentEnv()` has no runtime effect (`test/runtime/document.test.ts`). Fields such as `expiresAt` are read only by the build-time analysis.
+- **Contracts hold only what validation needs:** `default`, `processor`, `validator`, `context`, and a name for error messages.
 
 ## Dual-package hazard
 
-The runtime keeps identity-sensitive state in module scope: the private
-`WeakMap` that associates a contract object with its schema
-(`src/runtime/registry.ts`), and the validation cache
-(`src/runtime/cache.ts`). If a consumer's dependency tree resolves
-`env-cap` through two different specifiers — one importer
-getting the ESM build, one `require()`r getting the CJS build, via a mixed
-ESM/CJS dependency graph or a re-exporting intermediate package — Node
-loads two entirely separate module instances, each with its own registry
-and cache. No npm package that ships both ESM and CJS builds can prevent
-this; it is a property of how Node's two module systems resolve
-independently.
+The runtime keeps state in module scope: the registry that links a contract to its schema (`src/runtime/registry.ts`) and the validation cache (`src/runtime/cache.ts`). If one dependency loads the ESM build and another the CommonJS build, Node creates two separate copies of that state.
 
-`env-cap` treats this as a checked, documented risk class rather than an
-unstated unknown
-([ADR 0041](specs/decisions/0041-dual-package-hazard-checked-documented.md));
-`test/runtime/dual-package-hazard.test.ts` pins the exact consequence in
-CI. That consequence is **fail-fast, not silent corruption**: a contract
-created by `createEnv()` in one instance and passed to `validateEnv()`,
-`resetEnvCache()`, or `isEnvContract()` resolved from the other instance is
-not recognized — `validateEnv()`/`resetEnvCache()` throw a `TypeError`
-("this value was not created by createEnv()") and `isEnvContract()` returns
-`false`, immediately and visibly, rather than validating against the wrong
-schema or reading a stale cache. Keep each capability's `createEnv()` call
-and the `validateEnv()` call that consumes its manifest resolving through
-the same module specifier (the normal case for an application that imports
-`env-cap` one way throughout).
+No package that ships both formats can prevent this. env-cap makes the failure loud instead ([ADR 0041](specs/decisions/0041-dual-package-hazard-checked-documented.md)):
+
+1. A contract from one copy, passed to `validateEnv()` or `resetEnvCache()` from the other, throws a `TypeError`.
+2. `isEnvContract()` from the other copy returns `false`.
+3. Nothing validates against the wrong schema or reads a stale cache.
+
+`test/runtime/dual-package-hazard.test.ts` pins these results on the built `dist/` files, in one Node process. Keep each `createEnv()` call and the `validateEnv()` call that consumes it on the same import style.
 
 ## Build-time security model
 
-`generateEnvManifest()` (`./build`) is a static-analysis tool, not an
-execution engine.
+The build entry (`./build`, the CLI and the Action) analyzes source. It does not run it.
 
-The build system:
+| The build step                                                                     | Enforced by                                                                                                               | Limit                                                                                                                   |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Never imports, requires or evaluates a schema file                                 | `test/build/parse.test.ts` (a throwing top-level statement never runs); ESLint bans `eval` and `new Function` in `src/`   | Lint does not ban `import()`, `require()`, `vm` or workers in `src/build`; [CODE_REVIEW.md](CODE_REVIEW.md) covers them |
+| Resolves only literal values and reports the rest as unresolved                    | `test/build/parse.test.ts`, `test/build/literal-eval.test.ts`                                                             | None found                                                                                                              |
+| Rejects an output path that is absolute outside the root or climbs out with `..`   | `test/build/manifest-generate.test.ts`, `test/build/documentation-generate.test.ts`, `test/build/check-artifacts.test.ts` | The check is lexical. A symlinked directory inside the root can still lead outside it                                   |
+| Never overwrites an existing `.env.example` by default                             | `test/build/env-example.test.ts` (it writes a timestamped sibling)                                                        | `onExisting: "overwrite"` opts out                                                                                      |
+| Never descends into `node_modules` or `.git`, whatever `include` and `exclude` say | `test/build/discover.test.ts`                                                                                             | None found                                                                                                              |
+| Reads a listed package's schema without walking its directory                      | `test/build/resolution/resolve-package-schema.test.ts`                                                                    | Only packages you name in `packages`                                                                                    |
+| Never resolves a path alias into `node_modules`                                    | `src/_ipc/resolve-tsconfig-paths.ts`, tested in internal-package-contract; `ManagedFiles` keeps the copy identical        | The copy is outside env-cap's own coverage and mutation runs                                                            |
+| Never imports `node:fs`                                                            | ESLint, and `AmbientCapabilities`; the caller passes a `BuildFileSystem`                                                  | Textual scan                                                                                                            |
 
-- **Never imports or executes schema files.**
-  Schema files are analyzed as TypeScript ASTs. Only safe literal
-  expressions are evaluated, such as strings, numbers, booleans, arrays, and
-  object literals.
+A rejected output path fails before anything is written. A direct call throws that pass's error type. Through `generateEnvArtifacts()` or the CLI, the failure is collected into `EnvProjectGenerationError`.
 
-  Dynamic expressions such as:
+**Cross-package discovery** reads a schema from an installed dependency only when you name that package in `packages` ([ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)). For each named package it reads one `package.json`, then one declared file. That file must be a `.ts` or `.tsx` file inside the package, not a symlink out of it, and under a size cap. It never calls `readdir`, and it never follows a package's own dependencies.
 
-  - function calls
-  - variables
-  - computed values
-  - interpolated template strings
-
-  are treated as unresolved information and reported rather than executed or
-  guessed.
-
-- **Never writes outside the configured project root.**
-  All generated output paths (`location`, `docs.location`,
-  `envExample.location`) are resolved and verified against `root` before any
-  file is written.
-
-  Paths that escape the configured root through absolute paths or traversal
-  segments fail before any file is written. A direct `generateEnvManifest()`/
-  `generateDocumentation()`/`generateUsageReport()` call throws that pass's
-  own error type (`EnvManifestGenerationError`/`EnvDocumentationGenerationError`/
-  `EnvUsageAnalysisError`); through `generateEnvArtifacts()` or the CLI (the
-  primary documented workflow), the same escape is aggregated into
-  `EnvProjectGenerationError` instead.
-
-- **Never overwrites existing hand-managed `.env.example` files.**
-  If a generated example would conflict with an existing file, the generator
-  preserves the original and writes generated output separately.
-
-- **Avoids unnecessary traversal of dependency directories.**
-  The general file-discovery walk that powers `include`/`exclude` glob
-  matching excludes directories such as `node_modules` and `.git` during
-  traversal rather than scanning and filtering afterward -- this walk never
-  descends into `node_modules` at all, regardless of `include`/`exclude`.
-
-  A separate, narrow mechanism exists for reading a schema
-  that lives only inside an installed dependency: the `packages` option
-  (see [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)).
-  It is opt-in -- no package is ever considered unless its exact name
-  appears in a `packages` array the consuming project supplies -- and
-  bounded by construction, not by a traversal exclusion: it reads exactly
-  one `package.json` per named package to find a declared entry point, then
-  reads exactly one declared file, verified to be a real file (not a
-  symlink escaping the package directory) under a fixed size cap, before it
-  is parsed. It never calls `readdir` on any directory, named package or
-  not, and a package's own transitive dependencies are never considered.
-
-  A second, separate mechanism resolves TypeScript path
-  aliases (`compilerOptions.paths`/`baseUrl` in `tsconfig.json`) during
-  static analysis, on by default (see
-  [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)).
-  Unlike `packages`, it never crosses into `node_modules`: any resolution
-  landing on a path containing a `node_modules` segment is discarded, so a
-  bare specifier can only ever resolve into `node_modules` through the
-  `packages` mechanism above, never through alias resolution. It only ever
-  resolves to a real `.ts`/`.tsx` file already inside the scanned project.
+**Path-alias resolution** reads `compilerOptions.paths` and `baseUrl` and is on by default ([ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)). A result inside `node_modules` is discarded, so only `packages` can reach installed code.
 
 ## Application responsibilities
 
-`env-cap` intentionally does not attempt to solve problems outside the
-environment-contract lifecycle.
+These stay with you:
 
-Applications remain responsible for:
-
-- **Protecting documentation metadata.**
-  Values passed to `documentEnv()` are ordinary source-code data. If an
-  `env.schema.ts` file is imported into a browser bundle, documentation fields
-  inside that file may be included in the client output.
-
-  This means:
-
-  - descriptions are public
-  - runbook links are public
-  - operational notes are public
-  - lifecycle instructions are public
-
-  Documentation metadata must never contain credentials, private keys, or
-  information that should not appear in a client bundle.
-
-- **Writing safe processors and validators.**
-  Custom validation logic controls its own errors.
-
-  For example:
-
-  ```ts
-  throw new Error(`Invalid value: ${value}`)
-  ```
-
-  may expose a secret if the thrown message is later logged. The package
-  protects values passing through its own runtime boundaries but cannot
-  sanitize arbitrary application-generated error messages.
-
-- **Managing secret storage and rotation.**
-  Obtaining, storing, rotating, and revoking secrets are infrastructure
-  responsibilities. `env-cap` validates configuration after it has been
-  supplied; it does not replace a secret-management system.
+- **Keep secrets out of documentation.** `documentEnv()` values are ordinary source. If a schema file reaches a browser bundle, its descriptions, runbook links and notes ship with it.
+- **Write safe validators.** A message such as `` `Invalid value: ${value}` `` exposes the value wherever the error is logged. env-cap passes your message through unchanged.
+- **Do not spread contracts.** Spreading one reads every value into a plain object.
+- **Store and rotate secrets elsewhere.** env-cap validates values after your infrastructure supplies them.
+- **Treat validation contexts as filters.** A context decides whether a run validates a variable. It is not access control and not a bundling boundary ([ADR 0022](specs/decisions/0022-validation-contexts.md)).
 
 ## Supply-chain posture
 
-For a reviewer checking this project's publish/build pipeline rather than
-its runtime API: releases are published via npm's OIDC trusted publishing
-(`.github/workflows/release.yml`) — there is no long-lived `NPM_TOKEN`
-secret in this repository to leak, rotate, or scope. The workflow's
-`id-token: write` permission is exchanged for a short-lived publish
-credential per run, tied to this exact repository and workflow file, and
-the same OIDC flow attaches npm provenance attestations to each published
-version. The runtime and helpers entry points are verified against real
-Node, Bun, and Deno engines in CI (`test/cross-runtime/`), not merely
-asserted to be isomorphic by inspection. Test coverage is enforced
-ratchet-up-only (see `vitest.config.ts`; [`CONTRIBUTING.md`](CONTRIBUTING.md)
-forbids lowering a threshold to accommodate a drop). See
-[`RELEASING.md`](RELEASING.md#first-time-setup) for the one-time
-trusted-publisher setup this depends on.
+What a reviewer of the build and publish pipeline can rely on:
+
+| Control                                                                                                                       | Mechanism                                                                                                     | Limit                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `main` requires a pull request, resolved review threads, and the `contract` and `lint` checks                                 | Ruleset; `BranchProtection` check                                                                             | Admins can bypass; no approving review is required                                                        |
+| Releases publish over npm OIDC trusted publishing with a provenance attestation                                               | `.github/workflows/release.yml` and the shared release workflow it calls; the repository holds no `NPM_TOKEN` | A manual last-resort publish ([RELEASING.md](RELEASING.md)) carries no attestation                        |
+| The release checks that npm serves the version with its attestation                                                           | The release workflow's final verification step                                                                | It reports a failure; it cannot unpublish                                                                 |
+| A release publishes only a tree whose `contract` job passed, after `npm run verify` and an install-and-import of that tarball | The shared release workflow                                                                                   | It looks at `contract`, not `required`. No env-cap release has run on this workflow version yet           |
+| A person merges every release pull request                                                                                    | The Changesets flow; release pull requests are never merged automatically                                     | An admin can merge a `major` changeset; the workflow only posts a notice                                  |
+| Version tags `v<x.y.z>` cannot be moved or deleted                                                                            | A tag ruleset on `refs/tags/v*.*.*`                                                                           | Admins can bypass rulesets. The floating `v0` tag moves on each release by design                         |
+| Production dependency licences, `npm audit` and Socket alerts are reviewed                                                    | The `Licenses`, `SecurityDeps` and `SecuritySocket` checks in `contract`; each accepted alert needs a record  | Socket alerts on the bundled compiler (network, shell, environment, filesystem) are recorded, not removed |
+| No secrets are committed                                                                                                      | The `SecuritySecrets` check                                                                                   | Pattern-based                                                                                             |
+| A pull request with an open code-scanning alert on its ref fails                                                              | The `CodeScanning` check                                                                                      | Alerts that exist only on `main`, such as Scorecard's, are not visible to a pull request                  |
+| Shipped JavaScript is unminified, and every URL in `dist/` has a reviewed record                                              | The `NoMinify` and `DistNoUrls` checks                                                                        | None found                                                                                                |
+| Coverage stays above fixed floors                                                                                             | `vitest.config.ts` thresholds, enforced in `contract`                                                         | A pull request can lower a floor; reviewers treat that as a reviewed change                               |
+
+The runtime, helpers and evidence entries also run under Bun and Deno (`test/cross-runtime/`). That job does not yet block a merge. The build entry and the CLI are Node-only.
+
+[RELEASING.md](RELEASING.md#first-time-setup) describes the one-time trusted-publisher setup.
 
 ## Supported versions
 
-This project has not reached a `1.0` release.
+This is maintainer policy, not a mechanism.
 
-**Today, before `1.0`:** security fixes are provided on the latest published
-`0.x` version only. There is no separate long-term-support branch and no
-extended security-support policy yet -- an application pinned to an older
-`0.x` release does not receive backported fixes; upgrading to the latest
-`0.x` is the only supported remediation path.
+**Before 1.0:** security fixes go to the latest published `0.x` only. There is no long-term-support branch. Upgrading to the latest `0.x` is the only supported fix.
 
-**Starting at `1.0`:** once this project ships a `1.0` release, security
-fixes will be backported to the latest minor release of the previous major
-version for a minimum of six months after a new major version ships. This
-window may be extended at the maintainer's discretion -- for example, to
-give large downstream consumers more migration time -- but once a minimum
-end date has been stated for a given major version's backport window, it
-will never be shortened. Fixes for the current major version continue to
-target its latest published minor/patch release, exactly as fixes do today
-for `0.x`; the backport commitment only extends that same treatment one
-major version back, for a bounded time.
+**From 1.0:** security fixes will be backported to the previous major's latest minor for at least six months after a new major ships. The maintainer may extend that window. Once an end date is stated for a major, it will not be shortened.
 
-This is a forward commitment about a future release line, not a claim that
-backporting has already been exercised -- see
-[`ADOPTION.md`](ADOPTION.md#versioning-stability-and-long-term-support) for
-how to weigh that distinction today.
+This commitment covers a future release line and has not been exercised yet. [ADOPTION.md](ADOPTION.md#versioning-stability-and-long-term-support) explains how to weigh it.

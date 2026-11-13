@@ -31,9 +31,9 @@
       <section class="brief-block">
         <h2>What it does</h2>
         <p>
-          Each part of the application declares the settings it owns. A build step turns those
-          declarations into a report of owners, unused settings and approaching expiry dates, and
-          the application checks its settings when it starts.
+          Each part of the application declares the settings it owns. A build step reports owners,
+          unused settings and coming expiry dates. The application checks its settings when it
+          starts.
         </p>
       </section>
       <section class="brief-block">
@@ -46,7 +46,10 @@
             It works alongside the validator and secret manager a team already has, so nothing is
             replaced.
           </li>
-          <li>The part that runs in your application adds no dependencies to it.</li>
+          <li>
+            The part that runs in your application imports no Node module and stays under 3 KB
+            compressed.
+          </li>
         </ul>
       </section>
       <section class="brief-block">
@@ -61,11 +64,10 @@
         <h2>What could go wrong</h2>
         <ul>
           <li>
-            env-cap is pre-1.0. Per
-            <a href="https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md"
+            env-cap is pre-1.0. Before 1.0, a minor release may break the Stable tier (<a
+              href="https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md"
               >VERSIONING.md</a
-            >, a minor release may still include a breaking change to the Stable tier before 1.0, so
-            pin accordingly and read the changelog on every minor upgrade.
+            >). Pin a version and read the changelog on every minor.
           </li>
           <li>
             Its reports are only as accurate as the declarations a team writes, and it cannot see
@@ -75,10 +77,7 @@
             Security fixes target the latest 0.x release only, and there is no backport branch
             before 1.0.
           </li>
-          <li>
-            The install includes a bundled compiler, about 24 MB unpacked, used only for the
-            build-time reports.
-          </li>
+          <li>The install includes a TypeScript 6 compiler, used only to build the reports.</li>
         </ul>
       </section>
       <section class="brief-block">

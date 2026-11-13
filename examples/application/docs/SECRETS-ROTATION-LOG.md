@@ -1,10 +1,10 @@
 # Secrets Rotation Log
 
-Internal rotation-compliance artifact for NIST SP 800-53 Rev. 5 **IA-5** (Authenticator Management), control statement (f): "Change or refresh authenticators [organization-defined time period by authenticator type] or when [organization-defined events] occur." Generated from `env-cap`'s own evidence artifact -- see `scripts/rotation-log/README.md` for how.
+Internal secrets-rotation record for NIST SP 800-53 Rev. 5 **IA-5** (Authenticator Management), control item (f): "Changing or refreshing authenticators [Assignment: organization-defined time period by authenticator type] or when [Assignment: organization-defined events] occur;" Generated from `env-cap`'s own evidence artifact -- see `scripts/rotation-log/README.md` for how.
 
 > **Not NIST certification or ATO evidence.** This is an internal engineering artifact for tracking secrets-rotation hygiene, not a compliance attestation, an authorization package exhibit, or a substitute for your organization's own IA-5 assessment procedures.
 
-Generated at: 2026-11-02T20:26:45.716Z
+Generated at: 2026-11-12T00:13:08.826Z
 
 | Variable | Authenticator type | Rotation period | Last rotated | Status | Time-based trigger | Event-based triggers declared |
 | --- | --- | --- | --- | --- | --- | --- |

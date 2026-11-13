@@ -19,9 +19,9 @@ docs/
 
 `src/server.ts` and `src/client.ts` each validate the **same** manifest, each in its own process, each with a
 different `activeContexts`. This is deliberately two separate npm scripts, not one script calling
-`validateEnv()` twice: `validateEnv()` is one-shot per process by design (see the root README's
-["Validate once during startup"](../../README.md#3-validate-once-during-startup) and
-[ADR 0022](../../specs/decisions/0022-validation-contexts.md)'s cache invariant) — a real server process and a
+`validateEnv()` twice: `validateEnv()` is one-shot per process by design (see the Guide's
+["Validate once during startup"](../../../../../GUIDE.md#3-validate-once-during-startup) and
+[ADR 0022](../../../../../specs/decisions/0022-validation-contexts.md)'s cache invariant) — a real server process and a
 real browser bundle are two separate processes too, so this example's structure matches how the feature is
 actually meant to be used, not a shortcut that only works in a toy script.
 
@@ -74,8 +74,8 @@ real secret, putting it in the same schema as a client-context variable would st
 (including any literal `default`) ships wherever that manifest is imported — `activeContexts` filtering
 happens after that, at `validateEnv()` time, not before. A real application with an actual browser bundle
 should keep server-only schema files out of client-bound code the same way it already would without this
-feature — via separate discovery/generated manifests per contract (see the root README's
-["Runtime and build-time are intentionally separate"](../../README.md#runtime-and-build-time-are-intentionally-separate)
-and [ADR 0004](../../specs/decisions/0004-no-client-server-package-split.md)). Validation contexts are a
+feature — via separate discovery/generated manifests per contract (see the Guide's
+["Runtime and build-time are intentionally separate"](../../../../../GUIDE.md#runtime-and-build-time-are-intentionally-separate)
+and [ADR 0004](../../../../../specs/decisions/0004-no-client-server-package-split.md)). Validation contexts are a
 complement to that boundary, for the facets *within* an already-correctly-scoped manifest (an environment
 tier, a secondary entry point) — not a replacement for it.

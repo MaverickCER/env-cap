@@ -8,7 +8,7 @@
 
 _Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-11-02T20:27:03.904Z_
+_Generated 2026-11-12T00:12:54.738Z_
 
 ## Changes since last report
 
@@ -96,7 +96,7 @@ One row per unique variable name; more than one location means more than one fea
 | Variable | Owner | Expires | Refresh instructions |
 |---|---|---|---|
 | [`PAYPAL_CLIENT_ID`](#paypal-addon-paypal_client_id) | paypal-addon-maintainers | -- | -- |
-| [`PAYPAL_CLIENT_SECRET`](#paypal-addon-paypal_client_secret) | paypal-addon-maintainers | 2026-03-01 (**expired 246d ago**) | Rotate in the PayPal Developer Dashboard, then redeploy. |
+| [`PAYPAL_CLIENT_SECRET`](#paypal-addon-paypal_client_secret) | paypal-addon-maintainers | 2026-03-01 (**expired 256d ago**) | Rotate in the PayPal Developer Dashboard, then redeploy. |
 | [`PAYPAL_WEBHOOK_ID`](#paypal-addon-paypal_webhook_id) | paypal-addon-maintainers | -- | -- |
 
 ## Security review

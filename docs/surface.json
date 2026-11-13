@@ -2,45 +2,61 @@
   "entries": {
     ".": {
       "source": "src/runtime/",
-      "environment": "isomorphic, zero deps",
+      "environment": "No Node module or Node global",
       "tier": "Stable",
-      "purpose": "`createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, error types, `isEnvContract`"
+      "purpose": "`createEnv`, `documentEnv`, `validateEnv`, `resetEnvCache`, `isEnvContract` and the error types"
     },
     "./build": {
       "source": "src/build/",
-      "environment": "Node-only, dev/CI",
+      "environment": "Node only, in development and CI",
       "tier": "Stable",
-      "purpose": "discovery, AST analysis, artifact generation (see `VERSIONING.md` \u2014 the four `generate*()` orchestrators and the lower-level primitives are all Stable, ADR 0045)"
+      "purpose": "Discovery, AST analysis and artifact generation. The four `generate*()` orchestrators and the lower-level primitives are Stable (ADR 0045, `VERSIONING.md`)."
     },
     "./helpers": {
       "source": "src/helpers/",
-      "environment": "isomorphic, optional",
+      "environment": "No Node module; `processors.base64()` returns a Node `Buffer`",
       "tier": "Stable",
-      "purpose": "`processors` / `validators`"
+      "purpose": "`processors` and `validators`"
     },
     "./node": {
       "source": "src/node/",
-      "environment": "Node-only, dev/CI",
+      "environment": "Node only, in development and CI",
       "tier": "Stable",
-      "purpose": "`nodeBuildFileSystem` \u2014 the ready-made `BuildFileSystem` adapter a build script hands to `./build`"
+      "purpose": "`nodeBuildFileSystem`, the `BuildFileSystem` adapter a build script hands to `./build`"
     },
     "./evidence": {
       "source": "src/evidence/",
-      "environment": "isomorphic, optional",
+      "environment": "No Node module or Node global",
       "tier": "Stable",
-      "purpose": "`defineEvidenceProjection` \u2014 pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)"
+      "purpose": "`defineEvidenceProjection`, pure transforms over the Evidence Model (Stable, see `VERSIONING.md`)"
     },
     "./eslint-plugin": {
       "source": "src/eslint-plugin/",
-      "environment": "Node-only, optional",
+      "environment": "Node only, inside the project's ESLint",
       "tier": "Stable",
-      "purpose": "`no-raw-process-env` and `no-node-fs` lint rules"
+      "purpose": "The `no-raw-process-env` and `no-node-fs` lint rules"
     },
     "./schema": {
       "source": "schemas/",
-      "environment": "static JSON",
+      "environment": "Static JSON",
       "tier": "Stable",
-      "purpose": "The published JSON Schema for `env-cap --json` output (`env-cap-report.schema.json`), plus the model schemas under `./schema/*`"
+      "purpose": "The JSON Schema for `env-cap --json` output (`env-cap-report.schema.json`) and the model schemas under `./schema/*`"
     }
-  }
+  },
+  "dependencies": {
+    "@typescript/typescript6": "The TypeScript 6 compiler the build entry parses schemas with when the project's own TypeScript is 7 or missing (ADR 0049). Bundled inside the tarball. No runtime entry can reach it (`compiler-isolation`).",
+    "typescript": "The project's own compiler, used by the build entry instead of `@typescript/typescript6` when it is version 5 or 6. CI tests the newest 5.x, 6.x and 7.x, not the 5.0 floor.",
+    "eslint": "Only for `@maverickcer/env-cap/eslint-plugin`, which runs inside the project's own ESLint. CI runs the rules on ESLint 10 only.",
+    "@typescript-eslint/utils": "Only for `@maverickcer/env-cap/eslint-plugin`; projects linting TypeScript already have it through `typescript-eslint`."
+  },
+  "standards": [
+    {
+      "document": "Findings",
+      "standard": "OASIS SARIF 2.1.0",
+      "producedBy": "`buildSarifLog` (`@maverickcer/env-cap/build`), over the Finding Model",
+      "checkedAgainst": "The official OASIS schema (`test/fixtures/standards/`, a managed copy)",
+      "test": "test/build/sarif.test.ts",
+      "limits": "A library export, not wired to the CLI. A finding carries a region only when it has a real position. A finding with a position points at the cited file (percent-encoded path); the rest carry a file but no line."
+    }
+  ]
 }

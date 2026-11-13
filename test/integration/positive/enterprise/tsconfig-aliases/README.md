@@ -19,9 +19,9 @@ application organizes imports around its own project root rather than counting `
 
 ## The bug this fixes (ADR 0023)
 
-Before [ADR 0023](../../specs/decisions/0023-tsconfig-path-alias-resolution.md), `env-cap`'s static analysis
+Before [ADR 0023](../../../../../specs/decisions/0023-tsconfig-path-alias-resolution.md), `env-cap`'s static analysis
 only understood two import shapes: relative (`./foo`, `../foo`) and an explicitly allow-listed package name
-(`packages`, [ADR 0014](../../specs/decisions/0014-cross-package-schema-discovery.md)). A bare specifier
+(`packages`, [ADR 0014](../../../../../specs/decisions/0014-cross-package-schema-discovery.md)). A bare specifier
 matching a `tsconfig.json` path alias — exactly what `src/server.ts` writes here — fell through both, and the
 `payments` contract would have been misreported as **abandoned** (never imported anywhere) in
 `docs/OWNERSHIP.md`, even though it plainly is imported and read.
@@ -44,8 +44,8 @@ Unlike `packages`, nothing in `scripts/generate-manifest.mjs` opts into this —
 passed to `generateEnvArtifacts()`. `env-cap` auto-detects this example's own `tsconfig.json` at `root`
 automatically, the same way `tsc` itself would, because (unlike an installed package) a project's own
 `tsconfig.json` never crosses a trust/versioning boundary. See
-[TypeScript path aliases](../../README.md#typescript-path-aliases-pathsbaseurl) in the root README and
-[`VERSIONING.md`](../../VERSIONING.md) for the Experimental-surface policy this ships under.
+[TypeScript path aliases](../../../../../GUIDE.md#typescript-path-aliases-pathsbaseurl) in the Guide and
+[`VERSIONING.md`](../../../../../VERSIONING.md) for the Experimental-surface policy this ships under.
 
 ## Run it
 
@@ -71,7 +71,7 @@ This example is dual-purpose, the same way [`paypal-addon`](../paypal-addon/) is
 *and* installable as a real package. `package.json` declares `"envCap": { "schema":
 "./src/features/payments/env.schema.ts" }` and re-exports `paymentsEnv` from its main entry point
 (`src/index.ts`) — the same two obligations `paypal-addon`'s README documents in detail, see
-[ADR 0014](../../specs/decisions/0014-cross-package-schema-discovery.md).
+[ADR 0014](../../../../../specs/decisions/0014-cross-package-schema-discovery.md).
 
 See [`examples/tsconfig-aliases-consumer`](../tsconfig-aliases-consumer/) for an application that installs
 this package from a real packed tarball and discovers `paymentsEnv` across that real package boundary via

@@ -15,6 +15,8 @@ import {
   resetEnvCache,
   validateEnv,
 } from "../../dist/index.js"
+import { processors, validators } from "../../dist/helpers.js"
+import { defineEvidenceProjection } from "../../dist/evidence.js"
 
 test("createEnv + validateEnv resolve a typed, validated value under Bun", async () => {
   resetEnvCache()
@@ -49,4 +51,22 @@ test("contract self-redacts on String() -- ADR 0006 holds under Bun too", async 
   await validateEnv({ values: { SECRET: "shh-do-not-print-me" }, manifest: [env] })
   expect(String(env)).not.toContain("shh-do-not-print-me")
   expect(String(env)).toContain("bun-redaction")
+})
+
+test("helpers run under Bun: a processor converts and a validator rejects", () => {
+  expect(processors.toNumber()("8080")).toBe(8080)
+  expect(processors.toBoolean()("true")).toBe(true)
+  expect(validators.range(1, 65535)(1024, {})).toBe(true)
+  expect(typeof validators.range(1, 65535)(70000, {})).toBe("string")
+})
+
+test("evidence runs under Bun: a projection computes and records what it read", () => {
+  const projection = defineEvidenceProjection({
+    count: (evidence) => evidence.finding.findings.length,
+  })
+  const evidence = { schemaVersion: 1, finding: { findings: [] } }
+  // @ts-expect-error -- a minimal EvidenceModel shape is enough for this conformance probe
+  const result = projection.project(evidence)
+  expect(result.value.count).toBe(0)
+  expect(result.sources.count).toContain("finding.findings")
 })

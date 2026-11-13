@@ -157,7 +157,7 @@ analysis. Before a 1.0 release, several areas should continue to be evaluated:
   Keeping runtime and documentation separate improves boundaries, but requiring
   two declarations may create friction. Future versions may explore syntax
   improvements without merging the responsibilities back together. See the
-  README's ["Status"](../../README.md#status) section for this package's
+  README's ["Maturity, versioning and support"](../../README.md#maturity-versioning-and-support) section for this package's
   general pre-1.0 stability posture.
 
 - **Whether documentation completeness should remain opt-in.**

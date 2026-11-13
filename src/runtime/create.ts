@@ -21,6 +21,9 @@ let anonymousCount = 0
  * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a
  * key throws until {@link validateEnv} has run successfully for the runtime this contract
  * was passed to.
+ *
+ * The contract redacts itself under `console.log`, `String()`, `JSON.stringify` and template
+ * interpolation. Spreading it or calling `Object.entries()` on it reads every value, so do not.
  */
 export function createEnv<S extends EnvSchema>(
   schema: S,

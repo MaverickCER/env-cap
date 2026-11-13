@@ -3,8 +3,8 @@
 // different shape (a CSV for a spreadsheet import, a row per authenticator
 // TYPE instead of per variable, an HTML page) renders `RotationLogModel`
 // however it likes; this file is just this example's own choice, written
-// out in full so a reader can see exactly what "an IA-5 rotation-compliance
-// document" can look like end to end.
+// out in full so a reader can see exactly what "an IA-5 secrets-rotation
+// record" can look like end to end.
 //
 // There is no single official NIST-published template for this -- IA-5
 // (Authenticator Management) states the *control* ("change or refresh
@@ -51,11 +51,11 @@ export function renderRotationLog(model: RotationLogModel): string {
   lines.push("# Secrets Rotation Log")
   lines.push("")
   lines.push(
-    "Internal rotation-compliance artifact for NIST SP 800-53 Rev. 5 **IA-5** " +
-      '(Authenticator Management), control statement (f): "Change or refresh authenticators ' +
-      "[organization-defined time period by authenticator type] or when [organization-defined " +
-      'events] occur." Generated from `env-cap`\'s own evidence artifact -- see `scripts/' +
-      "rotation-log/README.md` for how.",
+    "Internal secrets-rotation record for NIST SP 800-53 Rev. 5 **IA-5** " +
+      '(Authenticator Management), control item (f): "Changing or refreshing authenticators ' +
+      "[Assignment: organization-defined time period by authenticator type] or when " +
+      '[Assignment: organization-defined events] occur;" Generated from `env-cap`\'s own ' +
+      "evidence artifact -- see `scripts/rotation-log/README.md` for how.",
   )
   lines.push("")
   lines.push(

@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
   // `require("@maverickcer/env-cap")` through Node's own module cache instead -- a real
   // singleton again, the same guarantee a plain Node script already gets for
   // free.
-  serverExternalPackages: ["env-cap"],
+  serverExternalPackages: ["@maverickcer/env-cap"],
 }
 
 export default nextConfig

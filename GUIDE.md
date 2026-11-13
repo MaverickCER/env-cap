@@ -1,73 +1,27 @@
 # env-cap Guide
 
-The reference manual: capability-owned contracts in depth, the full generate/validate workflow, validation contexts, reusable packages, tsconfig path aliases, runtime/build-time architecture, migration notes, the security model, troubleshooting, the CLI, the GitHub Action, the ESLint plugin, and performance characteristics.
+Find your entry point in the table below; its section starts with the problem it solves and states each limit next to its promise. Snippets name the CI-run file they come from, or say they are illustrative.
 
-For the pitch, quick start, and adoption reasoning, see [README.md](README.md). For why the package is built the way it is, see [specs/architecture.md](specs/architecture.md) and the [ADRs](specs/decisions/).
+For the overview and quick start, read [README.md](README.md). For the reasons behind the design, read [specs/architecture.md](specs/architecture.md) and the [ADRs](specs/decisions/).
 
-- [Documented example](#documented-example)
-- [Capability-owned contracts](#capability-owned-contracts)
-- [Helpers](#helpers)
-- [Core workflow](#core-workflow)
-- [Runtime support matrix](#runtime-support-matrix)
-- [Validation contexts](#validation-contexts)
-- [Reusable packages](#reusable-packages)
-- [TypeScript path aliases (paths/baseUrl)](#typescript-path-aliases-pathsbaseurl)
-- [Architecture](#architecture)
-- [Migration](#migration)
-- [Security model](#security-model)
-- [Troubleshooting](#troubleshooting)
-- [CLI](#cli)
-- [GitHub Action](#github-action)
-- [ESLint plugin](#eslint-plugin)
-- [Performance characteristics](#performance-characteristics)
+## Find your part
 
-## Documented example
+| You are                                                  | Entry point                                              | Start at                                                         |
+| -------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| An application developer bitten by an undefined variable | `@maverickcer/env-cap`                                   | [The runtime](#application-developers-the-runtime)               |
+| The same developer writing processors and validators     | `@maverickcer/env-cap/helpers`                           | [Helpers](#application-developers-helpers)                       |
+| A platform engineer who owns the CI pipeline             | `@maverickcer/env-cap/build`, the CLI, the GitHub Action | [Generating artifacts](#platform-engineers-generating-artifacts) |
+| A reviewer who needs an inventory of secrets and owners  | `@maverickcer/env-cap/evidence`                          | [Evidence](#reviewers-evidence)                                  |
+| A build-script author on Node                            | `@maverickcer/env-cap/node`                              | [The Node adapter](#build-script-authors-the-node-adapter)       |
+| A lint owner                                             | `@maverickcer/env-cap/eslint-plugin`                     | [ESLint plugin](#eslint-plugin)                                  |
 
-Most applications start with a centralized environment configuration model:
+## Application developers: the runtime
 
-```ts
-// src/env.ts
+**What it solves:** your application fails at startup with every bad variable's name, never its value, instead of crashing later in a request.
 
-import { createEnv } from "@maverickcer/env-cap"
+### Capability-owned contracts
 
-const schema = {
-  DATABASE_URL: {
-    validator(value: string) {
-      return value.startsWith("postgres://") || "Expected a PostgreSQL connection string."
-    },
-  },
-
-  STRIPE_KEY: {
-    validator(value: string) {
-      return value.startsWith("sk_") || 'Expected a Stripe secret key starting with "sk_".'
-    },
-  },
-
-  SENDGRID_API_KEY: {
-    validator(value: string) {
-      return value.startsWith("SG.") || "Expected a SendGrid API key."
-    },
-  },
-}
-
-export const env = createEnv(schema)
-```
-
-This approach works well while one application owns all configuration decisions.
-
-As applications grow, the challenge becomes understanding the relationship between configuration and the capabilities that depend on it:
-
-- Which feature requires `STRIPE_KEY`?
-- Can this variable be removed when a feature is removed?
-- Who owns its rotation?
-- Which service depends on this secret?
-- Is this configuration still required?
-
-`env-cap` can move those contracts closer to the capabilities that consume them, while still generating a complete application-wide view when teams need operational visibility.
-
-## Capability-owned contracts
-
-Each capability defines its own environment requirements while the application can still generate a complete project-wide view.
+Each feature declares the variables it owns, next to the validation it needs. This contract is illustrative. The contract CI runs is [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts).
 
 ```ts
 // features/payments/env.schema.ts
@@ -82,138 +36,41 @@ const paymentsSchema = {
   },
 }
 
-export const paymentsEnv = createEnv(paymentsSchema, {
-  name: "payments",
-})
+export const paymentsEnv = createEnv(paymentsSchema, { name: "payments" })
 
 documentEnv(paymentsSchema, {
   category: "Payments",
   owner: "payments-team",
-  metadata: {
-    service: "Payment Processing API",
-    criticality: "Production-critical",
-  },
   variables: {
     STRIPE_KEY: {
-      description:
-        "Stripe secret API key used by the payment service to create charges and process refunds.",
+      description: "Stripe secret key used to create charges and process refunds.",
       owner: "payments-team",
       expiresAt: "2027-01-01",
-      refreshInstructions: "Rotate in AWS Secrets Manager, then redeploy. Rotate every 90 days.",
+      refreshInstructions: "Rotate in AWS Secrets Manager, then redeploy.",
       sensitivity: "secret",
-      metadata: {
-        storageProvider: "AWS Secrets Manager",
-        accessPolicy: "Restricted to payment service runtime credentials.",
-        validationReason:
-          "Ensures the payment service cannot start with missing or malformed Stripe credentials.",
-      },
     },
   },
 })
 ```
 
-The application still receives one validated startup boundary:
+`createEnv()` takes what validation needs: `default`, `processor`, `validator` and `context`. `documentEnv()` takes what people need: owners, descriptions and expiry dates. `documentEnv()` has no runtime effect (`test/runtime/document.test.ts`), but its literals ship in any bundle that imports the file.
 
-```ts
-await validateEnv({
-  manifest,
-  values: process.env,
-})
-```
-
-But ownership follows usage:
+There is no global `env` object. Code reads a value through the contract that owns it:
 
 ```ts
 paymentsEnv.STRIPE_KEY
 ```
 
-The capability that owns the dependency owns access to it. There is no global configuration object requiring every capability to access configuration through a centralized namespace:
+Validation stays application-wide. One `validateEnv()` call checks every contract in the generated manifest and reports every failure in one `EnvValidationError` (`test/runtime/validate.test.ts`).
+
+### Core workflow
+
+#### 1. Define your environment contract
+
+Start with one central contract if that is what you have. This snippet is illustrative; [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts) is the central contract CI runs.
 
 ```ts
-env.payments.STRIPE_KEY
-```
-
-Instead, each capability exposes only the configuration it owns.
-
-At application startup, `validateEnv()` provides fail-fast verification across the complete application when paired with a generated manifest:
-
-```ts
-import { validateEnv } from "@maverickcer/env-cap"
-import { manifest } from "./generated/env.manifest"
-
-await validateEnv({
-  manifest,
-  values: process.env,
-})
-```
-
-The generated manifest provides a complete project-wide view without requiring runtime centralization. `validateEnv()` discovers every registered capability contract, validates required environment dependencies before the application serves traffic, and aggregates failures into a single validation error.
-
-This allows teams to maintain local ownership while preserving operational visibility:
-
-- Missing variables are detected before the application serves traffic.
-- Invalid values across multiple capabilities are reported together instead of failing one at a time.
-- Each capability retains ownership of its validation rules.
-- Operations teams maintain visibility into application-wide configuration requirements.
-
-Runtime access remains capability-scoped, while validation remains application-wide.
-
-## Helpers
-
-`@maverickcer/env-cap/helpers` provides optional convenience functions for common processor and validator patterns.
-
-Helpers are intentionally not the core `env-cap` workflow. They are provided for smaller applications, prototypes, and straightforward configuration requirements where a lightweight convenience API is useful.
-
-Already using Zod, envalid, or another validation library? Keep it and integrate it directly with env-cap contracts — helpers exist for when a lighter API is enough, not as a reason to switch.
-
-```ts
-import { createEnv } from "@maverickcer/env-cap"
-import { processors, validators } from "@maverickcer/env-cap/helpers"
-
-export const databaseEnv = createEnv(
-  {
-    DATABASE_URL: {
-      processor: processors.toURL(),
-      validator: validators.required(),
-    },
-
-    PORT: {
-      default: 5432,
-      processor: processors.toNumber(),
-      validator: validators.range(1, 65535),
-    },
-  },
-  {
-    name: "database",
-  },
-)
-```
-
-Available helpers include common processors and validators with composition utilities. They can be
-found at [src/helpers/index.ts](https://github.com/MaverickCER/env-cap/blob/main/src/helpers/index.ts)
-
-When possible, prefer validation rules that communicate domain intent directly alongside the capability contract. These may be custom `Processor<T>` and `Validator<T>` functions or existing validators from your application's validation stack.
-
-```ts
-validator(value: string) {
-  return value.startsWith("sk_") ||
-    'Expected a Stripe secret key starting with "sk_".';
-}
-```
-
-A named validation rule explains why the dependency exists and gives future maintainers context that a generic helper cannot always provide.
-
-The helper package is optional and has no impact on the core runtime when unused. When all runtime features are included, the runtime entry point remains within its 3 KB gzip budget and `./helpers` within its 4 KB one. `createEnv()` and `validateEnv()` remain the core APIs and provide the foundation for capability-owned configuration, while helpers provide convenient building blocks for common processor and validator patterns.
-
-## Core workflow
-
-### 1. Define your environment contract
-
-`env-cap` works with both centralized configuration and capability-owned contracts.
-
-For existing applications, start by wrapping your current environment requirements:
-
-```ts
+// src/env.ts
 import { createEnv } from "@maverickcer/env-cap"
 
 export const env = createEnv(
@@ -223,253 +80,81 @@ export const env = createEnv(
         return value.startsWith("postgres://") || "Expected a PostgreSQL connection string."
       },
     },
-    PORT: {
-      default: 3000,
-      processor(value: string) {
-        return Number(value)
-      },
-    },
+    PORT: { default: 3000, processor: (value: string) => Number(value) },
   },
-  {
-    name: "application",
-  },
+  { name: "application" },
 )
 ```
 
-As applications grow, contracts can move closer to the capabilities that consume them:
+Move contracts next to the features that consume them when ownership starts to matter. The runtime model does not change:
 
 ```text
-src/
-├── features/
-│   ├── payments/
-│   │   └── env.schema.ts
-│   ├── database/
-│   │   └── env.schema.ts
-│   └── notifications/
-│       └── env.schema.ts
+src/features/payments/env.schema.ts
+src/features/database/env.schema.ts
+packages/paypal-addon/src/env.schema.ts
 ```
 
-A capability can also be a reusable package:
+[`examples/application`](https://github.com/MaverickCER/env-cap/tree/main/examples/application) keeps one contract; [`examples/team-service`](https://github.com/MaverickCER/env-cap/tree/main/examples/team-service) splits it per feature.
 
-```text
-packages/
-└── paypal-addon/
-    └── src/env.schema.ts
+#### 2. Generate the project view
+
+A build step, run in development or CI, writes the manifest your startup code imports. The platform engineer's section covers the options; the short form is the CLI:
+
+```sh
+npx env-cap --location src/generated/env.manifest.ts --evidence docs/env.evidence.json
 ```
 
-The ownership model is identical whether the contract belongs to the application, an internal package, or a published dependency.
+Schema files are parsed, never imported or run (`test/build/parse.test.ts`). A schema built by a function, or a spread at the top of a schema object, produces a parse warning. A spread nested inside a variable's definition or its `documentEnv()` entry is skipped without one. Nothing is guessed.
 
-### 2. Generate the project view
-
-During development or CI:
-
-```ts
-import { generateEnvManifest } from "@maverickcer/env-cap/build"
-
-await generateEnvManifest({
-  location: "src/generated/env.manifest.ts",
-})
-```
-
-The build process creates the application-wide view required for:
-
-- environment manifests
-- documentation
-- `.env.example` files
-- configuration reports
-
-Every one of these draws a hard line between **declared** facts (author
-metadata — `owner`, `sensitivity`, `expiresAt`, `retention` — presence is
-checked, correctness never is) and **proven** facts (AST-derived —
-`UNCONSUMED_OWNED_VARIABLE`, the dependency graph). See
-[`specs/generated-artifacts.md`](specs/generated-artifacts.md) for the full
-list of what's generated today, the seven canonical fact models each one
-projects from, and what's deliberately deferred.
-
-Schemas are analyzed statically.
-
-They are never imported or executed during discovery.
-
-This provides project-wide visibility without requiring runtime configuration to become centralized.
-
-#### Change tracking via the persisted evidence artifact
-
-`generateEnvManifest()` no longer tracks its own change history — that moved to a separate, optional
-artifact: the full `EvidenceModel`, env-cap's canonical fact model covering the contract graph,
-dependency/ownership findings, lifecycle data, and a change report diffed against whatever was
-previously persisted. `generateEnvArtifacts()` always computes it; passing `evidence` also writes it
-to disk:
-
-```ts
-const result = await generateEnvArtifacts({
-  manifest: { location: "src/generated/env.manifest.ts" },
-  evidence: { location: "docs/env.evidence.json" },
-})
-
-console.log(result.evidence.change.manifest.addedVariables) // newly documented this run
-console.log(result.evidence.change.manifest.updatedVariables) // field-level before/after for anything that changed
-console.log(result.evidence.change.manifest.removedVariables) // no longer discovered at all
-```
-
-`evidence.location` is independent of `manifest.location` — requesting it needs no other pass, and a
-project with no `.ts` manifest at all can still generate a pure evidence report. Writing it also
-writes a paired `docs/env.evidence.json.fingerprint` sidecar, a cheap content hash a later read
-(`getEvidenceModel()`, for a report/projection script that doesn't want to pay for a full recompute
-on every invocation) uses to skip regenerating when nothing relevant has changed.
-
-**Commit both files, the same as you already commit `env.manifest.ts` itself.** "Since last
-execution" means since the last commit on your branch — that's what makes the diff meaningful in CI and
-reviewable in a pull request, not just a local curiosity. See
-[ADR 0038](specs/decisions/0038-always-computed-evidence-model-backs-generate-check-docs.md) for the
-full reasoning (superseding [ADR 0021](specs/decisions/0021-manifest-change-report-persisted-snapshot.md)'s
-original manifest-adjacent design).
-
-- **A diff is expected** any time a `documentEnv()` call's `description`/`owner`/`expiresAt`/
-  `refreshInstructions`/`required`/`extra` changes, or a contract's `active`/`category`/`exclusiveGroup`
-  changes — anything that isn't schema shape itself.
-- **Regeneration is automatic.** Every `generate:env`/CI run that passes `--evidence` already
-  rewrites both files; there's no separate "update the snapshot" step to remember.
-- **A diff signals real drift worth a second look** when it shows up somewhere nobody meant to touch —
-  an `updatedVariables` entry for a variable nobody intended to edit, or an `addedContracts`/
-  `removedContracts` entry from a change that was supposed to be unrelated.
-
-The CLI's normal (non-`--check`) output prints the same summary as an "Evidence changes since the
-last persisted snapshot" section whenever `--evidence <path>` is passed; run with `--json --evidence
-<path>` for the same data in machine-readable form.
-
-Separately, when two _active_ contracts document the same variable key with different metadata (e.g. two
-features that happen to reuse a name, each with its own `description`/`owner`), that's reported as a
-`duplicate-variable-documentation` warning in `result.warnings` — always a warning, never a hard error
-(static analysis can't prove two descriptions are "wrong," only different), gated by the same
-`onIncompatibility` option as every other compatibility warning.
-
-### 3. Validate once during startup
+#### 3. Validate once during startup
 
 ```ts
 import { validateEnv } from "@maverickcer/env-cap"
 import { manifest } from "./generated/env.manifest"
 
-await validateEnv({
-  manifest,
-  values: process.env,
-})
+await validateEnv({ manifest, values: process.env })
 ```
 
-At startup, `validateEnv()` verifies the complete application environment boundary.
+What happens, and where each rule is tested:
 
-After validation:
+| Situation                                      | Result                                                                | Test                            |
+| ---------------------------------------------- | --------------------------------------------------------------------- | ------------------------------- |
+| A contract is read before `validateEnv()` ends | Throws `EnvNotReadyError`                                             | `test/runtime/create.test.ts`   |
+| Several variables fail                         | One `EnvValidationError` lists every failure                          | `test/runtime/validate.test.ts` |
+| A failure message                              | Carries variable and contract names and your message, never the value | `test/runtime/validate.test.ts` |
+| `validateEnv()` is called again                | Returns or rethrows the first outcome without re-running validators   | `test/runtime/validate.test.ts` |
+| A test needs a fresh run                       | `resetEnvCache()` clears the cached outcome                           | `test/runtime/reset.test.ts`    |
 
-```ts
-env.DATABASE_URL
-```
+The record of validated values is frozen. The freeze is shallow: an object, array or `URL` that a processor returns stays mutable.
 
-or:
-
-```ts
-paymentsEnv.STRIPE_KEY
-```
-
-returns the processed value according to the contract that owns it.
-
-Before validation completes:
-
-```ts
-paymentsEnv.STRIPE_KEY
-```
-
-throws:
-
-```ts
-EnvNotReadyError
-```
-
-Validation failures are aggregated:
-
-```ts
-EnvValidationError
-```
-
-so applications receive the complete startup failure state instead of discovering missing or invalid variables one at a time.
-
-Runtime access can remain centralized for simpler applications or become capability-scoped as ownership boundaries grow. Validation remains application-wide.
-
-`validateEnv()` is idempotent for the life of the process: the first call's outcome (success or `EnvValidationError`) is cached and returned by every later call, without re-running any processor or validator — by design, since a real application validates once at startup and every later read should see that same, stable outcome. A test suite or a script that intentionally validates different `values` in the same process (as opposed to a real app's single startup call) needs `resetEnvCache()` between runs:
+A test suite that validates several scenarios in one process resets between them:
 
 ```ts
 import { resetEnvCache, validateEnv } from "@maverickcer/env-cap"
 
 await validateEnv({ manifest, values: scenarioA })
 resetEnvCache()
-await validateEnv({ manifest, values: scenarioB }) // re-runs validation from scratch
+await validateEnv({ manifest, values: scenarioB })
 ```
 
-Without it, a second `validateEnv()` call with different `values` silently returns the first run's cached result instead of re-validating.
+Without `resetEnvCache()`, the second call returns the first call's result.
 
-## Runtime support matrix
+### Validation contexts
 
-| Environment                                                    | `.` (runtime)                 | `./helpers` | `./build` (CLI/tooling)                                       |
-| -------------------------------------------------------------- | ----------------------------- | ----------- | ------------------------------------------------------------- |
-| Node.js 22+ (CJS or ESM)                                       | ✅                            | ✅          | ✅                                                            |
-| Browser bundle (Webpack/Vite/esbuild/etc.)                     | ✅                            | ✅ ¹        | ❌ not applicable — build-only, never bundle this into an app |
-| Edge/serverless (Cloudflare Workers, Vercel Edge, Deno Deploy) | ✅                            | ✅ ¹        | ❌ not applicable                                             |
-| Bun                                                            | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
-| Deno                                                           | ✅ (conformance-tested in CI) | ✅          | ✅                                                            |
-
-¹ Except `processors.base64()`, which returns a Node `Buffer`: use it only where `Buffer` exists, or decode with your own processor elsewhere.
-
-The runtime (`.` and `./helpers`) has zero dependencies, never touches the filesystem, and never imports a Node module (the one Node global it uses is the `Buffer` that `processors.base64()` returns) — see [`specs/architecture.md`](specs/architecture.md). `./build` is Node-only developer tooling (uses `node:path` and the TypeScript compiler API — never `node:fs`, see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)) meant for CI/npm-script use, never for shipping to a browser. Both ESM and CommonJS builds are published for every entry point (`package.json#exports`).
-
-### Requirements
-
-Node.js `>=22`. TypeScript 5, 6 or 7 is only required for build-time manifest generation: a bundled TypeScript 6 parses the schemas when yours is 7, is bundled inside the package and used only by the build entry, and adds about 24 MB unpacked to the install. The runtime works in plain JavaScript. TypeScript consumers need `moduleResolution` set to `node16`, `nodenext` or `bundler` to resolve the subpath exports (`./build`, `./helpers`, ...); the legacy `node10` resolver is not supported. `@maverickcer/env-cap/eslint-plugin` also needs `@typescript-eslint/utils` installed (an optional peer).
-
-## Validation contexts
-
-A schema entry may declare which **validation context** it belongs to. `validateEnv()` accepts the validation
-contexts active for a given run, and skips every variable that doesn't match:
-
-```ts
-DATABASE_URL: {
-  context: "server",
-  validator: validators.required(),
-}
-```
-
-```ts
-await validateEnv({
-  manifest,
-  values: process.env,
-  activeContexts: ["server"],
-})
-```
-
-**Matching rule:** a variable with no `context` participates in every run. A variable with a `context`
-participates only when `activeContexts` contains that exact string — no prefix matching, wildcards, or
-hierarchy. A skipped variable never runs its `default`/`processor`/`validator`, and reading it throws
-`EnvNotReadyError`, exactly as if `validateEnv()` had never run for it.
-
-`context` is entirely application-defined — env-cap never interprets, detects, or infers it. `"server"` and
-`"client"` are just one example; a validation context can represent anything a validation run needs to
-distinguish:
+A variable can belong to one validation context, a plain string your application chooses. These snippets are illustrative; the CI-run fixture is [`validation-contexts`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/team/validation-contexts).
 
 ```ts
 DATABASE_URL: { context: "server", validator: validators.required() }
 STRIPE_LIVE_KEY: { context: "production", validator: validators.required() }
 QUEUE_CONCURRENCY: { context: "worker", default: 4 }
-DEBUG_TRACE_ENDPOINT: { context: "development" }
 ```
 
-A run may activate more than one context at once — `activeContexts: ["server", "production"]` matches a
-variable declaring either. This works the same regardless of framework: `env-cap` never inspects `window` or
-`NODE_ENV` itself, the application computes `activeContexts` once, explicitly, before calling `validateEnv()`:
+Pass the contexts that apply to this process:
 
 ```ts
-// Works the same in a Next.js, TanStack Start, or plain Node app -- env-cap
-// never inspects window/NODE_ENV itself; the application does, once, before
-// calling validateEnv().
 await validateEnv({
-  values: typeof window === "undefined" ? process.env : window.__ENV__,
   manifest,
+  values: process.env,
   activeContexts: [
     typeof window === "undefined" ? "server" : "client",
     process.env.NODE_ENV === "production" ? "production" : "development",
@@ -477,412 +162,261 @@ await validateEnv({
 })
 ```
 
-When at least one variable declares a `context`, the generated manifest also exports every context it found,
-named to match `activeContexts` itself so it can be passed straight through:
+A variable takes part in a run by these rules:
 
-```ts
-// src/generated/env.manifest.ts (generated)
-export const activeContexts = ["client", "server"]
-export const manifest = [/* ... */]
-```
+1. A variable with no `context` takes part in every run.
+2. A variable with a `context` takes part only when `activeContexts` contains that exact string.
+3. A skipped variable runs no default, processor or validator, and reading it throws `EnvNotReadyError`.
+4. env-cap never inspects `window` or `NODE_ENV`; your code computes `activeContexts`.
 
-```ts
-import { activeContexts, manifest } from "./generated/env.manifest"
+When any variable declares a context, the generated manifest also exports `activeContexts`, listing every context it found. Treat it as a starting point and narrow it per process, as [`validation-contexts`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/team/validation-contexts) does.
 
-await validateEnv({ manifest, values: process.env, activeContexts })
-```
+**Contexts are not a security or bundling boundary.** They decide whether a run validates a variable, nothing else. A `context: "server"` variable in a schema that a client bundle imports still ships its definition and any literal `default`. Keep server-only variables in a separate schema and manifest ([ADR 0004](specs/decisions/0004-no-client-server-package-split.md), [ADR 0022](specs/decisions/0022-validation-contexts.md)).
 
-This is every context the manifest has — a convenient starting point, not a pre-scoped default. Importing it
-unmodified into every process defeats the point of scoping contexts per deployment target in the first place;
-narrow it (or import it under another name and filter it) the same way `src/server.ts`/`src/client.ts` in
-[`test/integration/positive/team/validation-contexts`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/team/validation-contexts)
-each hand-write their own narrowed `activeContexts: ["server"]` / `["client"]` instead of using this
-export directly.
+### Security model
 
-> **Validation contexts are not a bundling or security boundary, and not authorization.** They control whether
-> `validateEnv()` processes a variable — nothing else. Putting a `context: "server"` variable in the same
-> schema as `context: "client"` variables, feeding one manifest that a client bundle imports, does **not**
-> keep the server-context variable's definition (including any literal `default`) out of that bundle —
-> `activeContexts` filtering happens after the schema is already wherever it's going to be. If a variable must
-> never reach a browser bundle at all, keep using separate discovery/generated manifests per contract (see
-> ["Runtime and build-time are intentionally separate"](#architecture)
-> and [ADR 0004](specs/decisions/0004-no-client-server-package-split.md)) — validation contexts are a
-> complement to that boundary, not a replacement for it. Likewise, a string like `context: "admin"` does not
-> restrict _who_ can read a value; it only decides whether a given run validates it. See
-> [ADR 0022](specs/decisions/0022-validation-contexts.md) for the full set of invariants this feature commits to.
+What the runtime refuses to do, and what enforces each refusal:
 
-## Reusable packages
+| The runtime does not           | Enforced by                                                                                   | Limit                                                                |
+| ------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Touch the filesystem           | A lint ban on `node:fs` in `src/` outside the CLI, and the `AmbientCapabilities` tarball scan | The scan is textual                                                  |
+| Read `process.env`             | The `AmbientCapabilities` scan and the browser-bundle test                                    | `globalThis["process"]` would evade both                             |
+| Open a network connection      | The `ipc/no-network` lint rule on env-cap's own `src/`                                        | Source lint only; the bundled TypeScript compiler is not covered     |
+| Show values when logged        | `test/runtime/create.test.ts`: `console.log`, `String()`, `JSON.stringify`, templates         | Spreading a contract or calling `Object.entries()` reads every value |
+| Put values in errors           | `test/runtime/validate.test.ts`                                                               | Your own validator or processor message is passed through verbatim   |
+| Fetch, store or rotate secrets | No such code exists; `documentEnv()` fields are documentation only                            | Not a check; read the source                                         |
 
-A configuration contract can ship as its own installable package instead of living only inside the consuming application's source tree.
-
-This works for both centralized application schemas and capability-owned contracts. A reusable package can expose the environment requirements it owns, allowing consuming applications to validate and generate visibility artifacts without manually copying configuration definitions.
-
-See [`test/integration/positive/enterprise/paypal-addon`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-addon)/[`test/integration/positive/enterprise/paypal-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-consumer) for a complete, runnable example (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](https://github.com/MaverickCER/env-cap/tree/main/test/integration) for every other runnable scenario).
-
-Discovery still never walks `node_modules` during its general file-discovery pass (`generateEnvManifest()`'s `include`/`exclude` globs), and that guarantee is unconditional.
-
-Making a package-shipped contract discoverable is an opt-in mechanism (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)):
-
-```ts
-// consuming app's build script
-await generateEnvArtifacts({
-  packages: ["@acme/payments-sdk"], // explicit allowlist -- never implicit
-  manifest: { location: "src/env.manifest.ts" },
-})
-```
-
-The publishing package takes on two obligations:
-
-1. Declare `"envCap": { "schema": "./src/env.schema.ts" }` in its own `package.json`, pointing at its real, uncompiled `.ts` source (ship that file via `"files": ["dist", "src/env.schema.ts"]` alongside the compiled `dist/` used at runtime).
-
-2. Re-export the `createEnv()`-produced contract under the same name from its main entry point, so:
-
-```ts
-import { paypalEnv } from "@acme/paypal-addon"
-```
-
-resolves to the same contract discovered during build-time analysis.
-
-Resolution never calls `readdir` on `node_modules` — it reads exactly one `package.json` per allow-listed package to find the declared field, then exactly one declared file, validated (path, extension, symlink target, size) before it is parsed.
-
-See `SECURITY.md`'s "Avoids unnecessary traversal of dependency directories" section for the exact bounds.
-
-### Documenting a variable a package already explains
-
-A variable can be declared in the package's contract and again in the application that consumes it. The application
-does not repeat the explanation: it names the variable with only what is its own, and every field it leaves unset is
-filled from the package's declaration.
-
-```ts
-const credentials = { PAYPAL_CLIENT_SECRET: { default: "", validator: () => true } }
-export const credentialsEnv = createEnv(credentials, { name: "credentials" })
-
-documentEnv(credentials, {
-  variables: { PAYPAL_CLIENT_SECRET: { expiresAt: "2027-01-01", owner: "payments" } },
-})
-```
-
-Both declarations then report the package's `description`, `sensitivity` and `refreshInstructions` together with the
-application's `expiresAt` and `owner`. A field the application sets itself is never replaced, and a field both set to
-different values is reported as `DUPLICATE_VARIABLE_DOCUMENTATION`. Two of the application's own contracts never fill
-each other (a service that can run on either of two databases documents each one's variable for itself); a field
-both set differently is still reported. See
-[ADR 0050](specs/decisions/0050-a-variable-declared-twice-is-documented-once.md).
-
-## TypeScript path aliases (paths/baseUrl)
-
-If your project organizes its own source with a `tsconfig.json` path alias (`"@/lib/env"`, `"~/schema/env"`, ...), `env-cap` resolves it automatically — no configuration required:
-
-```ts
-// tsconfig.json
-{ "compilerOptions": { "paths": { "@/*": ["./src/*"] } } }
-```
-
-```ts
-// src/consumer.ts
-import { paymentsEnv } from "@/features/payments/env.schema.js"
-paymentsEnv.STRIPE_KEY
-```
-
-Without this, a contract only ever imported through an alias would be misreported as `abandoned` in the Dependency & Ownership Report, or its `documentEnv()` call left unlinked — the same class of false positive [ADR 0010](specs/decisions/0010-dependency-ownership-engine-scope-boundary.md)'s ownership engine exists to avoid.
-
-See [`test/integration/positive/enterprise/tsconfig-aliases`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/tsconfig-aliases) for a complete, runnable example, and [`test/integration/positive/enterprise/tsconfig-aliases-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/tsconfig-aliases-consumer) for the same producer/consumer pairing [Reusable packages](#reusable-packages) uses — proving this composes correctly with cross-package discovery (ADR 0014) in one real install (see [`examples/`](examples/) for the three flagship, human-facing examples, and [`test/integration/`](https://github.com/MaverickCER/env-cap/tree/main/test/integration) for every other runnable scenario).
-
-Unlike [Reusable packages](#reusable-packages) above, this is on by default (see [`VERSIONING.md`](VERSIONING.md) and [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)): a project's own `tsconfig.json` never crosses a trust/versioning boundary the way an installed package does, so there's no safety reason to require opt-in. `env-cap` auto-detects `tsconfig.json` at `root`, exactly (no upward directory search, unlike bare `tsc`). Pass `tsconfig: "<path>"` to point at a different file (useful in monorepos where the relevant config isn't at `root`), or `tsconfig: false` to disable alias resolution entirely:
-
-```ts
-await generateEnvArtifacts({
-  tsconfig: "tsconfig.build.json", // or `false` to disable
-  manifest: { location: "src/env.manifest.ts" },
-})
-```
-
-The actual `paths`/`baseUrl` matching is delegated entirely to the TypeScript compiler (`ts.resolveModuleName()`, the same function `tsc`/`tsserver` themselves use), never resolves into `node_modules` (that boundary stays exclusively [ADR 0014](specs/decisions/0014-cross-package-schema-discovery.md)'s), and only ever resolves to a real `.ts`/`.tsx` file.
-
-## Architecture
-
-### Runtime and build-time are intentionally separate
-
-`env-cap` separates application execution from project-wide analysis.
-
-```text
-Environment contract
-        |
-        |
-   +----+----+
-   |         |
-Runtime   Build-time
-   |         |
-createEnv  AST analysis
-   |         |
-validateEnv generate artifacts
-   |
-Typed access
-```
-
-Runtime:
-
-- validates configuration
-- exposes typed values
-- contains no filesystem access
-- does not discover files dynamically
-
-Build-time:
-
-- discovers contracts
-- generates documentation
-- creates manifests and operational visibility artifacts
-
-This separation keeps application startup deterministic while allowing development and platform workflows to understand the complete configuration surface.
-
-A project can begin with a centralized environment contract and adopt capability-owned contracts where ownership boundaries provide value. The runtime model remains the same: contracts define validated access, while build-time tooling provides application-wide visibility.
-
-For the reasoning behind capability-owned configuration — code ownership, reusable packages, and platform visibility without runtime centralization — see [Why capability ownership?](https://maverickcer.github.io/env-cap/#why-context) on the website, and [specs/architecture.md](specs/architecture.md) for the full technical treatment.
-
-## Migration
-
-`env-cap` is designed for incremental adoption.
-
-Keep your existing tools and validation approach. Introduce contracts where they provide value, then move toward stronger ownership boundaries as your application grows.
-
-### From dotenv
-
-Continue loading variables with dotenv.
-
-Add validated contracts on top:
-
-```ts
-import { createEnv } from "@maverickcer/env-cap"
-
-export const env = createEnv({
-  DATABASE_URL: {
-    validator(value: string) {
-      return value.startsWith("postgres://") || "Expected a PostgreSQL connection string."
-    },
-  },
-})
-```
-
-No loader replacement is required.
-
-### From process.env
-
-Replace scattered access:
-
-```ts
-process.env.STRIPE_KEY
-```
-
-with validated contract access:
-
-```ts
-env.STRIPE_KEY
-```
-
-As ownership boundaries become useful, contracts can move closer to the capabilities that consume them:
-
-```ts
-paymentsEnv.STRIPE_KEY
-```
-
-### From Zod, envalid, or t3-env
-
-Keep your existing validation logic.
-
-`env-cap` organizes configuration ownership, lifecycle visibility, and application-wide validation boundaries; it does not replace specialized validation libraries.
-
-Existing validators can be integrated directly:
-
-```ts
-validator(value) {
-  return existingValidator(value) || "Invalid value";
-}
-```
-
-No large rewrite is required.
-
-See [`specs/migrations/`](specs/migrations/) for the full, tool-specific guides this section summarizes.
-
-## Security model
-
-`env-cap` is intentionally limited in scope.
-
-The runtime:
-
-- does not store secrets
-- does not fetch secrets
-- does not transmit telemetry
-- does not execute lifecycle commands
-- does not log secret values
-- does not include documentation metadata in runtime contracts
-
-Runtime contracts protect against accidental exposure:
-
-```ts
-console.log(paymentsEnv)
-```
-
-outputs:
+Logged, a contract prints a marker instead of its values:
 
 ```txt
 EnvContract("payments") { 1 variable(s) }
 ```
 
-not:
+The full model, including what stays your responsibility, is in [SECURITY.md](SECURITY.md).
 
-```txt
-{
-  STRIPE_KEY: "sk_live_..."
-}
-```
+### Troubleshooting
 
-Explicit access remains required:
+env-cap defines these error classes. A contract from the other module format throws a `TypeError` ([dual-package hazard](SECURITY.md#dual-package-hazard)), and a processor called outside `validateEnv()` throws a plain `Error`.
+
+| Error                             | Thrown by                 | Common cause                                                                             | Fix                                                                        |
+| --------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `EnvNotReadyError`                | Reading `someEnv.KEY`     | The contract was read before `validateEnv()` finished, or its context was not active     | Await `validateEnv()` at startup, before application code reads values     |
+| `EnvValidationError`              | `validateEnv()`           | A processor or validator rejected one or more variables                                  | Read `error.failures`: one entry per variable, with names and your message |
+| `EnvManifestGenerationError`      | `generateEnvManifest()`   | Conflicting explicit processor types for one variable, or `location` outside `root`      | Read `error.issues`; fix the definitions or the output path                |
+| `EnvDocumentationGenerationError` | `generateDocumentation()` | `location` or `envExample.location` outside `root`                                       | Correct the output path                                                    |
+| `EnvUsageAnalysisError`           | `generateUsageReport()`   | `report.location` outside `root`                                                         | Correct the output path                                                    |
+| `EnvProjectGenerationError`       | `generateEnvArtifacts()`  | Any of the above, collected across the requested passes, or an exclusive-group violation | Fix the underlying error; every failure is listed in one result            |
+
+Documentation and ownership findings never throw. They are reported as findings in the evidence file, and fail a run only under a `--strict*` flag.
+
+**A schema's variable is missing from the manifest.** Discovery reads an inline object literal or a resolvable `const`. A spread or a factory produces a parse warning; read `result.parseWarnings` or the CLI output ([ADR 0002](specs/decisions/0002-static-analysis-never-execution.md)).
+
+**A contract imported through a path alias shows as abandoned.** Check that `tsconfig.json` sits at `root` and declares `paths` or `baseUrl`. Otherwise, point `tsconfig` at the right file. Discovery does not search upward ([path aliases](#typescript-path-aliases-pathsbaseurl)).
+
+**A listed package's contract is not discovered.** Look for a `(package) <name>` entry in `result.parseWarnings`. The package must declare `envCap.schema` pointing at a `.ts` or `.tsx` file inside itself ([reusable packages](#reusable-packages)).
+
+**A second `validateEnv()` call returned the first result.** That is the cache ([step 3](#3-validate-once-during-startup)). Call `resetEnvCache()` between scenarios.
+
+**Discovery fails with a "sanity limit" error.** `discoverSchemaFiles` refuses to return more files than `MAX_DISCOVERED_SCHEMA_FILES`. The usual cause is a `root` or `include` far broader than intended, such as an unset `root` falling back to a large working directory. Narrow `root`, `include` or `exclude`.
+
+## Application developers: helpers
+
+**What it solves:** small, composable processors and validators for when a validation library is more than a variable needs. This snippet is illustrative; [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts) uses `processors` and `validators` in CI.
 
 ```ts
-paymentsEnv.STRIPE_KEY
+import { createEnv } from "@maverickcer/env-cap"
+import { processors, validators } from "@maverickcer/env-cap/helpers"
+
+export const databaseEnv = createEnv(
+  {
+    DATABASE_URL: { processor: processors.toURL(), validator: validators.required() },
+    PORT: {
+      default: 5432,
+      processor: processors.toNumber(),
+      validator: validators.range(1, 65535),
+    },
+  },
+  { name: "database" },
+)
 ```
 
-Secret storage, rotation, and infrastructure management remain responsibilities of dedicated systems.
+- **The `Buffer` caveat:** `processors.base64()` returns a Node `Buffer`. Use it only where `Buffer` exists, or decode with your own processor. Every other helper uses Web globals only (`test/runtime/browser-bundle.test.ts`).
+- **Cost:** `./helpers` stays under 4 KB gzip, enforced by the `Size` check. Unused helpers are dropped by esbuild (`test/helpers/tree-shaking.test.ts`); other bundlers are not tested.
+- **Messages:** a processor that receives `undefined` or `null` names the type, not the value (`test/helpers/processors.test.ts`).
+- **Optional:** keep Zod, envalid or your own functions if you have them. Any function returning `true` or a message works as a validator.
 
-Full threat model, and what stays an application responsibility: [`SECURITY.md`](SECURITY.md). Decision-maker-level summary (bundle size, supply chain, LTS stance): [`ADOPTION.md`](ADOPTION.md).
+The full list is in the [API reference](https://maverickcer.github.io/env-cap/api/) and [src/helpers/index.ts](https://github.com/MaverickCER/env-cap/blob/main/src/helpers/index.ts).
 
-## Troubleshooting
+## Platform engineers: generating artifacts
 
-Every error `env-cap` throws belongs to one of these classes. When debugging a CI failure or a startup crash, start by checking which one was received.
+**What it solves:** generated manifests, documentation that cannot go stale, and drift that fails a pull request instead of reaching production.
 
-| Error                             | Thrown by                 | Common cause                                                                                                                                                           | Fix                                                                                                                                                                                                   |
-| --------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EnvNotReadyError`                | Reading `someEnv.KEY`     | A contract was accessed before `validateEnv()` completed validation                                                                                                    | Call `await validateEnv({ manifest, values })` during startup before application code accesses validated configuration                                                                                |
-| `EnvValidationError`              | `validateEnv()`           | One or more variables failed their processor or validator                                                                                                              | Read `error.failures` — one entry per variable, each naming the contract, variable, and developer-supplied message. It never contains raw or processed values (see [Security model](#security-model)) |
-| `EnvManifestGenerationError`      | `generateEnvManifest()`   | A provable contract conflict (for example, two contracts define incompatible processor return types for the same variable name), or `location` resolves outside `root` | Read `error.issues`; resolve the conflicting definitions or correct the output path                                                                                                                   |
-| `EnvDocumentationGenerationError` | `generateDocumentation()` | `location`/`envExample.location` resolves outside `root` (undocumented contracts/variables never throw — see below)                                                    | Correct the output path                                                                                                                                                                               |
-| `EnvUsageAnalysisError`           | `generateUsageReport()`   | `report.location` resolves outside `root` (unused/unowned findings never throw — see below)                                                                            | Correct the output path                                                                                                                                                                               |
-| `EnvProjectGenerationError`       | `generateEnvArtifacts()`  | Any of the above errors aggregated across requested generation steps (manifest/docs/usage), or a provable manifest-pass compatibility/exclusive-group issue            | Apply the fix for the underlying error. `generateEnvArtifacts()` combines failures into one result instead of failing independently per generation step                                               |
+The build entry discovers every `env.schema.ts`, parses it, and writes the artifacts you ask for. It needs a filesystem from its caller; on Node, pass `nodeBuildFileSystem`. This is the script `env-cap init` scaffolds, pinned by `test/cli/init.test.ts`:
 
-**Documentation completeness and dependency ownership never throw.** An undocumented contract/variable
-or an unconsumed owned dependency is a heuristic signal, not a provable defect the way a manifest
-compatibility conflict is — both have real, common false-positive causes (a webhook handler in another
-repo, a shell script reading the variable, a package outside the `packages` allowlist). They're
-reported as `Finding`s (`documentation`/`ownership` families) on the persisted evidence artifact
-instead; gate CI on them yourself by reading `--evidence`'s `finding` field if you want that
-enforced. See [ADR 0038](specs/decisions/0038-always-computed-evidence-model-backs-generate-check-docs.md).
+```ts
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 
-**"My schema file's variable isn't showing up in the generated manifest/docs."**
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
-Discovery only understands statically analyzable patterns — an inline object literal or a directly resolvable local/imported `const`.
+const result = await generateEnvArtifacts({
+  fs: nodeBuildFileSystem,
+  root,
+  manifest: { location: "src/generated/env.manifest.ts" },
+  docs: {
+    location: "docs/ENVIRONMENT.md",
+    envExample: { location: ".env.example", onExisting: "keep-sibling" },
+  },
+  usage: { report: { location: "docs/ENV-OWNERSHIP.md" } },
+})
+```
 
-A dynamically constructed schema (`createEnv(buildSchema())`) or a spread (`createEnv({ ...shared })`) may produce a parse warning instead of silently guessing.
+What the build step promises, and where it stops:
 
-Check `result.parseWarnings` or the CLI's non-JSON output for the specific reason (see [ADR 0002](specs/decisions/0002-static-analysis-never-execution.md)).
+| Promise                                                                                       | Test                                                                     | Limit                                                                      |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Schema files are parsed, never imported or run                                                | `test/build/parse.test.ts` (a throwing top-level statement never runs)   | Lint does not ban `import()` or `vm` in `src/build`; reviewers check that  |
+| Only literal values are resolved; anything dynamic is reported as unresolved                  | `test/build/parse.test.ts`, `test/build/literal-eval.test.ts`            | None found                                                                 |
+| An output path that is absolute outside `root`, or climbs out with `..`, fails before writing | `test/build/manifest-generate.test.ts`, `documentation-generate.test.ts` | The check is lexical; a symlinked directory inside `root` can lead outside |
+| An existing `.env.example` is never overwritten by default                                    | `test/build/env-example.test.ts`                                         | `onExisting: "overwrite"` opts out                                         |
+| Discovery never enters `node_modules` or `.git`                                               | `test/build/discover.test.ts`                                            | None found                                                                 |
 
-**"A contract imported through a `tsconfig.json` path alias shows up as abandoned / a `documentEnv()` call through an alias is unresolved."**
+Every artifact separates **declared** facts from **proven** ones. Declared facts come from `documentEnv()`: owner, sensitivity, expiry. env-cap checks they are present, never that they are true. Proven facts come from the syntax tree: which variables are consumed, and the dependency graph. [`specs/generated-artifacts.md`](specs/generated-artifacts.md) lists each artifact and the models it reads.
 
-Confirm `tsconfig.json` is actually at `root` (auto-detection doesn't search upward) and declares `paths`/`baseUrl`, or that an explicit `tsconfig` option points at the right file. Confirm `tsconfig` wasn't set to `false`.
+### Change tracking via the evidence file
 
-See [ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md) and [TypeScript path aliases](#typescript-path-aliases-pathsbaseurl) above.
+Pass `evidence` to also write the full Evidence Model, with a change report against the previous file:
 
-**"A package's contract isn't discoverable even though I listed it in `packages`."**
+```ts
+const result = await generateEnvArtifacts({
+  fs: nodeBuildFileSystem,
+  root,
+  manifest: { location: "src/generated/env.manifest.ts" },
+  evidence: { location: "docs/env.evidence.json" },
+})
 
-Check `result.parseWarnings` for a `"(package) <name>"`-prefixed entry.
+result.evidence.change.manifest.addedVariables
+result.evidence.change.manifest.updatedVariables
+result.evidence.change.manifest.removedVariables
+```
 
-The allow-listed package must declare a valid `envCap.schema` field pointing to real `.ts`/`.tsx` source inside its own directory (see [Reusable packages](#reusable-packages)).
+Writing it also writes `docs/env.evidence.json.fingerprint`, a content hash `getEvidenceModel()` uses to skip a rebuild when nothing changed.
 
-**"I called `validateEnv()` again with different `values` and got the same result as last time."**
+Commit both files, as you commit the manifest. The diff then means "since the last commit on this branch", which a reviewer can read ([ADR 0038](specs/decisions/0038-always-computed-evidence-model-backs-generate-check-docs.md)).
 
-`validateEnv()` caches its first outcome for the life of the process (see [Validate once during startup](#3-validate-once-during-startup)). Call `resetEnvCache()` before re-validating — normal for a test suite or a script exercising multiple scenarios, not something a running application should need.
+1. A diff is expected when a `documentEnv()` field or a contract's `active`, `category` or `exclusiveGroup` changes.
+2. Every run with `--evidence` rewrites both files; there is no separate update step.
+3. A diff worth a second look is one nobody meant to make, such as an `updatedVariables` entry in an unrelated change.
+
+Two active contracts that document the same variable differently produce a `DUPLICATE_VARIABLE_DOCUMENTATION` warning, which only `--strict` turns into an error.
+
+### Reusable packages
+
+A package can ship its own contract, and a consuming application can discover it. Discovery is opt-in, by exact package name:
+
+```ts
+await generateEnvArtifacts({
+  fs: nodeBuildFileSystem,
+  packages: ["@acme/payments-sdk"],
+  manifest: { location: "src/env.manifest.ts" },
+})
+```
+
+The publishing package does two things:
+
+1. Declare `"envCap": { "schema": "./src/env.schema.ts" }` in its `package.json`, and ship that `.ts` file in `files`.
+2. Re-export the `createEnv()` contract under the same name from its main entry.
+
+Resolution reads one `package.json` and one declared file per listed package, and never calls `readdir`. It rejects a symlink escaping the package and a file over the size cap (`test/build/resolution/resolve-package-schema.test.ts`). The runnable pair is [`paypal-addon`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-addon) and [`paypal-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-consumer); their CI job does not yet block a merge.
+
+An application can document a package's variable again with only its own fields, such as `expiresAt` and `owner`. Fields it leaves unset come from the package's declaration. A field both set differently is reported as `DUPLICATE_VARIABLE_DOCUMENTATION` ([ADR 0050](specs/decisions/0050-a-variable-declared-twice-is-documented-once.md)).
+
+### TypeScript path aliases (paths/baseUrl)
+
+A contract imported through an alias such as `@/features/payments/env.schema.js` is resolved with no configuration. Without it, that contract would be reported as abandoned.
+
+- `tsconfig.json` is read from `root` exactly; there is no upward search.
+- Pass `tsconfig: "tsconfig.build.json"` to use another file, or `tsconfig: false` to turn resolution off.
+- Matching uses TypeScript's own `ts.resolveModuleName()`. A result inside `node_modules` is discarded, so only `packages` can reach installed code ([ADR 0023](specs/decisions/0023-tsconfig-path-alias-resolution.md)).
+
+### Requirements
+
+| Need                      | Detail                                                                                                                            |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js                   | `>=22`. CI tests 22 and 24; 26 runs as an informational job                                                                       |
+| TypeScript (optional)     | The build entry uses yours when it is 5 or 6, and otherwise the bundled TypeScript 6 (`test/build/typescript-bundled.test.ts`)    |
+| TypeScript versions in CI | The newest 5.x, 6.x and 7.x, in a job that does not yet block a merge; the `^5.0.0` floor is not tested                           |
+| `moduleResolution`        | `node16`, `nodenext` or `bundler`, checked by the `TypeResolution` check; `node10` cannot resolve subpath exports                 |
+| `./eslint-plugin`         | Also needs `eslint` and `@typescript-eslint/utils`; versions in [ADOPTION's dependency table](ADOPTION.md#security--threat-model) |
+
+The bundled TypeScript 6 compiler is the package's one dependency. Only the build entry loads it, and `compiler-isolation` fails the build if a runtime entry can reach it ([ADR 0049](specs/decisions/0049-typescript-7-scanner-uses-a-bundled-typescript-6.md)). It is the price of scanning TypeScript 7 projects, whose compiler has no classic API.
+
+### Package managers
+
+npm is the supported package manager, and every CI job installs with it. The `package-managers` job checks pnpm, Yarn 1 and Yarn Berry with the `node-modules` linker. It checks one thing: the tarball installs and every entry imports as ESM and CommonJS. That job does not yet block a merge. Yarn Plug'n'Play and non-hoisted pnpm are unsupported.
 
 ## CLI
 
-Generate the manifest and the persisted evidence artifact directly from the command line:
+**What it solves:** the same artifacts and drift check in any CI system, from one command.
 
-```bash
-npx env-cap \
-  --location src/generated/env.manifest.ts \
-  --evidence docs/env.evidence.json \
-  --strict
+```sh
+npx env-cap --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --strict
 ```
 
-The CLI is designed for development workflows, CI pipelines, and platform automation.
-
-The CLI's own surface is deliberately narrow -- see [ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md):
-only outputs with a real runtime consumer (the manifest) or that are inherent
-to the tool's own evidence/reporting contract (`--evidence`/`--json`/`--check`)
-get a flag. The rich Markdown docs catalog, the dependency & ownership
-report, and a reconciled `.env.example` have no such consumer -- nothing
-imports them the way application code imports the generated manifest -- so
-generating them is a few lines of application code instead, calling
-`@maverickcer/env-cap/build`'s exported `generateDocumentation()`/`generateUsageReport()`
-directly:
+The CLI writes only the manifest and the evidence file ([ADR 0046](specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)). The documentation catalog, the ownership report and `.env.example` come from your own script calling `@maverickcer/env-cap/build`. This one is from [`examples/application/scripts/generate-docs/run.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/scripts/generate-docs/run.ts):
 
 ```ts
 import { generateDocumentation, generateUsageReport } from "@maverickcer/env-cap/build"
 import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
 
-await generateDocumentation({
+const docs = await generateDocumentation({
   fs: nodeBuildFileSystem,
+  root,
+  include,
   location: "docs/ENVIRONMENT.md",
-  // Never overwrites a file that already exists at `envExample.location` by
-  // default -- it writes a timestamped sibling instead, for you to
-  // diff/merge by hand. Pass `onExisting: "overwrite"` to replace it
-  // directly, or `"skip"` to write nothing at all when one is already
-  // present -- see `EnvExampleOnExisting`.
   envExample: { location: ".env.example", onExisting: "overwrite" },
 })
 
-await generateUsageReport({
+const usage = await generateUsageReport({
   fs: nodeBuildFileSystem,
-  report: { location: "docs/ENV-OWNERSHIP.md" },
+  root,
+  include,
+  report: { location: "docs/OWNERSHIP.md" },
 })
 ```
 
-`checkEnvArtifacts()` is the same function `--check` calls internally, and
-takes the same `docs`/`usage` options -- see any of this repo's own
-`examples/*/scripts/generate-docs/` directories for a complete, wired-up
-`run.ts`/`check.ts` pair to copy from.
-
-Common uses include:
-
-- generating environment manifests
-- generating the persisted evidence artifact for reporting/CI
-- enforcing configuration ownership rules
-- detecting undocumented or stale configuration changes
-- producing machine-readable reports for automation
+`checkEnvArtifacts()` is the drift check `--check` uses, with the same `docs` and `usage` options. Each example's `scripts/generate-docs/check.ts` shows it wired up.
 
 ### Options
 
-At least one of `--location` or `--evidence` is required. Run `npx env-cap --help` for the same list.
+At least one of `--location` or `--evidence` is required. `npx env-cap --help` prints the same list, and `test/docs-cli-flags.test.ts` fails if a flag has no row here.
 
-| Flag                 | Meaning                                                                                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--root <path>`      | Directory that globs resolve from (default: the current directory).                                                                                                  |
-| `--location <path>`  | Output path for the generated manifest.                                                                                                                              |
-| `--include <glob>`   | Schema-discovery glob. Repeatable. Default: `**/env.schema.ts`.                                                                                                      |
-| `--exclude <glob>`   | Glob to exclude from discovery. Repeatable.                                                                                                                          |
-| `--package <name>`   | Installed package to also discover a schema from, through its `envCap.schema` `package.json` field. Repeatable.                                                      |
-| `--tsconfig <path>`  | `tsconfig.json` (relative to root) whose `paths` and `baseUrl` resolve aliased imports during static analysis. Default: the `tsconfig.json` found at the root.       |
-| `--no-tsconfig`      | Turn path-alias resolution off entirely.                                                                                                                             |
-| `--evidence <path>`  | Also write the persisted evidence artifact and its `.fingerprint` sidecar, for example `docs/env.evidence.json`.                                                     |
-| `--strict`           | Escalate every warning-severity finding to a hard error: compatibility, documentation and ownership. Nothing is written when it fires. Info findings never escalate. |
-| `--strict-docs`      | Escalate only documentation warnings (undocumented, stale or expiring entries, unresolvable `documentEnv()` links), independent of `--strict`.                       |
-| `--strict-ownership` | Escalate only ownership warnings (abandoned contracts, unresolved consumers, unconsumed owned variables, indeterminate ownership), independent of `--strict`.        |
-| `--json`             | Emit a machine-readable report instead of formatted text (see below).                                                                                                |
-| `--check`            | Verify generated artifacts are up to date without writing anything. Exits `1` if any is stale or missing.                                                            |
-| `--help`, `-h`       | Show the help text.                                                                                                                                                  |
+| Flag                 | Meaning                                                                                                                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--root <path>`      | Directory that globs resolve from (default: the current directory).                                                                                                           |
+| `--location <path>`  | Output path for the generated manifest.                                                                                                                                       |
+| `--include <glob>`   | Schema-discovery glob. Repeatable. Default: `**/env.schema.ts`.                                                                                                               |
+| `--exclude <glob>`   | Glob to exclude from discovery. Repeatable.                                                                                                                                   |
+| `--package <name>`   | Installed package to also discover a schema from, through its `envCap.schema` field. Repeatable.                                                                              |
+| `--tsconfig <path>`  | `tsconfig.json` (relative to root) whose `paths` and `baseUrl` resolve aliased imports. Default: `tsconfig.json` at the root.                                                 |
+| `--no-tsconfig`      | Turn path-alias resolution off.                                                                                                                                               |
+| `--evidence <path>`  | Also write the evidence file and its `.fingerprint` sidecar, for example `docs/env.evidence.json`.                                                                            |
+| `--strict`           | Escalate every warning to an error: compatibility, documentation and ownership. Nothing is written when one fires.                                                            |
+| `--strict-docs`      | Escalate only documentation warnings: undocumented or stale entries, expiring or expired entries, and unresolvable `documentEnv()` links.                                     |
+| `--strict-ownership` | Escalate only ownership warnings: abandoned contracts, unresolved consumers, unconsumed owned variables, indeterminate ownership, stale or missing `dynamicAccess` citations. |
+| `--json`             | Print a machine-readable report instead of text.                                                                                                                              |
+| `--check`            | Write nothing; exit `1` if any generated artifact is stale or missing.                                                                                                        |
+| `--help`, `-h`       | Show the help text.                                                                                                                                                           |
+
+The CLI exits `0` on success. It exits `1` on any error, a warning escalated by `--strict*`, or a bad argument.
+
+Info findings never escalate. Without a `--strict*` flag, documentation and ownership findings never fail a run. Exclusive-group violations and conflicting explicit processor types always fail (`test/cli/main.test.ts`, `test/build/exclusive-group.test.ts`).
 
 ### `--json`
 
-Add `--json` to emit a machine-readable report instead of formatted terminal output.
-
-The output contains the same generated artifact information returned by `generateEnvArtifacts()` wrapped in a stable JSON envelope:
-
-```bash
-npx env-cap \
-  --location src/generated/env.manifest.ts \
-  --evidence docs/env.evidence.json \
-  --json
-```
-
-Example:
+`--json` prints a versioned report instead of text. It changes the format only; the exit code is the same. An abbreviated example:
 
 ```jsonc
 {
@@ -890,77 +424,55 @@ Example:
   "kind": "env-cap-report",
   "toolVersion": "<installed env-cap version>",
   "ok": true,
-  "manifest": {
-    "outputPath": "...",
-    "contracts": [/* discovered contracts */],
-  },
-  // "evidence" appears when --evidence is passed. "docs"/"usage" no longer
-  // appear from the CLI at all (ADR 0046) -- call `generateDocumentation()`/
-  // `generateUsageReport()` directly for that shape.
+  "manifest": { "outputPath": "...", "contracts": [] },
+  // "evidence" appears when --evidence is passed.
 }
 ```
 
-The full field-by-field shape -- including `docs.catalog` entries, `manifest`, and
-`usage` -- is defined by the [published JSON Schema](#published-json-schema) below
-rather than repeated here.
-
-`--json` changes output formatting only. Exit-code behavior remains unchanged.
-
-New fields may be added without a `schemaVersion` change. Consumers should ignore properties they do not recognize.
-
-See [ADR 0013](specs/decisions/0013-json-output-is-a-versioned-mirror.md).
+New fields may appear without a `schemaVersion` change, so ignore properties you do not recognize ([ADR 0013](specs/decisions/0013-json-output-is-a-versioned-mirror.md)).
 
 #### Published JSON Schema
 
-A real, published JSON Schema for the `--json` envelope lives at
-[`schemas/env-cap-report.schema.json`](schemas/env-cap-report.schema.json), also
-resolvable as `@maverickcer/env-cap/schema` -- for external, non-TypeScript tooling
-(a Go service, a Python dashboard, a generic CI linter) to validate or codegen
-against without hand-transcribing the shape above.
+The report's schema is [`schemas/env-cap-report.schema.json`](schemas/env-cap-report.schema.json), importable as `@maverickcer/env-cap/schema`. It is generated from `src/cli/json.ts`, and the `Schema` check fails if the committed file differs ([ADR 0019](specs/decisions/0019-published-json-schema-generated-from-types.md)).
 
-It's generated directly from `src/cli/json.ts`'s own types (never hand-authored), so
-the two can't silently drift apart, and it evolves under the same additive-only rule
-already established for `--json` itself: a new optional field is never a breaking
-schema change; a changed or removed field is.
-
-See [ADR 0019](specs/decisions/0019-published-json-schema-generated-from-types.md).
+- Real success, failure and `--check` payloads validate against it (`test/build/json-schema.test.ts`).
+- The committed evidence files of two examples validate against its `EvidenceModel` definition, in the same test file.
+- A changed or removed field is meant to bump `schemaVersion`. No check enforces that yet; the `SurfaceContract` check enforces the changeset level.
 
 ### `--check`
 
-Add `--check` to verify generated artifacts are current without modifying files.
+`--check` recomputes every requested artifact in memory and compares it with the committed file. It never writes ([ADR 0016](specs/decisions/0016-check-mode-compute-before-compare-never-partial-write.md)).
 
-This is useful as a CI drift check when a schema changes but generated artifacts were not updated:
-
-```bash
-npx env-cap \
-  --location src/generated/env.manifest.ts \
-  --evidence docs/env.evidence.json \
-  --check
+```sh
+npx env-cap --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --check
 ```
 
-The command exits:
+| Exit code | Meaning                         | Line of output                            |
+| --------- | ------------------------------- | ----------------------------------------- |
+| `0`       | Every artifact matches          | `All generated artifacts are up to date.` |
+| `1`       | An artifact is stale or missing | `<n> artifact(s) are stale or missing.`   |
 
-- `0` when generated artifacts match the expected output
-- `1` when artifacts are missing or stale
+With `--json`, the report carries a `checkResult` field: `ok` is the verdict and `stale` names each stale artifact (`test/build/check-artifacts.test.ts`).
 
-`--check` never writes to or modifies committed files, even when drift is detected.
+### Using the CLI outside GitHub Actions
 
-With `--json`, the response includes an additive `checkResult` field containing the comparison result.
+GitLab, Jenkins or Buildkite get the same gate from the CLI alone.
 
-See [ADR 0016](specs/decisions/0016-check-mode-compute-before-compare-never-partial-write.md).
+1. Install the package as a devDependency and run:
+
+   ```sh
+   npx env-cap --location src/generated/env.manifest.ts --evidence docs/env.evidence.json --check --json > env-cap.json
+   ```
+
+2. Fail the job on the exit code: `0` when every artifact is current, `1` when one is stale or missing or the run failed.
+3. Read `checkResult` in `env-cap.json` for the verdict. For per-finding severity, file and line, read `finding.findings` in the evidence file.
+4. For a SARIF upload, pass the persisted Finding Model to `buildSarifLog` from `@maverickcer/env-cap/build` ([evidence](#reviewers-evidence)).
+
+The CLI reads no `GITHUB_` variable today. No check enforces that, so read it as a description of the current code.
 
 ## GitHub Action
 
-The first-party GitHub Action runs `env-cap --json` and integrates configuration analysis into pull requests and scheduled maintenance workflows.
-
-It provides:
-
-- machine-readable configuration reports
-- inline pull request annotations
-- sticky summary comments
-- scheduled rotation monitoring
-
-Example:
+**What it solves:** drift and findings show up on the pull request, as annotations and one summary comment.
 
 ```yaml
 # .github/workflows/env-cap.yml
@@ -976,67 +488,48 @@ permissions:
 jobs:
   report:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
+      - run: npm ci # the Action runs the env-cap your project installs
       - uses: maverickcer/env-cap@v0
         with:
           args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
 ```
 
-The action runs the project's own installed `env-cap` (`devDependencies`) and never an unpinned
-`latest`: with no local install it needs `with: version: "<x.y.z>"` and otherwise fails with an
-explanation. Inputs reach the CLI through environment variables, not shell text, so a PR-controlled
-value forwarded into `args` cannot become a command.
+How the Action behaves, and what tests it:
 
-What this action reports (data-cap's sibling action reports the same sections minus the rotation
-alert): inline `::warning`/`::error` annotations, one sticky pull-request comment per `report-key`,
-and -- env-cap only, on runs with no pull request -- a GitHub issue for expiring or expired
-variables (`rotation-alert`, needs `issues: write`), closed again once nothing is expiring.
+1. It runs the env-cap your project installs. It looks for `node_modules/.bin/env-cap` inside `working-directory`; in a hoisted monorepo, set `version` or run from the root. With none found, it needs a `version` input and exits `2` without one (`test/scripts/github-action-run-cli.test.ts`).
+2. A `version` must be a plain version or a dist-tag. `latest` is a dist-tag and is accepted, so pin a version instead.
+3. Inputs reach the CLI as environment variables, never as shell text. `args` is split into words, so a forwarded value can add CLI flags.
+4. Its pass or fail is the CLI's exit code. It adds no policy of its own; a finding family fails only under its `--strict*` flag in `args`.
+5. Annotations and the summary comment are computed from the CLI report and the evidence file. Pass `--evidence` to get documentation, ownership and expiry reporting.
 
-`args` only reaches the CLI, so it can only drive `--location`/`--evidence`/
-`--strict`-family flags (ADR 0046) -- the persisted evidence artifact this
-produces is what the Action's own PR annotations/summary comment/rotation
-alerts read from (Finding Model, ADR 0038), regardless of whether your repo
-also generates `docs/ENVIRONMENT.md`/`docs/ENV-OWNERSHIP.md` as a separate step (the scaffolded default is `ENV-OWNERSHIP.md` so it never collides with a sibling package's ownership report).
+The report functions are unit-tested with a real CLI payload (`test/scripts/github-action-report.test.ts`). The `gh` calls that post comments and issues are not run in CI.
 
-| Input               | Default               | Purpose                                                                                               |
-| ------------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
-| `args`              | _(required)_          | Arguments passed to `env-cap --json`, such as `--location`, `--evidence`, and strict validation flags |
-| `working-directory` | `.`                   | Directory where `env-cap` executes                                                                    |
-| `version`           | _(latest)_            | Version to execute through `npx` when `env-cap` is not installed locally                              |
-| `comment`           | `true`                | Creates or updates a sticky pull request summary comment                                              |
-| `annotations`       | `true`                | Emits GitHub workflow annotations for detected issues                                                 |
-| `rotation-alert`    | `true`                | Enables scheduled expiration reporting outside pull requests                                          |
-| `report-key`        | _(working-directory)_ | Identifies this report when multiple workflows run against the same pull request                      |
-| `github-token`      | `${{ github.token }}` | Token used for the `gh` CLI calls that post/update PR comments and rotation-alert issues              |
-
-The Action does not create its own policy layer. Pass/fail behavior always follows the CLI exit code and whatever `--strict`/`--strict-docs`/`--strict-ownership` combination this invocation's own `args` input passes (ADR 0044 — see [Troubleshooting](#troubleshooting)). A finding family with no matching `--strict*` flag never fails the run on its own; read it from `--evidence`'s output and gate on it in your own workflow step if you want that enforced.
+| Input               | Default                 | Purpose                                                                                  |
+| ------------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
+| `args`              | _(required)_            | Arguments passed to `env-cap --json`, such as `--location`, `--evidence` and `--strict*` |
+| `working-directory` | `.`                     | Directory where `env-cap` runs                                                           |
+| `version`           | _(none; required then)_ | Version to run through `npx` when env-cap is not installed; pin one rather than `latest` |
+| `comment`           | `true`                  | Create or update one sticky summary comment on the pull request                          |
+| `annotations`       | `true`                  | Emit inline workflow annotations                                                         |
+| `rotation-alert`    | `true`                  | On runs with no pull request, report expiring variables in an issue                      |
+| `report-key`        | _(working-directory)_   | Identifies this report when several jobs comment on one pull request                     |
+| `github-token`      | `${{ github.token }}`   | Token for the `gh` calls that post comments and issues                                   |
 
 ### Monorepos
 
-For monorepos running multiple `env-cap` checks in parallel, provide a unique `report-key` for each invocation.
+Give each parallel invocation its own `report-key`, so jobs do not overwrite each other's comments. For one combined report, upload each job's `--json` output and merge them in a final step.
 
-This prevents separate jobs from overwriting each other's pull request comments.
-
-For teams that want a single combined report across multiple packages, upload each job's `--json` output as an artifact and aggregate the results in a final workflow step.
+The Action looks for `node_modules/.bin/env-cap` inside `working-directory`; in a hoisted monorepo, set `version` or run from the root.
 
 ### Reusable packages and external contracts
 
-Contracts discovered from explicitly included packages are reported through the same annotations and summary surfaces as local contracts.
-
-Because `node_modules` is not part of a pull request diff, findings originating from installed packages cannot render as inline changed-file annotations. The sticky summary comment remains the complete reporting surface.
-
-See [Reusable packages](#reusable-packages) for the package discovery model.
+Contracts discovered through `packages` appear in the same annotations and comment. Their files sit in `node_modules`, outside the diff, so their findings appear only in the summary comment.
 
 ### Scheduled rotation alerts
 
-The same Action can run independently of pull requests to monitor configuration lifecycle metadata.
-
-This is useful for detecting variables that are approaching expiration or have exceeded their documented rotation window.
-
-Example:
+The same Action can run on a schedule and report expiring variables in an issue:
 
 ```yaml
 # .github/workflows/env-cap-rotation.yml
@@ -1054,161 +547,189 @@ permissions:
 jobs:
   check-rotation:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
+      - run: npm ci
       - uses: maverickcer/env-cap@v0
         with:
           args: "--location src/generated/env.manifest.ts --evidence docs/env.evidence.json"
 ```
 
-The Action reads the rotation-alert list from the persisted evidence artifact's Lifecycle Model (`result.evidence.lifecycle.expiring`), so `--evidence` is required here — `--docs`/`--expiring-within-days` are not CLI flags (see ADR 0046); the expiring-soon window itself is always the library's 30-day default when driven through the CLI this way.
+1. The list comes from the evidence file's Lifecycle Model, so `--evidence` is required.
+2. The window is the library's default (`DEFAULT_EXPIRING_WITHIN_DAYS`); the CLI has no flag to change it.
+3. With no pull request, the Action opens or updates an issue listing expiring or expired variables.
+4. When nothing is expiring, it decides to close that issue. The decision is unit-tested; the `gh` call is not run in CI.
 
-When running without a pull request context, the Action can create or update a GitHub issue containing expiring or expired configuration entries.
+Set `rotation-alert: "false"` to turn issues off ([ADR 0018](specs/decisions/0018-rotation-alert-issue-on-non-pr-runs.md)).
 
-Once all reported variables are resolved, the issue is automatically closed.
+## Reviewers: evidence
 
-Set `rotation-alert: "false"` to disable issue-based rotation reporting.
+**What it solves:** an inventory of every variable, its owner and its expiry, with findings you can trace to a file and line. The outputs support a review, nothing more.
 
-See [ADR 0018](specs/decisions/0018-rotation-alert-issue-on-non-pr-runs.md).
+The evidence file is a serialized `EvidenceModel` with these members:
+
+| Member          | What it holds                                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `schemaVersion` | The evidence format's version                                                                                  |
+| `provenance`    | When it was generated, by which env-cap version, at which commit                                               |
+| `contract`      | Every contract and variable, with declared documentation                                                       |
+| `dependency`    | Which code consumes which variable, computed from the syntax tree; dynamic access is reported as indeterminate |
+| `ownership`     | Owners, abandoned contracts and unconsumed owned variables                                                     |
+| `lifecycle`     | Expiry, rotation fields and the computed `rotationStatus`                                                      |
+| `finding`       | Every finding, with family, severity and position where one is known                                           |
+| `change`        | What changed since the previous evidence file                                                                  |
+
+`rotationStatus` is a judgement over declared dates and periods. It never states that a rotation happened or that a control is met. Its values are `compliant`, `overdue`, `expired` and `undeclared`. `compliant` means only that the declared dates fall within the declared period; 1.0 renames it `withinPolicy`.
+
+### Findings and SARIF
+
+`buildSarifLog` from `@maverickcer/env-cap/build` turns the Finding Model into SARIF 2.1.0. Its output validates against the official OASIS schema, with and without positions (`test/build/sarif.test.ts`). It is a library export; the CLI does not write SARIF.
+
+### Projections
+
+`defineEvidenceProjection()` from `@maverickcer/env-cap/evidence` turns the model into any shape you need. It also records which model paths each output field read (`test/evidence/define-projection.test.ts`). This one is trimmed from [`inventory.mjs`](https://github.com/MaverickCER/env-cap/blob/main/test/integration/positive/enterprise/evidence-projections/projections/inventory.mjs):
+
+```ts
+import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence"
+
+export const inventoryProjection = defineEvidenceProjection({
+  inventory: (evidence) =>
+    evidence.contract.contracts.map((contract) => ({
+      contractName: contract.contractName,
+      variables: contract.variables.map((variable) => variable.key),
+    })),
+})
+```
+
+- `./evidence` imports no Node module and runs under Web globals only (`test/runtime/browser-bundle.test.ts`).
+- It stays under 3 KB gzip, enforced by the `Size` check.
+- `./evidence` and the `EvidenceModel` shape are Stable, and the `ApiContract` check diffs them. Before 1.0, a breaking change needs only a minor release.
+
+[`examples/enterprise-platform`](https://github.com/MaverickCER/env-cap/tree/main/examples/enterprise-platform) builds a configuration-governance report this way.
+
+## Build-script authors: the Node adapter
+
+**What it solves:** `./build` never acquires a filesystem on its own, so your script hands it one.
+
+```ts
+import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
+import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
+```
+
+`./node` re-exports the CLI's `node:fs` adapter; only `src/cli` imports `node:fs`. `./node` does not read `process.env`. The `AmbientCapabilities` check enforces both. A non-Node runtime passes its own `BuildFileSystem` instead ([ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)).
 
 ## ESLint plugin
 
-`@maverickcer/env-cap/eslint-plugin` provides a `no-raw-process-env` rule (and its filesystem analogue `no-node-fs`, below) that helps enforce environment ownership boundaries.
-
-It flags direct `process.env` access outside approved contract definitions, making configuration ownership enforceable through tooling rather than relying only on team conventions.
-
-```bash
-npm install -D eslint
-```
+**What it solves:** direct `process.env` reads outside your contracts become lint errors, so ownership is enforced by tooling.
 
 ```js
 // eslint.config.js
-
 import envCapPlugin from "@maverickcer/env-cap/eslint-plugin"
 
 export default [
   {
     files: ["**/*.ts"],
-    plugins: {
-      "env-cap": envCapPlugin,
-    },
-    rules: {
-      "env-cap/no-raw-process-env": "error",
-    },
+    plugins: { "env-cap": envCapPlugin },
+    rules: { "env-cap/no-raw-process-env": "error" },
   },
 ]
 ```
 
-By default, `env.schema.ts` and `env.schema.tsx` files are exempt because their purpose is to define the environment contract consumed by `createEnv()`.
+The plugin needs `eslint` and `@typescript-eslint/utils`; [ADOPTION's dependency table](ADOPTION.md#security--threat-model) lists the ranges. Its tests run on ESLint 10 only; the declared ESLint 8.57 and 9 support is untested.
 
-Other files must access validated contracts instead of reading environment variables directly.
+### `no-raw-process-env`
 
-For example:
-
-```ts
-process.env.STRIPE_KEY
-```
-
-becomes:
-
-```ts
-paymentsEnv.STRIPE_KEY
-```
-
-The rule does not prevent legitimate infrastructure or build-time code from accessing raw environment variables.
-
-For approved exceptions, provide an explicit allow list:
+The rule reports `process.env` outside `env.schema.ts` and `env.schema.tsx` files (`test/eslint-plugin/no-raw-process-env.test.ts`). Nothing else is exempt unless you list it:
 
 ```js
 rules: {
-  "env-cap/no-raw-process-env": [
-    "error",
-    {
-      allow: ["scripts/bootstrap-secrets.ts"],
-    },
-  ],
+  "env-cap/no-raw-process-env": ["error", { allow: ["scripts/bootstrap-secrets.ts"] }],
 }
 ```
 
-One-off exceptions can also use the standard ESLint disable comment:
-
-```ts
-// eslint-disable-next-line env-cap/no-raw-process-env
-process.env.BOOTSTRAP_TOKEN
-```
-
-The goal is not to eliminate every direct environment read. The goal is to make ownership boundaries intentional and reviewable.
-
-See [ADR 0017](specs/decisions/0017-eslint-plugin-entry-point.md).
+A one-off exception can use `// eslint-disable-next-line env-cap/no-raw-process-env` ([ADR 0017](specs/decisions/0017-eslint-plugin-entry-point.md)).
 
 ### `no-node-fs`
 
-The plugin also ships `no-node-fs`, the filesystem analogue of `no-raw-process-env`. It flags any `import`, `require`, or dynamic `import()` of `node:fs` (or `fs`, and their `/promises` subpaths) so a module accepts a filesystem capability from its caller instead of acquiring one implicitly — the discipline `env-cap`'s own `./build` surface follows (see [ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)).
+The rule reports `import`, `require` and `import()` of `fs`, `node:fs` and their `/promises` subpaths (`test/eslint-plugin/no-node-fs.test.ts`). Nothing is exempt unless you list it:
 
 ```js
 rules: {
-  "env-cap/no-node-fs": [
-    "error",
-    {
-      // globs for the executable entry points that legitimately construct
-      // the concrete node:fs adapter -- nothing is exempt by default.
-      allow: ["src/cli/**", "scripts/**"],
-    },
-  ],
+  "env-cap/no-node-fs": ["error", { allow: ["src/cli/**", "scripts/**"] }],
 }
 ```
 
-Nothing is exempt unless you list it: the rule never guesses at what counts as an executable capability boundary. A consuming project that runs `@maverickcer/env-cap/build` from its own script imports the ready-made adapter from `@maverickcer/env-cap/node` (`{ nodeBuildFileSystem }`) rather than reaching for `node:fs` itself.
+It applies the rule env-cap follows itself: a library accepts a filesystem from its caller ([ADR 0040](specs/decisions/0040-library-surfaces-do-not-acquire-node-fs.md)).
 
-Common questions about dotenv/Zod overlap, centralized configuration, AST analysis, incremental adoption, and ownership models are answered in the [FAQ](https://maverickcer.github.io/env-cap/#faq).
+## Architecture
 
-## Performance characteristics
+### Runtime and build-time are intentionally separate
 
-env-cap is designed to add predictable configuration validation without introducing
-runtime complexity into every environment variable access.
+The runtime and the build tooling share one contract file and nothing else.
 
-Runtime behavior:
+| Path       | Entry points                     | What it does                                                         | Where it runs                |
+| ---------- | -------------------------------- | -------------------------------------------------------------------- | ---------------------------- |
+| Runtime    | `.`, `./helpers`, `./evidence`   | Validates values, exposes typed access, projects evidence            | Your application, at startup |
+| Build-time | `./build`, CLI, `./node`, Action | Discovers contracts, analyzes source, writes manifests and documents | Development and CI only      |
 
-- Environment initialization: O(N), where N is the number of defined variables.
-- Initial validation: O(N), where N is the number of variables being validated.
-- Variable lookup after initialization: O(1).
-- Repeated validation after the initial pass: O(1) through cached validation state.
+A run goes through four steps, in order:
 
-This means applications pay validation and setup costs once during initialization,
-rather than repeatedly processing configuration during normal execution.
+1. Each capability declares a contract with `createEnv()` and `documentEnv()`.
+2. The build step parses every contract file and writes the manifest, documents and evidence.
+3. The application imports the manifest and calls `validateEnv()` once at startup.
+4. Code reads typed values through the contract that owns them.
 
-For comparison, conventional configuration patterns typically perform one of two
-operations:
+A project can start with one central contract and split it later; the runtime model stays the same. [specs/architecture.md](specs/architecture.md) has the full treatment.
 
-1. Build a configuration object and access properties:
-   - Object construction: O(N)
-   - Property lookup: O(1)
+### Runtime support matrix
 
-2. Build a configuration object with inline processing/validation:
-   - Object construction: O(N)
-   - Processing cost: O(N)
-   - Validation cost: O(N)
+| Environment                        | `.` (runtime)    | `./helpers`        | `./evidence`     | `./build`, CLI, `./node`, `./eslint-plugin` |
+| ---------------------------------- | ---------------- | ------------------ | ---------------- | ------------------------------------------- |
+| Node.js 22 and 24 (ESM and CJS)    | Tested, blocking | Tested, blocking   | Tested, blocking | Tested, blocking ⁴                          |
+| Web-globals bundle ¹               | Tested, blocking | Tested ², blocking | Tested, blocking | Not applicable                              |
+| Bun and Deno                       | Executed in CI ³ | Executed in CI ³   | Executed in CI ³ | Not tested                                  |
+| Real browsers, edge and serverless | Not tested       | Not tested         | Not tested       | Not applicable                              |
 
-env-cap follows the second model's safety benefits while separating processing,
-validation, and access so repeated application usage remains constant-time.
+¹ Bundled with esbuild for the browser and run in a `node:vm` context with no `process`, `Buffer`, `require` or timers (`test/runtime/browser-bundle.test.ts`).
 
-See the [performance documentation](./benchmarks/README.md) for benchmark methodology
-and regression tracking.
+² Except `processors.base64()`, which returns a Node `Buffer`.
+
+³ `bun-version: latest` and Deno `v2.x`, in a job that does not yet block a merge.
+
+⁴ `./eslint-plugin`: unit tests block; its ESM and CJS import from the tarball runs only in the non-blocking `package-managers` job.
+
+ESM and CommonJS builds ship for every entry point, and the `PackedConsumer` check imports each one from the packed tarball except `./eslint-plugin`. A dual-package split fails fast with a `TypeError` instead of validating against the wrong schema ([SECURITY.md](SECURITY.md#dual-package-hazard)).
+
+## Migration
+
+Adopt env-cap one contract at a time, and keep what you have:
+
+| Coming from          | What changes                                                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `dotenv`             | Keep loading with it; add a contract over the variables it loads                                                            |
+| Raw `process.env`    | Replace `process.env.STRIPE_KEY` with `env.STRIPE_KEY`, then move contracts next to their features                          |
+| Zod, envalid, t3-env | Keep your schemas; call them from a validator: `validator: (value) => schema.safeParse(value).success \|\| "Invalid value"` |
+
+[`specs/migrations/`](specs/migrations/) has a guide per tool, each with a section on when to keep what you have.
+
+## Performance
+
+Validation runs once, at startup. After it, reading a value is a property lookup on the frozen record of validated values.
+
+The [benchmark suite](./benchmarks/README.md) measures runtime and build-time cost as the number of variables grows. Pull requests from this repository are benchmarked, and a regression fails the `benchmark-pr` job. That job does not yet block a merge, and fork and bot pull requests are not measured. The growth class of `createEnv` is not yet determined on CI, so this guide states no complexity bound.
 
 ## Documentation index
 
-| Doc                                                                                       | For                                                          |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| This Guide + the [docs site](https://maverickcer.github.io/env-cap/)                      | Using `env-cap` in an application                            |
-| [API reference](https://maverickcer.github.io/env-cap/api/)                               | Every exported symbol, generated from the types              |
-| [`specs/architecture.md`](specs/architecture.md) + [`specs/decisions/`](specs/decisions/) | Why the package is shaped the way it is (ADRs)               |
-| [`specs/migrations/`](specs/migrations/)                                                  | Adopting `env-cap` alongside dotenv / Zod / envalid / t3-env |
-| [`ADOPTION.md`](ADOPTION.md)                                                              | Decision-maker summary: security, size, LTS                  |
-| [`SECURITY.md`](SECURITY.md)                                                              | Full threat model and application responsibilities           |
-| [`VERSIONING.md`](VERSIONING.md)                                                          | What semver covers; Stable / Experimental / Private tiers    |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                      | Making a change                                              |
-| [`CODE_REVIEW.md`](CODE_REVIEW.md)                                                        | What a reviewer checks before merging                        |
-| [`RELEASING.md`](RELEASING.md)                                                            | Maintainer release process                                   |
-| [`SUPPORT.md`](SUPPORT.md)                                                                | Where to ask questions and file bugs                         |
+| Doc                                                                                         | For                                                    |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| This guide and the [docs site](https://maverickcer.github.io/env-cap/)                      | Using env-cap                                          |
+| [API reference](https://maverickcer.github.io/env-cap/api/)                                 | Every exported symbol, generated from source           |
+| [`specs/architecture.md`](specs/architecture.md) and [`specs/decisions/`](specs/decisions/) | Why the package is shaped this way                     |
+| [`specs/migrations/`](specs/migrations/)                                                    | Adopting env-cap beside dotenv, Zod, envalid or t3-env |
+| [`ADOPTION.md`](ADOPTION.md)                                                                | What adopting costs, needs and refuses to do           |
+| [`SECURITY.md`](SECURITY.md)                                                                | What is enforced, where, and what is not               |
+| [`VERSIONING.md`](VERSIONING.md)                                                            | What semver covers; the tier of each entry point       |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                        | Making a change                                        |
+| [`CODE_REVIEW.md`](CODE_REVIEW.md)                                                          | What a reviewer checks before merging                  |
+| [`RELEASING.md`](RELEASING.md)                                                              | The release process                                    |
+| [`SUPPORT.md`](SUPPORT.md)                                                                  | Where to ask questions and file bugs                   |

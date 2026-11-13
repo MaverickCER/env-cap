@@ -22,7 +22,7 @@
     "bcryptjs": "^2.4.3",
     "@maverickcer/env-cap": "file:../..",
     "jose": "^5.9.0",
-    "mongoose": "^8.9.0",
+    "mongoose": "^8.24.7",
     "pino": "^9.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

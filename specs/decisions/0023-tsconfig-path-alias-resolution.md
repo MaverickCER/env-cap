@@ -2,13 +2,16 @@
 
 ## Status
 
-Proposed / **Experimental** (see [`VERSIONING.md`](../../VERSIONING.md)). Implemented in:
+Accepted. Stable since [ADR 0045](0045-promote-experimental-surfaces-to-stable.md) (see [`VERSIONING.md`](../../VERSIONING.md)). Implemented in:
 
 - `src/build/resolve-tsconfig-paths.ts`
 - `src/build/resolve-import.ts` (`resolveImportSpecifier`, `ImportResolutionContext`)
 - `src/build/generate-manifest.ts`, `generate-documentation.ts`, `generate-usage.ts`,
   `generate-env-artifacts.ts` (the `tsconfig` option)
 - `src/cli/index.ts` (`--tsconfig`/`--no-tsconfig`)
+
+The tier statements in the body below describe the decision as it was taken; ADR 0045 has since
+promoted these surfaces to Stable, and `VERSIONING.md` is the current policy.
 
 The `tsconfig` option and the resolution behavior it controls are Experimental: they may
 still change shape in a minor release without that being a semver violation, following the
