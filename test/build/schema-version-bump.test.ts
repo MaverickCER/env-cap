@@ -150,7 +150,8 @@ describe("published JSON Schemas: a breaking shape change bumps schemaVersion", 
     "%s: no removed, retyped or newly optional field at an unchanged schemaVersion",
     (entry) => {
       const exportTarget =
-        exportsMap[entry] ?? exportsMap["./schema/*"]?.replace("*", entry.replace("./schema/", ""))
+        exportsMap[entry] ??
+        exportsMap["./schema/*"]?.replace(/\*/g, entry.replace("./schema/", ""))
       expect(exportTarget).toBeDefined()
       const current = readJson(exportTarget!)
       expect(unbumpedBreakingChanges(baselineSchemas[entry]!, current)).toEqual([])
