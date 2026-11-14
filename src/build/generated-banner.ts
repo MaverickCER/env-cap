@@ -23,7 +23,7 @@ function envCap(): GeneratedBannerOptions {
 const banner = createGeneratedBanner(envCap)
 
 /**
- * Regeneration instruction for a report the CLI does not write (ADR 0046) -- it is produced by the project's own
+ * Regeneration instruction for a report the CLI does not write (ADR 0046): it is produced by the project's own
  * script calling the `@maverickcer/env-cap/build` generators, so naming `npx env-cap` there would send a reader to a command that
  * cannot regenerate it.
  * @returns The instruction, as a sentence.
@@ -46,10 +46,10 @@ export function generatedBanner(format?: "ts" | "markdown", regenerate?: string)
  * Whether `content` carries a {@link generatedBanner}-produced marker, in either format.
  *
  * @remarks
- * Deliberately not a bare `content.startsWith(generatedBanner(...))`: a shebang, a `"use strict"` pragma, or a
- * license header pushes a real banner off line one, and a stricter check would then read a genuinely
- * generated file as hand-written, which the dependency scan would take as "a real consumer imports this" and
- * so permanently mask an abandoned one. The marker is looked for across the first 20 non-empty lines instead,
+ * Deliberately not a bare `content.startsWith(generatedBanner(...))`. A shebang, a `"use strict"` pragma, or a
+ * license header pushes a real banner off line one. A stricter check would then read a generated file as
+ * hand-written. The dependency scan would take that as "a real consumer imports this" and so permanently mask an
+ * abandoned contract. The marker is looked for across the first 20 non-empty lines instead,
  * which clears every realistic preamble without scanning a whole file.
  * @param content - A file's text.
  * @returns `true` when the file is generated.

@@ -44,7 +44,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 // Wraps (never replaces) the real `computeSourceFingerprint`, purely so the
 // write path's own `options.packages ?? []` call argument (distinct from
 // `computeArtifacts()`'s own copy, computed once at the top of that separate
-// function and out of scope at the write path) is directly observable --
+// function and out of scope at the write path) is directly observable:
 // asserting on the resulting fingerprint *value* would require duplicating
 // its own internal hashing logic just to tell two fingerprints apart.
 const { computeSourceFingerprintMock } = vi.hoisted(() => ({
@@ -373,7 +373,7 @@ describe("generateEnvArtifacts", () => {
       `export const warnBEnv = createEnv({ SHARED_ONCOMPAT: { processor: (v) => String(v).trim() } }, { name: "warn-b" });`,
     )
 
-    // Same conflict, same include set -- "warn" (the default) does not block,
+    // Same conflict, same include set: "warn" (the default) does not block,
     // but the warning is still surfaced in Finding Model's own compatibility
     // family (fed by `activeContracts`, independent of whether it blocks).
     const warnResult = await generateEnvArtifacts({
@@ -404,7 +404,7 @@ describe("generateEnvArtifacts", () => {
 
   it("Finding Model's compatibility detection only considers active contracts, even when no manifest pass is requested", async () => {
     // detectExclusiveGroupIssues() filters `.active` internally regardless of
-    // its caller's own filtering, so it can't distinguish this mutant --
+    // its caller's own filtering, so it can't distinguish this mutant:
     // detectCompatibilityIssues() has no such internal filter, so a
     // processor-return-type conflict between an active and an INACTIVE
     // contract is the right shape to isolate generate-env-artifacts.ts's own
@@ -420,7 +420,7 @@ describe("generateEnvArtifacts", () => {
       documentEnv(schema, { active: false });`,
     )
 
-    // No manifest/docs/usage/evidence requested -- only Finding Model's own
+    // No manifest/docs/usage/evidence requested: only Finding Model's own
     // always-computed `activeContracts` filter (generate-env-artifacts.ts,
     // distinct from computeManifest()'s own internal one) is exercised here.
     const result = await generateEnvArtifacts({
@@ -439,9 +439,9 @@ describe("generateEnvArtifacts", () => {
     expect(violations).toHaveLength(0)
   })
 
-  it("docs.expiringWithinDays overrides the DEFAULT_EXPIRING_WITHIN_DAYS window everywhere it's threaded -- Lifecycle Model, Finding Model, and the written docs file", async () => {
+  it("docs.expiringWithinDays overrides the DEFAULT_EXPIRING_WITHIN_DAYS window everywhere it's threaded: Lifecycle Model, Finding Model, and the written docs file", async () => {
     // 45 days out: outside the DEFAULT_EXPIRING_WITHIN_DAYS (30) window, but
-    // inside the custom 60-day window this test requests -- so every
+    // inside the custom 60-day window this test requests; so every
     // consumer of `expiringWithinDays` must actually use the override, not
     // silently fall back to the default, to see this variable as expiring.
     const nearFutureIsoDate = new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)
@@ -524,7 +524,7 @@ describe("generateEnvArtifacts", () => {
       include: ["features/payments/**/env.schema.ts", "features/unresolvable/**/env.schema.ts"],
       manifest: { location: "src/generated/warning.manifest.ts" },
       docs: { location: "docs/warning.ENVIRONMENT.md" },
-      // No `report` location -- proves `usage.parseWarnings` is populated
+      // No `report` location: proves `usage.parseWarnings` is populated
       // whenever the usage pass runs at all, not only when a report is
       // actually written to disk (see `usageResult`'s own guard in
       // generate-env-artifacts.ts, gated on `usageOptions` alone).
@@ -543,8 +543,8 @@ describe("generateEnvArtifacts", () => {
     ).toBe(true)
     // `usage.parseWarnings` is sourced from a different array than
     // manifest/docs' own (`[...packageWarnings, ...tsconfigWarnings,
-    // ...linkResult.warnings]`, passed straight through `computeUsage()` --
-    // see that call site's own doc comment) -- this is the one assertion
+    // ...linkResult.warnings]`, passed straight through `computeUsage()` (
+    // see that call site's own doc comment)) this is the one assertion
     // that actually exercises it, rather than just the two arrays above.
     expect(
       result.usage!.parseWarnings.some((w) =>
@@ -563,7 +563,7 @@ describe("generateEnvArtifacts", () => {
     writeFileMock.mockImplementation(async (file, ...rest: unknown[]) => {
       if (file === docsLocation) throw new Error("simulated disk-full error")
       // Forwarding to the real multi-overload fs.writeFile with spread,
-      // unknown-typed args -- no single overload matches, hence the `any` cast.
+      // unknown-typed args: no single overload matches, hence the `any` cast.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return -- the overloaded writeFile cannot be called with unknown-typed arguments, hence the cast
       return (actual.writeFile as any)(file, ...rest)
     })
@@ -577,7 +577,7 @@ describe("generateEnvArtifacts", () => {
       }),
     ).rejects.toThrow(/simulated disk-full error/)
 
-    // The manifest write completed before the docs write failed -- the
+    // The manifest write completed before the docs write failed: the
     // documented write-non-atomicity gap, not a hidden one.
     await expect(fs.access(manifestLocation)).resolves.toBeUndefined()
     await expect(fs.access(docsLocation)).rejects.toThrow()
@@ -633,7 +633,7 @@ describe("generateEnvArtifacts", () => {
   it("defaults root to process.cwd() when omitted", async () => {
     // A real `process.chdir()` (tried first) throws `ERR_WORKER_UNSUPPORTED_OPERATION`
     // under any worker-thread-based test runner (Stryker's own vitest-runner
-    // included, unlike this project's default `vitest run` pool) -- a Node.js
+    // included, unlike this project's default `vitest run` pool): a Node.js
     // platform restriction, not a vitest quirk. Mocking `process.cwd()` itself
     // proves the same "root defaults to cwd" behavior without touching real
     // process-wide state at all.
@@ -802,7 +802,7 @@ describe("generateEnvArtifacts", () => {
       )
     })
 
-    it("a contract only reachable through an alias is discovered, documented, and not abandoned -- one loaded tsconfig, shared across all three passes (ADR 0011)", async () => {
+    it("a contract only reachable through an alias is discovered, documented, and not abandoned: one loaded tsconfig, shared across all three passes (ADR 0011)", async () => {
       const result = await generateEnvArtifacts({
         fs: nodeBuildFs,
         root: fixtureRoot,
@@ -816,7 +816,7 @@ describe("generateEnvArtifacts", () => {
       expect(result.docs!.contracts).toHaveLength(2)
       expect(result.usage!.dependencyOwnership).toHaveLength(2)
       expect(result.usage!.abandonedContracts).toEqual([])
-      // Not just "not abandoned" -- INVOICE_KEY was actually member-accessed
+      // Not just "not abandoned": INVOICE_KEY was actually member-accessed
       // (`billingEnv.INVOICE_KEY` above), so it must never show up as
       // unconsumed or indeterminate either.
       expect(result.usage!.unconsumedOwnedVariables).toEqual([])
@@ -841,7 +841,7 @@ describe("generateEnvArtifacts", () => {
   })
 })
 
-describe("generateEnvArtifacts -- the persisted evidence artifact (ADR 0038)", () => {
+describe("generateEnvArtifacts: the persisted evidence artifact (ADR 0038)", () => {
   it("evidence is always populated, even when options.evidence was never requested", async () => {
     const result = await generateEnvArtifacts({
       fs: nodeBuildFs,
@@ -868,7 +868,7 @@ describe("generateEnvArtifacts -- the persisted evidence artifact (ADR 0038)", (
     expect(fingerprint.trim()).toMatch(/^[0-9a-f]{64}$/)
   })
 
-  it("works standalone -- no manifest/docs/usage requested, only the evidence artifact is written", async () => {
+  it("works standalone: no manifest/docs/usage requested, only the evidence artifact is written", async () => {
     const result = await generateEnvArtifacts({
       fs: nodeBuildFs,
       root: fixtureRoot,
@@ -899,7 +899,7 @@ describe("generateEnvArtifacts -- the persisted evidence artifact (ADR 0038)", (
     expect(call.packages).toEqual(["@fixtures/some-package"])
   })
 
-  it("--check is stable across repeated runs -- provenance.generatedAt never causes false drift", async () => {
+  it("--check is stable across repeated runs: provenance.generatedAt never causes false drift", async () => {
     await generateEnvArtifacts({
       fs: nodeBuildFs,
       root: fixtureRoot,
@@ -917,7 +917,7 @@ describe("generateEnvArtifacts -- the persisted evidence artifact (ADR 0038)", (
     }
   })
 
-  it("never imported from runtime/isomorphic code -- src/runtime/ and src/evidence/ never reference evidence-snapshot.js/evidence-cache.js", async () => {
+  it("never imported from runtime/isomorphic code: src/runtime/ and src/evidence/ never reference evidence-snapshot.js/evidence-cache.js", async () => {
     const projectRoot = path.resolve(here, "../..")
     const forbidden = ["evidence-snapshot", "evidence-cache", "assemble-project"]
 
@@ -959,8 +959,8 @@ documentEnv(schema, { owner: "cited-team", variables: { CITED_KEY: { evidence: {
     // The contract itself must be imported somewhere for its variables to
     // reach per-variable unconsumed/asserted analysis at all
     // (deriveOwnershipFindings() short-circuits an un-imported contract
-    // straight to "abandoned") -- deliberately never touching CITED_KEY
-    // itself (not even a bare reference like `void citedEnv` -- since ADR
+    // straight to "abandoned") (deliberately never touching CITED_KEY
+    // itself (not even a bare reference like `void citedEnv`) since ADR
     // 0039, that would itself be an escape site and produce "indeterminate"
     // instead), so its own access status stays "unconsumed".
     await write(
@@ -980,7 +980,7 @@ documentEnv(schema, { owner: "cited-team", variables: { CITED_KEY: { evidence: {
       first.usage!.asserted.some((a) => a.key === "CITED_KEY" && a.wouldBeStatus === "unconsumed"),
     ).toBe(true)
 
-    // The cited file changes with no re-acknowledgment -- the citation goes stale.
+    // The cited file changes with no re-acknowledgment: the citation goes stale.
     await write("scripts/migrate.sh", "v2 -- more code\n")
 
     const second = await generateEnvArtifacts({
@@ -1002,7 +1002,7 @@ documentEnv(schema, { owner: "cited-team", variables: { CITED_KEY: { evidence: {
     expect(reportSource).toContain("scripts/migrate.sh:1:1 (stale)")
 
     // The same stale-citation problem also reaches Finding Model through its
-    // own `dynamicAccessCitationProblems` input -- fed from
+    // own `dynamicAccessCitationProblems` input: fed from
     // `evidenceChanges?.dynamicAccessCitationProblems`, distinct from the
     // usage-report path already asserted on above.
     expect(

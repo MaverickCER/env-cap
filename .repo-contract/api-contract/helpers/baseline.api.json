@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "@maverickcer/env-cap!",
-  "docComment": "",
+  "docComment": "/**\n * Optional processors and validators for common cases (`@maverickcer/env-cap/helpers`), such as\n * `processors.toNumber()` and `validators.range(1, 65535)`.\n *\n * A contract works the same without them: `createEnv` and `validateEnv` never import this module. Any\n * function with the `Processor<T>` or `Validator<T>` shape plugs in the same way.\n *\n * The two objects are plain literals of named imports, not `export * as processors`. A bundler lowers\n * `export * as` into a namespace helper call it cannot prove free of side effects. That call blocks\n * tree-shaking in a consumer's own bundler, so importing `processors` alone would still ship\n * `validators`. With plain literals, importing `processors` alone drops `validators` entirely.\n *\n * @packageDocumentation\n */\n",
   "name": "@maverickcer/env-cap",
   "preserveMemberOrder": false,
   "members": [
@@ -191,7 +191,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!processors:var",
-          "docComment": "/**\n * Convenience {@link runtime.Processor} implementations for common coercion\n * patterns (e.g. `processors.toNumber()`).\n *\n * @remarks\n *\n * Naming matches `data-cap`'s `helpers.processors` -- but these\n * throw with a formatted `Error` message on invalid input, where data-cap's\n * silently return `undefined`. Do not assume the same failure mode when\n * moving between packages.\n */\n",
+          "docComment": "/**\n * Convenience {@link runtime.Processor} implementations for common coercion\n * patterns (e.g. `processors.toNumber()`).\n *\n * @remarks\n *\n * Naming matches `data-cap`'s `helpers.processors`: but these\n * throw with a formatted `Error` message on invalid input, where data-cap's\n * silently return `undefined`. Do not assume the same failure mode when\n * moving between packages.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

@@ -19,23 +19,29 @@
         } catch (error) {}
       })()
     </script>
-    <title>env-cap: capability-owned environment contracts</title>
+    <title>env-cap: each feature declares its environment variables, validated at startup</title>
     <meta
       name="description"
-      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env. It sits next to your existing validation, not instead of it."
+      content="Each feature declares the environment variables it needs and their format. Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire. A TypeScript library that works alongside dotenv, Zod and your secret manager."
     />
     <link rel="canonical" href="https://maverickcer.github.io/env-cap/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://maverickcer.github.io/env-cap/" />
-    <meta property="og:title" content="env-cap: capability-owned environment contracts" />
+    <meta
+      property="og:title"
+      content="env-cap: each feature declares its environment variables, validated at startup"
+    />
     <meta
       property="og:description"
-      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env. It sits next to your existing validation, not instead of it."
+      content="Each feature declares the environment variables it needs and their format. Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire. A TypeScript library that works alongside dotenv, Zod and your secret manager."
     />
-    <meta name="twitter:title" content="env-cap: capability-owned environment contracts" />
+    <meta
+      name="twitter:title"
+      content="env-cap: each feature declares its environment variables, validated at startup"
+    />
     <meta
       name="twitter:description"
-      content="Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env. It sits next to your existing validation, not instead of it."
+      content="Each feature declares the environment variables it needs and their format. Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire. A TypeScript library that works alongside dotenv, Zod and your secret manager."
     />
     <meta property="og:image" content="https://maverickcer.github.io/env-cap/assets/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -83,20 +89,20 @@
         <div class="container">
           <p class="section-eyebrow">Configuration, owned</p>
           <h1 id="hero-heading">
-            Every environment variable has an owner, a reason to exist, and a lifecycle you can
-            query.
+            Each feature declares the environment variables it needs and their format.
           </h1>
           <p class="hero-lede">
-            A secret manager decides where a value lives. A validator decides whether it is
-            well-formed. Neither says who owns it, why it exists, or when it expires.
+            Your app validates them all in one place at startup, fails fast on a bad value, and
+            reports how they should be rotated before they expire.
           </p>
           <p class="hero-support">
-            Each part of your code declares the variables it owns. A build step turns those
-            declarations into an ownership and lifecycle report.
+            A feature is a folder or an installable package; the docs also call it a capability. Its
+            <strong>contract</strong> says how to check each value and, for a secret, when it
+            expires and how to rotate it. A build step writes the <strong>manifest</strong> that
+            <code>validateEnv()</code> checks, and docs that flag secrets expiring within 30 days.
           </p>
           <p class="hero-outcome">
-            Give every team a clear owner and expiry date for each environment variable, alongside
-            the validator and secret manager you already use.
+            A bad value stops startup with an error that names the variable, never its value.
           </p>
           <p class="hero-meta">Pre-1.0 · v0.7.5 · MIT</p>
           <div class="code-block">
@@ -107,12 +113,15 @@
               </button>
             </div>
             <pre tabindex="0"><code id="hero-install">npm install @maverickcer/env-cap
-npx env-cap init</code></pre>
+npx env-cap init
+node scripts/generate-env.mjs</code></pre>
           </div>
           <p class="hero-note">
-            The runtime validates your variables at startup. The build step produces the ownership
-            report. Nothing replaces <code>dotenv</code>, Zod, <code>envalid</code>,
-            <code>t3-env</code> or your secret manager.
+            <code>init</code> writes a starter contract and a script that writes the manifest, the
+            environment docs and the ownership report. A CI test runs both steps in an empty
+            project. env-cap does not load <code>.env</code> files, store secrets or replace
+            <code>dotenv</code>, Zod, <code>envalid</code>, <code>t3-env</code> or your secret
+            manager.
           </p>
           <div class="hero-actions">
             <a class="button button--primary" href="https://github.com/maverickcer/env-cap#readme"
@@ -155,8 +164,8 @@ npx env-cap init</code></pre>
             </ol>
           </div>
           <p>
-            env-cap puts the answer in the code. Each capability declares the variables it owns, and
-            a build step turns the declarations into one project-wide view.
+            env-cap puts the answer in the code. Each feature declares the variables it owns in a
+            contract, and a build step turns the contracts into one project-wide report.
           </p>
         </div>
       </section>
@@ -165,21 +174,21 @@ npx env-cap init</code></pre>
           <p class="section-eyebrow">How it works</p>
           <h2 id="how-heading">Runtime and build-time stay separate on purpose.</h2>
           <p class="section-lede">
-            The runtime has no filesystem access and imports no Node module. Build tooling creates
-            the visibility needed to maintain dependencies, as an explicit development or CI step,
-            never at startup.
+            The runtime has no filesystem access and imports no Node module. The build tooling runs
+            as an explicit development or CI step, never at startup, and writes the manifest, docs
+            and reports.
           </p>
           <div class="diagram">
             <p class="sr-only">
-              A capability&#39;s schema file branches into a runtime path for validated application
-              access and a build path for generated documentation and visibility artifacts.
+              A contract&#39;s schema file branches into a runtime path for validated application
+              access and a build path for the generated manifest, docs and reports.
             </p>
             <ol class="diagram-tree" aria-hidden="true">
-              <li><span class="diagram-branch-label">Capability schema file</span></li>
+              <li><span class="diagram-branch-label">Contract schema file</span></li>
               <li>
                 <span class="diagram-branch-label"
-                  >→ Runtime path: <code>createEnv()</code> · <code>validateEnv()</code> · typed,
-                  capability-scoped access</span
+                  >→ Runtime path: <code>createEnv()</code> · <code>validateEnv()</code> · typed
+                  access through the owning contract</span
                 >
               </li>
               <li>
@@ -191,9 +200,9 @@ npx env-cap init</code></pre>
             </ol>
           </div>
           <p>
-            The build package parses schema files as TypeScript ASTs and never imports or executes
-            them. That static-analysis boundary stops unfamiliar code from running as a side effect
-            of generating documentation, manifests and dependency insight.
+            The build package parses schema files as TypeScript syntax trees and never imports or
+            executes them. So generating the manifest, docs and reports never runs code from those
+            files.
           </p>
         </div>
       </section>
@@ -345,7 +354,7 @@ $ npx tsx scripts/generate-docs/run.ts
                 <tr>
                   <th scope="row">A secret manager</th>
                   <td>Decides where a value physically lives and how it&#39;s rotated</td>
-                  <td>Says nothing about which capability in your code actually depends on it</td>
+                  <td>Says nothing about which code actually reads it</td>
                 </tr>
               </tbody>
             </table>
@@ -355,11 +364,11 @@ $ npx tsx scripts/generate-docs/run.ts
       <section class="section section--muted" id="adoption" aria-labelledby="adoption-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">Adoption</p>
-          <h2 id="adoption-heading">From one schema to capability-owned contracts.</h2>
+          <h2 id="adoption-heading">From one schema to a contract per feature.</h2>
           <p class="section-lede">
             Most applications start with a single, centralized schema, and that is a fine place to
-            stay if it&#39;s working. As ownership boundaries start to matter, contracts move closer
-            to the capability that consumes them, with no change to the runtime model.
+            stay if it&#39;s working. As ownership boundaries start to matter, contracts move next
+            to the features that read them, with no change to the runtime model.
           </p>
           <div class="callout callout--note">
             <p class="callout-title">A progressive path, not a rewrite</p>
@@ -367,8 +376,8 @@ $ npx tsx scripts/generate-docs/run.ts
               <li>Start with one centralized schema and run <code>npx env-cap init</code>.</li>
               <li>Generate the manifest, documentation and ownership report in CI.</li>
               <li>
-                As ownership boundaries matter, move each contract next to the capability that
-                consumes it. The runtime model does not change.
+                As ownership boundaries matter, move each contract next to the feature that reads
+                it. The runtime model does not change.
               </li>
             </ol>
           </div>
@@ -388,8 +397,8 @@ $ npx tsx scripts/generate-docs/run.ts
           <p class="section-eyebrow">For decision-makers</p>
           <h2 id="brief-heading">A one-page brief for your manager</h2>
           <p class="section-lede">
-            env-cap gives every configuration setting an owner, a reason to exist and an expiry
-            date, and shows what is unused or overdue.
+            Each feature declares its environment variables; env-cap checks them at startup and
+            reports how each secret should be rotated before it expires.
           </p>
           <p>
             It answers what this is, why it matters, what it costs, what could go wrong and what is

@@ -2,12 +2,12 @@
 // README for why this exists as application code rather than a CLI flag):
 // verifies docs/ENVIRONMENT.md, docs/OWNERSHIP.md, and .env.example are
 // exactly what a fresh `run.ts` would produce, without writing anything,
-// via `@maverickcer/env-cap/build`'s exported `checkEnvArtifacts()` -- the same function
+// via `@maverickcer/env-cap/build`'s exported `checkEnvArtifacts()`; the same function
 // the removed `env-cap --check --docs --ownership --env-example` combination
 // called internally. `env-cap --check` itself (see package.json's `check`
 // script, chained before this) still separately verifies the manifest and
-// the persisted evidence artifact -- the two outputs that DO have a real
-// consumer/contract, per ADR 0046 -- so between the two, every artifact this
+// the persisted evidence artifact (the two outputs that DO have a real
+// consumer/contract, per ADR 0046) so between the two, every artifact this
 // example generates is drift-checked exactly as it was before.
 import path from "node:path"
 import { fileURLToPath } from "node:url"

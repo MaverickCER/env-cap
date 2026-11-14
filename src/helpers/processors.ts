@@ -1,7 +1,7 @@
 import type { Processor } from "../runtime/index.js"
 
 /**
- * Convenience processors. Purely optional sugar over `Processor<T>` --
+ * Convenience processors. Purely optional sugar over `Processor<T>`:
  * the runtime and generator never import from this module. Error messages
  * describe the *type* of an invalid value, never its content, so a
  * misconfigured secret is never echoed back through a thrown error.
@@ -116,7 +116,7 @@ export function toLowerCase(): Processor<string> {
 /** Coerces a value to a number, rejecting empty/whitespace-only strings instead of silently resolving to `0`. */
 export function toNumber(): Processor<number> {
   return (value) => {
-    // `Number("")` is `0`, not `NaN` -- without this check a blank env var would
+    // `Number("")` is `0`, not `NaN`: without this check a blank env var would
     // silently resolve to the number 0 instead of failing, slipping past
     // validators.required() too (that checks the processed value, not the raw string).
     if (typeof value === "string" && value.trim() === "") {

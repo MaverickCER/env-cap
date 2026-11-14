@@ -17,7 +17,7 @@ const evidence = await generateEvidenceModel({ fs: nodeBuildFileSystem,
 });
 
 const { envExample } = envExampleProjection(evidence);
-// Deliberately not named .env.* -- the root .gitignore's `.env.*` pattern
+// Deliberately not named .env.*: the root .gitignore's `.env.*` pattern
 // (with a narrow `!.env.example` exception) exists to keep real secrets out
 // of every example, and this is a committed demonstration artifact, not a
 // secret-shaped file.

@@ -2,10 +2,10 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * Owned by a different team than the database/orm capabilities on purpose
- * (`security-team`, not `data-platform-team`) -- this is what makes the
+ * (`security-team`, not `data-platform-team`): this is what makes the
  * generated ownership matrix and security review actually have something to
  * show: a real, multi-team contract list, not one team's name repeated
- * three times. `SESSION_SECRET` is `sensitivity: "secret"` -- the kind
+ * three times. `SESSION_SECRET` is `sensitivity: "secret"`: the kind
  * of variable a security review specifically exists to enumerate.
  */
 const authSchema = {
@@ -24,7 +24,7 @@ documentEnv(authSchema, {
       required: true,
       setupInstructions: "Generate with `openssl rand -base64 32`; security-team keeps the canonical copy in the shared vault.",
       expiresAt: "2026-06-01",
-      refreshInstructions: "Rotate via the vault, then redeploy -- existing sessions are invalidated on rotation, so schedule outside peak hours.",
+      refreshInstructions: "Rotate via the vault, then redeploy. Existing sessions are invalidated on rotation, so schedule outside peak hours.",
     },
   },
 });

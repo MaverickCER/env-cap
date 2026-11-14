@@ -1,6 +1,6 @@
 // Build-time script. Run via `npm run generate:env`. Never imported by application code.
 //
-// ADVANCED TIER -- deliberately NOT the pattern to copy by default.
+// ADVANCED TIER: deliberately NOT the pattern to copy by default.
 //
 // The `application` and `team-service` examples call the `env-cap` CLI
 // straight from a `docs`/`check` npm script for the manifest + persisted
@@ -61,7 +61,7 @@ if (result.manifest?.warnings.length) {
 }
 
 // Evidence change-tracking since the committed evidence artifact
-// (docs/env.evidence.json) was last written -- see ADR 0038.
+// (docs/env.evidence.json) was last written: see ADR 0038.
 const changes = result.evidence.change.manifest;
 const total =
   changes.addedContracts.length + changes.addedVariables.length +

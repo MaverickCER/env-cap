@@ -1,7 +1,7 @@
 // Cross-runtime conformance (see CI's `cross-runtime` job and the audit gap
-// it closes: the runtime's core claim is isomorphism -- "safe to include in
-// browser, edge, serverless, and Node environments" (specs/architecture.md)
-// -- but until this file existed, only Node/vitest ever actually ran it.
+// it closes: the runtime's core claim is isomorphism; "safe to include in
+// browser, edge, serverless, and Node environments" (specs/architecture.md):
+// but until this file existed, only Node/vitest ever actually ran it.
 //
 // Deliberately imports the *built* dist/index.js, not src/, and uses Bun's
 // own native test runner (not vitest) so this genuinely proves zero reliance
@@ -45,7 +45,7 @@ test("EnvValidationError aggregates a validator failure under Bun", async () => 
   )
 })
 
-test("contract self-redacts on String() -- ADR 0006 holds under Bun too", async () => {
+test("contract self-redacts on String(): ADR 0006 holds under Bun too", async () => {
   resetEnvCache()
   const env = createEnv({ SECRET: {} }, { name: "bun-redaction" })
   await validateEnv({ values: { SECRET: "shh-do-not-print-me" }, manifest: [env] })

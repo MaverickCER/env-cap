@@ -9,8 +9,8 @@
  * utility, so Evidence Model's own immutability guarantee (a later phase)
  * can reuse it instead of duplicating the recursion.
  *
- * Only recurses into arrays and plain objects (`{}` or `Object.create(null)`)
- * -- a `Map`, `Set`, or class instance is frozen at its own top level but not
+ * Only recurses into arrays and plain objects (`{}` or `Object.create(null)`):
+ * a `Map`, `Set`, or class instance is frozen at its own top level but not
  * walked further. This codebase's fact models are plain JSON-serializable
  * data, never class instances, so this is deliberately narrow rather than a
  * general-purpose deep-freeze library. A `WeakSet` guards against infinite

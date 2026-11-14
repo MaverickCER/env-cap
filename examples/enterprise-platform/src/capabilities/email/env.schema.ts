@@ -6,7 +6,7 @@ function emailAddress(value: unknown): string {
 
 /**
  * One secret credential (RESEND_API_KEY) paired with one non-secret
- * companion config value (EMAIL_FROM_ADDRESS) -- a mixed sensitivity
+ * companion config value (EMAIL_FROM_ADDRESS): a mixed sensitivity
  * within a single capability, distinct from every other capability here.
  * Both are optional: `email.service.ts` falls back to console-logging the
  * notification instead of sending it when unset, genuinely exercised as
@@ -32,7 +32,7 @@ documentEnv(emailSchema, {
       sensitivity: "secret",
       required: false,
       purpose: "Notify assigned staff when a matter or task they own changes.",
-      legalBasis: "Legitimate interest -- operational notifications, not marketing.",
+      legalBasis: "Legitimate interest: operational notifications, not marketing.",
       metadata: {
         documentation: "https://resend.com/api-keys",
       },

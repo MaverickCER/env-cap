@@ -22,7 +22,7 @@ export const env = createConfig({
 });
 ```
 
-Centralized schemas are a reasonable starting point. They provide a clear location for configuration and make small applications easy to understand.
+Centralized schemas are a reasonable starting point. They provide a clear location for configuration and make small applications straightforward to understand.
 
 As applications grow, however, the centralized file becomes a shared ownership boundary:
 

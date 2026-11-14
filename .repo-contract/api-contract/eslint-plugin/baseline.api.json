@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "@maverickcer/env-cap!",
-  "docComment": "",
+  "docComment": "/**\n * Lint rules that keep environment reads inside contracts (`@maverickcer/env-cap/eslint-plugin`).\n *\n * `no-raw-process-env` flags direct `process.env` reads outside `env.schema.ts` files. `no-node-fs` flags\n * `node:fs` imports in library code, which should take its file system from the caller. The plugin runs\n * inside the project's own ESLint; CI runs the rules on ESLint 10 only.\n *\n * @packageDocumentation\n */\n",
   "name": "@maverickcer/env-cap",
   "preserveMemberOrder": false,
   "members": [
@@ -291,7 +291,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!plugin:var",
-          "docComment": "/**\n * `@maverickcer/env-cap/eslint-plugin` -- a flat-config-shaped plugin object\n * ({ rules: { ... } }), consumed as:\n *\n * import envCapPlugin from \"@maverickcer/env-cap/eslint-plugin\";\n *  export default [{ plugins: { \"env-cap\": envCapPlugin }, rules: { \"env-cap/no-raw-process-env\": \"error\" } }];\n *\n * A 4th public entry point alongside `.`, `./build`, `./helpers` -- see ADR 0017.\n */\n",
+          "docComment": "/**\n * The ESLint plugin, as a flat-config plugin object (`{ rules }`). Register it under the `env-cap`\n * prefix:\n * ```js\n * import envCapPlugin from \"@maverickcer/env-cap/eslint-plugin\"\n * export default [{ plugins: { \"env-cap\": envCapPlugin }, rules: { \"env-cap/no-raw-process-env\": \"error\" } }]\n * ```\n *\n * ADR 0017 explains why the rules ship as their own entry point.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

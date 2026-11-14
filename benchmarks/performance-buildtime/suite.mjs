@@ -1,6 +1,6 @@
 // env-cap build-time benchmark suite: the cost of the CLI/CI tooling (`@maverickcer/env-cap/build`) that discovers
 // contracts and generates manifests, documentation, usage reports and evidence. This is development
-// and CI cost, not production request cost -- it is paid by every pipeline run and every developer
+// and CI cost, not production request cost: it is paid by every pipeline run and every developer
 // who regenerates artifacts. See ../READING-BENCHMARKS.md and ../WRITING-BENCHMARKS.md.
 //
 // Imports env-cap by its PACKAGE NAME, never a monorepo-relative path.

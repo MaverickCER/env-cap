@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import * as evidenceEntryPoint from "../../src/evidence/index.js"
 
-// Nothing else imports src/evidence/index.ts directly -- every other test in
-// this directory imports define-projection.ts's individual exports -- so
+// Nothing else imports src/evidence/index.ts directly (every other test in
+// this directory imports define-projection.ts's individual exports) so
 // without this test the barrel's re-export statement never actually
 // executes and it shows as 0% covered, mirroring test/build/index.test.ts
 // and test/eslint-plugin/index.test.ts's own header comments.
@@ -26,7 +26,7 @@ describe.skipIf(distMissing)(
   () => {
     // Unlike src/eslint-plugin/index.ts (ADR 0017), this entry point has
     // only named exports, so it needs none of
-    // internal-package-contract tool cjs-interop's postprocessing -- esbuild's
+    // internal-package-contract tool cjs-interop's postprocessing: esbuild's
     // ordinary CJS output already resolves named exports correctly.
     it("require() resolves defineEvidenceProjection directly", () => {
       const require = createRequire(import.meta.url)

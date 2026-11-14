@@ -1,7 +1,7 @@
 import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
- * Hand-rolled sessions (bcryptjs + jose), not a third-party auth library --
+ * Hand-rolled sessions (bcryptjs + jose), not a third-party auth library:
  * a real auth library pulls in its own env-var surface and its own Mongo-adapter
  * conventions, more moving parts that aren't about env-cap. This keeps `auth`'s
  * schema the whole story: one secret, signing/verifying session tokens.
@@ -24,7 +24,7 @@ documentEnv(authSchema, {
       sensitivity: "secret",
       required: true,
       purpose: "Maintain authenticated staff sessions for access to confidential matter data.",
-      legalBasis: "Necessary for providing the service -- without a session, no staff member can be authenticated to view privileged case data.",
+      legalBasis: "Necessary for providing the service: without a session, no staff member can be authenticated to view privileged case data.",
       retention: "Rotated on security-team's own schedule; rotating invalidates every existing session.",
       auditRequired: true,
       metadata: {

@@ -26,7 +26,7 @@ describe("validators.required", () => {
     expect(validators.required(true)("", {})).toBe(true)
   })
 
-  it("never rejects a non-string value whose OWN length happens to be 0 -- the empty-string check is string-typed only", () => {
+  it("never rejects a non-string value whose OWN length happens to be 0: the empty-string check is string-typed only", () => {
     expect(validators.required()([], {})).toBe(true)
   })
 })
@@ -40,7 +40,7 @@ describe("validators.email", () => {
   it("requires the WHOLE string to match (anchored at both ends), and accepts multi-character local/domain segments", () => {
     const v = validators.email()
     expect(v("abc@example.com", {})).toBe(true)
-    // Multi-char local/domain segments -- a single-character-only pattern
+    // Multi-char local/domain segments: a single-character-only pattern
     // would already fail to consume the whole (anchored) string.
     expect(v("prefix abc@example.com", {})).not.toBe(true)
     expect(v("abc@example.com suffix", {})).not.toBe(true)
@@ -79,7 +79,7 @@ describe("validators.range", () => {
     expect(v(70000, {})).not.toBe(true)
   })
 
-  it("treats both endpoints as inclusive -- the boundary, not just clearly-inside/-outside", () => {
+  it("treats both endpoints as inclusive: the boundary, not just clearly-inside/-outside", () => {
     const v = validators.range(1, 65535)
     expect(v(1, {})).toBe(true)
     expect(v(65535, {})).toBe(true)
@@ -119,7 +119,7 @@ describe("validators.all", () => {
     expect(second).not.toHaveBeenCalled()
   })
 
-  it("keeps checking after a validator passes -- a passing first validator must not short-circuit a failing second one", () => {
+  it("keeps checking after a validator passes: a passing first validator must not short-circuit a failing second one", () => {
     const v = validators.all<number>(
       () => true,
       () => "second validator failed",
@@ -278,7 +278,7 @@ describe("validators: date comparisons", () => {
     expect(validator(input, {})).toBe(expected)
   })
 
-  it("treats a date exactly equal to 'now' as neither future nor past -- the boundary, not just clearly-before/-after", () => {
+  it("treats a date exactly equal to 'now' as neither future nor past: the boundary, not just clearly-before/-after", () => {
     vi.useFakeTimers()
     try {
       const now = new Date()
@@ -309,7 +309,7 @@ describe("validators.uuid", () => {
     expect(validators.uuid([4, 5])(v1, {})).toBe("Expected UUID version 4, 5.")
   })
 
-  it("requires the WHOLE string to match (anchored at both ends) -- a valid UUID with extra leading or trailing text is not accepted", () => {
+  it("requires the WHOLE string to match (anchored at both ends): a valid UUID with extra leading or trailing text is not accepted", () => {
     const v = validators.uuid()
     const valid = "110ec58a-a0f2-4ac4-8393-c866d813b8d1"
     expect(v(valid, {})).toBe(true)
@@ -319,7 +319,7 @@ describe("validators.uuid", () => {
 })
 
 describe("validators.uuidVersion", () => {
-  it("is shorthand for uuid([version]) -- accepts only the exact requested version", () => {
+  it("is shorthand for uuid([version]): accepts only the exact requested version", () => {
     const v4 = "110ec58a-a0f2-4ac4-8393-c866d813b8d1"
     const v1 = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
     expect(validators.uuidVersion(4)(v4, {})).toBe(true)

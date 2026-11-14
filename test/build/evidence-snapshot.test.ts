@@ -161,7 +161,7 @@ function cmContract(
   }
 }
 
-/** A minimal, structurally-valid `EvidenceModel` wrapping the given contract/dependency facts -- everything `computeEvidenceChanges()`/`buildCitationSnapshots()` actually read from a previous snapshot; every other sub-model is empty. */
+/** A minimal, structurally-valid `EvidenceModel` wrapping the given contract/dependency facts: everything `computeEvidenceChanges()`/`buildCitationSnapshots()` actually read from a previous snapshot; every other sub-model is empty. */
 function evidenceFixture(overrides: {
   contracts?: readonly ContractModelContract[]
   dependencyContracts?: EvidenceModel["dependency"]["contracts"]
@@ -210,7 +210,7 @@ describe("readEvidenceSnapshot / writeEvidenceSnapshot", () => {
     await fs.rm(root, { recursive: true, force: true })
   })
 
-  it("reports 'missing' for a file that doesn't exist -- the normal, silent first-run/never-configured case", async () => {
+  it("reports 'missing' for a file that doesn't exist: the normal, silent first-run/never-configured case", async () => {
     const result = await readEvidenceSnapshot(path.join(root, "does-not-exist.json"), nodeBuildFs)
     expect(result).toEqual({ status: "missing" })
   })
@@ -232,7 +232,7 @@ describe("readEvidenceSnapshot / writeEvidenceSnapshot", () => {
     expect(result).toEqual({ status: "unsupported-version", foundVersion: 999 })
   })
 
-  it("reports 'unsupported-version' (never throws) for well-formed JSON that parses to null -- typeof null access must not crash", async () => {
+  it("reports 'unsupported-version' (never throws) for well-formed JSON that parses to null: typeof null access must not crash", async () => {
     const snapshotPath = path.join(root, "null.json")
     await fs.writeFile(snapshotPath, "null", "utf8")
 
@@ -284,7 +284,7 @@ describe("normalizeEvidenceSnapshotForComparison", () => {
     )
   })
 
-  it("resets change.manifest and change.renamedVariables to empty -- change describes drift from the on-disk snapshot, not reproducible by a second computation", () => {
+  it("resets change.manifest and change.renamedVariables to empty: change describes drift from the on-disk snapshot, not reproducible by a second computation", () => {
     const snapshot = evidenceFixture({ contracts: [] })
     const withRealChange: EvidenceModel = {
       ...snapshot,
@@ -396,7 +396,7 @@ describe("normalizeEvidenceSnapshotForComparison", () => {
     expect(normalized.finding.findings.map((f) => f.message)).toEqual([
       "STRIPE_KEY expired N day(s) ago.",
       "STRIPE_KEY expires in N day(s).",
-      // Not EXPIRED/EXPIRING_SOON -- must survive untouched, even though its
+      // Not EXPIRED/EXPIRING_SOON: must survive untouched, even though its
       // own text contains the exact same "15 day(s)" shape.
       "STRIPE_KEY has been undocumented for 15 day(s), unrelated to expiry.",
     ])
@@ -428,7 +428,7 @@ describe("diffContracts", () => {
     expect(report.updatedVariables).toHaveLength(0)
   })
 
-  it("treats a variable literally named 'Stryker was here' as added on a first run -- the previous-variables Map must be genuinely empty, not defaulted to a poisoned placeholder entry", () => {
+  it("treats a variable literally named 'Stryker was here' as added on a first run: the previous-variables Map must be genuinely empty, not defaulted to a poisoned placeholder entry", () => {
     const current = [
       cmContract({
         file: "a/env.schema.ts",
@@ -460,7 +460,7 @@ describe("diffContracts", () => {
     expect(report.updatedVariables).toHaveLength(0)
   })
 
-  it("sorts addedContracts and removedContracts by file then exportName -- not discovery order", () => {
+  it("sorts addedContracts and removedContracts by file then exportName: not discovery order", () => {
     const previous = [
       cmContract({ file: "z/old.ts", exportName: "zOld" }),
       cmContract({ file: "a/old.ts", exportName: "aOld" }),
@@ -485,7 +485,7 @@ describe("diffContracts", () => {
     expect(report.addedContracts.map((c) => c.exportName)).toEqual(["aEnv", "zEnv"])
   })
 
-  it("sorts addedVariables and removedVariables by key when file/exportName are the same -- not discovery order", () => {
+  it("sorts addedVariables and removedVariables by key when file/exportName are the same: not discovery order", () => {
     const previous = [
       cmContract({
         file: "a/env.schema.ts",
@@ -506,7 +506,7 @@ describe("diffContracts", () => {
     expect(report.removedVariables.map((v) => v.key)).toEqual(["A_OLD", "Z_OLD"])
   })
 
-  it("keeps 4+ variables already in alphabetical-by-key order stable -- a one-sided-blanked key comparator would flip an already-sorted run into reverse order", () => {
+  it("keeps 4+ variables already in alphabetical-by-key order stable: a one-sided-blanked key comparator would flip an already-sorted run into reverse order", () => {
     // A 2-element reversal alone can pass even under a broken comparator
     // (small-array insertion sort's few pairwise comparisons can still land
     // on the right answer by luck); this specific ALREADY-ascending 4-key
@@ -526,7 +526,7 @@ describe("diffContracts", () => {
     expect(report.addedVariables.map((v) => v.key)).toEqual(["A_NEW", "B_NEW", "C_NEW", "D_NEW"])
   })
 
-  it("sorts updatedContracts and updatedVariables by file then exportName -- not discovery order", () => {
+  it("sorts updatedContracts and updatedVariables by file then exportName: not discovery order", () => {
     const previous = [
       cmContract({
         file: "z/env.schema.ts",
@@ -609,7 +609,7 @@ describe("diffContracts", () => {
     expect(report.removedVariables.map((v) => v.key)).toEqual(["OLD"])
   })
 
-  it("reports changed fields in alphabetical key order, not declaration order -- 'retention' is declared after 'sensitivity' on ContractModelContract but sorts before it", () => {
+  it("reports changed fields in alphabetical key order, not declaration order: 'retention' is declared after 'sensitivity' on ContractModelContract but sorts before it", () => {
     const previous = [
       cmContract({
         file: "a/env.schema.ts",
@@ -665,7 +665,7 @@ describe("diffContracts", () => {
     )
   })
 
-  it("reports a schema-shape field change too, not only documented metadata -- the diff is now comprehensive, not manifest-scoped (ADR 0038)", () => {
+  it("reports a schema-shape field change too, not only documented metadata: the diff is now comprehensive, not manifest-scoped (ADR 0038)", () => {
     const previous = [
       cmContract({
         file: "a/env.schema.ts",
@@ -772,7 +772,7 @@ describe("diffContracts", () => {
     expect(diffContracts(previous, current).updatedVariables).toHaveLength(0)
   })
 
-  it("reports every key as added when metadata goes from entirely absent to present -- the 'previous ?? {}' fallback, not just 'metadata: {}'", () => {
+  it("reports every key as added when metadata goes from entirely absent to present: the 'previous ?? {}' fallback, not just 'metadata: {}'", () => {
     const previous = [
       cmContract({
         file: "a/env.schema.ts",
@@ -839,7 +839,7 @@ describe("diffContracts", () => {
     ])
   })
 
-  it("only reports the metadata keys that actually changed, not every key -- an unchanged key alongside a changed one must be silent", () => {
+  it("only reports the metadata keys that actually changed, not every key: an unchanged key alongside a changed one must be silent", () => {
     const previous = [
       cmContract({
         file: "a/env.schema.ts",
@@ -878,7 +878,7 @@ describe("diffContracts", () => {
     ])
   })
 
-  it("does not report the whole variables array as a changed field on a contract -- it's diffed separately into added/removed/updatedVariables", () => {
+  it("does not report the whole variables array as a changed field on a contract: it's diffed separately into added/removed/updatedVariables", () => {
     const previous = [
       cmContract({
         file: "a/env.schema.ts",
@@ -893,7 +893,7 @@ describe("diffContracts", () => {
         exportName: "aEnv",
         owner: "team-b",
         // Variables genuinely differ (a new one added) alongside the owner
-        // change -- "variables" must never show up as its own field entry.
+        // change: "variables" must never show up as its own field entry.
         variables: [cmVariable({ key: "ONLY" }), cmVariable({ key: "NEW" })],
       }),
     ]
@@ -1056,7 +1056,7 @@ describe("buildCitationSnapshots / verifyDynamicAccessCitations (ADR 0037)", () 
     })
   }
 
-  it("reports a brand-new citation as fresh -- nothing to contradict it yet -- and stamps this run's own contentHash", async () => {
+  it("reports a brand-new citation as fresh (nothing to contradict it yet) and stamps this run's own contentHash", async () => {
     await fs.writeFile(path.join(root, "scripts", "migrate.sh"), "v1\n", "utf8")
 
     const acknowledgments = await buildCitationSnapshots(
@@ -1153,7 +1153,7 @@ describe("buildCitationSnapshots / verifyDynamicAccessCitations (ADR 0037)", () 
       ],
     })
 
-    // The cited file changes -- "more code is added" -- with no re-acknowledgment.
+    // The cited file changes ("more code is added") with no re-acknowledgment.
     await fs.writeFile(path.join(root, "scripts", "migrate.sh"), "v2 -- more code\n", "utf8")
 
     const second = await buildCitationSnapshots(

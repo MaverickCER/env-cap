@@ -1,4 +1,4 @@
-// REFERENCE ONLY -- not part of this example's active code, and never
+// REFERENCE ONLY: not part of this example's active code, and never
 // discovered by generate-manifest.mjs (it only includes src/env.ts).
 //
 // This example intentionally uses one centralized schema at src/env.ts
@@ -10,7 +10,7 @@
 // import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
- * Using the optional helpers subpath for common coercions -- entirely
+ * Using the optional helpers subpath for common coercions: entirely
  * equivalent to writing the processor/validator functions by hand.
  */
 // const databaseSchema = {
@@ -22,7 +22,7 @@
 //     processor: processors.toNumber(),
 //     validator: validators.range(1, 65535),
 //   },
-//   // Declared independently by both database and payments (see ../payments/env.schema.ts) --
+//   // Declared independently by both database and payments (see ../payments/env.schema.ts);
 //   // not a conflict, see the root README's "Duplicate variables" section.
 //   LOG_LEVEL: {
 //     default: "info",

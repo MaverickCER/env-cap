@@ -1,19 +1,19 @@
 /**
  * The dual-package hazard: if a consumer's dependency tree resolves
- * `env-cap` through two different specifiers -- one importer
+ * `env-cap` through two different specifiers (one importer
  * getting the ESM build, one `require()`r getting the CJS build (a mixed
- * ESM/CJS dependency graph, or a re-exporting intermediate package) -- Node
+ * ESM/CJS dependency graph, or a re-exporting intermediate package)) Node
  * loads two entirely separate module instances. The runtime keeps
  * identity-sensitive state in module scope: `registry.ts`'s private
  * `WeakMap` associating a contract with its schema, and `cache.ts`'s
  * validation cache. Each instance gets its own.
  *
- * No npm package shipping both ESM and CJS builds can prevent this -- it's a
+ * No npm package shipping both ESM and CJS builds can prevent this: it's a
  * property of how Node's two module systems resolve independently. This test
  * pins the ACTUAL, understood consequence (ADR 0041): fail-fast, not silent.
  * A contract created by one instance and handed to the other's
  * `validateEnv()`/`resetEnvCache()` is rejected with a `TypeError`, and
- * `isEnvContract()` returns `false` -- it never validates against the wrong
+ * `isEnvContract()` returns `false`: it never validates against the wrong
  * schema or reads a stale cache silently. See SECURITY.md#dual-package-hazard.
  *
  * Requires `npm run build` to have produced dist/index.{js,cjs}; skips
@@ -48,15 +48,15 @@ function loadCjs(): RuntimeModule {
 }
 
 describe.skipIf(distMissing)(
-  "dual-package hazard -- runtime registry/cache (requires `npm run build`)",
+  "dual-package hazard: runtime registry/cache (requires `npm run build`)",
   () => {
-    it("the same resolution path always yields the same module instance -- no hazard within one module graph", async () => {
+    it("the same resolution path always yields the same module instance: no hazard within one module graph", async () => {
       const a = await loadEsm()
       const b = await loadEsm()
       expect(a.createEnv).toBe(b.createEnv)
     })
 
-    it("ESM and CJS builds load different module instances -- the documented hazard itself", async () => {
+    it("ESM and CJS builds load different module instances: the documented hazard itself", async () => {
       const esm = await loadEsm()
       const cjs = loadCjs()
       expect(esm.createEnv).not.toBe(cjs.createEnv)

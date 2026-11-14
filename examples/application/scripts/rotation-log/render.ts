@@ -1,4 +1,4 @@
-// The default Markdown renderer for a `RotationLogModel` -- NOT the only
+// The default Markdown renderer for a `RotationLogModel`: NOT the only
 // possible one. `build-model.ts` is the real seam: an org that wants a
 // different shape (a CSV for a spreadsheet import, a row per authenticator
 // TYPE instead of per variable, an HTML page) renders `RotationLogModel`
@@ -6,7 +6,7 @@
 // out in full so a reader can see exactly what "an IA-5 secrets-rotation
 // record" can look like end to end.
 //
-// There is no single official NIST-published template for this -- IA-5
+// There is no single official NIST-published template for this: IA-5
 // (Authenticator Management) states the *control* ("change or refresh
 // authenticators [by an organization-defined time period, by authenticator
 // type] or when [organization-defined events] occur," NIST SP 800-53 Rev.
@@ -15,12 +15,12 @@
 // own judgment call about which columns matter, not a reproduction of a
 // NIST-provided layout.
 //
-// Only the IA-5 main statement is implemented here -- not IA-5(13)
+// Only the IA-5 main statement is implemented here: not IA-5(13)
 // ("Expiration of Cached Authenticators"), a control enhancement about
 // prohibiting use of a *cached* authenticator copy past a time limit. That's
 // a distinct concern from rotating the primary authenticator value itself
 // (what `rotationPeriod`/`lastRotatedAt`/`rotationTriggerEvents` model
-// here), so IA-5(13) is deliberately not cited below -- citing a control
+// here), so IA-5(13) is deliberately not cited below: citing a control
 // this document doesn't actually speak to would be worse than citing none.
 import type { RotationLogModel } from "./types.js"
 
@@ -40,7 +40,7 @@ function cell(value: string | undefined): string {
 }
 
 /**
- * Renders a `RotationLogModel` as a Markdown document -- the default shape
+ * Renders a `RotationLogModel` as a Markdown document: the default shape
  * `run.ts` writes to `docs/SECRETS-ROTATION-LOG.md`. See this file's own
  * header comment for why this exact layout is a judgment call, not a
  * NIST-mandated one.
@@ -55,7 +55,7 @@ export function renderRotationLog(model: RotationLogModel): string {
       '(Authenticator Management), control item (f): "Changing or refreshing authenticators ' +
       "[Assignment: organization-defined time period by authenticator type] or when " +
       '[Assignment: organization-defined events] occur;" Generated from `env-cap`\'s own ' +
-      "evidence artifact -- see `scripts/rotation-log/README.md` for how.",
+      "evidence artifact; see `scripts/rotation-log/README.md` for how.",
   )
   lines.push("")
   lines.push(
@@ -70,7 +70,7 @@ export function renderRotationLog(model: RotationLogModel): string {
   if (model.entries.length === 0) {
     lines.push(
       "No variable in this project declares `authenticatorType`, `rotationPeriod`, " +
-        "`lastRotatedAt`, or `rotationTriggerEvents` -- nothing to report.",
+        "`lastRotatedAt`, or `rotationTriggerEvents`, so there is nothing to report.",
     )
     lines.push("")
     return lines.join("\n")

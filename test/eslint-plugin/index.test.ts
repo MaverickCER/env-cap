@@ -6,9 +6,9 @@ import { describe, expect, it } from "vitest"
 import envCapPlugin, { noNodeFs, noRawProcessEnv } from "../../src/eslint-plugin/index.js"
 
 // Only test/eslint-plugin/no-raw-process-env.ts imports the rule module
-// directly -- nothing imports this barrel (`src/eslint-plugin/index.ts`)
+// directly (nothing imports this barrel (`src/eslint-plugin/index.ts`)
 // itself, the actual `@maverickcer/env-cap/eslint-plugin` entry point a
-// consumer's flat config imports (see ADR 0017) -- so it shows as 0%
+// consumer's flat config imports (see ADR 0017)) so it shows as 0%
 // covered without this test.
 describe("@maverickcer/env-cap/eslint-plugin entry point", () => {
   it("exports a flat-config-shaped plugin object with every rule", () => {
@@ -34,7 +34,7 @@ describe.skipIf(distMissing)(
   "@maverickcer/env-cap/eslint-plugin entry point: CJS require() interop (requires `npm run build`)",
   () => {
     // src/eslint-plugin/index.ts has both a default export and a named
-    // export (`noRawProcessEnv`) -- esbuild's plain CJS output for that
+    // export (`noRawProcessEnv`): esbuild's plain CJS output for that
     // shape is `{ default: plugin, noRawProcessEnv }`, which would silently
     // break a `require("@maverickcer/env-cap/eslint-plugin")` consumer
     // (e.g. an `eslint.config.cjs`) expecting the plugin object itself, the

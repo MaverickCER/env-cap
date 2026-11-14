@@ -4,7 +4,7 @@ import type { BuildFileSystem } from "./types.js"
 
 /** Options for {@link discoverSchemaFiles}. */
 export interface DiscoverOptions {
-  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability: `./build` never imports `node:fs` (ADR 0040). */
   readonly fs: BuildFileSystem
   /** Absolute path to search under. */
   readonly root: string
@@ -14,35 +14,33 @@ export interface DiscoverOptions {
   readonly exclude: readonly string[]
 }
 
-// A predicate, not a module-level `Set` -- a `Set` of string literals is
+// A predicate, not a module-level `Set`: a `Set` of string literals is
 // evaluated once at module load, which `perTest` coverage analysis can't
-// attribute to a covering test (a documented Stryker false-Survivor; see
-// [[feedback_stryker_mutation_score_formula]]).
+// attribute to a covering test, so Stryker reports a false Survived.
 function isAlwaysSkippedDirName(name: string): boolean {
   return name === "node_modules" || name === ".git"
 }
 
-// Generously above any legitimate single project's real schema-file count
-// (every real fixture/example in this very repo uses single digits; even a
-// large enterprise monorepo built from many small feature contracts -- the
-// tool's own intended shape, see ADR 0011 -- would need to be extreme
-// outliers to approach four figures) -- see `discoverSchemaFiles`'s own use
-// of it below.
+// Generously above any legitimate single project's schema-file count. Every
+// fixture and example in this repo uses single digits. A large enterprise
+// monorepo built from many small feature contracts (the tool's intended
+// shape, see ADR 0011) would have to be an extreme outlier to approach four
+// figures. See `discoverSchemaFiles`'s use of it below.
 const MAX_DISCOVERED_SCHEMA_FILES = 1000
 
 /**
  * Finds every file matching `include`/`exclude` under `root`, returned as
  * absolute paths in deterministic (alphabetically sorted) order. No count
- * limit -- the usage scan walks every TypeScript source file, which a large
+ * limit: the usage scan walks every TypeScript source file, which a large
  * project legitimately has thousands of; {@link discoverSchemaFiles} adds the
  * schema-specific sanity limit on top.
  *
  * @remarks
- * No external glob dependency: directories are pruned *during* the walk
+ * No external glob dependency. Directories are pruned *during* the walk
  * (both a hardcoded node_modules/.git skip and the caller's `exclude`
- * patterns), rather than walked in full and filtered afterward -- walking an
- * entire node_modules tree just to discard it is not acceptable for a tool
- * meant to run against real projects.
+ * patterns), not walked in full and filtered afterward. Walking an entire
+ * node_modules tree just to discard it is not acceptable for a tool meant to
+ * run against real projects.
  */
 export async function discoverFiles(options: DiscoverOptions): Promise<string[]> {
   const files = await walkDirectory(options.root, options.root, options.exclude, options.fs)
@@ -61,35 +59,29 @@ export async function discoverFiles(options: DiscoverOptions): Promise<string[]>
 
 /**
  * Finds every schema file matching `include`/`exclude` under `root`, returned
- * as absolute paths in deterministic (alphabetically sorted) order -- the
+ * as absolute paths in deterministic (alphabetically sorted) order: the
  * same walk as `discoverFiles`, plus a sanity limit on the count.
  *
  * @remarks
- * No external glob dependency: directories are pruned *during* the walk
+ * No external glob dependency. Directories are pruned *during* the walk
  * (both a hardcoded node_modules/.git skip and the caller's `exclude`
- * patterns), rather than walked in full and filtered afterward -- walking an
- * entire node_modules tree just to discard it is not acceptable for a tool
- * meant to run against real projects.
+ * patterns), not walked in full and filtered afterward. Walking an entire
+ * node_modules tree just to discard it is not acceptable for a tool meant to
+ * run against real projects.
  */
 export async function discoverSchemaFiles(options: DiscoverOptions): Promise<string[]> {
   const included = await discoverFiles(options)
 
-  // Fails fast, before any caller starts parsing a single discovered file,
-  // when `include`/`root` matched far more than any legitimate single
-  // project's schema-file count -- almost always a misconfigured `root`
-  // (e.g. accidentally resolving to a much larger directory than intended)
-  // rather than a real project actually declaring this many contracts.
+  // A match count this large almost always means a misconfigured `root`
+  // (resolving to a much larger directory than intended), not a real project.
   // Every caller (`generateEnvManifest`, `generateDocumentation`,
-  // `generateUsageReport`, `generateEnvArtifacts`, evidence-cache.ts) does
-  // real per-file parsing plus O(n^2) cross-file compatibility analysis
-  // afterward -- work whose cost is invisible here but scales with exactly
-  // this count, so catching a wrong `root` here (milliseconds) instead of
-  // letting it run (which stays finite, just very slow for a genuinely large
-  // accidental match) gives a caller a fast, actionable error instead of a
-  // multi-minute hang with no feedback.
+  // `generateUsageReport`, `generateEnvArtifacts`, evidence-cache.ts) parses
+  // each file and then runs an O(n^2) cross-file compatibility analysis.
+  // Failing here takes milliseconds; letting that run on an accidental match
+  // stays finite but can take minutes with no feedback.
   if (included.length > MAX_DISCOVERED_SCHEMA_FILES) {
     throw new Error(
-      `discoverSchemaFiles: found ${String(included.length)} files matching "include" under ${options.root} -- more than the ${String(MAX_DISCOVERED_SCHEMA_FILES)}-file sanity limit. This almost always means "root" (or "include"/"exclude") resolved more broadly than intended -- e.g. an omitted "root" falling back to an unexpectedly large process.cwd() -- rather than a real project genuinely declaring this many contracts. Narrow "root"/"include"/"exclude" to the intended project boundary.`,
+      `discoverSchemaFiles: found ${String(included.length)} files matching "include" under ${options.root}, more than the ${String(MAX_DISCOVERED_SCHEMA_FILES)}-file sanity limit. This usually means "root" (or "include"/"exclude") resolved more broadly than intended, for example an omitted "root" falling back to a large process.cwd(). Narrow "root"/"include"/"exclude" to the intended project boundary.`,
     )
   }
 
@@ -109,17 +101,17 @@ async function walkDirectory(
     const fullPath = path.join(directory, entry.name)
 
     // entry.isDirectory()/isFile() reflect the raw directory-entry type
-    // (lstat semantics), not a followed symlink -- a directory symlink is
-    // therefore silently skipped here (neither branch below matches it),
-    // which is also what makes this walk immune to a directory-symlink
+    // (lstat semantics), not a followed symlink. A directory symlink is
+    // therefore silently skipped here (neither branch below matches it).
+    // That is also what makes this walk immune to a directory-symlink
     // cycle without any explicit visited-path guard. Switching either check
     // to something that follows symlinks (e.g. fs.statSync) would
-    // reintroduce that infinite-recursion risk -- see
+    // reintroduce that infinite-recursion risk: see
     // test/build/discover.test.ts's symlink-cycle regression test.
     if (entry.isDirectory()) {
       if (isAlwaysSkippedDirName(entry.name)) continue
-      // Test as a directory (trailing slash) so a pattern like "**/node_modules/**"
-      // -- which is meant to match *files inside* the directory -- also prunes
+      // Test as a directory (trailing slash) so a pattern like "**/node_modules/**":
+      // which is meant to match *files inside* the directory; also prunes
       // the directory itself before we ever read its contents.
       const relativeDir = `${toPosixRelative(root, fullPath)}/`
       if (matchesAnyPattern(relativeDir, exclude)) continue

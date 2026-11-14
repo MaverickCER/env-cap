@@ -2,30 +2,30 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "no
 import path from "node:path"
 
 /**
- * `env-cap init` -- scaffolds a minimal, working env-cap starting point into
+ * `env-cap init`: scaffolds a minimal, working env-cap starting point into
  * the current project: one discoverable capability contract and one
  * artifact-generation script. Nothing more.
  *
  * Deliberately filesystem-only and non-executing, matching this package's
- * own runtime discipline (ADR 0002, ADR 0040) and repo-contract's `init`:
- * it reads the consumer's `package.json` (to confirm it's a project and to
+ * own runtime discipline (ADR 0002, ADR 0040) and repo-contract's `init`.
+ * It reads the consumer's `package.json` (to confirm it's a project and to
  * decide `src/` vs. root placement) and writes new files with
- * exclusive-create -- it never runs a subprocess, never invokes a package
- * manager, never mutates `package.json`, never regenerates an artifact, and
- * never reads the ambient environment. Anything the documented workflow
+ * exclusive-create. It never runs a subprocess, invokes a package manager,
+ * mutates `package.json`, regenerates an artifact or reads the ambient
+ * environment. Anything the documented workflow
  * still needs afterwards is printed as a `Next:` step, not performed here.
  * See ADR 0042.
  *
- * `src/cli/**` is the sanctioned place for direct `node:fs` use (ADR 0040) --
+ * `src/cli/**` is the sanctioned place for direct `node:fs` use (ADR 0040):
  * this file is bundled into the `bin` target, exempt from the
- * the `AmbientCapabilities` check tarball guard exactly as `src/cli/index.ts` is.
+ * `AmbientCapabilities` check's tarball guard exactly as `src/cli/index.ts` is.
  */
 
 // USAGE/SCHEMA_TEMPLATE/GENERATOR_TEMPLATE are functions, not module-level
-// `const`s: a module-level const is evaluated once at import time, not per
-// test, so Stryker's perTest coverage analysis can't attribute it to any
-// single test and reports mutants on it Survived/NoCoverage even when tests
-// do exercise the rendered content. A function called at each use site is
+// `const`s. A module-level const is evaluated once at import time, not per
+// test, so Stryker's perTest coverage analysis can't attribute it to a test.
+// It then reports mutants on it Survived/NoCoverage even when tests do
+// exercise the rendered content. A function called at each use site is
 // evaluated during the test itself, which Stryker can attribute correctly.
 function usage(): string {
   return `Usage: env-cap init
@@ -36,20 +36,20 @@ Scaffolds a minimal env-cap starting point into the current directory:
   scripts/generate-env.mjs a script that generates the manifest + docs artifacts
 
 Never overwrites an existing file, never runs anything, never edits
-package.json. Everything else -- generating artifacts, wiring validateEnv()
-into startup -- is printed as a next step. Run generation afterwards with
+package.json. Generating artifacts and wiring validateEnv() into startup
+are printed as next steps. Run generation afterwards with
 \`node scripts/generate-env.mjs\` or \`npx env-cap --location <path>\`.`
 }
 
 function schemaTemplate(): string {
-  return `// Starter env-cap capability contract -- expand it: add your real variables,
+  return `// Starter env-cap capability contract. Expand it: add your real variables,
 // split into per-capability files (e.g. features/<name>/env.schema.ts), or
 // keep everything here. env-cap discovers every **/env.schema.ts by default.
 //
-// createEnv() reads only default/processor/validator/context -- the fields
+// createEnv() reads only default/processor/validator/context: the fields
 // validateEnv() uses at runtime. documentEnv() is a build-time-only marker
 // that feeds the generated docs and ownership report; it is inert at runtime.
-// Keep the object passed to both a static literal -- env-cap resolves it by
+// Keep the object passed to both a static literal. env-cap resolves it by
 // static analysis and never executes this file.
 import { createEnv, documentEnv } from "@maverickcer/env-cap"
 
@@ -121,13 +121,13 @@ interface InitReport {
 
 /**
  * Confirms `cwd` is a project (`package.json` present and a JSON object).
- * Throws a message suitable for printing directly on any failure -- every
+ * Throws a message suitable for printing directly on any failure: every
  * such failure is a preflight failure and nothing is written.
  */
 function assertIsProject(cwd: string): void {
   const packageJsonPath = path.join(cwd, "package.json")
   if (!existsSync(packageJsonPath)) {
-    throw new Error(`no package.json found at ${packageJsonPath} -- run \`npm init\` first.`)
+    throw new Error(`no package.json found at ${packageJsonPath}. Run \`npm init\` first.`)
   }
   let parsed: unknown
   try {
@@ -142,7 +142,7 @@ function assertIsProject(cwd: string): void {
   }
 }
 
-/** `src/` if it already exists as a directory, otherwise the project root -- where the starter schema goes. */
+/** `src/` if it already exists as a directory, otherwise the project root: where the starter schema goes. */
 function schemaDirectory(cwd: string): string {
   const srcDir = path.join(cwd, "src")
   return existsSync(srcDir) && statSync(srcDir).isDirectory() ? srcDir : cwd
@@ -187,9 +187,9 @@ function planTargets(cwd: string): [ScaffoldTarget, ScaffoldTarget] {
 /**
  * Writes `content` to `filePath` only if it doesn't already exist, creating
  * parent directories first. Exclusive-create (`"wx"`) rather than an
- * existsSync-then-write pair -- the two-step form races between the check
+ * existsSync-then-write pair: the two-step form races between the check
  * and the write; `"wx"` makes "don't overwrite" atomic. An existing file is
- * never touched -- the conflict is resolved by skipping, never overwriting.
+ * never touched: the conflict is resolved by skipping, never overwriting.
  */
 function writeIfAbsent(filePath: string, content: string): WriteOutcome {
   mkdirSync(path.dirname(filePath), { recursive: true })
@@ -243,7 +243,7 @@ function renderReport(report: InitReport): string {
   lines.push(
     "Next:",
     "  1. Generate the manifest + docs:  node scripts/generate-env.mjs",
-    '     Requires "typescript" (>=5) in your project -- it\'s how env-cap parses',
+    '     Requires "typescript" (>=5) in your project: it\'s how env-cap parses',
     "     env.schema.ts by static analysis. Add it if you don't already have it:",
     "     npm install --save-dev typescript",
     "  2. Validate once at app startup:",
@@ -254,7 +254,7 @@ function renderReport(report: InitReport): string {
     "",
     "  3. Read validated values through the contract:  exampleEnv.EXAMPLE_API_URL",
     "",
-    "env-cap init edited no package.json script -- add one if you want, e.g.",
+    "env-cap init edited no package.json script. Add one if you want, e.g.",
     '  "generate:env": "node scripts/generate-env.mjs"',
   )
 

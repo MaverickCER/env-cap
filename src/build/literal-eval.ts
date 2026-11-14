@@ -9,7 +9,7 @@ export type LiteralEvalResult = { ok: true; value: unknown } | { ok: false; valu
 
 /**
  * Structurally evaluates a *literal* AST expression (strings, numbers, booleans, null, arrays,
- * and object literals of the same) into a real JS value -- without ever executing code.
+ * and object literals of the same) into a real JS value: without ever executing code.
  *
  * @remarks
  * Anything that isn't a literal (identifiers, calls, imports, template expressions with
@@ -34,7 +34,7 @@ export function evaluateLiteral(node: TS.Expression): LiteralEvalResult {
   if (ts.isArrayLiteralExpression(node)) {
     const values: unknown[] = []
     for (const element of node.elements) {
-      // No explicit `ts.isSpreadElement(element)` check -- a spread element
+      // No explicit `ts.isSpreadElement(element)` check: a spread element
       // doesn't match any of this function's other `if` branches either
       // (none of them recognize `SyntaxKind.SpreadElement`), so it already
       // falls through to the same `{ ok: false }` this line special-cased.
@@ -61,7 +61,7 @@ export function evaluateLiteral(node: TS.Expression): LiteralEvalResult {
   return { ok: false }
 }
 
-/** Reads a property name statically (identifier, string literal, or numeric literal) -- a computed key (e.g. `[expr]`) resolves to `undefined` rather than being guessed at. */
+/** Reads a property name statically (identifier, string literal, or numeric literal): a computed key (e.g. `[expr]`) resolves to `undefined` rather than being guessed at. */
 export function getStaticPropertyName(name: TS.PropertyName): string | undefined {
   if (ts.isIdentifier(name)) return name.text
   if (ts.isStringLiteralLike(name)) return name.text

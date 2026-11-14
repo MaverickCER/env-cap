@@ -31,7 +31,7 @@ beforeAll(async () => {
   )
 
   // A real allow-listed package with its own schema file, resolved via
-  // node_modules -- same fixture shape as resolve-package-schema.test.ts's
+  // node_modules: same fixture shape as resolve-package-schema.test.ts's
   // own "simple-pkg".
   await writeJson("node_modules/@fixtures/billing-pkg/package.json", {
     name: "@fixtures/billing-pkg",
@@ -78,7 +78,7 @@ describe("assembleProject", () => {
     expect(result.packageWarnings).toEqual([])
   })
 
-  it("links a real allow-listed package's own schema file too -- the package's contract genuinely reaches linkFiles(), not just the local ones", async () => {
+  it("links a real allow-listed package's own schema file too: the package's contract genuinely reaches linkFiles(), not just the local ones", async () => {
     const result = await assembleProject({
       fs: nodeBuildFs,
       root: fixtureRoot,

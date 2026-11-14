@@ -17,7 +17,7 @@ export interface SessionPayload {
   email: string;
 }
 
-/** Signs a session token (HS256, jose) -- fully real, local crypto, no external dependency. */
+/** Signs a session token (HS256, jose): fully real, local crypto, no external dependency. */
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })

@@ -4,28 +4,15 @@ import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 /**
- * Regression test for a real, hands-on-verified bug: `env-cap init` and
- * `env-cap --help` used to fail on a completely fresh install with
- * `ERR_MODULE_NOT_FOUND: Cannot find package 'typescript'`, because
- * src/cli/index.ts had a static top-level `import { checkEnvArtifacts,
- * generateEnvArtifacts } from "../build/index.js"` -- evaluated eagerly for
- * EVERY invocation of the CLI, even though `../build/index.js` (indirectly)
- * imports `typescript`, and `typescript` is only an optional peer dependency
- * (README: "TypeScript 5+ is only required for build-time manifest
- * generation"). `env-cap init` itself is pure `node:fs` (ADR 0042) and never
- * needed `../build/index.js` at all.
+ * `env-cap init` and `env-cap --help` never load `../build/index.js`, which
+ * loads the TypeScript compiler. So they work even when that module cannot
+ * load. Only the generate and check paths import it, through a dynamic
+ * `import()`. Each test mocks the module to throw and asserts which commands
+ * still succeed.
  *
- * Reproduced by hand: `npm pack` a real build, install it into a scratch
- * project with no `typescript` anywhere in its dependency tree, and run
- * `npx env-cap init` -- it threw before `runInitCommand` ever ran. Fixed by
- * making `../build/index.js` a type-only import at module scope, loaded via
- * a dynamic `import()` inside `runCheckMode`/`runGenerateMode` only -- the
- * two code paths that actually need it.
- *
- * Isolated into its own file (matching test/cli/direct-run.test.ts's own
- * comment on why) so `vi.resetModules()` + a mocked `../build/index.js`
- * never interferes with the static `import { main }` bindings the rest of
- * the CLI test suite relies on.
+ * Isolated into its own file (as test/cli/direct-run.test.ts is) so
+ * `vi.resetModules()` and the mocked `../build/index.js` never interfere with
+ * the static `import { main }` bindings the rest of the CLI tests use.
  */
 
 const originalArgv = process.argv
@@ -90,12 +77,14 @@ describe("CLI init/--help never load ../build/index.js (typescript optional-peer
     await expect(main()).resolves.toBeUndefined()
 
     expect(process.exitCode).toBe(0)
-    expect(writes.join("")).toContain("env-cap - generate a manifest")
+    expect(writes.join("")).toContain(
+      "env-cap: from your env.schema.ts contracts, write the manifest",
+    )
   })
 
   it("sanity check: a real generate run DOES load ../build/index.js (proves the mock above is meaningful, not a false pass)", async () => {
     // A throwing vi.doMock factory surfaces through vitest's own module-mock
-    // error wrapper rather than the original error message verbatim -- the
+    // error wrapper rather than the original error message verbatim: the
     // meaningful assertion is that main() rejects at all here (proving
     // ../build/index.js's mocked factory actually ran), unlike the init/
     // --help cases above, which resolve cleanly against the very same mock.

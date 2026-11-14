@@ -1,18 +1,18 @@
 /**
  * Used by `env-example.mjs`, which wraps `@maverickcer/env-cap/build`'s
- * `renderEnvExample()` -- still `DiscoveredContract[]`-based (ADR 0038 only
+ * `renderEnvExample()`: still `DiscoveredContract[]`-based (ADR 0038 only
  * migrated `renderDocs()`/`buildCatalog()` to Contract Model's own shape,
  * not `renderEnvExample()`). Reshapes Contract Model + Lifecycle Model back
  * into that shape. Joined by `${file}#${exportName}` identity, the same
  * join key `effectiveOwner()`'s own callers use elsewhere in this codebase.
  *
  * `file` is passed through unchanged (Contract Model's own root-relative,
- * POSIX-separated value) -- `renderEnvExample()` only ever compares `.file`
+ * POSIX-separated value): `renderEnvExample()` only ever compares `.file`
  * for identity/sorting, never resolves it against a `root`, so a relative
  * value here is already exactly what it needs.
  *
  * `deprecated`/`deprecatedReason`/`removeBy`/`renamedFrom` come from
- * Lifecycle Model (ADR 0029), not Contract Model -- every other field comes
+ * Lifecycle Model (ADR 0029), not Contract Model: every other field comes
  * from Contract Model (ADR 0025) directly.
  */
 export function toDiscoveredContracts(evidence) {

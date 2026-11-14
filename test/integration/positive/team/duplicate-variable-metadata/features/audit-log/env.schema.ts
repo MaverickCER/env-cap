@@ -1,6 +1,6 @@
 import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
-/** See ../notifications/env.schema.ts's header comment -- this is the other half of the pair. */
+/** See ../notifications/env.schema.ts's header comment: this is the other half of the pair. */
 const schema = {
   WEBHOOK_URL: {},
 };

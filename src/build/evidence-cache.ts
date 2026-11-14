@@ -17,12 +17,12 @@ import { readToolVersion } from "./tool-version.js"
 import type { BuildFileSystem } from "./types.js"
 
 /**
- * A fast, honest read path for the persisted evidence artifact -- for a
- * report/projection script, a CI step, or any consumer that just wants the
- * current `EvidenceModel` without paying a full `generateEvidenceModel()`
- * recompute (schema parsing, cross-file linking, the dependency-graph AST
- * scan, all six model builds) on every single invocation, and without ever
- * risking silently-stale data. The mechanism: a cheap content fingerprint,
+ * A fast, honest read path for the persisted evidence artifact. It serves a
+ * report/projection script, a CI step, or any consumer that wants the
+ * current `EvidenceModel` without silently-stale data. Such a consumer
+ * avoids a full `generateEvidenceModel()` recompute on every invocation
+ * (schema parsing, cross-file linking, the dependency-graph AST scan, all six
+ * model builds). The mechanism: a cheap content fingerprint,
  * computed from raw file bytes with zero AST work, lets a caller cheaply
  * prove "nothing relevant to evidence generation has changed since this file
  * was last written" before trusting it.
@@ -30,7 +30,7 @@ import type { BuildFileSystem } from "./types.js"
 
 /** Options for {@link computeSourceFingerprint}. */
 export interface ComputeSourceFingerprintOptions {
-  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability: `./build` never imports `node:fs` (ADR 0040). */
   readonly fs: BuildFileSystem
   readonly root: string
   readonly include: readonly string[]
@@ -41,17 +41,17 @@ export interface ComputeSourceFingerprintOptions {
 /**
  * SHA-256 over the raw bytes of every schema file and every usage-scan-
  * surface file (the same file sets `assembleProject()`/`computeScanSurface()`
- * touch), plus env-cap's own installed version -- zero AST parsing or
+ * touch), plus env-cap's own installed version: zero AST parsing or
  * linking. Still requires the discovery/glob walk itself (fingerprinting has
  * to know which files matter), but skips everything after it. Deterministic:
  * file paths are deduplicated and sorted before hashing, so the result never
  * depends on filesystem enumeration order.
  *
  * @remarks
- * Not a timestamp, and never compared as one -- a fresh mtime doesn't prove
+ * Not a timestamp, and never compared as one. A fresh mtime doesn't prove
  * content is unchanged (a checkout, a rebase, or a touch can all bump it
- * with no real edit), and content is the only thing that actually
- * invalidates a cached evidence artifact.
+ * with no real edit). Content is the only thing that invalidates a cached
+ * evidence artifact.
  */
 export async function computeSourceFingerprint(
   options: ComputeSourceFingerprintOptions,
@@ -78,25 +78,23 @@ export async function computeSourceFingerprint(
   const hash = crypto.createHash("sha256")
   hash.update(readToolVersion())
   for (const file of allFiles) {
-    // Root-relative, not the raw absolute path -- an absolute path bakes in
-    // wherever this checkout happens to live (e.g. /home/runner/work/... in
-    // CI vs a contributor's own machine), so hashing it directly made this
-    // fingerprint -- and the committed .fingerprint sidecar that pins it --
-    // differ by checkout location alone, with the file's content unchanged.
+    // Root-relative, not the raw absolute path. An absolute path bakes in
+    // wherever this checkout lives (e.g. /home/runner/work/... in CI vs a
+    // contributor's own machine). Hashing it would make this fingerprint (and
+    // the committed .fingerprint sidecar that pins it) differ by checkout
+    // location alone, with the file's content unchanged.
     hash.update(displayPath(root, file))
     try {
-      // Empirically confirmed equivalent to omitting the encoding (and thus
-      // getting a Buffer back instead of a string): `hash.update()` accepts
-      // either, and for any valid-UTF-8 file (every real TS/JS source file
-      // qualifies) a Buffer's raw bytes and its UTF-8-decoded string
-      // produce byte-identical SHA-256 digests either way (verified via a
-      // real `node -e` comparison, not just reasoning).
+      // Equivalent to omitting the encoding and getting a Buffer back:
+      // `hash.update()` accepts either. For any valid-UTF-8 file (every real
+      // TS/JS source file qualifies), a Buffer's raw bytes and its
+      // UTF-8-decoded string produce byte-identical SHA-256 digests.
       hash.update(await fs.readFile(file, "utf8"))
     } catch {
       // A file the glob walk found but can't be read by the time we hash it
-      // (deleted mid-run, a race with another process) -- folded into the
-      // hash as a distinct marker so the fingerprint still changes rather
-      // than silently treating a vanished file as if it were never there.
+      // (deleted mid-run, a race with another process). A distinct marker
+      // keeps the fingerprint changing, instead of treating a vanished file
+      // as if it were never there.
       hash.update("(unreadable)")
     }
   }
@@ -107,7 +105,7 @@ function fingerprintPathFor(evidencePath: string): string {
   return `${evidencePath}.fingerprint`
 }
 
-/** Writes `fingerprint`'s paired sidecar for `evidencePath` -- call immediately after writing the evidence artifact itself, so the two files always describe the same moment in the source tree's history. */
+/** Writes `fingerprint`'s paired sidecar for `evidencePath`: call immediately after writing the evidence artifact itself, so the two files always describe the same moment in the source tree's history. */
 export async function writeEvidenceFingerprint(
   evidencePath: string,
   fingerprint: string,
@@ -120,36 +118,36 @@ export async function writeEvidenceFingerprint(
   await fs.writeFile(fingerprintPathFor(evidencePath), `${fingerprint}\n`, "utf8")
 }
 
-/** Options for {@link getEvidenceModel} -- every `generateEvidenceModel()` option, plus where the cached artifact lives. */
+/** Options for {@link getEvidenceModel}: every `generateEvidenceModel()` option, plus where the cached artifact lives. */
 export interface GetEvidenceModelOptions extends GenerateEvidenceModelOptions {
-  /** Where the cached evidence artifact (and its `.fingerprint` sidecar) live, e.g. `docs/env.evidence.json`, relative to `root`. Required -- there is no honest default env-cap could guess at for where a project keeps this. */
+  /** Where the cached evidence artifact (and its `.fingerprint` sidecar) live, e.g. `docs/env.evidence.json`, relative to `root`. Required: there is no honest default env-cap could guess at for where a project keeps this. */
   readonly location: string
 }
 
 /** The result of {@link getEvidenceModel}. */
 export interface GetEvidenceModelResult {
   readonly evidence: EvidenceModel
-  /** `"hit"` -- the committed evidence artifact's fingerprint matched current source; read from disk, no recompute. `"miss"` -- a real `generateEvidenceModel()` call ran. */
+  /** `"hit"`: the committed evidence artifact's fingerprint matched current source; read from disk, no recompute. `"miss"`: a real `generateEvidenceModel()` call ran. */
   readonly source: "hit" | "miss"
-  /** Set only when `source === "miss"` -- why the cache wasn't trusted, for a caller that wants to log it. */
+  /** Set only when `source === "miss"`: why the cache wasn't trusted, for a caller that wants to log it. */
   readonly missReason: string | undefined
 }
 
 /**
  * Trusts the committed evidence artifact at `options.location` only when its
  * paired `.fingerprint` sidecar matches a freshly (cheaply) computed
- * {@link computeSourceFingerprint} -- never on file presence alone, never on
+ * {@link computeSourceFingerprint}: never on file presence alone, never on
  * a timestamp. On any mismatch (stale fingerprint, missing/corrupt evidence
  * file, no fingerprint sidecar at all), falls back to a real
- * `generateEvidenceModel()` call -- never hard-fails, never silently serves
+ * `generateEvidenceModel()` call: never hard-fails, never silently serves
  * data that might be stale.
  *
  * @remarks
- * Never writes anything. A cache miss here does not self-heal the cache --
- * only an explicit write (`generateEnvArtifacts()`'s `evidence` option)
- * refreshes the committed artifact and its fingerprint together, so "when
- * was this last regenerated" stays under explicit control, never an
- * implicit side effect of a read. Two independent callers hitting the same
+ * Never writes anything. A cache miss here does not self-heal the cache.
+ * Only an explicit write (`generateEnvArtifacts()`'s `evidence` option)
+ * refreshes the committed artifact and its fingerprint together. That keeps
+ * "when was this last regenerated" under explicit control, never an implicit
+ * side effect of a read. Two independent callers hitting the same
  * stale cache both recompute independently; neither one's recompute updates
  * the file the other reads.
  */

@@ -3,43 +3,43 @@ import type { DiscoveredContract } from "./link.js"
 import type { ManifestChangeReport, ManifestVariableRef } from "./evidence-snapshot.js"
 
 /**
- * The sixth of env-cap's seven canonical fact models (ADR 0024) -- what
- * changed since the last persisted evidence snapshot (ADR 0038; previously
- * a manifest-scoped snapshot, ADR 0021). See ADR 0030 (base shape) and ADR
+ * The sixth of env-cap's seven canonical fact models (ADR 0024): what
+ * changed since the last persisted evidence snapshot (ADR 0038, which
+ * replaces the manifest-scoped snapshot of ADR 0021). See ADR 0030 (base shape) and ADR
  * 0029 (the `renamedFrom` field this file's rename correlation is gated
  * on).
  *
  * @remarks
  * Wraps `ManifestChangeReport` (`evidence-snapshot.ts`) rather than
- * replacing it -- this model exists to give the change report a versioned,
+ * replacing it: this model exists to give the change report a versioned,
  * model-namespaced shape Evidence Model can assemble against, alongside the
  * other six models. Empty (no adds/removes/updates) whenever no previous
- * evidence snapshot location was configured for this run -- there is
+ * evidence snapshot location was configured for this run: there is
  * nothing to diff against, which is a genuinely different state from a
  * first-ever run *with* tracking configured (where everything reads as
  * added).
  */
 
-/** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
+/** Bump only when a reader could misinterpret the new shape: same discipline every other canonical model's `schemaVersion` follows. */
 export const CHANGE_MODEL_SCHEMA_VERSION = 1
 
 /** One `addedVariables`/`removedVariables` pair in `manifest`, correlated into a single rename via the current declaration's `renamedFrom` field (ADR 0029). */
 export interface RenamedVariable {
-  /** The owning contract's identity (`${file}#${exportName}`) -- a rename never crosses contracts. */
+  /** The owning contract's identity (`${file}#${exportName}`): a rename never crosses contracts. */
   readonly contractIdentity: string
   readonly file: string
   readonly exportName: string
   readonly contractName: string
-  /** The variable's key before the rename -- matches a `manifest.removedVariables` entry. */
+  /** The variable's key before the rename: matches a `manifest.removedVariables` entry. */
   readonly previousKey: string
-  /** The variable's key after the rename -- matches a `manifest.addedVariables` entry. */
+  /** The variable's key after the rename: matches a `manifest.addedVariables` entry. */
   readonly currentKey: string
 }
 
-/** The versioned, JSON-serializable root of the Change Model -- what changed since the last persisted evidence snapshot. See this module's own doc comment for the full picture. */
+/** The versioned, JSON-serializable root of the Change Model: what changed since the last persisted evidence snapshot. See this module's own doc comment for the full picture. */
 export interface ChangeModel {
   readonly schemaVersion: typeof CHANGE_MODEL_SCHEMA_VERSION
-  /** The existing manifest change report, unmodified -- see ADR 0021. `addedVariables`/`removedVariables` still list a correlated rename's two halves separately; `renamedVariables` below is an additive, separately-computed view, not a filter over this field. */
+  /** The existing manifest change report, unmodified: see ADR 0021. `addedVariables`/`removedVariables` still list a correlated rename's two halves separately; `renamedVariables` below is an additive, separately-computed view, not a filter over this field. */
   readonly manifest: ManifestChangeReport
   /**
    * Every `addedVariables`/`removedVariables` pair this run's currently
@@ -47,10 +47,10 @@ export interface ChangeModel {
    * contract identity then current key.
    *
    * @remarks
-   * Only ever populated from an *authored* `renamedFrom` -- never guessed
+   * Only ever populated from an *authored* `renamedFrom`: never guessed
    * from name similarity (ADR 0010's "provable, not heuristic" ethos).
    * Variable-level only: Lifecycle Model deliberately has no contract-level
-   * `renamedFrom` (ADR 0029), so there is no `renamedContracts` -- a
+   * `renamedFrom` (ADR 0029), so there is no `renamedContracts`; a
    * contract-level rename has no field to correlate from.
    */
   readonly renamedVariables: readonly RenamedVariable[]
@@ -81,7 +81,7 @@ function findByContractAndKey(
  * shape, and correlates renames using the current run's `renamedFrom`
  * declarations. `currentContracts` should be the same contracts the
  * manifest was generated from (active contracts only, matching
- * `renderManifest()`'s own scope -- same as every other input to this
+ * `renderManifest()`'s own scope: same as every other input to this
  * report family).
  */
 export function buildChangeModel(
@@ -115,7 +115,7 @@ export function buildChangeModel(
         file: addedRef.file,
         exportName: addedRef.exportName,
         // Resolved from the contract this rename was declared on, not carried
-        // on the ref -- see `ContractRef` (`evidence-reference.ts`).
+        // on the ref: see `ContractRef` (`evidence-reference.ts`).
         contractName: contract.contractName,
         previousKey: removedRef.key,
         currentKey: addedRef.key,

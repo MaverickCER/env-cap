@@ -29,7 +29,7 @@ Variables no consumer reads within the scanned surfaces below. Not proof of dead
 
 Searched: application.
 
-A blank Stale/missing citations cell is the strongest "looks genuinely unused" signal -- no developer has ever claimed otherwise. A non-blank cell means someone specifically claimed dynamic access here via `dynamicAccess`, and that claim can no longer be verified (ADR 0037) -- check with them before deleting.
+A blank Stale/missing citations cell is the strongest "looks unused" signal: no developer has ever claimed otherwise. A non-blank cell means someone specifically claimed dynamic access here via `dynamicAccess`, and that claim can no longer be verified (ADR 0037). Check with them before deleting.
 
 | Variable | Contract | Owner | Stale/missing citations |
 |---|---|---|---|

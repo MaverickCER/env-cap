@@ -53,7 +53,7 @@ describe("generateUsageReport", () => {
       "src/server.ts",
       `import { paymentsEnv } from "../features/payments/env.schema.js";\npaymentsEnv.STRIPE_KEY;`,
     )
-    // .tsx-only file -- distinguishes the scan `include` glob's OWN
+    // .tsx-only file: distinguishes the scan `include` glob's OWN
     // "**/*.tsx" entry from "**/*.ts" alone (a fixture with only .ts files
     // can never observe that pattern's own StringLiteral mutant).
     await write("src/widget.tsx", `export const Widget = () => null;\n`)
@@ -81,7 +81,7 @@ describe("generateUsageReport", () => {
     ])
   })
 
-  it("never throws for an abandoned/unconsumed/unresolved/indeterminate ownership finding -- ownership hygiene is never a blocking concern (ADR 0038)", async () => {
+  it("never throws for an abandoned/unconsumed/unresolved/indeterminate ownership finding: ownership hygiene is never a blocking concern (ADR 0038)", async () => {
     await expect(generateUsageReport({ fs: nodeBuildFs, root: fixtureRoot })).resolves.toBeDefined()
   })
 
@@ -184,7 +184,7 @@ describe("generateUsageReport", () => {
   it("defaults root to process.cwd() when omitted", async () => {
     // A real `process.chdir()` (tried first) throws `ERR_WORKER_UNSUPPORTED_OPERATION`
     // under any worker-thread-based test runner (Stryker's own vitest-runner
-    // included, unlike this project's default `vitest run` pool) -- a Node.js
+    // included, unlike this project's default `vitest run` pool): a Node.js
     // platform restriction, not a vitest quirk. Mocking `process.cwd()` itself
     // proves the same "root defaults to cwd" behavior without touching real
     // process-wide state at all.
@@ -199,11 +199,11 @@ describe("generateUsageReport", () => {
     }
   })
 
-  it("resolves an unconsumed variable's effective owner -- its own override, not just the contract's (regression, ADR 0028)", async () => {
+  it("resolves an unconsumed variable's effective owner: its own override, not just the contract's (regression, ADR 0028)", async () => {
     const ownerFallbackRoot = path.resolve(fixtureRoot, "owner-fallback")
     // TWO variables, declared in an order where the FIRST one (INVOICE_KEY)
     // is consumed (so never unconsumed) and the SECOND (LEDGER_KEY) is the
-    // one that's actually unconsumed and owner-overridden -- if the lookup
+    // one that's actually unconsumed and owner-overridden: if the lookup
     // ever picked the first-found variable instead of finding the one whose
     // `key` actually matches, it would wrongly report INVOICE_KEY's owner
     // (undefined, no override) instead of LEDGER_KEY's ("ledger-team").
@@ -215,7 +215,7 @@ describe("generateUsageReport", () => {
     )
     // Imports the contract (so it's not "abandoned") and accesses
     // INVOICE_KEY but never LEDGER_KEY (so only LEDGER_KEY is "unconsumed").
-    // The contract declares no owner of its own -- only LEDGER_KEY does.
+    // The contract declares no owner of its own: only LEDGER_KEY does.
     await write(
       "owner-fallback/src/server.ts",
       `import { billingEnv } from "../features/billing/env.schema.js";\nbillingEnv.INVOICE_KEY;\n`,
@@ -239,7 +239,7 @@ describe("generateUsageReport", () => {
       export const billingEnv = createEnv(billingSchema, { name: "billing" });
       documentEnv(billingSchema, { owner: "billing-team" });`,
     )
-    // Only reachable through an unresolved `export * from` barrel -- must
+    // Only reachable through an unresolved `export * from` barrel: must
     // land in unresolvedConsumers, never abandoned.
     await write("ambiguous-findings/features/billing/index.ts", `export * from "./env.schema.js";`)
     await write(
@@ -267,9 +267,9 @@ describe("generateUsageReport", () => {
     expect(result.unresolvedConsumers).toEqual([
       expect.objectContaining({ contractName: "billing" }),
     ])
-    // Also pins `dynamicAccessSites`' own mapping (root-relative `file`,
-    // real `line`/`column`) -- not just the finding's contractName/key --
-    // since `payrollEnv[key]` is the one dynamic-access site in this fixture.
+    // Also pins `dynamicAccessSites`' own mapping (root-relative `file`, real
+    // `line` and `column`), not just the finding's contractName and key, because
+    // `payrollEnv[key]` is the one dynamic-access site in this fixture.
     expect(result.indeterminate).toEqual([
       expect.objectContaining({
         contractName: "payroll",
@@ -286,9 +286,9 @@ describe("generateUsageReport", () => {
     ])
   })
 
-  it("omits any packages report entirely when options.packages is omitted -- exactly the one real (non-package) warning shows, no spurious `(package) ...` entry", async () => {
+  it("omits any packages report entirely when options.packages is omitted: exactly the one real (non-package) warning shows, no spurious `(package) ...` entry", async () => {
     const warningRoot = path.resolve(fixtureRoot, "warning-only")
-    // An unresolvable schema factory reference -- `link.ts` can't statically
+    // An unresolvable schema factory reference: `link.ts` can't statically
     // evaluate `someFactory()`, so it emits a real parse warning, distinct
     // from any `(package) <name>` warning `resolveAllowlistedPackages()`
     // would emit for an unresolvable *package name*.
@@ -303,7 +303,7 @@ describe("generateUsageReport", () => {
     expect(result.parseWarnings.some((w) => w.file.startsWith("(package)"))).toBe(false)
   })
 
-  describe("computeUsage -- stale/missing dynamic-access citations", () => {
+  describe("computeUsage: stale/missing dynamic-access citations", () => {
     const citationsRoot = path.resolve(fixtureRoot, "citations")
 
     beforeAll(async () => {
@@ -315,9 +315,9 @@ describe("generateUsageReport", () => {
       )
       // Imported (so the contract isn't "abandoned") but never referenced
       // past the import at all, and INVOICE_KEY itself is never
-      // member-accessed -- lands in unconsumedOwned, the one finding type
+      // member-accessed: lands in unconsumedOwned, the one finding type
       // `staleOrMissingCitationsFor` is reached through here. (Deliberately
-      // NOT a bare reference like `console.log(billingEnv)` -- since ADR
+      // NOT a bare reference like `console.log(billingEnv)`: since ADR
       // 0039, that would itself be an escape site and produce
       // "indeterminate" instead of "unconsumed".)
       await write(
@@ -369,11 +369,11 @@ describe("generateUsageReport", () => {
 
     it("maps a real 'stale'/'missing' acknowledgment into an exact staleOrMissingCitations entry", async () => {
       // NOTE: a "fresh" entry can never coexist here with a real
-      // unconsumedOwned finding -- see the note on `staleOrMissingCitationsFor`
+      // unconsumedOwned finding (see the note on `staleOrMissingCitationsFor`
       // in the source: `deriveOwnershipFindings()` promotes ANY variable with
       // a "fresh" assertion to the separate "asserted" finding bucket
       // *before* it would ever reach `unconsumedOwned`/`indeterminate`, using
-      // this exact same identity-keyed map -- so a "fresh"-and-"stale" mix
+      // this exact same identity-keyed map) so a "fresh"-and-"stale" mix
       // for one variable is unreachable from this call site.
       const identity = dynamicAccessVariableIdentity(
         displayPath(citationsRoot, path.resolve(citationsRoot, "features/billing/env.schema.ts")),
@@ -414,7 +414,7 @@ describe("generateUsageReport", () => {
 
   describe("computeScanSurface (direct)", () => {
     // Deliberately OUTSIDE fixtureRoot (a sibling directory, never nested
-    // under it) -- a package dir nested inside the scanned root would be
+    // under it): a package dir nested inside the scanned root would be
     // picked up by the LOCAL scan too, making the package-specific scan
     // branch's own `include`/`exclude` unobservable (a real bug caught only
     // by hand-mutating `include: []` and seeing the test pass unchanged).
@@ -448,7 +448,7 @@ describe("generateUsageReport", () => {
       }
     }
 
-    it("scans more than 1,000 source files, locally and in a package -- the schema-file sanity limit does not apply to the usage scan (regression)", async () => {
+    it("scans more than 1,000 source files, locally and in a package: the schema-file sanity limit does not apply to the usage scan (regression)", async () => {
       const memRoot = path.normalize("/project")
       const memPackageDir = path.normalize("/vendor/package-a")
       const seeded: Record<string, string> = {}
@@ -468,7 +468,7 @@ describe("generateUsageReport", () => {
       expect(scanFiles).toHaveLength(2002)
     })
 
-    it("returns just the application surface when no package origins are given -- including a .tsx-only file", async () => {
+    it("returns just the application surface when no package origins are given: including a .tsx-only file", async () => {
       const { scannedSurfaces, scanFiles } = await computeScanSurface(
         fixtureRoot,
         [],
@@ -512,7 +512,7 @@ describe("generateUsageReport", () => {
       )
     })
 
-    it("scans each distinct package origin's own directory once each, keyed by resolvedFile -- not just the first", async () => {
+    it("scans each distinct package origin's own directory once each, keyed by resolvedFile: not just the first", async () => {
       const a = origin("@fixtures/package-a", packageDirA)
       const b = origin("@fixtures/package-b", packageDirB)
       const origins = new Map([
@@ -542,7 +542,7 @@ describe("generateUsageReport", () => {
     it("scans a shared packageDir only once when two origins resolve into the same package", async () => {
       const a = origin("@fixtures/package-a", packageDirA)
       // A second, differently-named origin resolving to a DIFFERENT file
-      // within the SAME packageDir -- multiple resolved schema files can
+      // within the SAME packageDir: multiple resolved schema files can
       // share one packageDir (a package with more than one allow-listed
       // export). Keyed by its own distinct resolvedFile, so both entries
       // survive in the Map, but the directory itself must only be scanned
@@ -575,7 +575,7 @@ describe("generateUsageReport", () => {
 
 // Isolated from `fixtureRoot` above (own root, own beforeAll/afterAll) so this
 // suite's tsconfig.json doesn't affect any other test's default auto-detection.
-describe("generateUsageReport -- tsconfig path alias resolution (ADR 0023, Experimental)", () => {
+describe("generateUsageReport: tsconfig path alias resolution (ADR 0023, Experimental)", () => {
   const aliasRoot = path.resolve(here, "fixtures-usage-generate-tsconfig-aliases")
 
   async function writeAliased(relativePath: string, content: string): Promise<string> {
@@ -610,7 +610,7 @@ describe("generateUsageReport -- tsconfig path alias resolution (ADR 0023, Exper
     const result = await generateUsageReport({ fs: nodeBuildFs, root: aliasRoot })
 
     expect(result.abandonedContracts).toEqual([])
-    // Not just "not abandoned" -- INVOICE_KEY was actually member-accessed
+    // Not just "not abandoned": INVOICE_KEY was actually member-accessed
     // (`billingEnv.INVOICE_KEY` above), so it must never show up as
     // unconsumed or indeterminate either.
     expect(result.unconsumedOwnedVariables).toEqual([])
@@ -621,7 +621,7 @@ describe("generateUsageReport -- tsconfig path alias resolution (ADR 0023, Exper
     ])
   })
 
-  it("tsconfig: false reproduces the pre-ADR-0023 gap, for contrast -- the same contract misreported as abandoned", async () => {
+  it("tsconfig: false reproduces the pre-ADR-0023 gap for contrast (the same contract misreported as abandoned)", async () => {
     const result = await generateUsageReport({ fs: nodeBuildFs, root: aliasRoot, tsconfig: false })
 
     expect(result.abandonedContracts).toEqual([

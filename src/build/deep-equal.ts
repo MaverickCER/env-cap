@@ -1,8 +1,8 @@
 /**
- * Structural equality for JSON-safe values -- `documentEnv()`'s `metadata` can hold an
+ * Structural equality for JSON-safe values: `documentEnv()`'s `metadata` can hold an
  * object/array (ADR 0035), so two independently-declared-but-identical values are never `===`.
  * Values compared here are always JSON-safe (string/number/boolean/null/array/object,
- * recursively -- see `literal-eval.ts`), so this doesn't need to handle cycles, `Date`, `Map`, or
+ * recursively: see `literal-eval.ts`), so this doesn't need to handle cycles, `Date`, `Map`, or
  * anything else `evaluateLiteral()` can never produce.
  */
 export function deepEqual(a: unknown, b: unknown): boolean {

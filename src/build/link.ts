@@ -25,7 +25,7 @@ import type { SourcePosition } from "./source-position.js"
 /** One schema variable, merged with its linked `documentEnv()` documentation (if any). */
 /**
  * One schema variable merged with its linked `documentEnv()` documentation. Its
- * governance fields (`owner` .. `metadata`) are `EnvGovernanceFields` --
+ * governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`:
  * each an individual-variable override of the contract's own value, from the
  * linked `documentEnv()` call's matching `variables` entry, or `undefined`.
  */
@@ -52,17 +52,17 @@ export interface DiscoveredVariable extends DiscoveredSchemaVariable, EnvGoverna
   readonly deprecatedReason: string | undefined
   /** From the linked `documentEnv()` call's matching `variables` entry, if any. */
   readonly removeBy: string | undefined
-  /** From the linked `documentEnv()` call's matching `variables` entry, if any -- the previous variable name this one renames, if this declaration is the result of a rename. */
+  /** From the linked `documentEnv()` call's matching `variables` entry, if any. The previous variable name this one renames, if this declaration is the result of a rename. */
   readonly renamedFrom: string | undefined
-  /** The linked `documentEnv()` entry's `evidence` sub-object -- the re-verified-every-run half of this variable's documentation, deliberately not flattened in alongside the declared-only fields above. See {@link runtime.VariableEvidenceDocs} and ADR 0037. */
+  /** The linked `documentEnv()` entry's `evidence` sub-object: the re-verified-every-run half of this variable's documentation, deliberately not flattened in alongside the declared-only fields above. See {@link runtime.VariableEvidenceDocs} and ADR 0037. */
   readonly evidence: DiscoveredVariableEvidence | undefined
   /** Whether this specific key had a matching entry in the linked `documentEnv()` call, if any. */
   readonly documented: boolean
-  // `declaration: SourcePosition` is inherited from `DiscoveredSchemaVariable` --
+  // `declaration: SourcePosition` is inherited from `DiscoveredSchemaVariable`:
   // where this variable's own schema property is declared. See ADR 0036.
 }
 
-/** One `createEnv()` contract, merged with its linked `documentEnv()` documentation (if any). Its governance fields (`owner` .. `metadata`) are `EnvGovernanceFields` -- contract-level defaults that individual variables may override. */
+/** One `createEnv()` contract, merged with its linked `documentEnv()` documentation (if any). Its governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`: contract-level defaults that individual variables may override. */
 export interface DiscoveredContract extends EnvGovernanceFields {
   /** Absolute path of the file declaring the `createEnv()` call. */
   readonly file: string
@@ -74,7 +74,7 @@ export interface DiscoveredContract extends EnvGovernanceFields {
   readonly active: boolean
   /** From the linked `documentEnv()` call, if any. */
   readonly category: string | undefined
-  /** From the linked `documentEnv()` call, if any -- see {@link runtime.ContractDocs.exclusiveGroup}. */
+  /** From the linked `documentEnv()` call, if any: see {@link runtime.ContractDocs.exclusiveGroup}. */
   readonly exclusiveGroup: string | undefined
   /** From the linked `documentEnv()` call, if any. */
   readonly deprecated: boolean | undefined
@@ -85,11 +85,11 @@ export interface DiscoveredContract extends EnvGovernanceFields {
   /** Whether *any* `documentEnv()` call is linked to this contract at all. */
   readonly documented: boolean
   /** Set when this contract was discovered via an allow-listed package's
-   *  declared schema entry point rather than local discovery -- the bare
-   *  package name `renderManifest()` must import from instead of computing a
-   *  relative path to the (analysis-only) resolved file. See ADR 0014. */
+   *  declared schema entry point rather than local discovery. It is the bare
+   *  package name `renderManifest()` imports from. A relative path to the
+   *  (analysis-only) resolved file would be wrong. See ADR 0014. */
   readonly packageOrigin: PackageOrigin | undefined
-  /** Where this contract's `createEnv(...)` call is declared. Always present -- every discovered contract has one, by definition. See ADR 0036. */
+  /** Where this contract's `createEnv(...)` call is declared. Always present: every discovered contract has one, by definition. See ADR 0036. */
   readonly declaration: SourcePosition
   /** Where this contract's `documentEnv(...)` call is declared, if one exists. Undefined for a contract that's never been documented. See ADR 0036. */
   readonly documentation: SourcePosition | undefined
@@ -140,24 +140,24 @@ export interface LinkResult {
 
 /**
  * Parses every discovered file, then resolves and links `createEnv`/
- * `documentEnv` calls into the merged, docs-enriched contract shape the rest
- * of the generator (`compatibility.ts`, `exclusive-group.ts`, `manifest.ts`,
- * `docs.ts`, `env-example.ts`) consumes.
+ * `documentEnv` calls into the merged, docs-enriched contract shape. The
+ * rest of the generator consumes that shape (`compatibility.ts`,
+ * `exclusive-group.ts`, `manifest.ts`, `docs.ts`, `env-example.ts`).
  *
  * @remarks
- * Cross-file linking is deliberately narrow (see `resolveImportSpecifier`):
- * a `documentEnv()` call's schema reference resolves either to a `const` in
- * its own file, to a directly-imported named export of another file's
- * `const`, or (since ADR 0014) to an allow-listed package's declared schema
- * entry point. Anything else -- a re-export barrel, a namespace import, an
- * unlisted bare package specifier -- becomes an `unresolvedLinks` entry
- * rather than a throw or a guess, exactly like every other static-analysis
- * boundary in this codebase.
+ * Cross-file linking is deliberately narrow (see `resolveImportSpecifier`).
+ * A `documentEnv()` call's schema reference resolves to one of three things.
+ * The first is a `const` in its own file. The second is a directly-imported
+ * named export of another file's `const`. The third is an allow-listed
+ * package's declared schema entry point (ADR 0014). Anything else becomes an `unresolvedLinks` entry, not a throw
+ * or a guess. Examples: a re-export barrel, a namespace import, an unlisted
+ * bare package specifier. Every other static-analysis boundary in this codebase
+ * does the same.
  *
  * `packageOrigins` (from `resolveAllowlistedPackages()`) tags any discovered
  * contract whose `file` matches a package-resolved path with that package's
- * origin -- purely a lookup; `discoveredFiles` must already include those
- * files (merged in by the caller via `mergeLocalAndPackageFiles()`).
+ * origin. It is purely a lookup. `discoveredFiles` must already include
+ * those files (the caller merges them in via `mergeLocalAndPackageFiles()`).
  *
  * @param context - See `ImportResolutionContext`; drives how a resolved import specifier maps back to a file on disk.
  */
@@ -196,16 +196,16 @@ export async function linkFiles(
     contextLabel: string,
   ): Promise<{ identity: string; variables: DiscoveredSchemaVariable[] } | undefined> {
     // `inFile` is always the loop variable from `discoveredFiles` below,
-    // already analyzed (and cached) by the pre-pass above -- `mustGet` makes
-    // that invariant explicit instead of a silent, unreachable `undefined`
-    // fallback (see the identical pattern the two loops below already use).
+    // already analyzed (and cached) by the pre-pass above. `mustGet` makes
+    // that invariant explicit, with no silent, unreachable `undefined`
+    // fallback. The two loops below use the same pattern.
     const inFileAnalysis = mustGet(analysisCache, inFile)
 
     switch (ref.kind) {
       case "literal":
-        // Unique per AST node position -- an inline schema literal can never be
-        // referenced by anything else, so it can never be linked to a
-        // documentEnv() call elsewhere. That's expected, not a bug: documenting
+        // Unique per AST node position. Nothing else can reference an inline
+        // schema literal, so it can never be linked to a documentEnv() call
+        // elsewhere. That's expected, not a bug: documenting
         // a schema requires giving it a name.
         return {
           identity: `${inFile}#<inline:${ref.node.pos}>`,
@@ -321,7 +321,7 @@ export async function linkFiles(
         continue
       }
       if (documentEnvByIdentity.has(resolved.identity)) {
-        // Multiple documentEnv() calls for the same schema -- the first one
+        // Multiple documentEnv() calls for the same schema: the first one
         // found (in discovery order) wins, silently. Unusual enough not to
         // warrant its own warning category.
         continue
@@ -476,18 +476,17 @@ export function summarizeContract(
  * variable itself doesn't set one.
  *
  * @remarks
- * The one place this resolution rule should live -- see ADR 0028. Every
- * caller that needs "who owns this variable" (the docs Catalog/ownership
- * matrix/security review, and, as of ADR 0028, the usage report's
- * variable-level ownership findings) must go through this, not
- * `variable.owner` or `contract.owner` alone, so two call sites can never
- * again disagree about who owns a variable the way `docs.ts` and
- * `usage-report.ts` once did.
+ * The one place this resolution rule should live: see ADR 0028. Every
+ * caller that needs "who owns this variable" must go through this, not
+ * `variable.owner` or `contract.owner` alone. Those callers are the docs
+ * Catalog, ownership matrix and security review, and the usage report's
+ * variable-level ownership findings (ADR 0028). One rule means two call
+ * sites can never disagree about who owns a variable.
  *
- * Structurally typed (not pinned to `DiscoveredContract`/`DiscoveredVariable`)
- * so the same one resolution rule also serves `ContractModelContract`/
- * `ContractModelVariable` (`contract-model.ts`) -- both shapes carry the same
- * field, and this rule must never have two independent implementations.
+ * Structurally typed (not pinned to `DiscoveredContract`/`DiscoveredVariable`).
+ * So the same rule also serves `ContractModelContract`/`ContractModelVariable`
+ * (`contract-model.ts`). Both shapes carry the same field, and this rule must
+ * never have two independent implementations.
  */
 export function effectiveOwner(
   contract: { readonly owner: string | undefined },
@@ -496,7 +495,7 @@ export function effectiveOwner(
   return variable.owner ?? contract.owner
 }
 
-/** A variable's sensitivity, falling back to its contract's default -- see {@link effectiveOwner}. */
+/** A variable's sensitivity, falling back to its contract's default: see {@link effectiveOwner}. */
 export function effectiveSensitivity(
   contract: { readonly sensitivity: string | undefined },
   variable: { readonly sensitivity: string | undefined },
@@ -504,7 +503,7 @@ export function effectiveSensitivity(
   return variable.sensitivity ?? contract.sensitivity
 }
 
-/** A variable's purpose, falling back to its contract's default -- see {@link effectiveOwner}. */
+/** A variable's purpose, falling back to its contract's default: see {@link effectiveOwner}. */
 export function effectivePurpose(
   contract: { readonly purpose: string | undefined },
   variable: { readonly purpose: string | undefined },
@@ -512,7 +511,7 @@ export function effectivePurpose(
   return variable.purpose ?? contract.purpose
 }
 
-/** A variable's legal basis, falling back to its contract's default -- see {@link effectiveOwner}. */
+/** A variable's legal basis, falling back to its contract's default: see {@link effectiveOwner}. */
 export function effectiveLegalBasis(
   contract: { readonly legalBasis: string | undefined },
   variable: { readonly legalBasis: string | undefined },
@@ -520,7 +519,7 @@ export function effectiveLegalBasis(
   return variable.legalBasis ?? contract.legalBasis
 }
 
-/** A variable's retention policy, falling back to its contract's default -- see {@link effectiveOwner}. */
+/** A variable's retention policy, falling back to its contract's default: see {@link effectiveOwner}. */
 export function effectiveRetention(
   contract: { readonly retention: string | undefined },
   variable: { readonly retention: string | undefined },
@@ -528,7 +527,7 @@ export function effectiveRetention(
   return variable.retention ?? contract.retention
 }
 
-/** A variable's data residency, falling back to its contract's default -- see {@link effectiveOwner}. */
+/** A variable's data residency, falling back to its contract's default: see {@link effectiveOwner}. */
 export function effectiveDataResidency(
   contract: { readonly dataResidency: string | readonly string[] | undefined },
   variable: { readonly dataResidency: string | readonly string[] | undefined },
@@ -536,7 +535,7 @@ export function effectiveDataResidency(
   return variable.dataResidency ?? contract.dataResidency
 }
 
-/** A variable's audit-required assertion, falling back to its contract's default -- see {@link effectiveOwner}. */
+/** A variable's audit-required assertion, falling back to its contract's default: see {@link effectiveOwner}. */
 export function effectiveAuditRequired(
   contract: { readonly auditRequired: boolean | undefined },
   variable: { readonly auditRequired: boolean | undefined },

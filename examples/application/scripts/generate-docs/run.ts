@@ -1,17 +1,11 @@
-// Regenerates docs/ENVIRONMENT.md, docs/OWNERSHIP.md, and .env.example --
-// what `env-cap --docs`/`--ownership`/`--env-example` used to write for this
-// example, before those flags were removed from the CLI surface (see
-// specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md).
-// Neither has a real *runtime* consumer -- nothing in this app `import`s
-// ENVIRONMENT.md/OWNERSHIP.md/.env.example the way `src/startup.ts` imports
-// the generated manifest -- so generating them moved from a CLI flag to
-// plain application code, calling `@maverickcer/env-cap/build`'s still-fully-exported
-// `generateDocumentation()`/`generateUsageReport()` directly. Run via
-// `npm run docs:reports` (see package.json), which chains `npm run docs`
-// first so `docs/env.evidence.json` -- the evidence artifact this script
-// runs alongside -- is always current with what gets written here. See
-// check.ts for the `--check` (drift-guard) counterpart, and this directory's
-// own README for why this doesn't parse evidence.json directly.
+// Regenerates docs/ENVIRONMENT.md, docs/OWNERSHIP.md and .env.example by
+// calling `generateDocumentation()` and `generateUsageReport()` from
+// `@maverickcer/env-cap/build`. Nothing in the app imports these files at
+// runtime, so the CLI does not write them; it writes only the manifest and the
+// evidence file (specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md).
+// `npm run docs:reports` runs `npm run docs` first, so `docs/env.evidence.json`
+// is current alongside them. check.ts is the drift-guard counterpart, and this
+// directory's README says why this script does not parse the evidence file.
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { generateDocumentation, generateUsageReport } from "@maverickcer/env-cap/build"
@@ -39,10 +33,8 @@ console.log(
   `[generate-docs] wrote docs/ENVIRONMENT.md (${String(docs.contracts.length)} contract(s)), .env.example, and docs/OWNERSHIP.md (${String(usage.abandonedContracts.length)} abandoned, ${String(usage.unconsumedOwnedVariables.length)} unconsumed owned variable(s)).`,
 )
 
-// The two findings this example's own README leads with (see the root
-// README's "Why it exists" transcript) -- printed by name here the same way
-// the removed `--docs`/`--ownership` CLI flags used to, since a bare count
-// in the one-liner above doesn't make the same concrete case on its own.
+// Prints the two findings the root README's "See it run" block shows, by name:
+// a bare count in the line above does not show which variable to act on.
 if (docs.documentation.expiringSoon.length > 0) {
   console.log(`\n${String(docs.documentation.expiringSoon.length)} variable(s)/contract(s) expiring soon or already expired:`)
   for (const e of docs.documentation.expiringSoon) {

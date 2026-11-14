@@ -184,7 +184,7 @@ describe("processors.base64", () => {
 
   it("wraps a String()-conversion failure in the same generic error, without leaking the underlying cause", () => {
     // Buffer.from(str, "base64") itself never throws (invalid characters are
-    // silently ignored) -- the only way to reach this processor's catch is a
+    // silently ignored): the only way to reach this processor's catch is a
     // value whose String() coercion itself throws.
     const poison = {
       toString: () => {

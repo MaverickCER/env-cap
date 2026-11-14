@@ -5,10 +5,10 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  *
  * Unlike env-example.mjs/config-reference.mjs, this one's output is data
  * (the same shape `usage-report.ts`'s private `RenderUsageReportOptions`
- * describes -- `dependencyOwnership`/`abandonedContracts`/
+ * describes (`dependencyOwnership`/`abandonedContracts`/
  * `unresolvedConsumers`/`unconsumedOwnedVariables`/`indeterminate`/
  * `parseWarnings`, every one of those five finding-shape types publicly
- * exported from `@maverickcer/env-cap/build`), not rendered Markdown --
+ * exported from `@maverickcer/env-cap/build`), not rendered Markdown)
  * `renderUsageReport()` itself is a private implementation detail of
  * `generateUsageReport()`'s orchestration (ADR 0010's boundary), never
  * re-exported. This projection's job is producing the *data* a consumer's
@@ -18,12 +18,12 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  * `dependencyOwnership` (every contract, not just problematic ones) is
  * built directly from Contract Model + Dependency Model, joined by
  * `${file}#${exportName}` identity. The four finding arrays are recovered
- * from Finding Model's `"ownership"`-family findings (ADR 0026) -- each
+ * from Finding Model's `"ownership"`-family findings (ADR 0026) (each
  * `OwnershipEvidenceReference` carries `contractName`/`file`/`variable`,
  * but not the owner a `AbandonedContractFinding`/`UnconsumedOwnedVariableFinding`
  * also needs, so those are looked up from Ownership Model by `contractName`
  * (this codebase's `contractName` is a resolved *display* name, not a
- * structural identity key like `file`+`exportName` -- a real edge case with
+ * structural identity key like `file`+`exportName`) a real edge case with
  * two same-named contracts would collide here; a limitation worth noting,
  * not a scope this reference projection tries to solve).
  */

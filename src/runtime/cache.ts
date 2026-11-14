@@ -10,7 +10,7 @@ export interface CacheState {
 }
 
 /**
- * All shared state lives here -- nothing is exported except the accessor
+ * All shared state lives here: nothing is exported except the accessor
  * functions below, and every write goes through them. Values are frozen
  * before they ever reach `contractValues`, so once set, a contract's
  * resolved record cannot be mutated in place.

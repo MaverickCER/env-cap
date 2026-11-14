@@ -1,6 +1,6 @@
 # Contributing to env-cap
 
-A change needs a branch, tests, a changeset and green `contract` and `lint` checks. The steps below go from clone to merge; [CODE_REVIEW.md](CODE_REVIEW.md) covers the reviewer's side.
+A change needs a branch, tests, a changeset and green `contract`, `lint` and `required` checks. The steps below go from clone to merge; [CODE_REVIEW.md](CODE_REVIEW.md) covers the reviewer's side.
 
 ## Development setup
 
@@ -58,17 +58,17 @@ npm run examples:update-golden
 2. Make your change. If it touches a surface in [`VERSIONING.md`](VERSIONING.md)'s Stable tier, decide whether it is breaking, additive or a fix.
 3. Add or update tests. `npm run test:coverage` fails below the floors in `vitest.config.ts`. Floors are raised in review when coverage improves. Lowering one is a reviewed change, never a silent one.
 4. Run `npx changeset` and describe what changes for someone who installs the package. Pick `patch`, `minor` or `major` by [`VERSIONING.md`](VERSIONING.md). If you add none, the release workflow generates one from `feat`, `fix`, `perf` and `revert` commit messages; other types release nothing.
-5. Open a pull request. A merge needs the `contract` and `lint` checks; `contract` fails when `verify` or `lint` fails.
+5. Open a pull request. A merge needs the `contract`, `lint` and `required` checks; `contract` fails when `verify` or `lint` fails.
 
-CI also runs the Bun and Deno suite, the examples, the integration fixtures, `typescript-5`, `typescript-compat` and the package-manager smoke test. The `required` check waits for all of them. The branch ruleset does not yet require `required`, so those jobs do not yet block a merge. Treat a red one as blocking anyway.
+The `required` check also waits for `cross-runtime` (Bun and Deno), `examples`, `integration-fixtures`, `typescript-5`, `typescript-compat` and `package-managers`, so a red one blocks a merge.
 
-`benchmark-pr` needs the same care. A failure there skips `lint`, `verify` and `contract`, which GitHub then counts as passing; check it by hand.
+A `benchmark-pr` failure skips `lint` and `verify`. `contract` and `required` still run and fail on it, so it blocks a merge too.
 
 ## Adding an Architecture Decision Record (ADR)
 
 `specs/decisions/` records why the project is shaped the way it is. `specs/architecture.md` summarizes the current state. Add an ADR when a change:
 
-- introduces a constraint or guarantee an application could rely on, such as "warn, not throw, by default";
+- introduces a constraint or promise an application could rely on, such as "warn, not throw, by default";
 - closes off an approach a future contributor might reintroduce without knowing it was rejected; or
 - moves the boundary of what the runtime, build or helpers entry points are responsible for.
 

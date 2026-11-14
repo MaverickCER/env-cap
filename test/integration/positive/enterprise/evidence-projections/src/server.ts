@@ -1,4 +1,4 @@
-// A minimal, real consumer of ./env.ts -- not a runnable app (this example
+// A minimal, real consumer of ./env.ts: not a runnable app (this example
 // has no `start` script; see README.md), just enough real usage for the
 // static dependency scanner (generateEvidenceModel() -> Dependency Model)
 // to have something to report besides "never consumed anywhere."

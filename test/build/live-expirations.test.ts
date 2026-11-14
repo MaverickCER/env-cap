@@ -155,7 +155,7 @@ describe("applyLiveExpirationOverrides", () => {
     expect(result.expiresAt).toBe("2027-01-01")
   })
 
-  it("returns a fully independent copy -- no shared object identity with the input at any depth", () => {
+  it("returns a fully independent copy: no shared object identity with the input at any depth", () => {
     const contract = makeContract({
       file: "/repo/x/env.schema.ts",
       exportName: "xEnv",
@@ -168,7 +168,7 @@ describe("applyLiveExpirationOverrides", () => {
     expect(result.variables[0]).not.toBe(contract.variables[0])
     expect(result.variables[0]?.metadata).not.toBe(contract.variables[0]?.metadata)
     expect(result.metadata).not.toBe(contract.metadata)
-    // A genuinely independent COPY, not a fresh-but-empty object -- every
+    // A genuinely independent COPY, not a fresh-but-empty object: every
     // key/value must actually be carried over.
     expect(result.variables[0]?.metadata).toEqual({ setup: "..." })
     expect(result.metadata).toEqual({ runbook: "https://example.com" })

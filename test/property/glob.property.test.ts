@@ -6,7 +6,7 @@ import { globToRegExp } from "../../src/build/glob.js"
 const segment = fc.stringMatching(/^[a-z0-9_-]{1,8}$/)
 const path = fc.array(segment, { minLength: 1, maxLength: 5 }).map((parts) => parts.join("/"))
 
-describe("globToRegExp -- property-based", () => {
+describe("globToRegExp: property-based", () => {
   it("compiles any string without throwing", () => {
     fc.assert(
       fc.property(fc.string({ unit: "binary", maxLength: 40 }), (pattern) => {

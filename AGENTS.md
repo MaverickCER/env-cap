@@ -1,114 +1,77 @@
 # AGENTS.md
 
-Guidance for AI coding agents (Codex, Cursor, Copilot, Continue, and others reading this
-convention) working in `env-cap`'s own source, or in an application that consumes
-`env-cap`. Agents whose tooling loads skill files get the fuller, more detailed version of
-this same guidance from [`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md) — read that file
-instead if your tooling supports it; this file is a self-contained distillation for
-agents that don't.
+Rules for coding agents working with `env-cap`, both in an application that uses it and in this
+repository's own source. If your tooling loads skill files, load
+[`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md) instead: it is the fuller version of the
+application rules, generated from the package.
 
 ## What this package is
 
-`env-cap` gives each capability (a feature folder or an installable package) its own
-environment contract — declared once as a static schema, validated at runtime, documented
-and aggregated at build time. There is no global `env` object.
+In `env-cap`, each feature (a folder or an installable package; the docs also call it a
+capability) declares its environment variables in a **contract**: a static schema object passed to
+`createEnv()` and `documentEnv()`. The application validates every contract once at startup. A build
+step reads the contracts as source and writes the manifest, docs, `.env.example` and ownership
+report. Values are always read through the contract that owns them.
 
-## Non-negotiable invariants
+## Contract rules
 
-1. **Static analysis only — schemas are never executed.** The build package
-   (`@maverickcer/env-cap/build`) parses `env.schema.ts` files as TypeScript AST; it never
-   `import()`s, `require()`s, or `eval()`s them. Only literal expressions resolve — a
-   spread, a factory call, or a re-export resolves as "unknown" and surfaces as a warning,
-   never a guess. Keep every schema object passed to `createEnv()`/`documentEnv()` a
-   static literal.
-2. **Capability ownership — never a global env object.** Each `createEnv()` call is
-   scoped to, and exported by, the module that owns it (`paymentsEnv`, `databaseEnv`).
-   Access always goes through the owning contract — `paymentsEnv.STRIPE_KEY`, never
-   `env.payments.STRIPE_KEY`. Never introduce a merged/global wrapper object.
-3. **Runtime config and documentation are separate calls on the same schema object.**
-   `createEnv(schema, options)` reads only `default`/`processor`/`validator`/`context` —
-   that is the runtime's entire vocabulary. `documentEnv(schema, docs)` is a second, inert
-   call over the same object; it returns `void` and exists only as a build-time AST marker.
-   Never put `description`/`owner`/`expiresAt` fields inside `createEnv()`; never expect
-   `documentEnv()` to affect runtime behavior.
-4. **Public API surface only.** `package.json#exports` exposes exactly `.`, `./build`,
-   `./helpers`, `./evidence`, `./node`, `./eslint-plugin`, `./schema`, `./schema/*` (one JSON Schema
-   per canonical fact model, e.g. `./schema/contract-model`), and `./package.json`. Import
-   only from these — never `dist/*.cjs` internals, `src/**/*.ts` paths, or an unexported
-   build internal (e.g. the dependency-graph engine).
-5. **Runtime and build are strictly separated.** `src/build` uses `node:path` and
-   `typescript`, never `node:fs`. It takes a `BuildFileSystem` from its caller; only `src/cli`
-   may import `node:fs` (ADR 0040). It must never be imported from runtime or browser code.
-   `src/runtime` imports no Node module, has no filesystem access, and is held to a 3 KB gzip
-   budget (`npm run size`).
-6. **Contracts self-redact; errors never carry values.** `console.log(paymentsEnv)`
-   prints only `EnvContract("payments") { N variable(s) }`. Validation errors are built
-   from variable name, contract name/source, failure kind, and the developer's own error
-   message — never raw or processed values. Never write a processor/validator error
-   message that embeds the raw value.
-7. **Validation contexts are participation filters, not security or detection.** A schema
-   entry may set `context: "server"` (or any application-defined string); `validateEnv({
-activeContexts })` skips any variable whose `context` isn't in that list — no default/
-   processor/validator runs for it, and reading it throws `EnvNotReadyError`. env-cap never
-   detects or infers `activeContexts` (no `window`/`NODE_ENV` sniffing inside the package —
-   the application always computes and passes it explicitly), `context` never restricts who
-   can read a resolved value, and it is **not** a bundling boundary: a `context: "server"`
-   variable in the same manifest as `context: "client"` variables still ships its
-   definition to a client bundle that imports that manifest. Use separate discovery/
-   manifests per contract when a variable must never reach client-bound code at all (see
-   `specs/decisions/0004-no-client-server-package-split.md` and
-   `specs/decisions/0022-validation-contexts.md`).
+1. **Schemas are static literals, read as source.** The build entry (`@maverickcer/env-cap/build`)
+   parses `env.schema.ts` files as TypeScript syntax trees and never runs them. Only literal
+   expressions resolve. A spread, a factory call or a re-export resolves as "unknown" and surfaces
+   as a warning. So declare each schema as a literal object in the module that owns it, and pass
+   that one binding to `createEnv()` and `documentEnv()`.
+2. **Each contract belongs to the module that declares it.** That module exports it (`paymentsEnv`,
+   `databaseEnv`), and code reads `paymentsEnv.STRIPE_KEY` from it. Keep contracts separate; a
+   merged or global env object defeats ownership.
+3. **`createEnv()` holds runtime fields; `documentEnv()` holds documentation.** `createEnv(schema,
+options)` reads only `default`, `processor`, `validator` and `context`. `documentEnv(schema, docs)`
+   is an inert second call over the same object: it returns `void` and exists only as a build-time
+   marker. So `description`, `owner` and `expiresAt` go in `documentEnv()`. The field is `processor`;
+   the old name `transformer` has no alias.
+4. **Import from the public entry points only.** They are listed in the
+   [Public API map](#public-api-map) below. Internal paths (`dist/*.cjs`, `src/**/*.ts`, the
+   dependency-graph engine in `src/build/dependency-graph.ts`) are not public.
+5. **Runtime and build stay apart.** `src/runtime` imports no Node module, has no filesystem access
+   and is held to a 3 KB gzip budget (`npm run size`). `src/build` uses `node:path` and
+   `typescript`, and takes a `BuildFileSystem` from its caller. Only `src/cli` imports `node:fs`
+   (ADR 0040). Runtime and browser code import neither `./build` nor `./node`.
+6. **Errors and logs carry names, not values.** `console.log(paymentsEnv)` prints only
+   `EnvContract("payments") { N variable(s) }`. Validation errors are built from the variable name,
+   the contract name and source, the failure kind and your own message. Write processor and
+   validator messages that describe the expected shape without quoting the value. To inspect a
+   contract, log it; spreading it or calling `Object.entries()` on it reads every real value.
+7. **`context` filters which variables take part in validation.** A schema entry may set
+   `context: "server"` or any application-defined string. `validateEnv({ activeContexts })` skips a
+   variable whose `context` is not listed: no default, processor or validator runs, and reading it
+   throws `EnvNotReadyError`. The application computes `activeContexts` and passes it explicitly;
+   the package never infers it. `context` is neither an access control nor a bundling boundary: a
+   client bundle that imports a manifest ships every definition in it. To keep a variable out of
+   client code, give it its own discovery run and manifest
+   ([ADR 0004](specs/decisions/0004-no-client-server-package-split.md),
+   [ADR 0022](specs/decisions/0022-validation-contexts.md)).
 
-## Avoid
+## In an application
 
-- Deep/internal imports (`dist/*.cjs`, `src/build/dependency-graph.ts`, anything not
-  re-exported by the public entry points).
-- Importing `@maverickcer/env-cap/build` into runtime or browser code — it is Node-only,
-  dev/CI-only.
-- Calling any `generate*()` function at application startup or on a request path —
-  build-time only, wired into an npm script or CI step.
-- Dynamically constructed schemas (`createEnv(buildSchema())`, `createEnv({ ...shared })`,
-  re-exporting a contract from another module) — static AST discovery cannot resolve
-  these.
-- Documentation fields inside `createEnv()`'s schema — those belong in `documentEnv()`
-  only.
-- The field name `transformer` — renamed to `processor`, no alias exists.
-- Reading a contract before `validateEnv()` has run — throws `EnvNotReadyError`.
-- Spreading or `Object.entries()`-ing a whole contract "just to inspect it" —
-  `console.log(paymentsEnv)` is safe by design, but `{...paymentsEnv}` triggers every
-  getter and produces a plain object with every real value.
-- Manually constructing a contract collection when a generated manifest is available —
-  regenerate it instead: run the project's `generate:env` script if one exists, or call
-  `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` from
-  `@maverickcer/env-cap/build`, or run `npx env-cap --location
-src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection it
-  produces.
-- Validation managers, service locators, providers, registries, or other initialization
-  frameworks around `validateEnv()` — call it directly from the application's existing
-  startup path.
-
-## Migrating an existing app onto env-cap
-
-- Generated manifests are meant to be consumed by `validateEnv()` at runtime, and
-  generated artifacts (manifest, docs, `.env.example`, ownership report) are meant to be
-  consumed by tooling — prefer them over anything manually maintained, and treat them as
-  the source of truth.
-- To generate a manifest: check for an existing `generate:env` (or similarly named) npm
-  script first and run that. If none exists, either call
-  `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` (import from
-  `@maverickcer/env-cap/build`) from a build script, or run the CLI directly —
-  `npx env-cap --location src/generated/env.manifest.ts` (add `--evidence`, `--strict`,
-  etc. as needed; see the Public API map and `skills/env-cap/SKILL.md` for the full option
-  set). `--docs`/`--ownership`/`--env-example` are not CLI flags — the documentation
-  catalog, `.env.example`, and dependency-ownership report have no runtime consumer, so
-  generating them is a `generateEnvArtifacts()`/`generateDocumentation()`/
-  `generateUsageReport()` call from a build script instead (see ADR 0046). Commit the
-  generated file only if the project already commits generated artifacts; otherwise wire
-  the command into CI.
-- Prefer migrations that are small, reviewable PRs covering one capability at a time,
-  preserve existing validation and runtime behavior, and avoid new infrastructure unless
-  it's actually required. See [`specs/migrations/`](specs/migrations/) for guide-by-guide
-  detail.
+- Call `validateEnv()` once, directly from the application's existing startup path, before any
+  contract is read. Reading earlier throws `EnvNotReadyError`. Wrappers such as validation managers,
+  service locators or registries add nothing.
+- Run the `generate*()` functions from an npm script or CI step; they are build-time only.
+- Treat generated files as the source of truth. To change one, change its contract and regenerate
+  it, in this order of preference:
+  1. the project's `generate:env` script (or a similarly named one), if it exists;
+  2. `generateEnvManifest({ location: "src/generated/env.manifest.ts" })` from
+     `@maverickcer/env-cap/build`, called in a build script;
+  3. `npx env-cap --location src/generated/env.manifest.ts`, adding `--evidence` or `--strict` as
+     needed (`npx env-cap --help` lists every flag).
+- The CLI writes only the manifest and the evidence file. The docs catalog, `.env.example` and the
+  ownership report come from `generateEnvArtifacts()`, `generateDocumentation()` or
+  `generateUsageReport()` in a build script (ADR 0046). There are no `--docs`, `--ownership` or
+  `--env-example` flags.
+- Commit generated files only if the project already commits generated files; otherwise wire the
+  command into CI.
+- Migrate one feature per pull request, keep its validation and runtime behavior unchanged, and
+  add infrastructure only when the migration needs it. [`specs/migrations/`](specs/migrations/) has
+  a guide per starting point (`dotenv`, a central schema, Zod, envalid, t3-env).
 
 ## Public API map
 
@@ -128,20 +91,22 @@ src/generated/env.manifest.ts` from the CLI. Never hand-assemble the collection 
 
 ## Before finishing a change
 
-- Run `npm run typecheck` and `npm test`.
-- If `src/runtime` or `src/helpers` changed, run `npm run size`.
-- If public exports changed, confirm it's intentional and justified — otherwise revert
-  the export.
-- If an `env.schema.ts` changed, add/update the matching `documentEnv()` entry and
-  regenerate dependent generated artifacts via the project's `generate:env` script. Never
-  hand-edit a file marked `AUTO-GENERATED FILE. DO NOT EDIT.`
-- Confirm no secret/raw environment value appears in a thrown error message, a log, or a
-  committed example file.
+Each step is done when its command exits 0 or its condition holds.
+
+1. `npm run typecheck` and `npm test` pass.
+2. If `src/runtime`, `src/helpers` or `src/evidence` changed, `npm run size` passes.
+3. If a public export changed, the change is intended; otherwise the export is restored.
+4. If an `env.schema.ts` changed, its `documentEnv()` entry matches, and the generated files are
+   regenerated by the project's `generate:env` script.
+5. Every generated file was regenerated, not edited. A generated file starts with a comment that
+   says `GENERATED FILE -- do not edit by hand`, or, for `.env.example`, with the line
+   `# AUTO-GENERATED EXAMPLE FILE.`.
+6. No secret or raw environment value appears in a thrown error message, a log or a committed
+   example file.
 
 ## Full reference
 
-For architecture rationale, the complete decision history, migration guides, and
-maintainer-only notes on modifying `env-cap`'s own source, see
-[`specs/architecture.md`](specs/architecture.md), [`specs/decisions/`](specs/decisions/),
-[`specs/migrations/`](specs/migrations/), and
-[`skills/env-cap/SKILL.md`](skills/env-cap/SKILL.md).
+- Why the architecture is shaped this way: [`specs/architecture.md`](specs/architecture.md).
+- Why a specific rule exists: [`specs/decisions/`](specs/decisions/).
+- Moving an existing application onto env-cap: [`specs/migrations/`](specs/migrations/).
+- Every option of the generators and the CLI: [GUIDE.md](GUIDE.md).

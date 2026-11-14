@@ -9,16 +9,16 @@ import type {
 import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
- * The configuration-governance evidence projection -- built entirely on
+ * The configuration-governance evidence projection: built entirely on
  * env-cap's public building blocks (Contract Model + Dependency Model + the
  * shared `SourcePosition` shape), the same way the reference projections in
  * test/integration/positive/enterprise/evidence-projections/ are. Named for
  * what it actually enforces, not the domain it happens to run against:
- * three policy rules -- is every credential documented
+ * three policy rules (is every credential documented
  * (`credential-without-documentation`), does every sensitive variable
  * declare a legal basis (`sensitive-without-legal-basis`), is every
  * audit-required variable actually auditable
- * (`audit-required-but-not-found`) -- the kind of "here's what we can prove
+ * (`audit-required-but-not-found`)) the kind of "here's what we can prove
  * about how configuration is governed" report useful for audit preparation
  * or as a CI gate. env-cap core exposes the generic facts
  * (sensitivity, metadata, legalBasis, ...); this file, not env-cap,
@@ -33,7 +33,7 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /** `ContractModelContract`/`ContractModelVariable`'s `owner`/`purpose`/`legalBasis`/`retention`/`dataResidency`/`auditRequired`
  *  fields aren't pre-resolved (Contract Model stores each level's raw value, matching
- *  `DiscoveredContract`/`DiscoveredVariable`'s own un-resolved storage) -- these mirror
+ *  `DiscoveredContract`/`DiscoveredVariable`'s own un-resolved storage): these mirror
  *  `@maverickcer/env-cap/build`'s own `effectiveX()` helpers, which target `DiscoveredContract`/
  *  `DiscoveredVariable` specifically (a structurally different, Contract-Model-shaped type
  *  Lifecycle Model's `deprecated`/`deprecatedReason` fields keep the two from lining up exactly),
@@ -47,7 +47,7 @@ function effective<K extends keyof ContractModelContract & keyof ContractModelVa
 }
 
 const SENSITIVE_CLASSIFICATIONS = new Set(["secret", "credential", "pii"]);
-/** The sensitivitys an "API key" style value actually gets -- `pii` is personal data, not a credential, so it's deliberately excluded from `credential-without-documentation` below. */
+/** The sensitivitys an "API key" style value actually gets: `pii` is personal data, not a credential, so it's deliberately excluded from `credential-without-documentation` below. */
 const CREDENTIAL_CLASSIFICATIONS = new Set(["secret", "credential"]);
 
 function documentationLinkOf(metadata: Readonly<Record<string, unknown>> | undefined): string | undefined {
@@ -55,7 +55,7 @@ function documentationLinkOf(metadata: Readonly<Record<string, unknown>> | undef
   return typeof link === "string" && link.length > 0 ? link : undefined;
 }
 
-/** The four-way evidence disclosure (plan Design 7) -- always computed from `status` + `dynamicAccessAssertions` together, never letting a developer's claim overwrite what env-cap actually observed. */
+/** The four-way evidence disclosure (plan Design 7): always computed from `status` + `dynamicAccessAssertions` together, never letting a developer's claim overwrite what env-cap actually observed. */
 export type EvidenceCategory = "proven" | "asserted" | "uncertain" | "not-found";
 
 export function evidenceCategoryOf(dependencyVariable: DependencyModelVariable | undefined): {
@@ -72,7 +72,7 @@ export function evidenceCategoryOf(dependencyVariable: DependencyModelVariable |
   return { category: "not-found", status };
 }
 
-/** `"Per developers, this data point is dynamically accessed at <citations>."` -- only ever rendered alongside the raw `status`, never in place of it. */
+/** `"Per developers, this data point is dynamically accessed at <citations>."`: only ever rendered alongside the raw `status`, never in place of it. */
 export function describeAssertions(dependencyVariable: DependencyModelVariable | undefined): string | undefined {
   const fresh = (dependencyVariable?.dynamicAccessAssertions ?? []).filter(
     (a) => a.acknowledgment === "fresh",
@@ -94,13 +94,13 @@ export interface SensitiveVariableEvidence {
   readonly dataResidency: string | readonly string[] | undefined;
   readonly auditRequired: boolean | undefined;
   readonly expiresAt: string | undefined;
-  /** Where to find/manage this credential -- e.g. `metadata: { documentation: "https://dashboard.stripe.com/apikeys" }`. Checked by `credential-without-documentation` below. */
+  /** Where to find/manage this credential: e.g. `metadata: { documentation: "https://dashboard.stripe.com/apikeys" }`. Checked by `credential-without-documentation` below. */
   readonly documentationLink: string | undefined;
   /** The contract's `createEnv()` call. Always present. */
   readonly declaration: SourcePosition;
   /** The contract's `documentEnv()` call, if any. */
   readonly documentation: SourcePosition | undefined;
-  /** This variable's own schema property -- distinct from both positions above. */
+  /** This variable's own schema property: distinct from both positions above. */
   readonly variableDeclaration: SourcePosition;
   /** Every position this variable was actually member-accessed at. */
   readonly accessPositions: readonly SourcePosition[];
@@ -170,7 +170,7 @@ function sensitiveVariables(evidence: EvidenceModel): readonly SensitiveVariable
   );
 }
 
-/** One policy rule's own outcome -- shaped like `Finding` for familiarity, but not part of env-cap's own `FindingCode` union: these rules are this projection's own, per ADR 0024/ADR 0035's "env-cap exposes facts, the organization decides what they mean" boundary. */
+/** One policy rule's own outcome: shaped like `Finding` for familiarity, but not part of env-cap's own `FindingCode` union: these rules are this projection's own, per ADR 0024/ADR 0035's "env-cap exposes facts, the organization decides what they mean" boundary. */
 export interface PolicyFinding {
   readonly severity: "error" | "warning";
   readonly code: string;
@@ -193,7 +193,7 @@ export function computePolicyFindings(
       findings.push({
         severity: "warning",
         code: "credential-without-documentation",
-        message: `"${row.key}" (owned by "${row.contractName}", sensitivity "${row.sensitivity}") has no metadata.documentation link -- an on-call engineer or auditor has nowhere to go to find, manage, or verify this credential.`,
+        message: `"${row.key}" (owned by "${row.contractName}", sensitivity "${row.sensitivity}") has no metadata.documentation link, so an on-call engineer or auditor has nowhere to go to find, manage, or verify this credential.`,
         contractName: row.contractName,
         key: row.key,
       });
@@ -211,7 +211,7 @@ export function computePolicyFindings(
       findings.push({
         severity: "error",
         code: "audit-required-but-not-found",
-        message: `"${row.key}" (owned by "${row.contractName}") is marked audit-required, but no consumer was found anywhere in the scanned surfaces -- cannot audit access to a variable that's never read.`,
+        message: `"${row.key}" (owned by "${row.contractName}") is marked audit-required, but no consumer was found anywhere in the scanned surfaces, so access to a variable that's never read cannot be audited.`,
         contractName: row.contractName,
         key: row.key,
       });

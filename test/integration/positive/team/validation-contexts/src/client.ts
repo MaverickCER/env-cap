@@ -1,6 +1,6 @@
-// Client entry point -- its own process, run via `npm run example:client`.
+// Client entry point: its own process, run via `npm run example:client`.
 // Validates the *same* manifest server.ts validates, but with a different
-// activeContexts -- see README.md for why that has to be two separate
+// activeContexts: see README.md for why that has to be two separate
 // process invocations, not two validateEnv() calls in one script.
 import { EnvNotReadyError, validateEnv } from "@maverickcer/env-cap";
 import { manifest } from "./generated/env.manifest.js";

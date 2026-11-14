@@ -10,7 +10,7 @@ function relativizePosition(root: string, position: SourcePosition): SourcePosit
   return { ...position, file: displayPath(root, position.file) }
 }
 
-/** `PackageOrigin.resolvedFile`/`.packageDir` are absolute, realpath-canonicalized paths (the internal resolution machinery needs that) -- rendered relative here, matching every other path in this model. */
+/** `PackageOrigin.resolvedFile`/`.packageDir` are absolute, realpath-canonicalized paths (the internal resolution machinery needs that): rendered relative here, matching every other path in this model. */
 function relativizePackageOrigin(
   root: string,
   origin: PackageOrigin | undefined,
@@ -24,7 +24,7 @@ function relativizePackageOrigin(
 }
 
 /**
- * The first of env-cap's seven canonical fact models (ADR 0024) -- a
+ * The first of env-cap's seven canonical fact models (ADR 0024): a
  * versioned, JSON-serializable projection of every declared environment
  * variable's structural and documentation contract. See ADR 0025.
  *
@@ -35,12 +35,12 @@ function relativizePackageOrigin(
  * matching `renderManifest()`'s own scope (ADR 0021). This model includes
  * every discovered contract regardless of `active`, plus the AST-derived
  * schema facts (`hasDefault`/`hasProcessor`/etc.) the change report
- * deliberately excludes -- both are load-bearing for downstream
+ * deliberately excludes: both are load-bearing for downstream
  * Finding/Evidence Model work.
  */
 
 /** Bump only when a reader could misinterpret the new shape (a field changes
- *  type/meaning, or is removed) -- NOT for every additive field. Same
+ *  type/meaning, or is removed): NOT for every additive field. Same
  *  discipline `evidence-model.ts`'s `EVIDENCE_MODEL_SCHEMA_VERSION` and
  *  `src/cli/json.ts`'s `JSON_SCHEMA_VERSION` already document. */
 export const CONTRACT_MODEL_SCHEMA_VERSION = 3
@@ -48,10 +48,10 @@ export const CONTRACT_MODEL_SCHEMA_VERSION = 3
 /**
  * One variable's full statically-discoverable contract: schema-shaped facts plus linked documentation.
  *
- * @see {@link DependencyModelVariable} -- this same declared variable's access status.
- * @see {@link OwnershipModelVariable} -- this same declared variable's effective owner.
- * @see {@link LifecycleModelVariable} -- this same declared variable's lifecycle data.
- * @see `CatalogVariable` (`docs.ts`) -- this same declared variable, reshaped for the generated
+ * @see {@link DependencyModelVariable}: this same declared variable's access status.
+ * @see {@link OwnershipModelVariable}: this same declared variable's effective owner.
+ * @see {@link LifecycleModelVariable}: this same declared variable's lifecycle data.
+ * @see `CatalogVariable` (`docs.ts`): this same declared variable, reshaped for the generated
  * docs catalog/JSON. Plain reference, not `{@link}`: `CatalogVariable` is intentionally not part
  * of the public surface (see `typedoc.json`'s `intentionallyNotExported`).
  */
@@ -71,7 +71,7 @@ export interface ContractModelVariable extends EnvGovernanceFields {
   readonly setupInstructions: string | undefined
   readonly required: boolean | undefined
   readonly documented: boolean
-  /** The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See {@link runtime.VariableEvidenceDocs} and ADR 0037. */
+  /** The `evidence` sub-object from this variable's linked documentation: re-verified every run, unlike every declared-only field above. See {@link runtime.VariableEvidenceDocs} and ADR 0037. */
   readonly evidence: DiscoveredVariableEvidence | undefined
   /** Where this variable's own schema property is declared. See ADR 0036. */
   readonly declaration: SourcePosition
@@ -79,7 +79,7 @@ export interface ContractModelVariable extends EnvGovernanceFields {
 
 /** One `createEnv()` contract's full statically-discoverable contract, active or not. */
 export interface ContractModelContract extends EnvGovernanceFields {
-  /** Root-relative, POSIX-separated -- matches `DiscoveredContractSummary.file`. */
+  /** Root-relative, POSIX-separated: matches `DiscoveredContractSummary.file`. */
   readonly file: string
   readonly exportName: string
   readonly contractName: string
@@ -95,7 +95,7 @@ export interface ContractModelContract extends EnvGovernanceFields {
   readonly documentation: SourcePosition | undefined
 }
 
-/** The versioned, JSON-serializable root of the Contract Model -- every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See {@link ContractModelContract}. */
+/** The versioned, JSON-serializable root of the Contract Model: every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See {@link ContractModelContract}. */
 export interface ContractModel {
   readonly schemaVersion: typeof CONTRACT_MODEL_SCHEMA_VERSION
   readonly contracts: readonly ContractModelContract[]

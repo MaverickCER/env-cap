@@ -5,53 +5,52 @@ import { effectiveOwner } from "./link.js"
 import type { DiscoveredContract } from "./link.js"
 
 /**
- * The third of env-cap's seven canonical fact models (ADR 0024) -- every
+ * The third of env-cap's seven canonical fact models (ADR 0024): every
  * contract and variable's effective owner, plus first-class
  * `unownedContracts`/`unownedVariables` arrays. See ADR 0028.
  *
  * @remarks
- * "Unowned" previously existed only as a count (`noOwnerCount`) inside
- * `docs.ts`'s `renderSecurityReview()` -- itemized here as real data for the
- * first time, computed via the same `effectiveOwner()` (variable overrides
- * contract) that ADR 0028 also fixed `usage-report.ts`'s ownership findings
- * to use, so this model can never disagree with either of them about who
- * owns a variable.
+ * `docs.ts`'s security review holds "unowned" only as a count
+ * (`noOwnerCount`); this model itemizes it as data. It uses the same
+ * `effectiveOwner()` rule (variable overrides contract) as `docs.ts` and
+ * `usage-report.ts`'s ownership findings (ADR 0028). So this model can never
+ * disagree with either of them about who owns a variable.
  */
 
-/** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
+/** Bump only when a reader could misinterpret the new shape: same discipline every other canonical model's `schemaVersion` follows. */
 export const OWNERSHIP_MODEL_SCHEMA_VERSION = 1
 
 /**
  * One variable's effective owner (its own, falling back to the contract's).
  *
- * @see {@link ContractModelVariable} -- this same declared variable's canonical starting point.
+ * @see {@link ContractModelVariable}: this same declared variable's canonical starting point.
  */
 export interface OwnershipModelVariable {
   readonly key: string
-  /** The variable's own `owner`, falling back to the contract's -- see `effectiveOwner()`. */
+  /** The variable's own `owner`, falling back to the contract's: see `effectiveOwner()`. */
   readonly owner: string | undefined
 }
 
 /** One contract's own default owner plus every variable's effective owner. See {@link OwnershipModelVariable} for the per-variable shape. */
 export interface OwnershipModelContract {
-  /** Root-relative, POSIX-separated -- matches `ContractModelContract.file`. */
+  /** Root-relative, POSIX-separated: matches `ContractModelContract.file`. */
   readonly file: string
   readonly exportName: string
   readonly contractName: string
-  /** The contract's own default owner -- not "effective" the way a variable's is, since there's no level above a contract to fall back to. */
+  /** The contract's own default owner: not "effective" the way a variable's is, since there's no level above a contract to fall back to. */
   readonly owner: string | undefined
   readonly variables: readonly OwnershipModelVariable[]
 }
 
-/** One contract, referenced by identity only -- see {@link ContractRef} for why no `contractName` is carried here. Resolve one from `ContractModel` when a renderer needs display text. */
+/** One contract, referenced by identity only: see {@link ContractRef} for why no `contractName` is carried here. Resolve one from `ContractModel` when a renderer needs display text. */
 export type OwnershipModelContractRef = ContractRef
 
-/** One variable, referenced by its owning contract's identity plus its own key -- see {@link ContractRef}. */
+/** One variable, referenced by its owning contract's identity plus its own key: see {@link ContractRef}. */
 export interface OwnershipModelVariableRef extends ContractRef {
   readonly key: string
 }
 
-/** The versioned, JSON-serializable root of the Ownership Model -- see this module's own doc comment for the full picture. */
+/** The versioned, JSON-serializable root of the Ownership Model: see this module's own doc comment for the full picture. */
 export interface OwnershipModel {
   readonly schemaVersion: typeof OWNERSHIP_MODEL_SCHEMA_VERSION
   readonly contracts: readonly OwnershipModelContract[]

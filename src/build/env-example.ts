@@ -6,7 +6,7 @@ import { mustGet } from "./map-utils.js"
 
 /**
  * Controls what happens when a `.env.example` already exists at the target
- * location. `"keep-sibling"` (default): never touch the existing file --
+ * location. `"keep-sibling"` (default): never touch the existing file;
  * write a timestamped sibling instead, for the developer to diff/merge
  * manually. `"overwrite"`: replace the existing file with freshly rendered
  * content directly. `"skip"`: write nothing at all.
@@ -30,7 +30,7 @@ export interface EnvExampleResult {
   readonly skippedExistingPath: string | undefined
   /** Variable names (live or already commented-out) in an existing example file that no discovered contract declares anymore. */
   readonly staleVariables: readonly string[]
-  /** Variables live in an existing example file whose feature is no longer active, and that no other active feature still needs -- safe to comment out. */
+  /** Variables live in an existing example file whose feature is no longer active, and that no other active feature still needs: safe to comment out. */
   readonly variablesToComment: readonly string[]
   /** Variables the current (active) configuration requires that aren't yet a live entry in an existing example file. */
   readonly variablesToAdd: readonly string[]
@@ -40,7 +40,7 @@ export interface EnvExampleResult {
 export interface Reconciliation {
   /** Variable names (live or already commented-out) in an existing example file that no discovered contract declares anymore. */
   readonly staleVariables: readonly string[]
-  /** Variables live in an existing example file whose feature is no longer active, and that no other active feature still needs -- safe to comment out. */
+  /** Variables live in an existing example file whose feature is no longer active, and that no other active feature still needs: safe to comment out. */
   readonly variablesToComment: readonly string[]
   /** Variables the current (active) configuration requires that aren't yet a live entry in an existing example file. */
   readonly variablesToAdd: readonly string[]
@@ -59,10 +59,10 @@ function defaultLiteralFor(variable: DiscoveredVariable): string | undefined {
 /**
  * Renders one variable's documentation comments + `KEY=value` line. `commented`
  * comments out the `KEY=value` line itself (documentation lines are always
- * comments regardless); `note` adds a leading comment explaining why --
+ * comments regardless); `note` adds a leading comment explaining why:
  * used for both cross-feature duplicates and disabled-feature entries.
  *
- * Data comes from the linked `documentEnv()` call, if any -- never from the
+ * Data comes from the linked `documentEnv()` call, if any: never from the
  * schema itself, which only ever carries `processor`/`validator`/`default`.
  * An undocumented variable renders with no comments at all, just `KEY=`.
  */
@@ -117,12 +117,12 @@ function groupByKey(
 
 /**
  * Renders a deterministic `.env.example`-style file scoped to the *current*
- * configuration: every unique variable the active contracts require (one
- * live entry per key, alphabetical; a key declared by more than one active
- * contract renders once live and the rest commented-out with a pointer),
- * followed by variables unique to disabled contracts (commented-out, for
- * visibility -- a key already required by an active contract is not unique
- * and never repeated here). `reconciliationHeader`, when non-empty, is
+ * configuration. It lists every unique variable the active contracts
+ * require, one live entry per key, alphabetically. A key declared by more
+ * than one active contract renders once live; the rest are commented out
+ * with a pointer. Variables unique to disabled contracts follow, commented
+ * out for visibility. A key already required by an active contract is not
+ * unique and never repeated there. `reconciliationHeader`, when non-empty, is
  * spliced in right after the banner (see `computeReconciliation`).
  */
 export function renderEnvExample(
@@ -135,7 +135,7 @@ export function renderEnvExample(
     "# AUTO-GENERATED EXAMPLE FILE.",
     "# Copy to .env and fill in real values. Do not commit .env.",
   ]
-  // Only shown when at least one variable actually declares a context --
+  // Only shown when at least one variable actually declares a context:
   // keeps this file byte-identical for every project not using the
   // feature.
   if (sorted.some((c) => c.variables.some((v) => v.context))) {
@@ -156,7 +156,7 @@ export function renderEnvExample(
       lines.push(
         ...renderVariableLines(dup.variable, {
           commented: true,
-          note: `Also declared by "${dup.contract.contractName}" -- see "${first.contract.contractName}" above.`,
+          note: `Also declared by "${dup.contract.contractName}". See "${first.contract.contractName}" above.`,
         }),
       )
     }
@@ -165,12 +165,12 @@ export function renderEnvExample(
   // Active contracts are grouped too, but their keys are skipped below: an active declaration claims the key.
   const inactiveByKey = groupByKey(sorted)
   for (const key of [...inactiveByKey.keys()].sort()) {
-    if (activeByKey.has(key)) continue // claimed by an active contract -- not unique to the disabled feature.
+    if (activeByKey.has(key)) continue // Claimed by an active contract: not unique to the disabled feature.
     const [first] = mustGet(inactiveByKey, key)
     lines.push(
       ...renderVariableLines(first.variable, {
         commented: true,
-        note: `Disabled -- feature "${first.contract.contractName}" is not active.`,
+        note: `Disabled: feature "${first.contract.contractName}" is not active.`,
       }),
     )
   }
@@ -190,7 +190,7 @@ export function extractDeclaredVariables(source: string): string[] {
   return names
 }
 
-/** Parses `# KEY=value` lines out of an existing `.env`-style file -- variables it already knows about but has turned off. */
+/** Parses `# KEY=value` lines out of an existing `.env`-style file: variables it already knows about but has turned off. */
 export function extractCommentedVariables(source: string): string[] {
   const names: string[] = []
   for (const line of source.split("\n")) {
@@ -203,7 +203,7 @@ export function extractCommentedVariables(source: string): string[] {
 
 /**
  * Diffs an existing `.env.example` against the current configuration into
- * three actionable sets. Pure and filesystem-independent -- `writeEnvExample`
+ * three actionable sets. Pure and filesystem-independent: `writeEnvExample`
  * is the only caller that reads the file itself.
  */
 export function computeReconciliation(
@@ -219,7 +219,7 @@ export function computeReconciliation(
   const oldKnown = new Set([...oldLive, ...extractCommentedVariables(existingContent)])
 
   const staleVariables = [...oldKnown].filter((key) => !knownKeys.has(key)).sort()
-  // Only ever flags a key that no active contract needs -- a key shared with
+  // Only ever flags a key that no active contract needs: a key shared with
   // a still-active feature is never suggested for commenting out.
   const variablesToComment = [...oldLive]
     .filter((key) => !activeKeys.has(key) && knownKeys.has(key))
@@ -256,14 +256,14 @@ function renderReconciliationHeader(reconciliation: Reconciliation): string[] {
  *    comparing it against the existing file (omitted when there's nothing
  *    to report).
  *  - `"overwrite"`: the existing file is replaced directly with freshly
- *    rendered content -- no reconciliation header (the changes it would
+ *    rendered content; no reconciliation header (the changes it would
  *    describe are already applied).
  *  - `"skip"`: nothing is written.
  * When no file exists yet at `location`, all three modes behave the same:
  * write fresh content, nothing to reconcile against. `staleVariables`/
  * `variablesToComment`/`variablesToAdd` are always computed and returned
  * when a prior file existed, even under `"overwrite"`/`"skip"`, as a
- * diagnostic -- independent of whether anything was actually written.
+ * diagnostic: independent of whether anything was actually written.
  */
 export async function writeEnvExample(
   contracts: readonly DiscoveredContract[],
@@ -274,16 +274,16 @@ export async function writeEnvExample(
   const onExisting = options.onExisting ?? "keep-sibling"
 
   // An empty catch (no assignment) is provably equivalent to explicitly
-  // setting `existingContent = undefined` -- `let` without an initializer is
-  // already `undefined` at runtime -- and an empty block gives Stryker's
-  // BlockStatement mutator nothing to swap in for, eliminating the mutant
-  // target entirely rather than needing a disable. See helpers/processors.ts's
+  // setting `existingContent = undefined`: `let` without an initializer is
+  // already `undefined` at runtime. An empty block gives Stryker's
+  // BlockStatement mutator nothing to swap in, which removes the mutant
+  // target instead of needing a disable. See helpers/processors.ts's
   // `orUndefined` for the same established pattern.
   let existingContent: string | undefined
   try {
     existingContent = await fs.readFile(location, "utf8")
   } catch {
-    // treat any read failure as "no file existed"
+    // Treat any read failure as "no file existed".
   }
 
   if (existingContent === undefined) {
@@ -317,7 +317,7 @@ export async function writeEnvExample(
     }
   }
 
-  // Only "keep-sibling" embeds the reconciliation as an in-file header --
+  // Only "keep-sibling" embeds the reconciliation as an in-file header:
   // "overwrite" already applies the changes directly, so "remove/comment/add
   // the following" instructions would just describe work already done.
   const headerLines =

@@ -12,7 +12,7 @@ interface Todo {
 
 interface TodoAppProps {
   // Read server-side in page.tsx and passed down, never read from
-  // env-cap directly in this client component -- see page.tsx's comment.
+  // env-cap directly in this client component: see page.tsx's comment.
   appName: string
 }
 
@@ -54,7 +54,7 @@ export function TodoApp({ appName }: TodoAppProps) {
   return (
     <main>
       {/* appName traces back to publicEnv.NEXT_PUBLIC_APP_NAME, read
-          server-side in page.tsx -- the counterpart to serverEnv's
+          server-side in page.tsx: the counterpart to serverEnv's
           DATABASE_URL/SESSION_SECRET/INTERNAL_API_KEY, which "server-only"
           (see src/lib/session.ts and src/lib/store.ts) makes it a build
           error to import from a client component like this one. */}

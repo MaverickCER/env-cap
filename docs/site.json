@@ -1,21 +1,25 @@
 {
   "siteUrl": "https://maverickcer.github.io/env-cap/",
   "repoUrl": "https://github.com/maverickcer/env-cap",
-  "title": "env-cap: capability-owned environment contracts",
-  "description": "Every environment variable has an owner, a reason to exist, and a lifecycle you can query. env-cap treats configuration as a capability-owned contract, not loose strings read off process.env. It sits next to your existing validation, not instead of it.",
+  "title": "env-cap: each feature declares its environment variables, validated at startup",
+  "description": "Each feature declares the environment variables it needs and their format. Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire. A TypeScript library that works alongside dotenv, Zod and your secret manager.",
   "ogImage": "assets/og-image.png",
   "maturity": "env-cap is pre-1.0. Before 1.0, a minor release may break the Stable tier ([VERSIONING.md](https://github.com/maverickcer/env-cap/blob/main/VERSIONING.md)). Pin a version and read the changelog on every minor.",
   "hero": {
     "eyebrow": "Configuration, owned",
-    "heading": "Every environment variable has an owner, a reason to exist, and a lifecycle you can query.",
-    "lede": "A secret manager decides where a value lives. A validator decides whether it is well-formed. Neither says who owns it, why it exists, or when it expires.",
-    "support": "Each part of your code declares the variables it owns. A build step turns those declarations into an ownership and lifecycle report.",
-    "outcome": "Give every team a clear owner and expiry date for each environment variable, alongside the validator and secret manager you already use."
+    "heading": "Each feature declares the environment variables it needs and their format.",
+    "lede": "Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire.",
+    "support": "A feature is a folder or an installable package; the docs also call it a capability. Its **contract** says how to check each value and, for a secret, when it expires and how to rotate it. A build step writes the **manifest** that `validateEnv()` checks, and docs that flag secrets expiring within 30 days.",
+    "outcome": "A bad value stops startup with an error that names the variable, never its value."
   },
   "install": {
     "label": "Quick start",
-    "commands": ["npm install @maverickcer/env-cap", "npx env-cap init"],
-    "note": "The runtime validates your variables at startup. The build step produces the ownership report. Nothing replaces `dotenv`, Zod, `envalid`, `t3-env` or your secret manager."
+    "commands": [
+      "npm install @maverickcer/env-cap",
+      "npx env-cap init",
+      "node scripts/generate-env.mjs"
+    ],
+    "note": "`init` writes a starter contract and a script that writes the manifest, the environment docs and the ownership report. A CI test runs both steps in an empty project. env-cap does not load `.env` files, store secrets or replace `dotenv`, Zod, `envalid`, `t3-env` or your secret manager."
   },
   "cta": {
     "primary": {
@@ -39,19 +43,19 @@
       "a leftover from a feature that moved on"
     ],
     "conclusion": "no executable source of truth",
-    "closing": "env-cap puts the answer in the code. Each capability declares the variables it owns, and a build step turns the declarations into one project-wide view."
+    "closing": "env-cap puts the answer in the code. Each feature declares the variables it owns in a contract, and a build step turns the contracts into one project-wide report."
   },
   "model": {
     "eyebrow": "How it works",
     "heading": "Runtime and build-time stay separate on purpose.",
-    "lede": "The runtime has no filesystem access and imports no Node module. Build tooling creates the visibility needed to maintain dependencies, as an explicit development or CI step, never at startup.",
+    "lede": "The runtime has no filesystem access and imports no Node module. The build tooling runs as an explicit development or CI step, never at startup, and writes the manifest, docs and reports.",
     "flow": [
-      "Capability schema file",
-      "→ Runtime path: `createEnv()` · `validateEnv()` · typed, capability-scoped access",
+      "Contract schema file",
+      "→ Runtime path: `createEnv()` · `validateEnv()` · typed access through the owning contract",
       "→ Build path: `documentEnv()` · static AST analysis, never imported or executed · generated manifest, docs and ownership report"
     ],
-    "flowDescription": "A capability's schema file branches into a runtime path for validated application access and a build path for generated documentation and visibility artifacts.",
-    "note": "The build package parses schema files as TypeScript ASTs and never imports or executes them. That static-analysis boundary stops unfamiliar code from running as a side effect of generating documentation, manifests and dependency insight."
+    "flowDescription": "A contract's schema file branches into a runtime path for validated application access and a build path for the generated manifest, docs and reports.",
+    "note": "The build package parses schema files as TypeScript syntax trees and never imports or executes them. So generating the manifest, docs and reports never runs code from those files."
   },
   "demo": {
     "eyebrow": "See it",
@@ -110,19 +114,19 @@
       [
         "A secret manager",
         "Decides where a value physically lives and how it's rotated",
-        "Says nothing about which capability in your code actually depends on it"
+        "Says nothing about which code actually reads it"
       ]
     ]
   },
   "adoption": {
     "eyebrow": "Adoption",
-    "heading": "From one schema to capability-owned contracts.",
-    "lede": "Most applications start with a single, centralized schema, and that is a fine place to stay if it's working. As ownership boundaries start to matter, contracts move closer to the capability that consumes them, with no change to the runtime model.",
+    "heading": "From one schema to a contract per feature.",
+    "lede": "Most applications start with a single, centralized schema, and that is a fine place to stay if it's working. As ownership boundaries start to matter, contracts move next to the features that read them, with no change to the runtime model.",
     "calloutTitle": "A progressive path, not a rewrite",
     "steps": [
       "Start with one centralized schema and run `npx env-cap init`.",
       "Generate the manifest, documentation and ownership report in CI.",
-      "As ownership boundaries matter, move each contract next to the capability that consumes it. The runtime model does not change."
+      "As ownership boundaries matter, move each contract next to the feature that reads it. The runtime model does not change."
     ],
     "notFor": {
       "title": "You probably don't need it when",
@@ -131,9 +135,9 @@
   },
   "brief": {
     "heading": "A one-page brief for your manager",
-    "oneLine": "env-cap gives every configuration setting an owner, a reason to exist and an expiry date, and shows what is unused or overdue.",
+    "oneLine": "Each feature declares its environment variables; env-cap checks them at startup and reports how each secret should be rotated before it expires.",
     "problem": "As an application grows, nobody can say who owns a setting, whether it is still used, or when a secret expires. That knowledge sits in wikis, chat threads and people's memory.",
-    "whatItDoes": "Each part of the application declares the settings it owns. A build step reports owners, unused settings and coming expiry dates. The application checks its settings when it starts.",
+    "whatItDoes": "Each feature declares the variables it needs and their format, with an owner, an expiry date and rotation steps where they apply. The application validates them all in one place at startup and stops on a bad value. A build step reports owners, unused variables and secrets that expire soon.",
     "whyItMatters": [
       "Overdue secret rotations and orphaned settings are found by a report, not by an outage.",
       "It works alongside the validator and secret manager a team already has, so nothing is replaced.",

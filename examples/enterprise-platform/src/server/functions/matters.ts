@@ -3,7 +3,7 @@ import { AuditLog } from "../db/models/audit-log.model.js";
 import { Matter } from "../db/models/matter.model.js";
 
 /**
- * Plain, directly-callable business logic -- see auth.ts's own comment on
+ * Plain, directly-callable business logic: see auth.ts's own comment on
  * why this is kept separate from the createServerFn() wrappers below.
  */
 export async function createMatterLogic(data: {

@@ -205,7 +205,7 @@ describe("configurationReference", () => {
     ])
   })
 
-  it("includes inactive contracts, marked -- the reference documents everything discovered", () => {
+  it("includes inactive contracts, marked: the reference documents everything discovered", () => {
     const result = configurationReference(evidenceFor([PAYMENTS, DATABASE]))
     expect(result.entries.map((e) => [e.key, e.active])).toEqual([
       ["DATABASE_URL", false],
@@ -218,11 +218,11 @@ describe("configurationReference", () => {
     const { value, sources } = configurationReference.project(evidenceFor([PAYMENTS]))
     expect(value.entries).toHaveLength(2)
     expect(sources["entries"]!.some((p) => p.startsWith("contract.contracts"))).toBe(true)
-    // The disclaimer is a constant -- it reads nothing from the model at all.
+    // The disclaimer is a constant: it reads nothing from the model at all.
     expect(sources["disclaimer"]).toEqual([])
   })
 
-  it("sorts variables within the same contract by key -- not insertion order", () => {
+  it("sorts variables within the same contract by key: not insertion order", () => {
     const reversed = contract({
       ...PAYMENTS,
       variables: [variable({ key: "Z_VAR" }), variable({ key: "A_VAR" })],
@@ -231,9 +231,9 @@ describe("configurationReference", () => {
     expect(result.entries.map((e) => e.key)).toEqual(["A_VAR", "Z_VAR"])
   })
 
-  it("sorts by file ahead of exportName -- a contract whose exportName would sort the other way must still follow file order", () => {
+  it("sorts by file ahead of exportName: a contract whose exportName would sort the other way must still follow file order", () => {
     // fileB's exportName ("aaa") would sort BEFORE fileA's ("zzz") if file
-    // were not compared first -- this is the only way to distinguish "file
+    // were not compared first: this is the only way to distinguish "file
     // genuinely decides the order" from "file's result gets discarded and
     // exportName decides instead".
     const fileB = contract({
@@ -273,7 +273,7 @@ describe("ownershipSummary", () => {
     expect(result.unowned).toEqual(["database.DATABASE_URL"])
   })
 
-  it("lists an empty variables array (not absent) for an owner that owns a contract but no individual variable -- every one of its variables was overridden to a different owner", () => {
+  it("lists an empty variables array (not absent) for an owner that owns a contract but no individual variable: every one of its variables was overridden to a different owner", () => {
     const overridden = contract({
       file: "checkout/env.schema.ts",
       exportName: "checkoutEnv",
@@ -288,7 +288,7 @@ describe("ownershipSummary", () => {
     ])
   })
 
-  it("sorts multiple distinct owners alphabetically -- not the order their contracts were discovered in", () => {
+  it("sorts multiple distinct owners alphabetically: not the order their contracts were discovered in", () => {
     const zebraOwned = contract({
       file: "z/env.schema.ts",
       exportName: "zEnv",
@@ -342,10 +342,10 @@ describe("ownershipSummary", () => {
     expect(result.unowned).toEqual(["database.DATABASE_URL"])
   })
 
-  it("sorts owners, and each owner's own variables and contracts, alphabetically -- not insertion order", () => {
+  it("sorts owners, and each owner's own variables and contracts, alphabetically: not insertion order", () => {
     // "zebra" is declared before "alpha" (reverse alphabetical insertion),
     // and each owner has TWO variables/contracts also inserted out of
-    // order -- real sorting at every level, not a coincidence of the
+    // order: real sorting at every level, not a coincidence of the
     // fixture already being alphabetical.
     const zebraContract = contract({
       file: "z/env.schema.ts",
@@ -371,7 +371,7 @@ describe("ownershipSummary", () => {
     ])
   })
 
-  it("falls back to the exportName when Ownership Model references a contract that's genuinely absent from Contract Model -- a real EvidenceModel is never guaranteed internally consistent by its own type", () => {
+  it("falls back to the exportName when Ownership Model references a contract that's genuinely absent from Contract Model: a real EvidenceModel is never guaranteed internally consistent by its own type", () => {
     const evidence = evidenceFor([PAYMENTS])
     const desynced = {
       ...evidence,
@@ -529,7 +529,7 @@ describe("expiringSoonReport", () => {
     expect(result.expiredCount).toBe(0)
   })
 
-  it("treats daysRemaining exactly 0 (expires today) as NOT yet expired -- the boundary, not just clearly-past/clearly-future values", () => {
+  it("treats daysRemaining exactly 0 (expires today) as NOT yet expired: the boundary, not just clearly-past/clearly-future values", () => {
     const result = expiringSoonReport(
       evidenceFor(
         [withRefresh],
@@ -548,7 +548,7 @@ describe("expiringSoonReport", () => {
     expect(result.expiredCount).toBe(0)
   })
 
-  it("falls back to the exportName and leaves owner undefined when the expiry's contract is absent from Contract Model -- a real EvidenceModel is never guaranteed internally consistent by its own type", () => {
+  it("falls back to the exportName and leaves owner undefined when the expiry's contract is absent from Contract Model: a real EvidenceModel is never guaranteed internally consistent by its own type", () => {
     const result = expiringSoonReport(
       evidenceFor(
         [withRefresh],

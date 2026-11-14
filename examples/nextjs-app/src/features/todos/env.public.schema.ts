@@ -1,7 +1,7 @@
 // Client-safe capability contract. Every key here is a real `NEXT_PUBLIC_*`
 // variable: Next.js inlines these into the client bundle at build time
 // (https://nextjs.org/docs/app/guides/environment-variables#bundling-environment-variables-for-the-browser),
-// so nothing declared in this file may ever hold a secret -- unlike
+// so nothing declared in this file may ever hold a secret; unlike
 // env.server.schema.ts, this module carries no "server-only" import and is
 // imported directly by client components (see src/app/page.tsx).
 import { createEnv, documentEnv } from "@maverickcer/env-cap"

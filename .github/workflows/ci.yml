@@ -5,58 +5,18 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  # Lets a bot-authored branch with no human push get real CI on demand --
-  # internal-package-contract's dependency-pin-sync.yml (called from this
-  # repo's own sync-internal-package-contract.yml) dispatches this explicitly
-  # after opening its pin-bump PR. (This is NOT needed for the benchmark-pr
-  # job's own commit below -- that one genuinely fires its own `pull_request:
-  # synchronize` event, contrary to what an earlier version of this comment
-  # assumed; see benchmark-pr's own placement/ordering for how that's
-  # actually handled now.)
+  # The pin-sync workflow dispatches CI on its bot-authored pull request, which no push event triggers.
   workflow_dispatch:
 
-# Explicit least-privilege default so every job's GITHUB_TOKEN scope is a
-# property of this file, not an assumption about the repo/org's ambient
-# default. Jobs that need more (`deploy` below) override this at the job
-# level -- a job-level `permissions:` block replaces, not adds to, this one.
+# Least privilege by default, so each job's token scope is visible here. A job-level `permissions:` block
+# replaces this one, so `deploy` grants its own.
 permissions:
   contents: read
 
-# Runtime and evidence each carry a hard 3 KB gzip budget, helpers 4 KB (ci/size-budgets.mjs) --
-# this workflow is what turns that budget from a script someone could forget
-# to run into a check every change actually has to pass.
+# The size budgets live in ci/size-budgets.mjs, and every change must pass them here.
 jobs:
-  # Runs first, on every PR that touches benchmarked code: it measures the
-  # suites and posts or updates one PR comment. It never commits to the PR
-  # branch -- results and history are recorded after the merge, through their
-  # own small pull request -- so every job below validates exactly the commit
-  # that was pushed, in one CI run.
-  #
-  # As of internal-package-contract's "shared benchmark engine" (PR #22),
-  # this job's own steps (measure -> post or update the PR comment) are no longer maintained here --
-  # they live once, for both env-cap and data-cap, in
-  # internal-package-contract's own reusable
-  # `.github/workflows/benchmark-pr.yml`, called below via `uses:`. This job
-  # still MUST keep the exact name `benchmark-pr`: `lint`/`verify` below (and
-  # `contract`/`badges`/`deploy` transitively, via their own identically-
-  # shaped conditions) all read `needs.benchmark-pr.result` by that exact
-  # job name.
-  #
-  # The anti-recursion-loop guard (`github.actor != 'github-actions[bot]'`,
-  # same-repo PRs only) and the per-PR concurrency group that used to live
-  # inline here now live INSIDE that reusable workflow's own job (see its
-  # own header comment in internal-package-contract) -- deliberately not
-  # duplicated here. `github.event_name`/`github.event`/`github.actor`
-  # inside a called reusable workflow are the CALLING workflow's own values,
-  # not the reusable workflow's -- GitHub documents this context propagation,
-  # so that condition evaluates exactly as it did when it lived inline in
-  # this file. When it evaluates false (a push-to-main run, a fork PR, or
-  # the bot's own re-triggered run), the reusable workflow's one job is
-  # skipped, and GitHub reports THIS calling job's own `result` as `skipped`
-  # too -- confirmed live (see this migration's own PR description for the
-  # exact run checked) -- exactly like the plain `if:`-skipped job this
-  # replaced. `lint`/`verify` below already tolerate that (see their own
-  # `if:`), unchanged.
+  # Posts benchmark results as one PR comment and never commits, so every job below tests the pushed
+  # commit. Keep the job id: the jobs below read `needs.benchmark-pr.result` by name.
   benchmark-pr:
     # A caller job's own `permissions:` caps the token the reusable workflow's job runs with, so it
     # must grant at least what that job declares. The pinned benchmark-pr.yml only reads the
@@ -65,10 +25,9 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    # The `suites`/`install-dirs` inputs below exist only in internal-package-contract commits that
-    # include the generalized benchmark kit: bump this SHA to such a commit together with the
-    # internal-package-contract devDependency pin, in the same pull request.
-    uses: MaverickCER/internal-package-contract/.github/workflows/benchmark-pr.yml@e5b8d9eeac7d951a5ea0c7c02c2f761087f8148b # v0.18.0
+    # Bump this SHA together with the internal-package-contract devDependency pin, in one pull request,
+    # because the `suites` and `install-dirs` inputs must exist at the pinned commit.
+    uses: MaverickCER/internal-package-contract/.github/workflows/benchmark-pr.yml@de11cec0f2cd93bbac00512ba706db3f4bbf5e09 # v0.19.0
     with:
       suites: |
         Runtime|benchmarks/performance-runtime|benchmarks/history/runtime.json
@@ -80,28 +39,22 @@ jobs:
       comment-marker: "<!-- env-cap-benchmark-summary -->"
       node-version: 22.x
 
-  # Dev-tooling checks (lint/format/API-report) are a property of the source
-  # repo, not the published package's own runtime behavior across Node
-  # versions -- unlike `verify` below, running them once on a single modern
-  # Node version is correct, not a coverage gap. Splitting them out here
-  # also keeps them independent of `verify`'s own Node-version floor.
+  # Lint, format and the API report depend on the source, not on the Node version, so one modern Node is
+  # enough.
   lint:
     needs: [benchmark-pr]
-    # A skipped dependency isn't a passing one by GitHub's own default job
-    # condition -- without this, `lint` (and `verify` below) would themselves
-    # always skip whenever benchmark-pr does (every push-to-main run, every
-    # fork PR), taking every job that needs them, including `contract`, down
-    # with them. `always()` opts back into running on a skip; the explicit
-    # result check still blocks on a genuine benchmark-pr failure.
+    # A skipped benchmark-pr (every push to main, every fork PR) must not skip this job, so
+    # `always()` opts back in on a skip. A failed benchmark-pr skips it. GitHub counts a skipped
+    # required check as passing, so `contract` fails on that failure in its first step.
     if: always() && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # github.sha: the merge commit for a pull_request (what would actually land), the pushed
-          # commit for a push, and the dispatched branch's head for a workflow_dispatch. Never the PR
-          # head by name -- checking that out in a workflow that can also be dispatched runs untrusted
-          # code with a privileged cache scope (CodeQL actions/cache-poisoning).
+          # github.sha is the merge commit for a pull_request, the pushed commit for a push, and the
+          # branch head for a workflow_dispatch. Never check out the PR head by name: in a workflow that
+          # can be dispatched, that runs untrusted code with a privileged cache scope (CodeQL
+          # actions/cache-poisoning).
           ref: ${{ github.sha }}
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -112,17 +65,11 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run build
-      # The committed Markdown API report (docs/api-report/) must match a
-      # fresh `typedoc --options typedoc.markdown.json` -- a public API
-      # change can't land without the report, and the PR diff, updated too.
+      # The committed Markdown API report (docs/api-report/) must match a fresh build, so a public API
+      # change shows in the pull request diff.
       - run: npm run docs:api:report:check
 
-  # Matches package.json's own `engines.node` floor (`>=22.0.0`). Was
-  # `[18.x, 22.x, 24.x]` until the dev toolchain itself (Vitest 4.x, whose
-  # own `engines.node` is `^20.0.0 || ^22.0.0 || >=24.0.0`) stopped running
-  # on Node 18 at all -- `vitest run --coverage` can't even start there,
-  # so 18.x was never actually being verified, just failing to boot. The
-  # `engines.node` promise moved to match what's genuinely tested.
+  # The matrix starts at package.json's `engines.node` floor (`>=22.0.0`), so the floor is tested.
   verify:
     needs: [benchmark-pr]
     # Same reasoning as `lint`'s own identical condition above.
@@ -164,38 +111,31 @@ jobs:
       - run: npm test
       - run: npm run size
 
-  # The org-wide governance gate: internal-package-contract's own 56 checks
-  # (mutation, coverage, security-deps/secrets/socket, accessibility,
-  # dead-code, docs, licenses, ...) run against this package for real, not
-  # just declared as a devDependency. Node 24.x to match
-  # internal-package-contract's own engines.node floor.
+  # Runs internal-package-contract's checks (mutation, coverage, security, docs, licences and more) on
+  # this package. Node 24.x matches internal-package-contract's `engines.node` floor.
   contract:
     needs: [verify, lint, benchmark-pr]
-    # Same reasoning as `verify`/`lint`'s own identical-shaped condition: GitHub's default
-    # `success()` considers the *entire* transitive dependency graph, not just this job's direct
-    # `needs` -- since `verify`/`lint` themselves depend on `benchmark-pr`, a skipped `benchmark-pr`
-    # (every push-to-main run, every fork PR) still propagates through as "not success" here even
-    # when `verify`/`lint` genuinely ran and passed, silently skipping `contract` itself. Confirmed
-    # live: a real PR run where `verify`/`lint` both concluded "success" still skipped `contract`.
-    # `verify` and `lint` are deliberately NOT in this condition: a skipped required check counts as
-    # passing on GitHub, so when they fail this job must run and FAIL (first step below), never skip.
-    if: always() && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
+    # Always runs, so it can never be skipped: GitHub counts a skipped required check as passing.
+    # The first step fails it when benchmark-pr failed or verify or lint did not pass. A benchmark
+    # failure then blocks the merge through both `contract` and `required`.
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: read
       # CodeScanning reads the repository's open alerts.
       security-events: read
     steps:
-      - name: verify and lint passed
-        if: needs.verify.result != 'success' || needs.lint.result != 'success'
+      - name: benchmark-pr, verify and lint passed
+        if: needs.verify.result != 'success' || needs.lint.result != 'success' || (needs.benchmark-pr.result != 'success' && needs.benchmark-pr.result != 'skipped')
         env:
+          BENCHMARK: ${{ needs.benchmark-pr.result }}
           VERIFY: ${{ needs.verify.result }}
           LINT: ${{ needs.lint.result }}
         run: |
-          echo "::error::contract needs verify and lint to pass (verify=$VERIFY, lint=$LINT)"
+          echo "::error::contract needs benchmark-pr to pass or be skipped, and verify and lint to pass (benchmark-pr=$BENCHMARK, verify=$VERIFY, lint=$LINT)"
           exit 1
 
-      # fetch-depth: 0 -- the Commits check reads origin/main..HEAD.
+      # fetch-depth: 0; the Commits check reads origin/main..HEAD.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -207,11 +147,8 @@ jobs:
           node-version: 24.x
 
       - run: npm ci
-      # internal-package-contract's own runner deletes reports/ and coverage/
-      # after the run UNLESS they existed before it started -- pre-creating
-      # them here is what makes the mutation-report artifact upload below
-      # (and Coverage's own reports) survive past the run at all on a fresh
-      # CI checkout, which starts with neither directory present.
+      # IPC's runner deletes reports/ and coverage/ after the run unless they existed before it. Creating
+      # them first keeps the mutation report for the upload below.
       - run: mkdir -p reports coverage
       - run: npm run benchmark:check --if-present
       - run: npm run contract
@@ -222,12 +159,8 @@ jobs:
           SOCKET_SECURITY_API_KEY: ${{ secrets.SOCKET_SECURITY_API_KEY }}
           GH_TOKEN: ${{ github.token }}
 
-      # Diagnostic aid, not part of the gate itself: `always()` so a failed
-      # Mutation run's exact per-mutant detail (file, mutator, location,
-      # status) is downloadable instead of only the summary count `npm run
-      # contract` prints to the log -- needed to hand-verify a CI-only
-      # "Survived" that never reproduces locally, per each mutant's own real
-      # source rather than guessing from the count alone.
+      # Diagnostic only. `always()` keeps the per-mutant detail of a failed Mutation run downloadable, so
+      # a CI-only survivor can be checked against its source.
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -237,13 +170,9 @@ jobs:
           retention-days: 5
           if-no-files-found: ignore
 
-      # A contract run is not a pure read: Format/Lint auto-fix, and
-      # SecurityDeps/SecuritySocket reconcile .repo-contract/exceptions/*.json
-      # (scaffolding a blank stub for any new finding, surfacing a stale
-      # record). CI starts from a clean checkout, so any post-run working-tree
-      # change means an ungoverned finding or an un-added exception stub
-      # slipped through -- fail loudly rather than let it ride along with a
-      # green run, matching repo-contract's own identical guard.
+      # A contract run can write: Format and Lint auto-fix, and SecurityDeps and SecuritySocket add
+      # exception stubs. Any change after the run on a clean checkout is an ungoverned finding, so it
+      # fails.
       - name: Working tree is clean after the contract run
         run: |
           if [ -n "$(git status --porcelain)" ]; then
@@ -273,9 +202,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-  # Packs the package and installs it next to a root `typescript` of 5, 6 and 7: the scanner has to run
-  # from both its ESM and CJS entry points (under 7 through the bundled TypeScript 6, ADR 0049) and the
-  # shipped declarations have to type-check in a consumer. See scripts/typescript-compat.mjs.
+  # Packs the package and installs it next to a root `typescript` of 5, 6 and 7. The scanner must run from
+  # its ESM and CJS entry points (under 7 through the bundled TypeScript 6, ADR 0049). The shipped
+  # declarations must type-check in a consumer. See scripts/typescript-compat.mjs.
   typescript-compat:
     runs-on: ubuntu-latest
     steps:
@@ -311,21 +240,13 @@ jobs:
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
         with:
           deno-version: v2.x
-      # --no-check: Deno's type-checker doesn't resolve the sibling .d.ts for
-      # a bare relative-path .js import the way tsc/vitest do, and instead
-      # infers a type from dist/index.js's own static JS shape -- a Deno
-      # import-resolution nuance, not a defect in the shipped declarations
-      # (see test/cross-runtime/deno.test.ts's header comment). This job's
-      # job is proving execution conformance, which --no-check still fully
-      # exercises; type-declaration correctness is already checked by
-      # `npm run typecheck` against source in the `verify` job above.
+      # --no-check: Deno does not resolve the sibling .d.ts for a relative .js import (see
+      # test/cross-runtime/deno.test.ts). This job proves execution; `verify` type-checks the
+      # declarations.
       - run: deno test --no-check --allow-read test/cross-runtime/deno.test.ts
 
-  # Proves the three flagship examples still install and generate cleanly
-  # against the real, just-built package -- each depends on the root package
-  # via `file:../..`, which needs `dist/` to already exist. Without this job,
-  # an API change could silently break a flagship's env.schema.ts with
-  # nothing to catch it until a human runs one by hand.
+  # Each flagship example installs the built package via `file:../..`, so an API change that breaks one
+  # fails here instead of on a reader's machine.
   examples:
     runs-on: ubuntu-latest
     steps:
@@ -344,13 +265,8 @@ jobs:
           npm ci
           npm run typecheck
 
-      # README.md's "See it run" section claims to be real output from this
-      # same example -- verify:readme-example (scripts/check-readme-example-fresh.mjs)
-      # re-runs its doc-generation command and fails on drift (e.g. a stale
-      # day count). Runs from the repo root, after `application`'s own
-      # `npm install` above -- it skips gracefully everywhere examples/
-      # application/node_modules isn't installed (see the script's own
-      # header), so this is the one place it actually asserts anything.
+      # README.md's "See it run" output must match a fresh run of this example. The script skips where
+      # examples/application/node_modules is missing, so this step is its only real assertion.
       - run: npm run verify:readme-example
 
       - name: team-service
@@ -367,34 +283,20 @@ jobs:
           npm run test:evidence
           npm start
 
-      # Not a fourth flagship -- see examples/README.md's "Framework
-      # integration" section. `npm run build` is the real assertion here: it
-      # chains `docs` -> `scripts/validate-env.ts` (tsx) -> `next build`, so a
-      # regression in the fail-fast contract mechanism (or the
-      # serverExternalPackages/force-dynamic/per-chunk-import fixes this
-      # example's own README documents) fails CI, not just a typecheck.
+      # `npm run build` chains `docs`, `scripts/validate-env.ts` and `next build`. A regression in the
+      # fail-fast check or the fixes this example's README documents fails CI.
       - name: nextjs-app
         working-directory: examples/nextjs-app
         run: |
           npm ci
           npm run build
 
-      # Runs each flagship's real npm scripts against its own committed,
-      # fake-but-plausible `.env` file and asserts on real stdout -- the
-      # actual runtime path (validateEnv -> read a validated value), not just
-      # that the schema typechecks -- then asserts its committed generated
-      # output is exactly what a fresh run produces, via that example's own
-      # `check` script (`env-cap --check`). No `expected/` mirror tree: the
-      # committed docs/manifest/.env.example are themselves the golden.
-      # One file per flagship -- see test/examples/support.ts.
+      # Runs each flagship's npm scripts against its committed `.env` and asserts on stdout. Its `check`
+      # script (`env-cap --check`) then compares the committed generated files with a fresh run.
       - run: npx vitest run test/examples/
 
-  # Proves every relocated behavioral fixture (Part 0 of the examples
-  # restructuring -- see examples/README.md) still installs and generates
-  # cleanly against the real, just-built package. These are no longer
-  # presented to human readers as examples (see examples/README.md), but
-  # every scenario they prove still runs in CI exactly as it did before the
-  # restructuring -- zero coverage loss, just de-emphasized.
+  # Each behavioural fixture under test/integration/ must install and generate against the built package,
+  # because each one proves a scenario no unit test reaches.
   integration-fixtures:
     runs-on: ubuntu-latest
     steps:
@@ -407,56 +309,46 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      # Same contract as application, generated via the packaged env-cap CLI
-      # binary instead of a custom .mjs script -- proves the real bin entry
-      # resolves and behaves as documented.
+      # Same contract as application, generated by the packaged `env-cap` binary, so the bin entry is
+      # exercised.
       - name: cli-usage
         working-directory: test/integration/positive/basic/cli-usage
         run: |
           npm ci
           npm run typecheck
 
-      # application's exact contract, generated via three separate standalone
-      # calls (generateEnvManifest/generateDocumentation/generateUsageReport)
-      # instead of one generateEnvArtifacts() call.
+      # application's contract, generated by three standalone calls instead of one
+      # `generateEnvArtifacts()` call.
       - name: split-generators
         working-directory: test/integration/positive/basic/split-generators
         run: |
           npm ci
           npm run typecheck
 
-      # One schema/manifest, validated by two separate entry points
-      # (example:server/example:client) with different activeContexts --
-      # see ADR 0022.
+      # One manifest, validated by two entry points with different activeContexts (ADR 0022).
       - name: validation-contexts
         working-directory: test/integration/positive/team/validation-contexts
         run: |
           npm ci
           npm run typecheck
 
-      # Not broken -- two independently-owned, both-active contracts document
-      # the same variable name differently, always a warning (never an
-      # error) by default.
+      # Not broken: two active contracts document one variable differently, which is a warning by default.
       - name: duplicate-variable-metadata
         working-directory: test/integration/positive/team/duplicate-variable-metadata
         run: |
           npm ci
           npm run typecheck
 
-      # No AWS credentials are configured in this job on purpose: a failed
-      # DescribeSecretCommand call is caught per-variable and falls back to
-      # the static expiresAt (see live-expirations.ts) -- generate:env, and
-      # therefore typecheck, is designed to still succeed without them.
+      # No AWS credentials on purpose. A failed DescribeSecretCommand falls back to the static expiresAt
+      # (live-expirations.ts), so `generate:env` still succeeds.
       - name: aws-secrets-manager
         working-directory: test/integration/positive/enterprise/aws-secrets-manager
         run: |
           npm ci
           npm run typecheck
 
-      # paypal-consumer installs paypal-addon from a real packed tarball, not
-      # a workspace/symlink reference (see both fixtures' package.json
-      # descriptions for why) -- paypal-addon must be built and packed before
-      # paypal-consumer installs.
+      # paypal-consumer installs paypal-addon from a packed tarball, not a workspace link, so paypal-addon
+      # is built and packed first.
       - name: paypal-addon (typecheck, build, pack)
         working-directory: test/integration/positive/enterprise/paypal-addon
         run: |
@@ -470,12 +362,8 @@ jobs:
           npm ci
           npm run typecheck
 
-      # A contract imported only through a "@/*" tsconfig.json path alias,
-      # never a relative import, resolved automatically (no `tsconfig` option
-      # passed) by both env-cap's static analysis and tsx at runtime -- see
-      # ADR 0023. Also installable as its own package (like paypal-addon) --
-      # built and packed here so tsconfig-aliases-consumer below can install
-      # it from a real tarball.
+      # A contract reached only through a `@/*` tsconfig path alias, resolved with no `tsconfig` option
+      # (ADR 0023). It is packed here for tsconfig-aliases-consumer.
       - name: tsconfig-aliases (typecheck, build, pack)
         working-directory: test/integration/positive/enterprise/tsconfig-aliases
         run: |
@@ -483,63 +371,45 @@ jobs:
           npm run typecheck
           npm run pack:local
 
-      # Installs tsconfig-aliases's packed tarball and discovers its contract
-      # via `packages` (ADR 0014), while this app's own local contract is
-      # organized through its own "@/*" alias (ADR 0023) -- proves the two
-      # mechanisms compose in one real install.
+      # Installs tsconfig-aliases from its tarball through `packages` (ADR 0014) and uses its own `@/*`
+      # alias (ADR 0023). This proves the two compose in one install.
       - name: tsconfig-aliases-consumer (installs tsconfig-aliases's packed tarball)
         working-directory: test/integration/positive/enterprise/tsconfig-aliases-consumer
         run: |
           npm ci
           npm run typecheck
 
-      # env-cap's own first-party Evidence Model projections -- the original
-      # ten (ADR 0024/0031/0032) plus an eleventh, Joined Variable View,
-      # added afterward -- built entirely through the public API
-      # (generateEvidenceModel() from /build, defineEvidenceProjection()
-      # from /evidence) -- reuses application's exact schema so each
-      # projection's output can be golden-compared against the existing,
-      # already-tested rendering path.
+      # env-cap's first-party Evidence Model projections, built only through the public API. They reuse
+      # application's schema, so each output is compared with the tested rendering path.
       - name: evidence-projections
         working-directory: test/integration/positive/enterprise/evidence-projections
         run: |
           npm ci
           npm run typecheck
 
-      # Deliberately, permanently broken by design -- a missing required
-      # variable. `typecheck` succeeds here (static discovery never reads
-      # .env values); only `start`, which actually calls validateEnv(), is
-      # expected to fail.
+      # Broken by design: a required variable is missing. `typecheck` passes because discovery never reads
+      # `.env`; only `start` fails.
       - name: missing-env-var
         working-directory: test/integration/negative/invalid-config/missing-env-var
         run: |
           npm ci
           npm run typecheck
 
-      # Deliberately, permanently broken by design -- two active contracts
-      # sharing an exclusiveGroup. `generate:env` (and therefore
-      # `typecheck`/`start`, which both run it first) always fails here, so
-      # -- unlike every other fixture in this job -- there is no typecheck
-      # step: it would never get past generation to reach `tsc` anyway.
+      # Broken by design: two active contracts share an exclusiveGroup, so `generate:env` always fails.
+      # `typecheck` and `start` run that generation first, so this fixture, unlike the others, has no
+      # typecheck step.
       - name: multiple-active-exclusive-capabilities
         working-directory: test/integration/negative/exclusive-violation/multiple-active-exclusive-capabilities
-        run: npm install
+        run: npm ci
 
-      # Runs each fixture's real npm scripts against its own committed,
-      # fake-but-plausible `.env` file and asserts on real stdout, and
-      # golden-compares every generated artifact byte-for-byte against its
-      # committed expected/ copy. One file per fixture, mirroring
-      # test/integration/{positive,negative}/ 1:1 -- see
-      # test/support/example-runner.ts.
+      # Runs each fixture's npm scripts against its committed `.env` and compares every generated file
+      # byte for byte with its `expected/` copy (test/support/example-runner.ts).
       - run: npx vitest run test/integration/positive/ test/integration/negative/
 
-  # Aggregates every job above that is not `contract` or `lint`. It runs as the `required` job and
-  # blocks a merge once the ruleset lists `required` (today the ruleset lists only those two).
-  # GitHub cannot name a matrix job (`verify (22.x)`) as a required context and counts a skipped or
-  # cancelled job as passing, so this job runs `if: always()` and fails unless each job it needs
-  # finished `success`. `benchmark-pr` may skip: it runs only on same-repo pull requests by design.
-  # `verify-current` (Node current) stays informational. Add every new job to `needs`;
-  # test/ci-jobs.test.ts fails when one is missing.
+  # The ruleset requires this job. It fails unless every job in `needs` succeeded, because GitHub cannot
+  # require a matrix job by name and counts a skipped job as passing. `benchmark-pr` may skip; it runs only
+  # on same-repo pull requests. `verify-current` stays informational. test/ci-jobs.test.ts fails when a new
+  # job is missing from `needs`.
   required:
     needs:
       - benchmark-pr
@@ -570,9 +440,8 @@ jobs:
           }"
 
   # Installs the packed tarball with npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker) and imports
-  # every entry point from it, as ESM and as CommonJS (scripts/package-managers-smoke.mjs). What is
-  # proven is exactly that: the tarball installs and resolves under those managers; nothing else about
-  # them is claimed. Yarn Plug'n'Play and pnpm without hoisting are documented as unsupported.
+  # every entry as ESM and CommonJS. That is all it proves. Yarn Plug'n'Play and non-hoisted pnpm are
+  # unsupported.
   package-managers:
     runs-on: ubuntu-latest
     permissions:
@@ -589,20 +458,12 @@ jobs:
       - run: npm run build
       - run: npm run package-managers
 
-  # Coverage/bundle-size badges (item B) -- only on a push to main, never on a
-  # PR run (a job whose `if` is false is skipped, and everything downstream
-  # via `needs:` is skipped with it, so `deploy` below never runs for a PR).
-  # Deliberately depends on `verify` and `cross-runtime`, NOT `verify-current`
-  # (the Node-"current" signal job), since that job is intentionally
-  # `continue-on-error: true` and non-blocking -- gating the docs deploy on it
-  # would contradict its own documented purpose.
+  # Coverage and size badges are built only on a push to main; skipping here also skips `deploy` on a
+  # pull request. It does not need `verify-current`, which may fail by design.
   badges:
     needs: [verify, lint, cross-runtime, contract]
-    # Same transitive-skip reasoning as `contract`'s own identical-shaped condition above --
-    # `verify`/`lint` depend on `benchmark-pr`, which is always skipped on a push-to-main event
-    # (it only ever runs for `pull_request`), so without this, GitHub's default `success()` here
-    # sees that skipped ancestor and silently skips `badges` (and therefore `deploy` below) even
-    # when `verify`/`lint` genuinely ran and passed. Confirmed live on a real push to `main`.
+    # `benchmark-pr` always skips on a push to main. GitHub's default `success()` would then skip
+    # `badges` and `deploy` even when `verify` and `lint` passed, so `always()` opts back in.
     if: >-
       github.event_name == 'push' && github.ref == 'refs/heads/main' && always() &&
       (needs.verify.result == 'success' || needs.verify.result == 'skipped') &&
@@ -641,21 +502,12 @@ jobs:
             docs/size.json
           retention-days: 14
 
-  # Deploys docs/ (the GitHub Pages site) plus the badge JSON `badges` above
-  # just produced, in the same run -- no cross-run artifact download, no
-  # extra `actions: read` permission, no second workflow file to keep in
-  # sync with this one. Only this job needs the `pages`/`id-token`
-  # permissions and the `pages` concurrency group -- job-level `permissions`/
-  # `concurrency` override the workflow-level default, so `verify`/
-  # `verify-current`/`cross-runtime`/`badges` keep running with the
-  # workflow's existing minimal default permissions.
+  # Deploys docs/ and the badge JSON from `badges` in the same run, so no cross-run artifact download is
+  # needed. Only this job gets the `pages` and `id-token` permissions.
   deploy:
     needs: badges
-    # Same transitive-skip reasoning as `badges`'/`contract`'s own conditions above -- `badges`'
-    # own ancestry runs back through `verify`/`lint` to `benchmark-pr`, which is always skipped on
-    # a push-to-main event, so without this, GitHub's default `success()` here still sees that
-    # skipped ancestor deep in the chain and silently skips `deploy` even when `badges` genuinely
-    # ran and passed. Confirmed live on a real push to `main`.
+    # `always()` for the same reason as `badges`: a skipped `benchmark-pr` deep in the chain would
+    # otherwise skip `deploy`.
     if: always() && needs.badges.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -676,16 +528,11 @@ jobs:
         with:
           node-version: 22.x
       - run: npm ci
-      # The rendered HTML API reference is generated fresh here, never
-      # committed -- it lands at maverickcer.github.io/env-cap/api/ alongside
-      # the hand-authored landing page. The Markdown report drift check in
-      # the `lint` job is what guards the API surface itself.
+      # The HTML API reference is built here and never committed. The Markdown report check in `lint`
+      # guards the API surface.
       - run: npm run docs:api
-      # Same "generated fresh here, never committed" treatment as docs:api
-      # above -- internal-package-contract's shared benchmark engine builds
-      # the history chart page from the committed benchmarks/history/*.json
-      # files (see benchmark-pr's own header comment above for where those
-      # come from). Lands at maverickcer.github.io/env-cap/benchmarks/.
+      # The benchmark history page is built here from the committed benchmarks/history/*.json and never
+      # committed.
       - run: npm run docs:benchmarks
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:

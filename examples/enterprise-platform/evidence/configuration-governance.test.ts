@@ -13,7 +13,7 @@ import {
 /**
  * The evidence-contract test: pure build-time analysis of this package's own
  * real `src/capabilities/*\/env.schema.ts` files. No Mongo, no TanStack Start
- * dev server, no browser -- proves the configuration-governance report is correct
+ * dev server, no browser: proves the configuration-governance report is correct
  * independently of whether the application itself works (see
  * src/main-headless.ts's separate smoke test for that). Non-negotiable per
  * this flagship's own design review.
@@ -31,7 +31,7 @@ describe("configurationGovernanceProjection (evidence-contract test, no Mongo/se
     const { sensitiveVariables } = configurationGovernanceProjection(evidence);
 
     const byKey = new Map(sensitiveVariables.map((row) => [row.key, row]));
-    // One representative sensitive variable per capability -- proves the
+    // One representative sensitive variable per capability: proves the
     // projection reaches every capability, not just the first one discovered.
     expect(byKey.has("MONGODB_URI")).toBe(true);
     expect(byKey.has("SESSION_SECRET")).toBe(true);
@@ -39,7 +39,7 @@ describe("configurationGovernanceProjection (evidence-contract test, no Mongo/se
     expect(byKey.has("RESEND_API_KEY")).toBe(true);
     expect(byKey.has("S3_SECRET_ACCESS_KEY")).toBe(true);
     // AUDIT_LOG_RETENTION_DAYS and EMAIL_FROM_ADDRESS are "config", never
-    // sensitive-classified -- confirms the filter isn't just "everything".
+    // sensitive-classified: confirms the filter isn't just "everything".
     expect(byKey.has("AUDIT_LOG_RETENTION_DAYS")).toBe(false);
     expect(byKey.has("EMAIL_FROM_ADDRESS")).toBe(false);
   });
@@ -55,15 +55,15 @@ describe("configurationGovernanceProjection (evidence-contract test, no Mongo/se
     const stripeKey = sensitiveVariables.find((row) => row.key === "S3_ACCESS_KEY_ID");
 
     expect(stripeKey?.owner).toBe("compliance-team");
-    // S3_ACCESS_KEY_ID sets no variable-level purpose/legalBasis -- both fall
+    // S3_ACCESS_KEY_ID sets no variable-level purpose/legalBasis: both fall
     // back to storage's own contract-level defaults.
     expect(stripeKey?.purpose).toBe(
-      "Store case-file attachments -- potentially privileged, client-confidential documents.",
+      "Store case-file attachments (potentially privileged, client-confidential documents).",
     );
     expect(stripeKey?.legalBasis).toContain("Attorney-client privilege");
   });
 
-  it("every row's three declaration positions resolve to a real file, line, and column -- never collapsed into one", async () => {
+  it("every row's three declaration positions resolve to a real file, line, and column, never collapsed into one", async () => {
     const { evidence } = await getEvidenceModel({
       fs: nodeBuildFileSystem,
       root,
@@ -80,7 +80,7 @@ describe("configurationGovernanceProjection (evidence-contract test, no Mongo/se
         expect(position.line).toBeGreaterThanOrEqual(1);
         expect(position.column).toBeGreaterThanOrEqual(1);
       }
-      // documentation is a genuinely distinct position from declaration --
+      // documentation is a genuinely distinct position from declaration:
       // every capability here calls documentEnv() separately from createEnv().
       expect(row.documentation).toBeDefined();
       expect(row.documentation).not.toEqual(row.declaration);
@@ -116,7 +116,7 @@ describe("configurationGovernanceProjection (evidence-contract test, no Mongo/se
     expect(scannedSurfaces.some((s) => s.label === "application")).toBe(true);
   });
 
-  it("this real, deliberately well-documented deployment produces zero policy findings -- a clean audit", async () => {
+  it("this real, deliberately well-documented deployment produces zero policy findings: a clean audit", async () => {
     const { evidence } = await getEvidenceModel({
       fs: nodeBuildFileSystem,
       root,
@@ -129,7 +129,7 @@ describe("configurationGovernanceProjection (evidence-contract test, no Mongo/se
 
   it("stamps real provenance (toolVersion, a fresh generatedAt)", async () => {
     const before = Date.now();
-    // generateEvidenceModel(), not getEvidenceModel() -- this test is
+    // generateEvidenceModel(), not getEvidenceModel(): this test is
     // specifically about what a real generation pass stamps, which
     // getEvidenceModel()'s fingerprint cache would defeat on any run where
     // the source hasn't changed since docs/env.evidence.json was last
@@ -146,7 +146,7 @@ describe("configurationGovernanceProjection (evidence-contract test, no Mongo/se
   });
 });
 
-describe("computePolicyFindings (rule-correctness unit tests, synthetic rows -- no EvidenceModel needed)", () => {
+describe("computePolicyFindings (rule-correctness unit tests, synthetic rows, no EvidenceModel needed)", () => {
   function row(overrides: Partial<SensitiveVariableEvidence>): SensitiveVariableEvidence {
     return {
       contractName: "test",
@@ -196,7 +196,7 @@ describe("computePolicyFindings (rule-correctness unit tests, synthetic rows -- 
     expect(findings.some((f) => f.code === "credential-without-documentation")).toBe(false);
   });
 
-  it("does not flag a pii-classified variable for missing documentation -- pii is personal data, not a credential", () => {
+  it("does not flag a pii-classified variable for missing documentation: pii is personal data, not a credential", () => {
     const findings = computePolicyFindings([
       row({ sensitivity: "pii", documentationLink: undefined, key: "CLIENT_SSN" }),
     ]);
@@ -223,7 +223,7 @@ describe("computePolicyFindings (rule-correctness unit tests, synthetic rows -- 
     ]);
   });
 
-  it("does not flag an audit-required variable that's proven, asserted, or merely uncertain -- only not-found", () => {
+  it("does not flag an audit-required variable that's proven, asserted, or merely uncertain: only not-found is flagged", () => {
     for (const category of ["proven", "asserted", "uncertain"] as const) {
       const findings = computePolicyFindings([row({ auditRequired: true, evidenceCategory: category })]);
       expect(findings.some((f) => f.code === "audit-required-but-not-found")).toBe(false);

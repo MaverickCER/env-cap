@@ -4,9 +4,9 @@ import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 
 /**
  * Every documentation field of a variable that a second declaration of it can supply. `metadata` is merged key by
- * key rather than as one value, so it is handled on its own below. `evidence` is not one of them: its citations
- * point at the declaring contract's own code and are re-verified there every run (ADR 0037), so they stay with the
- * contract that wrote them and are never copied to, or compared with, another declaration.
+ * key rather than as one value, so it is handled on its own below. `evidence` is not one of them. Its citations
+ * point at the declaring contract's own code and are re-verified there every run (ADR 0037). So they stay with the
+ * contract that wrote them, and are never copied to, or compared with, another declaration.
  */
 export const VALUE_FIELDS = [
   "description",
@@ -41,17 +41,18 @@ interface Declaration {
  * Fills what one declaration of a variable leaves unset from the other declarations of the same variable.
  *
  * @remarks
- * A variable can be declared in more than one contract: a package that ships its own contract (see
+ * A variable can be declared in more than one contract. A package that ships its own contract (see
  * {@link ../README} "Reusable packages") and the application that consumes it both name the same environment
  * variable, because the process has one flat namespace. Writing the explanation twice is how the two drift, so the
  * declaration that carries it can be the one place it is written, and the other adds only what is its own (the
  * application's own `expiresAt`, say).
  *
  * Every field a declaration leaves unset is taken from another declaration that sets it, as long as one of the two
- * is a package's contract; when several do, the one from a package's contract wins over the application's own, the
- * first package's over a later one's, and the application's own fill a gap only when all of them that set it agree. Two of the application's own contracts never fill each
- * other: they are siblings, often alternatives, and each documents the variable for itself. A field a declaration sets itself is never replaced, so two declarations that set the same field
- * differently still differ afterwards, and the compatibility check can say so. `metadata` is merged key by key under
+ * is a package's contract. When several set it, a package's contract wins over the application's own, and the
+ * first package's wins over a later one's. The application's own contracts fill a gap only when all of them that set
+ * it agree. Two of the application's own contracts never fill each other: they are siblings, often alternatives,
+ * and each documents the variable for itself. A field a declaration sets itself is never replaced. So two
+ * declarations that set the same field differently still differ afterwards, and the compatibility check can say so. `metadata` is merged key by key under
  * the same rule. Pure: the contracts passed in are not changed.
  */
 export function mergeSharedDocumentation(
@@ -89,7 +90,7 @@ export function mergeSharedDocumentation(
 
 /**
  * The value to fill a gap with: the first package declaration's that sets it, otherwise the application
- * declarations' -- but only when every one of them that sets it agrees. The application's own contracts are often
+ * declarations'; but only when every one of them that sets it agrees. The application's own contracts are often
  * alternatives (a database it can run on either of); when they disagree, a package's declaration takes neither.
  */
 function donated(

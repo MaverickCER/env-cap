@@ -2,7 +2,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * This application's own local capability contract, alongside the imported
- * paypal-addon contract in app.ts -- generateEnvManifest() discovers both
+ * paypal-addon contract in app.ts: generateEnvManifest() discovers both
  * (see scripts/generate-manifest.mjs) and validateEnv() validates both
  * together at startup.
  */

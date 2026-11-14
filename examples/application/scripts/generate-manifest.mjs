@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const result = await generateEnvArtifacts({
   fs: nodeBuildFileSystem,
   root,
-  // Default discovery is ["**/env.schema.ts"] -- this example now keeps a
+  // Default discovery is ["**/env.schema.ts"]: this example now keeps a
   // single central schema at src/env.ts instead of per-feature
   // env.schema.ts files (see database/payments env.schema.ts, both
   // commented out), so the include pattern must say so explicitly.
@@ -23,7 +23,7 @@ console.log(`Wrote manifest: ${result.manifest?.outputPath}`);
 console.log(`Wrote docs: ${result.docs?.docsPath}`);
 console.log(`Discovered ${result.manifest?.contracts.length ?? 0} contract(s).`);
 
-// .env.example is regenerated and overwritten directly on every run here --
+// .env.example is regenerated and overwritten directly on every run here:
 // it's a live, always-current teaching artifact, not something meant to be
 // hand-merged. See the "onExisting" option (ADR-adjacent: README's CLI section).
 const envExample = result.docs?.envExample;
@@ -45,8 +45,8 @@ if (result.manifest?.warnings.length) {
 }
 
 // Manifest change-tracking since the committed snapshot (env.manifest.snapshot.json)
-// was last written -- see ADR 0021. Lives on the Change Model
-// (result.evidence.change.manifest), not on result.manifest itself --
+// was last written: see ADR 0021. Lives on the Change Model
+// (result.evidence.change.manifest), not on result.manifest itself:
 // GenerateEnvManifestResult has no changes field of its own.
 const changes = result.evidence?.change?.manifest;
 if (changes) {
@@ -62,7 +62,7 @@ if (changes) {
 }
 
 // The Dependency & Ownership Report: which contracts nobody consumes, and
-// which owned variables no consumer reads within this repository -- the
+// which owned variables no consumer reads within this repository; the
 // mirror image of the .env.example stale-variable check above (that catches
 // lingering references after a variable is removed; this catches a schema
 // that was never wired up, or was abandoned mid-removal).

@@ -33,7 +33,7 @@ export function before(date: Date): Validator<Date> {
   return (value, _rawEnv) => value < date || "Expected date to be before required date."
 }
 
-/** Identity wrapper for a hand-written `Validator<T>` -- no behavior change, just a fluent entry point alongside the other helpers. */
+/** Identity wrapper for a hand-written `Validator<T>`: no behavior change, just a fluent entry point alongside the other helpers. */
 export function custom<T>(validator: Validator<T>): Validator<T> {
   return validator
 }
@@ -218,7 +218,7 @@ export function uuid(versions: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8]): Va
   }
 }
 
-/** Shorthand for `uuid([version])` -- passes only for that exact UUID version. */
+/** Shorthand for `uuid([version])`: passes only for that exact UUID version. */
 export function uuidVersion(number: number): Validator<string> {
   return uuid([number])
 }

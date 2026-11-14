@@ -1,7 +1,7 @@
-// Cross-runtime conformance -- see bun.test.ts's header comment for why this
+// Cross-runtime conformance: see bun.test.ts's header comment for why this
 // file exists and what gap it closes. Deliberately dependency-free (no
 // `@std/assert` from JSR) so this smoke test never depends on network access
-// in CI -- its only job is proving dist/index.js's actual behavior under
+// in CI: its only job is proving dist/index.js's actual behavior under
 // Deno's engine, not showcasing Deno test idioms.
 //
 // Run via `deno test --no-check --allow-read test/cross-runtime/deno.test.ts`
@@ -11,13 +11,13 @@
 //
 // `--no-check` is required for a reason worth recording: Deno's type-checker
 // does not resolve the sibling dist/index.d.ts for this bare relative-path
-// `.js` import the way tsc/vitest do -- it instead infers a type from
+// `.js` import the way tsc/vitest do; it instead infers a type from
 // dist/index.js's own static JS shape (picking up the two
 // `Object.defineProperty(contract, "toString"/"toJSON", ...)` calls in
 // create.ts, but not the dynamically-generated per-key getters), producing
 // a spurious "Property 'PORT' does not exist" error. This is a Deno
 // import-resolution nuance specific to raw relative-disk-path imports, not a
-// defect in the shipped declarations -- confirmed by isolating the exact
+// defect in the shipped declarations: confirmed by isolating the exact
 // same type structure in a standalone repro, which `deno check` accepts
 // without complaint. Type-declaration correctness is already verified by
 // `npm run typecheck` against source; this file's job is execution
@@ -94,7 +94,7 @@ Deno.test("EnvValidationError aggregates a validator failure under Deno", async 
   )
 })
 
-Deno.test("contract self-redacts on String() -- ADR 0006 holds under Deno too", async () => {
+Deno.test("contract self-redacts on String(): ADR 0006 holds under Deno too", async () => {
   resetEnvCache()
   const env = createEnv({ SECRET: {} }, { name: "deno-redaction" })
   await validateEnv({ values: { SECRET: "shh-do-not-print-me" }, manifest: [env] })

@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "@maverickcer/env-cap!",
-  "docComment": "",
+  "docComment": "/**\n * The env-cap runtime entry point: declare contracts, validate them once at startup, and read\n * typed values through the contract that owns them.\n *\n * It imports no Node module and reads no Node global; it takes values only from the `values`\n * you pass to `validateEnv()`. `test/runtime/browser-bundle.test.ts` checks the built bundle for\n * Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.\n * Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.\n *\n * `documentEnv` is exported here, not from `./build`, because it is called inline in the same\n * schema file as `createEnv`, which may end up in any bundle. It must be as cheap to import as\n * `createEnv` (see `document.ts`).\n *\n * @packageDocumentation\n */\n",
   "name": "@maverickcer/env-cap",
   "preserveMemberOrder": false,
   "members": [
@@ -191,7 +191,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!ContractDocs:interface",
-          "docComment": "/**\n * Contract-level documentation, plus everything {@link documentEnv}'s options used to carry that\n * only the generator ever read.\n *\n * @remarks\n *\n * Generic over `S`, the exact schema type {@link documentEnv} infers from its `schema` argument --\n * this is what makes `variables` below a closed, checked map (a typo'd or renamed key is a\n * compile error, not a silent no-op) rather than an open `Record<string, VariableDocs>` any string\n * would satisfy. `S` defaults to the widest possible schema so this type is still nameable on its\n * own (e.g. in a helper function's own parameter type) without narrowing to one specific contract.\n */\n",
+          "docComment": "/**\n * Contract-level documentation. Only the generator reads these fields; validation never does.\n *\n * @remarks\n *\n * Generic over `S`, the exact schema type {@link documentEnv} infers from its `schema` argument.\n * That makes `variables` below a closed, checked map, not an open `Record<string, VariableDocs>`\n * any string would satisfy. A typo'd or renamed key is a compile error, not a silent no-op. `S`\n * defaults to the widest possible schema. So this type is still nameable on its own (e.g. in a\n * helper function's parameter type) without narrowing to one specific contract.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -237,7 +237,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#active:member",
-              "docComment": "/**\n * When `false`, this contract is excluded from the generated manifest, docs' required section, and exclusiveGroup checks -- it still appears, marked disabled, in the feature catalog. Defaults to `true`.\n */\n",
+              "docComment": "/**\n * When `false`, this contract is excluded from the generated manifest, docs' required section, and exclusiveGroup checks: it still appears, marked disabled, in the feature catalog. Defaults to `true`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -264,7 +264,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#auditRequired:member",
-              "docComment": "/**\n * Default audit-required assertion for this contract's variables -- see {@link VariableDocs.auditRequired}.\n */\n",
+              "docComment": "/**\n * Default audit-required assertion for this contract's variables: see {@link VariableDocs.auditRequired}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -318,7 +318,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#dataResidency:member",
-              "docComment": "/**\n * Default data residency for this contract's variables -- see {@link VariableDocs.dataResidency}.\n */\n",
+              "docComment": "/**\n * Default data residency for this contract's variables: see {@link VariableDocs.dataResidency}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -399,7 +399,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#exclusiveGroup:member",
-              "docComment": "/**\n * The generator throws if two *active* contracts declare the same `exclusiveGroup` -- use it to mark interchangeable features (e.g. two database backends) as mutually exclusive.\n */\n",
+              "docComment": "/**\n * The generator throws if two *active* contracts declare the same `exclusiveGroup`: use it to mark interchangeable features (e.g. two database backends) as mutually exclusive.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -453,7 +453,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#legalBasis:member",
-              "docComment": "/**\n * Default legal basis for this contract's variables -- see {@link VariableDocs.legalBasis}.\n */\n",
+              "docComment": "/**\n * Default legal basis for this contract's variables: see {@link VariableDocs.legalBasis}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -480,7 +480,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#metadata:member",
-              "docComment": "/**\n * Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this feature -- see {@link VariableDocs.metadata}.\n */\n",
+              "docComment": "/**\n * Arbitrary contract-level documentation (e.g. `runbook`), rendered alongside this feature: see {@link VariableDocs.metadata}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -566,7 +566,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#purpose:member",
-              "docComment": "/**\n * Default reason this contract's variables' values are collected/used -- see {@link VariableDocs.purpose}.\n */\n",
+              "docComment": "/**\n * Default reason this contract's variables' values are collected/used: see {@link VariableDocs.purpose}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -593,7 +593,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#retention:member",
-              "docComment": "/**\n * Default retention policy for this contract's variables -- see {@link VariableDocs.retention}.\n */\n",
+              "docComment": "/**\n * Default retention policy for this contract's variables: see {@link VariableDocs.retention}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -620,7 +620,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#sensitivity:member",
-              "docComment": "/**\n * Default sensitivity for every variable in this contract that doesn't set its own `sensitivity` -- see {@link VariableDocs.sensitivity} for why this is an open `string`.\n */\n",
+              "docComment": "/**\n * Default sensitivity for every variable in this contract that doesn't set its own `sensitivity`: see {@link VariableDocs.sensitivity} for why this is an open `string`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -647,7 +647,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractDocs#variables:member",
-              "docComment": "/**\n * Per-variable documentation, keyed by variable name -- keys are checked against `S`'s own keys\n * at compile time, so documenting a variable that was renamed or removed from `schema` (or a\n * plain typo) is a type error here, not a silently-ignored entry the generator would otherwise\n * have to report as \"stale\" after the fact. A schema key absent from `variables` entirely is\n * still valid (not every variable needs documentation) and is reported as undocumented by the\n * generator, exactly as before.\n */\n",
+              "docComment": "/**\n * Per-variable documentation, keyed by variable name. Keys are checked against `S`'s own keys\n * at compile time. Documenting a variable that was renamed or removed from `schema` (or a plain\n * typo) is therefore a type error here. The generator never has to report it as \"stale\" after\n * the fact. A schema key absent from `variables` entirely is\n * still valid (not every variable needs documentation). The generator reports it as\n * undocumented.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -686,7 +686,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!createEnv:function(1)",
-          "docComment": "/**\n * Declares a feature's environment contract. Colocate this call with the\n * feature that consumes the variables (e.g. `features/payments/env.schema.ts`).\n *\n * @remarks\n *\n * `createEnv` is runtime-only: `processor`/`validator`/`default` are the\n * whole vocabulary, because they're the only fields {@link validateEnv} actually\n * reads. Documentation -- description, ownership, lifecycle, category, and\n * everything else that only exists to generate docs -- lives in a separate\n * {@link documentEnv} call (see `document.ts`), which is entirely optional and\n * never required for this to work.\n *\n * @returns An {@link EnvContract} exposing one read-only getter per key -- there is no\n * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a\n * key throws until {@link validateEnv} has run successfully for the runtime this contract\n * was passed to.\n */\n",
+          "docComment": "/**\n * Declares a feature's environment contract. Colocate this call with the\n * feature that consumes the variables (e.g. `features/payments/env.schema.ts`).\n *\n * @remarks\n *\n * `createEnv` is runtime-only: `processor`/`validator`/`default` are the\n * whole vocabulary, because they're the only fields {@link validateEnv} actually\n * reads. Documentation (description, ownership, lifecycle, category, and\n * everything else that only exists to generate docs) lives in a separate\n * {@link documentEnv} call (see `document.ts`), which is entirely optional and\n * never required for this to work.\n *\n * @returns An {@link EnvContract} exposing one read-only getter per key: there is no\n * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a\n * key throws until {@link validateEnv} has run successfully for the runtime this contract\n * was passed to.\n *\n * The contract redacts itself under `console.log`, `String()`, `JSON.stringify` and template\n * interpolation. Spreading it or calling `Object.entries()` on it reads every value, so do not.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -775,7 +775,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions:interface",
-          "docComment": "",
+          "docComment": "/**\n * Options for {@link createEnv}: a display name for error messages and where the contract was\n * declared.\n *\n * @remarks\n *\n * Purely for identification. Owners, descriptions and other documentation belong in\n * `documentEnv()`.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -790,7 +790,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions#name:member",
-              "docComment": "/**\n * A short, stable label for this contract (e.g. \"payments\", \"database\").\n * Used in error messages. Defaults to an auto-generated anonymous label if\n * omitted -- providing one is strongly recommended for readable validation\n * errors.\n */\n",
+              "docComment": "/**\n * A short, stable label for this contract (e.g. \"payments\", \"database\").\n * Used in error messages. Defaults to an auto-generated anonymous label if\n * omitted: providing one is strongly recommended for readable validation\n * errors.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -817,7 +817,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions#source:member",
-              "docComment": "/**\n * Pass `import.meta.url` here so validation errors point at the file that\n * declared the failing variable (e.g. \"features/payments/env.schema.ts\")\n * instead of just the short `name` label. There is no portable way for\n * `createEnv` to discover its caller's module URL on its own -- this is\n * always correct and never goes stale, since it's supplied by the JS\n * engine rather than hand-typed.\n */\n",
+              "docComment": "/**\n * Pass `import.meta.url` here so validation errors point at the file that\n * declared the failing variable (e.g. \"features/payments/env.schema.ts\")\n * instead of just the short `name` label. There is no portable way for\n * `createEnv` to discover its caller's module URL on its own: this is\n * always correct and never goes stale, since it's supplied by the JS\n * engine rather than hand-typed.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -847,7 +847,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!DefaultValue:type",
-          "docComment": "/**\n * A default may be a literal value, or a zero-arg thunk evaluated lazily when the raw value is\n * undefined.\n *\n * @remarks\n *\n * The union is redundant at the type level (`unknown` alone already accepts a\n * function) -- it's kept because this type is public API, and collapsing it to bare `unknown`\n * would erase the one thing a reader of the generated `.d.ts` needs to learn here.\n */\n",
+          "docComment": "/**\n * A default may be a literal value, or a zero-arg thunk evaluated lazily when the raw value is\n * undefined.\n *\n * @remarks\n *\n * The union is redundant at the type level (`unknown` alone already accepts a\n * function). It's kept because this type is public API: collapsing it to bare `unknown`\n * would erase the one thing a reader of the generated `.d.ts` needs to learn here.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -873,7 +873,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!documentEnv:function(1)",
-          "docComment": "/**\n * Documents a schema for the generator: explains values, assigns ownership,\n * and describes lifecycle, feeding the generated docs artifact and\n * `.env.example`. Pass it the *same* schema object given to {@link createEnv}, so\n * the generator can statically link the two and verify every variable is\n * documented -- and so TypeScript can check `docs.variables`' keys against\n * `schema`'s own keys, the same object identity doing double duty for both\n * the generator's static link and the type checker's.\n *\n * @remarks\n *\n * A no-op at runtime by design -- nothing passed here is retained anywhere,\n * and this can never throw, no matter how malformed `schema`/`docs` are.\n * Calling it is entirely optional: {@link createEnv} works identically whether or\n * not a matching `documentEnv` call exists. The real \"is everything\n * documented?\" check, and every artifact this data drives (the docs\n * artifact's ownership matrix, dependency graph, lifecycle report, and\n * security review; `.env.example`'s comments), runs entirely inside\n * {@link build.generateEnvManifest}'s static analysis -- this function's only job at\n * runtime is to exist as a safe, harmless marker the AST parser can find,\n * and to give you type-checked argument shapes while writing it.\n *\n * `S` is inferred from `schema`, never written out by hand -- pass the\n * schema object literal (or a `const`-inferred reference to it) directly for\n * the strongest inference; an explicitly-widened `schema: EnvSchema`\n * annotation loses the per-key literal type and falls back to accepting any\n * string key in `docs.variables`, same as before this generic existed.\n */\n",
+          "docComment": "/**\n * Documents a schema for the generator: explains values, assigns ownership,\n * and describes lifecycle, feeding the generated docs artifact and\n * `.env.example`. Pass it the *same* schema object given to {@link createEnv}.\n * The generator then statically links the two and verifies every variable is\n * documented. TypeScript also checks `docs.variables`' keys against\n * `schema`'s own keys, so the same object identity serves both the\n * generator's static link and the type checker.\n *\n * @remarks\n *\n * A no-op at runtime by design: nothing passed here is retained anywhere,\n * and this can never throw, no matter how malformed `schema`/`docs` are.\n * Calling it is entirely optional: {@link createEnv} works identically whether or\n * not a matching `documentEnv` call exists. The real \"is everything\n * documented?\" check runs entirely inside {@link build.generateEnvManifest}'s\n * static analysis. So does every artifact this data drives: the docs\n * artifact's ownership matrix, dependency graph, lifecycle report and\n * security review, and `.env.example`'s comments. At runtime this function\n * only exists as a safe marker the AST parser can find, and gives you\n * type-checked argument shapes while writing it.\n *\n * `S` is inferred from `schema`, never written out by hand. Pass the\n * schema object literal (or a `const`-inferred reference to it) directly for\n * the strongest inference. An explicitly-widened `schema: EnvSchema`\n * annotation loses the per-key literal type, so `docs.variables` then\n * accepts any string key.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -961,7 +961,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!EnvContract:type",
-          "docComment": "/**\n * The object returned by {@link createEnv}. Each key is a lazily-resolved getter backed by the\n * runtime cache -- there is no global env object, only per-feature contracts like this one.\n *\n * @remarks\n *\n * `toString()` is intersected in (rather than left to the ambient `Object.prototype`\n * declaration) because `create.ts` genuinely overrides it to return a redacted\n * `EnvContract(\"name\")` representation, never resolved values -- see ADR 0006. Declaring\n * it here means the type accurately describes what calling `String(contract)` returns.\n */\n",
+          "docComment": "/**\n * The object returned by {@link createEnv}. Each key is a lazily-resolved getter backed by the\n * runtime cache: there is no global env object, only per-feature contracts like this one.\n *\n * @remarks\n *\n * `toString()` is intersected in (rather than left to the ambient `Object.prototype`\n * declaration) because `create.ts` genuinely overrides it to return a redacted\n * `EnvContract(\"name\")` representation, never resolved values: see ADR 0006. Declaring\n * it here means the type accurately describes what calling `String(contract)` returns.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1046,7 +1046,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!EnvDefinition#context:member",
-              "docComment": "/**\n * The validation context this variable belongs to (e.g. `\"server\"`,\n * `\"production\"`, `\"worker\"`) -- entirely application-defined; env-cap\n * never interprets, detects, or infers this string. Omitted (the\n * default) means the variable participates in every {@link validateEnv}\n * run regardless of `activeContexts`. A variable belongs to at most one\n * validation context -- see ADR 0022 for why this is a single `string`\n * and not `string[]`; do not widen it to an array to let one variable\n * join multiple contexts, that reintroduces the AND/OR ambiguity this\n * design deliberately avoids.\n *\n * @remarks\n *\n * Validation contexts are a participation filter only -- not\n * authentication, authorization, or a bundling/security boundary. See\n * ADR 0022's Formal Invariants.\n */\n",
+              "docComment": "/**\n * The validation context this variable belongs to (e.g. `\"server\"`,\n * `\"production\"`, `\"worker\"`): entirely application-defined; env-cap\n * never interprets, detects, or infers this string. Omitted (the\n * default) means the variable participates in every {@link validateEnv}\n * run regardless of `activeContexts`. A variable belongs to at most one\n * validation context: see ADR 0022 for why this is a single `string`\n * and not `string[]`. Do not widen it to an array to let one variable\n * join multiple contexts. That reintroduces the AND/OR ambiguity this\n * design deliberately avoids.\n *\n * @remarks\n *\n * Validation contexts are a participation filter only: not\n * authentication, authorization, or a bundling/security boundary. See\n * ADR 0022's Formal Invariants.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1168,7 +1168,7 @@
         {
           "kind": "Class",
           "canonicalReference": "@maverickcer/env-cap!EnvNotReadyError:class",
-          "docComment": "/**\n * Thrown when a contract's value is accessed via property access before\n * {@link validateEnv} has completed successfully for it.\n *\n * @remarks\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling --\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
+          "docComment": "/**\n * Thrown when a contract's value is accessed via property access before\n * {@link validateEnv} has completed successfully for it.\n *\n * @remarks\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling:\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1322,7 +1322,7 @@
         {
           "kind": "Class",
           "canonicalReference": "@maverickcer/env-cap!EnvValidationError:class",
-          "docComment": "/**\n * Thrown by {@link validateEnv} when one or more variables fail processing or\n * validation. Aggregates every failure across every contract in the batch --\n * the caller sees the whole picture in one error, not one-at-a-time.\n *\n * @remarks\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling --\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
+          "docComment": "/**\n * Thrown by {@link validateEnv} when one or more variables fail processing or\n * validation. Aggregates every failure across every contract in the batch:\n * the caller sees the whole picture in one error, not one-at-a-time.\n *\n * @remarks\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling:\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1468,7 +1468,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!InferEnvValue:type",
-          "docComment": "/**\n * Resolves the application-facing type for one schema entry: processor return type, else the\n * default's type, else `string` (the shape raw process.env values naturally arrive in).\n *\n * @remarks\n *\n * Same documented generic-bound variance workaround as {@link EnvSchema} above --\n * `any` here is never surfaced to a consumer's inferred type.\n */\n",
+          "docComment": "/**\n * Resolves the application-facing type for one schema entry: processor return type, else the\n * default's type, else `string` (the shape raw process.env values naturally arrive in).\n *\n * @remarks\n *\n * Same documented generic-bound variance workaround as {@link EnvSchema} above:\n * `any` here is never surfaced to a consumer's inferred type.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1676,7 +1676,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!resetEnvCache:function(1)",
-          "docComment": "/**\n * Clears cached validation state. Intended for tests and dev tooling (e.g.\n * `beforeEach(() => resetEnvCache())` in a test suite that re-validates with\n * different fixture values per test) -- production applications validate\n * once at startup and should not normally call this.\n */\n",
+          "docComment": "/**\n * Clears cached validation state. Intended for tests and dev tooling (e.g.\n * `beforeEach(() => resetEnvCache())` in a test suite that re-validates with\n * different fixture values per test): production applications validate\n * once at startup and should not normally call this.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1704,7 +1704,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!validateEnv:function(1)",
-          "docComment": "/**\n * Validates every variable in every contract in `options.manifest` against\n * `options.values`, then caches the results.\n *\n * @remarks\n *\n * Idempotent: the first successful (or failed) call is authoritative for the life of the\n * process -- later calls return (or re-throw) that same outcome without re-running any\n * processor or validator. Concurrent in-flight calls share one underlying run.\n *\n * @throws\n *\n * {EnvValidationError} If any variable fails processing or validation.\n */\n",
+          "docComment": "/**\n * Validates every variable in every contract in `options.manifest` against\n * `options.values`, then caches the results.\n *\n * @remarks\n *\n * Idempotent: the first successful (or failed) call is authoritative for the life of the\n * process; later calls return (or re-throw) that same outcome without re-running any\n * processor or validator. Concurrent in-flight calls share one underlying run. Call\n * `resetEnvCache()` to validate again, for example between test scenarios.\n *\n * The record of validated values is frozen, but only one level deep: an object, array or `URL`\n * a processor returns stays mutable. A failure message carries variable and contract names and\n * the message your processor or validator produced, never the value itself.\n *\n * @example\n * ```ts\n * import { validateEnv } from \"@maverickcer/env-cap\"\n * import { manifest } from \"./generated/env.manifest\"\n *\n * await validateEnv({ manifest, values: process.env })\n * ```\n *\n * @throws\n *\n * {EnvValidationError} If any variable fails processing or validation.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1764,7 +1764,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!validateEnvOptions:interface",
-          "docComment": "",
+          "docComment": "/**\n * What {@link validateEnv} validates: the generated manifest, the raw values, and the active\n * validation contexts.\n *\n * @remarks\n *\n * Only the first call in a process is used; later calls return its outcome, whatever options\n * they pass. Call `resetEnvCache()` between runs in a test.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1779,7 +1779,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!validateEnvOptions#activeContexts:member",
-              "docComment": "/**\n * The validation contexts active for this run (e.g. `[\"server\",\n * \"production\"]`) -- entirely application-defined; env-cap never\n * detects or infers these, the caller always computes and passes them\n * explicitly. A variable whose `context` isn't in this list is skipped\n * entirely (no default/processor/validator runs for it, and it stays in\n * its not-ready state, exactly as if this run had never happened for\n * it) -- see ADR 0022. A variable with no `context` always participates,\n * regardless of what's passed here. Omitted (the default) behaves as an\n * empty list: only variables with no `context` participate.\n *\n * @remarks\n *\n * Not part of the validation cache's identity -- {@link validateEnv}\n * remains one-shot per process exactly as before this option existed. A\n * second call does not re-evaluate `activeContexts`; it returns the\n * first call's result outright. Different active contexts belong to\n * different processes (e.g. a server process and a browser bundle),\n * never to two calls within the same one.\n */\n",
+              "docComment": "/**\n * The validation contexts active for this run (e.g. `[\"server\",\n * \"production\"]`): entirely application-defined; env-cap never\n * detects or infers these, the caller always computes and passes them\n * explicitly. A variable whose `context` isn't in this list is skipped\n * entirely (no default/processor/validator runs for it, and it stays in\n * its not-ready state, exactly as if this run had never happened for\n * it): see ADR 0022. A variable with no `context` always participates,\n * regardless of what's passed here. Omitted (the default) behaves as an\n * empty list: only variables with no `context` participate.\n *\n * @remarks\n *\n * Not part of the validation cache's identity: {@link validateEnv}\n * remains one-shot per process whatever this option holds. A\n * second call does not re-evaluate `activeContexts`; it returns the\n * first call's result outright. Different active contexts belong to\n * different processes (e.g. a server process and a browser bundle),\n * never to two calls within the same one.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1806,7 +1806,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!validateEnvOptions#manifest:member",
-              "docComment": "/**\n * Every contract to validate -- typically the `contracts` array imported\n * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them\n * in one call: {@link validateEnv} only ever initializes once per process, so\n * a second call returns the first call's cached result without\n * re-running anything, even if it passes a different manifest.\n */\n",
+              "docComment": "/**\n * Every contract to validate: typically the `contracts` array imported\n * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them\n * in one call: {@link validateEnv} only ever initializes once per process, so\n * a second call returns the first call's cached result without\n * re-running anything, even if it passes a different manifest.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1993,7 +1993,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!VariableDocs:interface",
-          "docComment": "/**\n * Per-variable documentation. Every field is optional and unconstrained on\n * purpose -- there is no required shape, so documenting a variable never\n * fights the type checker, and you can add a field the generator doesn't\n * know about yet without it being rejected.\n */\n",
+          "docComment": "/**\n * Per-variable documentation. Every field is optional and unconstrained on purpose. With no\n * required shape, documenting a variable never fights the type checker. A field the generator\n * doesn't know yet is accepted, not rejected.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2035,7 +2035,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#authenticatorType:member",
-              "docComment": "/**\n * The kind of authenticator/secret this variable holds (e.g. \"api-key\", \"oauth-client-secret\",\n * \"database-password\", \"tls-certificate\") -- feeds the NIST SP 800-53 IA-5 rotation-compliance\n * report's \"authenticator type\" column (IA-5's main statement requires an organization-defined\n * rotation period \"by authenticator type,\" so this is what a generator groups/labels by).\n *\n * @remarks\n *\n * Deliberately an open `string`, not a closed union -- same \"open vocabulary\" pattern as\n * {@link sensitivity}: an org's own authenticator taxonomy is its own, and IA-5 itself never\n * names a fixed set of types either.\n */\n",
+              "docComment": "/**\n * The kind of authenticator/secret this variable holds (e.g. \"api-key\", \"oauth-client-secret\",\n * \"database-password\", \"tls-certificate\"). It feeds the \"authenticator type\" column of the NIST\n * SP 800-53 IA-5 rotation-status report. IA-5 requires an organization-defined rotation period\n * \"by authenticator type,\" so a generator groups and labels by this field.\n *\n * @remarks\n *\n * Deliberately an open `string`, not a closed union, like {@link sensitivity}. An org's\n * authenticator taxonomy is its own, and IA-5 itself names no fixed set of types.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2170,7 +2170,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#evidence:member",
-              "docComment": "/**\n * Developer-supplied evidence assertions for this variable -- verified over\n * time, unlike every other field above, which is declared and never\n * verified. Kept structurally separate for exactly that reason; see\n * {@link VariableEvidenceDocs}.\n */\n",
+              "docComment": "/**\n * Developer-supplied evidence assertions for this variable: verified over\n * time, unlike every other field above, which is declared and never\n * verified. Kept structurally separate for exactly that reason; see\n * {@link VariableEvidenceDocs}.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2198,7 +2198,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#expiresAt:member",
-              "docComment": "/**\n * ISO date string (e.g. \"2026-06-01\") -- when this variable's current value stops being valid (a key rotation deadline, a sunset date, etc.).\n */\n",
+              "docComment": "/**\n * ISO date string (e.g. \"2026-06-01\"): when this variable's current value stops being valid (a key rotation deadline, a sunset date, etc.).\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2225,7 +2225,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#lastRotatedAt:member",
-              "docComment": "/**\n * ISO date string -- the last time this variable's value was actually rotated. Paired with\n * {@link rotationPeriod} to compute rotation compliance. Independent of {@link expiresAt}, which\n * states when the *current* value stops being valid, not when it was last changed -- a value can\n * be freshly rotated and still have a near-term `expiresAt` (a short-lived token), or long overdue\n * for rotation while its `expiresAt` (if any) is still comfortably in the future.\n */\n",
+              "docComment": "/**\n * ISO date string: the last time this variable's value was actually rotated. Paired with\n * {@link rotationPeriod} to compute whether rotation is within the declared period. Independent of {@link expiresAt}, which\n * states when the *current* value stops being valid, not when it was last changed. A value can\n * be freshly rotated and still have a near-term `expiresAt` (a short-lived token). It can also be\n * long overdue for rotation while its `expiresAt` (if any) is still comfortably in the future.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2252,7 +2252,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#legalBasis:member",
-              "docComment": "/**\n * The legal basis this variable's collection/use relies on -- framework-agnostic (e.g. \"user consent,\" \"contractual necessity\"), never a specific statute name. Overrides the contract's own `legalBasis` for this key.\n */\n",
+              "docComment": "/**\n * The legal basis this variable's collection/use relies on: framework-agnostic (e.g. \"user consent,\" \"contractual necessity\"), never a specific statute name. Overrides the contract's own `legalBasis` for this key.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2279,7 +2279,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#metadata:member",
-              "docComment": "/**\n * Structured, unsupported-key documentation -- any primitive or object value, for anything that\n * doesn't warrant its own named field. A previously-supported top-level key belongs in a named\n * field above instead of here once one exists for it.\n */\n",
+              "docComment": "/**\n * Structured, unsupported-key documentation: any primitive or object value, for anything that\n * doesn't warrant its own named field. A key that has a named field above belongs in that field,\n * not here.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2338,7 +2338,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#purpose:member",
-              "docComment": "/**\n * Why this variable's value is collected/used -- a framework-agnostic fact (pairs with `legalBasis`; a specific citation like a GDPR article belongs in `metadata` instead). Overrides the contract's own `purpose` for this key.\n */\n",
+              "docComment": "/**\n * Why this variable's value is collected/used: a framework-agnostic fact (pairs with `legalBasis`; a specific citation like a GDPR article belongs in `metadata` instead). Overrides the contract's own `purpose` for this key.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2392,7 +2392,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#removeBy:member",
-              "docComment": "/**\n * ISO date string -- by when a deprecated variable must be removed. Only meaningful alongside `deprecated: true`.\n */\n",
+              "docComment": "/**\n * ISO date string: by when a deprecated variable must be removed. Only meaningful alongside `deprecated: true`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2473,7 +2473,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#retention:member",
-              "docComment": "/**\n * Descriptive retention policy (e.g. \"delete after 90 days\"). A policy statement, not a computed value -- unlike `expiresAt`, nothing parses or evaluates this. Overrides the contract's own `retention` for this key.\n */\n",
+              "docComment": "/**\n * Descriptive retention policy (e.g. \"delete after 90 days\"). A policy statement, not a computed value: unlike `expiresAt`, nothing parses or evaluates this. Overrides the contract's own `retention` for this key.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2500,7 +2500,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#rotationPeriod:member",
-              "docComment": "/**\n * How often this variable's value must be rotated, in organization-defined terms (e.g. \"90\n * days\", \"P90D\", \"6 months\") -- IA-5's own \"organization-defined time period\" per authenticator\n * type (the time-based half of IA-5's two-trigger rotation model). Paired with\n * {@link lastRotatedAt} so a generator can compute whether rotation is actually current, rather\n * than only recording that a period was declared; see `lifecycle-model.ts`'s\n * `computeRotationStatus()` for exactly how the two combine with {@link expiresAt}.\n */\n",
+              "docComment": "/**\n * How often this variable's value must be rotated, in organization-defined terms (e.g. \"90\n * days\", \"P90D\", \"6 months\"). This is IA-5's \"organization-defined time period\" per authenticator\n * type (the time-based half of IA-5's two-trigger rotation model). Paired with\n * {@link lastRotatedAt}, it lets a generator compute whether rotation is current. Without it, a\n * generator could only record that a period was declared. `lifecycle-model.ts`'s\n * `computeRotationStatus()` shows how the two combine with {@link expiresAt}. The result is a\n * policy-window judgement over declared metadata (\"within the declared period\"). It never states\n * that a rotation happened or that a control is met. env-cap reads declarations; it does not\n * check them against the secret store.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2527,7 +2527,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#rotationTriggerEvents:member",
-              "docComment": "/**\n * IA-5's event-based rotation triggers that apply to this variable (e.g. \"suspected compromise\",\n * \"personnel change\", \"system update\") -- the event-based half of IA-5's two-trigger rotation\n * model. Structured and additive alongside the existing free-text {@link refreshInstructions}\n * rather than replacing it: this is a list a generator can render as its own column,\n * `refreshInstructions` stays prose (\"how to actually rotate it\"). Presence-only -- env-cap has\n * no way to observe whether a listed event actually occurred, so declaring this never by itself\n * changes a computed rotation-compliance status (see `lifecycle-model.ts`); it only makes the\n * event-based trigger's existence visible in generated output.\n */\n",
+              "docComment": "/**\n * IA-5's event-based rotation triggers that apply to this variable (e.g. \"suspected compromise\",\n * \"personnel change\", \"system update\"): the event-based half of IA-5's two-trigger rotation\n * model. It sits beside the free-text {@link refreshInstructions} and does not replace it. This\n * is a list a generator can render as its own column; `refreshInstructions` stays prose (\"how to\n * actually rotate it\"). It is presence-only: env-cap cannot observe whether a listed event\n * occurred. So declaring it never changes a computed rotation status by itself (see\n * `lifecycle-model.ts`). It only makes the event-based trigger visible in generated output.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2554,7 +2554,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#sensitivity:member",
-              "docComment": "/**\n * How sensitive this variable's value is. Overrides the contract's own `sensitivity` for this\n * key.\n *\n * @remarks\n *\n * Deliberately an open `string`, not a closed union: an org's own sensitivity vocabulary is its\n * own, and a level env-cap doesn't recognize is always honored, never dropped. The generator\n * still reports a `NONSTANDARD_SENSITIVITY_LEVEL` finding (severity `info`, never blocking) for\n * anything outside `secret`/`credential`/`pii`/`config`, so vocabulary drift stays visible\n * without being enforced.\n */\n",
+              "docComment": "/**\n * How sensitive this variable's value is. Overrides the contract's own `sensitivity` for this\n * key.\n *\n * @remarks\n *\n * Deliberately an open `string`, not a closed union. An org's sensitivity vocabulary is its own,\n * and a level env-cap doesn't recognize is always honored, never dropped. The generator\n * still reports a `NONSTANDARD_SENSITIVITY_LEVEL` finding (severity `info`, never blocking) for\n * anything outside `secret`/`credential`/`pii`/`config`, so vocabulary drift stays visible\n * without being enforced.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2581,7 +2581,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableDocs#setupInstructions:member",
-              "docComment": "/**\n * Explicit, actionable instructions for obtaining this variable's value the *first* time --\n * where `refreshInstructions` is \"how to rotate it once you already have one,\" this is \"how to\n * get one at all\" (e.g. \"Create a restricted API key in the Stripe dashboard under Developers ->\n * API keys, scoped to read/write Charges.\"). A named field specifically so this can render as\n * its own labeled line in generated docs, rather than requiring a `metadata.setup`-style\n * convention with no dedicated rendering or type checking.\n */\n",
+              "docComment": "/**\n * Explicit, actionable instructions for obtaining this variable's value the *first* time.\n * `refreshInstructions` is \"how to rotate it once you already have one\"; this is \"how to get\n * one at all\" (e.g. \"Create a restricted API key in the Stripe dashboard under Developers ->\n * API keys, scoped to read/write Charges.\"). It is a named field so it renders as its own\n * labeled line in generated docs. A `metadata.setup`-style convention would get no dedicated\n * rendering or type checking.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2611,7 +2611,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!VariableEvidenceDocs:interface",
-          "docComment": "/**\n * Developer-supplied evidence assertions for one variable -- categorically\n * different from every field on {@link VariableDocs}: those are\n * declared-and-never-verified, while `dynamicAccess` is re-checked against\n * reality on every run (fresh / stale / missing). Kept structurally separate,\n * in `VariableDocs.evidence` rather than folded in alongside `description`/\n * `owner`/..., specifically so that different epistemic status is visible in\n * the shape itself and not only in a doc comment. See ADR 0037.\n */\n",
+          "docComment": "/**\n * Developer-supplied evidence assertions for one variable. They differ in kind from every field on\n * {@link VariableDocs}, which are declared and never verified. `dynamicAccess` is re-checked against\n * reality on every run (fresh / stale / missing). It lives apart, in `VariableDocs.evidence`, not\n * beside `description`, `owner` and the rest. So the shape itself shows the different status, not\n * only a doc comment. See ADR 0037.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2626,7 +2626,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!VariableEvidenceDocs#dynamicAccess:member",
-              "docComment": "/**\n * Citation(s) of where this variable is actually read dynamically --\n * somewhere env-cap's own static AST scan can't see (a shell script, a\n * Docker entrypoint, a sibling service). Each entry is a\n * `\"<relative-path>:<line>:<column>\"` citation.\n *\n * @remarks\n *\n * A developer's re-acknowledgment that access happens, never a claim\n * env-cap itself observed anything -- tracked as its own independent fact\n * and never folded into the AST-derived `VariableAccessStatus`. Re-verified\n * every run: a citation whose file no longer exists, or whose content has\n * visibly changed since it was last acknowledged, is flagged rather than\n * trusted forever.\n */\n",
+              "docComment": "/**\n * Citation(s) of where this variable is read dynamically, somewhere env-cap's static AST scan\n * can't see (a shell script, a Docker entrypoint, a sibling service). Each entry is a\n * `\"<relative-path>:<line>:<column>\"` citation.\n *\n * @remarks\n *\n * A developer's re-acknowledgment that access happens, never a claim that env-cap observed\n * anything. It is tracked as its own fact and never folded into the AST-derived\n * `VariableAccessStatus`. It is re-verified every run. A citation whose file is gone, or whose\n * content has visibly changed since it was acknowledged, is flagged rather than trusted forever.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",

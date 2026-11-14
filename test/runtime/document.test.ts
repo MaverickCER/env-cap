@@ -8,7 +8,7 @@ describe("documentEnv", () => {
     // eslint-disable-next-line @typescript-eslint/no-base-to-string -- coercing an unknown raw value to string, same idiom as helpers/processors.ts
     const schema = { STRIPE_KEY: { processor: (v: unknown) => String(v ?? "") } }
     // Deliberately capturing a `void`-typed return to assert it's genuinely
-    // undefined -- the whole point of this test (documentEnv() is inert,
+    // undefined: the whole point of this test (documentEnv() is inert,
     // ADR 0001), not an accidental misuse of a void expression.
     // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- the test checks the void-typed result on purpose (see the note above)
     const result = documentEnv(schema, {
@@ -42,7 +42,7 @@ describe("documentEnv", () => {
     }).not.toThrow()
   })
 
-  it("still accepts a documented-but-not-required subset of a schema's keys -- documenting every variable is never mandatory", () => {
+  it("still accepts a documented-but-not-required subset of a schema's keys: documenting every variable is never mandatory", () => {
     const schema = { A: {}, B: {}, C: {} }
     // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- documentEnv returns void on purpose; the test asserts that return value is undefined
     const result = documentEnv(schema, {
@@ -79,7 +79,7 @@ describe("documentEnv", () => {
     }).not.toThrow()
   })
 
-  it("does not affect createEnv/validateEnv -- calling it, or not, changes nothing observable", async () => {
+  it("does not affect createEnv/validateEnv: calling it, or not, changes nothing observable", async () => {
     const { validateEnv } = await import("../../src/runtime/validate.js")
     const { resetEnvCache } = await import("../../src/runtime/reset.js")
     resetEnvCache()
@@ -92,7 +92,7 @@ describe("documentEnv", () => {
     expect(contract.PORT).toBe(3000)
   })
 
-  it("retains nothing observable -- the docs object is not attached to the contract or any registry the runtime reads", () => {
+  it("retains nothing observable: the docs object is not attached to the contract or any registry the runtime reads", () => {
     const schema = { SECRET: { processor: (v: unknown) => String(v) } }
     const contract = createEnv(schema, { name: "no-retention" })
     documentEnv(schema, { variables: { SECRET: { description: "sensitive-looking-marker-text" } } })

@@ -1,7 +1,7 @@
 import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
- * Prisma isn't itself a database backend -- it's an ORM layer that targets
+ * Prisma isn't itself a database backend: it's an ORM layer that targets
  * whichever one is active, so it's categorized separately ("orm", not
  * "database") and carries no exclusiveGroup: there's only one ORM choice in
  * this boilerplate, nothing for it to conflict with.

@@ -13,7 +13,7 @@ function reachableContainers(value: unknown, into: object[] = []): object[] {
   return into
 }
 
-describe("deepFreeze -- property-based", () => {
+describe("deepFreeze: property-based", () => {
   it("returns the very value it was given, with the structure unchanged", () => {
     fc.assert(
       fc.property(fc.jsonValue(), (value) => {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import * as buildEntryPoint from "../../src/build/index.js"
 
-// Nothing else imports `src/build/index.ts` directly -- every other test
-// imports the individual submodules it needs -- so without this file the
+// Nothing else imports `src/build/index.ts` directly (every other test
+// imports the individual submodules it needs) so without this file the
 // barrel's re-export statements never actually execute and it shows as 0%
 // covered despite every symbol it forwards being otherwise fully tested.
 // This test exists to exercise the barrel itself and pin its public surface

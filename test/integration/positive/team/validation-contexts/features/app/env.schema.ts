@@ -5,13 +5,13 @@ import { validators } from "@maverickcer/env-cap/helpers";
  * One schema, one manifest, three variables demonstrating validation
  * contexts (ADR 0022):
  *
- *  - LOG_LEVEL has no `context` -- it participates in every validateEnv()
+ *  - LOG_LEVEL has no `context`; it participates in every validateEnv()
  *    run, regardless of activeContexts.
  *  - DATABASE_URL is scoped to `context: "server"`.
  *  - PUBLIC_API_URL is scoped to `context: "client"`.
  *
  * src/server.ts and src/client.ts each validate this same manifest, in
- * their own process, with different activeContexts -- see README.md for
+ * their own process, with different activeContexts: see README.md for
  * why that's two npm scripts/processes rather than two validateEnv() calls
  * in one script (validateEnv() is one-shot per process, by design, both
  * before and after this feature).

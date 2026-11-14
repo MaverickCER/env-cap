@@ -9,7 +9,7 @@ function sign(value: string): string {
   return createHmac("sha256", serverEnv.SESSION_SECRET).update(value).digest("hex")
 }
 
-/** Real use of SESSION_SECRET: signs/verifies the demo session cookie. Deliberately single-user -- multi-user auth is out of scope for this example. */
+/** Real use of SESSION_SECRET: signs/verifies the demo session cookie. Deliberately single-user: multi-user auth is out of scope for this example. */
 export function signSessionCookie(): string {
   return `${DEMO_USER_ID}.${sign(DEMO_USER_ID)}`
 }

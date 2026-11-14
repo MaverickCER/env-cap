@@ -46,7 +46,7 @@ describe("deepEqual", () => {
   it("treats an array and a plain object as unequal even when the object has a matching own .length property too", () => {
     // Once at least one side is known to be an array, `a.length !== b.length`
     // alone can't tell "one side isn't an array" apart from "both are arrays
-    // with the same length" -- a plain object that happens to declare its
+    // with the same length": a plain object that happens to declare its
     // own `length` matching the array's is the one input that exposes this:
     // `!Array.isArray(a) || !Array.isArray(b)` is what actually catches it.
     expect(deepEqual([1, 2], { length: 2, 0: 1, 1: 2 })).toBe(false)

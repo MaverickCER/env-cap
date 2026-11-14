@@ -22,7 +22,7 @@ function withOneLeafChanged(value: unknown): unknown {
   return Object.fromEntries([[key, withOneLeafChanged(first)], ...rest])
 }
 
-describe("deepEqual -- property-based", () => {
+describe("deepEqual: property-based", () => {
   it("is reflexive", () => {
     fc.assert(
       fc.property(jsonValue, (value) => deepEqual(value, value)),

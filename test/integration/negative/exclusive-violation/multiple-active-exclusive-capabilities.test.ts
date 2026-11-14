@@ -5,12 +5,12 @@ import { isInstalled, runExpectingFailure } from "../../../support/example-runne
 
 /**
  * multiple-active-exclusive-capabilities is deliberately, permanently
- * broken -- two active contracts (`mongodb`, `postgres`) sharing an
- * `exclusiveGroup` -- to fix that one specific failure mode in place.
+ * broken (two active contracts (`mongodb`, `postgres`) sharing an
+ * `exclusiveGroup`) to fix that one specific failure mode in place.
  * Unlike missing-env-var, generation itself always fails here (ADR 0009:
  * exclusive-group violations are always hard errors, never gated by
  * `onIncompatibility`), so there is no successfully-generated artifact set
- * for this fixture and therefore **no golden comparison** -- `generate:env`
+ * for this fixture and therefore **no golden comparison**; `generate:env`
  * (and therefore `typecheck`/`start`, which both run it first) never gets
  * past generation to write anything at all. This file verifies
  * `generate:env` fails with the exact `EnvProjectGenerationError` content

@@ -15,25 +15,22 @@ import type { BuildFileSystem } from "./types.js"
  * The persisted evidence artifact and everything that reads/diffs it.
  *
  * Not a sibling of `env.manifest.ts`. `env.manifest.ts` is a *runtime build
- * artifact* -- real TypeScript, imported and executed by the running
+ * artifact*: real TypeScript, imported and executed by the running
  * application. This module's own artifact is a *CI/reporting artifact*: the
  * literal `EvidenceModel` a caller gets back from `generateEvidenceModel()`,
- * serialized to disk, read only by `--check`, by CI tooling, and by whatever
- * a project's own reporting/projection code chooses to do with it -- never
- * imported by anything under `src/runtime/`, never a build input to the
- * application itself. Its location is never derived from a manifest's own
- * output path (there is no `<manifest>.snapshot.json` sidecar mechanism
- * anymore); a caller supplies it directly, independent of whether a `.ts`
- * manifest is even being generated at all.
+ * serialized to disk. Only `--check`, CI tooling and a project's own
+ * reporting/projection code read it. Nothing under `src/runtime/` imports it,
+ * and it is never a build input to the application itself. Its location is never derived from a
+ * manifest's own output path; there is no `<manifest>.snapshot.json` sidecar. A caller supplies
+ * it directly, whether or not a `.ts` manifest is being generated at all.
  *
- * Two jobs, one file: this is both (a) the baseline `diffContracts()`
- * compares the current run's `ContractModel` against to produce
- * `ManifestChangeReport`, and (b) the committed-baseline content-hash source
- * `buildCitationSnapshots()` (`citation-verification.ts`) uses to tell a
- * "fresh" developer dynamic-access citation from a "stale" one (ADR 0037).
- * Whether a project commits this file to git or regenerates it fresh every CI
- * run is that project's call -- a missing file is always treated as the normal
- * first-run state, never an error.
+ * Two jobs, one file. (a) It is the baseline `diffContracts()` compares the
+ * current run's `ContractModel` against to produce `ManifestChangeReport`.
+ * (b) It is the committed content-hash baseline `buildCitationSnapshots()`
+ * (`citation-verification.ts`) uses to tell a "fresh" developer
+ * dynamic-access citation from a "stale" one (ADR 0037).
+ * A project chooses whether to commit this file or regenerate it every CI
+ * run. A missing file is always the normal first-run state, never an error.
  */
 
 /** One field's before/after value in a {@link ManifestContractUpdate} or {@link ManifestVariableUpdate}. */
@@ -46,10 +43,10 @@ export interface ManifestFieldChange {
   readonly current: string | undefined
 }
 
-/** Identifies one contract for {@link ManifestChangeReport} purposes -- see {@link ContractRef} for why neither a `contractName` nor a pre-formatted `identity` is carried here. */
+/** Identifies one contract for {@link ManifestChangeReport} purposes: see {@link ContractRef} for why neither a `contractName` nor a pre-formatted `identity` is carried here. */
 export type ManifestContractRef = ContractRef
 
-/** Identifies one variable for {@link ManifestChangeReport} purposes -- its owning contract's identity plus its own key. See {@link ContractRef}. */
+/** Identifies one variable for {@link ManifestChangeReport} purposes: its owning contract's identity plus its own key. See {@link ContractRef}. */
 export interface ManifestVariableRef extends ContractRef {
   /** The environment variable name. */
   readonly key: string
@@ -68,15 +65,13 @@ export interface ManifestVariableUpdate extends ManifestVariableRef {
 }
 
 /**
- * The result of diffing two `ContractModel.contracts` arrays -- see
- * `diffContracts()`. Comprehensive by construction: every own field of
- * `ContractModelContract`/`ContractModelVariable` (schema facts --
- * `hasDefault`/`processorSource`/`validatorSource`/... -- alongside
- * documented metadata) participates, and every discovered contract is
- * covered, not only active ones. A field-by-field, hand-maintained diff
- * (this module's previous design) would need updating by hand every time
- * Contract Model gains a field; the generic differ below can't drift out of
- * sync with the model it diffs.
+ * The result of diffing two `ContractModel.contracts` arrays: see
+ * `diffContracts()`. Comprehensive by construction. Every own field of
+ * `ContractModelContract`/`ContractModelVariable` participates: schema facts
+ * (`hasDefault`/`processorSource`/`validatorSource`/...) and documented
+ * metadata. Every discovered contract is covered, not only active ones.
+ * `diffContracts()` compares every field generically, so a new Contract Model
+ * field is diffed without an edit here.
  */
 export interface ManifestChangeReport {
   /** Contracts present now but not in the previous snapshot. */
@@ -93,7 +88,7 @@ export interface ManifestChangeReport {
   readonly updatedVariables: readonly ManifestVariableUpdate[]
 }
 
-/** `${file}#${exportName}` -- built here, at the point of use, purely to key the two `Map`s `diffContracts()` matches previous against current with. Deliberately never stored on a ref; see {@link ContractRef}. */
+/** `${file}#${exportName}`: built here, at the point of use, purely to key the two `Map`s `diffContracts()` matches previous against current with. Deliberately never stored on a ref; see {@link ContractRef}. */
 function contractIdentity(contract: ContractRef): string {
   return `${contract.file}#${contract.exportName}`
 }
@@ -118,7 +113,7 @@ function toComparable(value: unknown): string | undefined {
 /**
  * Walks every own key of `previous`/`current` (except `skipKeys`, the
  * identity fields already used to match this pair up), appending a
- * `ManifestFieldChange` for each that differs. Generic on purpose -- see
+ * `ManifestFieldChange` for each that differs. Generic on purpose: see
  * `ManifestChangeReport`'s own doc comment.
  */
 function genericFieldChanges(
@@ -133,11 +128,11 @@ function genericFieldChanges(
     const previousValue = previous[key]
     const currentValue = current[key]
     if (deepEqual(previousValue, currentValue)) continue
-    // `metadata` is a free-form record (ADR 0035) -- reported per-key
+    // `metadata` is a free-form record (ADR 0035): reported per-key
     // (`metadata.<key>`), not as one opaque blob, so a report reader sees
     // exactly which key changed. Every other field (including every other
     // object-shaped one, e.g. `defaultValue`) is reported as a single,
-    // whole-value change -- there's no equivalent "named sub-keys a reader
+    // whole-value change: there's no equivalent "named sub-keys a reader
     // would want broken out" structure to any of them.
     if (key === "metadata") {
       changes.push(
@@ -157,7 +152,7 @@ function genericFieldChanges(
   return changes
 }
 
-/** Per-key diff of the `metadata` record -- a changed, added, or removed key each become their own `metadata.<key>` field entry. */
+/** Per-key diff of the `metadata` record: a changed, added, or removed key each become their own `metadata.<key>` field entry. */
 function recordFieldChanges(
   previous: Readonly<Record<string, unknown>> | undefined,
   current: Readonly<Record<string, unknown>> | undefined,
@@ -179,9 +174,9 @@ function recordFieldChanges(
 
 /**
  * Deterministic order for every array in a `ManifestChangeReport`: by file,
- * then export name, then (for a variable ref) key. Derives the same total
- * order the removed `identity` field's plain string comparison used to give,
- * from the identity fields themselves -- see {@link ContractRef}.
+ * then export name, then (for a variable ref) key. It sorts on the identity
+ * fields themselves, so no combined identity string is needed: see
+ * {@link ContractRef}.
  */
 function byIdentity<T extends ContractRef & { key?: string }>(a: T, b: T): number {
   return (
@@ -192,7 +187,7 @@ function byIdentity<T extends ContractRef & { key?: string }>(a: T, b: T): numbe
 }
 
 /**
- * Pure. `previous === undefined` (no snapshot last time, for any reason --
+ * Pure. `previous === undefined` (no snapshot last time, for any reason:
  * see `EvidenceSnapshotReadResult`) reports everything in `current` as
  * added, nothing as removed/updated.
  */
@@ -281,11 +276,11 @@ export async function readEvidenceSnapshot(
 ): Promise<EvidenceSnapshotReadResult> {
   let text: string
   try {
-    // "utf8" vs "" encoding equivalence, same established class as
-    // resolve-package-schema.ts/evidence-cache.ts/evidence-fingerprint.ts:
-    // the result is immediately JSON.parse()d below, and JSON.parse()
-    // coerces a Buffer (what "" would return) via .toString() identically
-    // to a decoded string for any valid-UTF-8 JSON text.
+    // "utf8" vs "" encoding equivalence, the same class as
+    // resolve-package-schema.ts/evidence-cache.ts/evidence-fingerprint.ts.
+    // The result is JSON.parse()d below. JSON.parse() coerces a Buffer (what
+    // "" would return) via .toString(), identically to a decoded string for
+    // any valid-UTF-8 JSON text.
     text = await fs.readFile(snapshotPath, "utf8")
   } catch {
     return { status: "missing" }
@@ -314,37 +309,36 @@ export async function writeEvidenceSnapshot(
   fs: BuildFileSystem,
 ): Promise<void> {
   await fs.mkdir(path.dirname(snapshotPath), { recursive: true })
-  // "utf8" vs "" encoding equivalence -- verified via a real `node -e`
-  // byte-for-byte comparison of the two written files (both encodings write
-  // a string's UTF-8 bytes identically; "" is not a special "raw" mode for
-  // writeFile the way it changes readFile's return type).
+  // "utf8" vs "" encoding equivalence, verified by a byte-for-byte `node -e`
+  // comparison of the two written files. Both encodings write a string's
+  // UTF-8 bytes identically. "" is not a "raw" mode for writeFile, unlike
+  // the way it changes readFile's return type.
   await fs.writeFile(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8")
 }
 
 /**
- * `snapshot`, with two fields normalized to a constant -- the comparison
+ * `snapshot`, with two fields normalized to a constant: the comparison
  * basis `--check` uses:
  *
  * - `provenance.generatedAt` is a live timestamp stamped fresh on every real
- *   `generate` run; comparing it byte-for-byte against a
- *   freshly-rendered-for-`--check` copy would report drift every single
- *   time, even with zero real changes, since the two renders' timestamps
- *   can never match. `toolVersion`/`commit` stay compared as-is -- both are
- *   real, meaningfully-stable provenance across a `--check` run and the
- *   `generate` run it's verifying, not something that varies on its own.
+ *   `generate` run. The two renders' timestamps can never match. So a
+ *   byte-for-byte comparison with a copy rendered for `--check` would report
+ *   drift every time, even with zero real changes. `toolVersion`/`commit`
+ *   stay compared as-is. Both are stable provenance across a `--check` run
+ *   and the `generate` run it verifies; neither varies on its own.
  * - `change` describes "what's different from whatever snapshot was on disk
- *   the moment this run computed it" -- inherently not reproducible by a
- *   second computation, since by the time `--check` re-derives it, the file
- *   just written *is* the new baseline (the diff naturally comes back empty
- *   against itself). This isn't drift; it's `change`'s own definition, so
- *   `--check` doesn't attempt to re-verify it, the same treatment as
- *   `generatedAt`.
- * - every `now`-relative expiry countdown -- `lifecycle.expiring[].daysRemaining`
- *   and the day-count inside an `EXPIRED`/`EXPIRING_SOON` finding message -- is
- *   the same class as `generatedAt`: a static `expiresAt` produces a different
- *   number every day, so a committed artifact would go "stale" with zero real
- *   edits. Normalized to a constant so `--check` (and the golden tests) verify
- *   the substance, not the calendar. The raw `expiresAt` strings stay compared.
+ *   the moment this run computed it". A second computation cannot reproduce
+ *   it. By the time `--check` re-derives it, the file just written *is* the
+ *   new baseline, so the diff comes back empty against itself. This isn't
+ *   drift; it's `change`'s own definition. So `--check` doesn't re-verify it,
+ *   the same treatment as `generatedAt`.
+ * - every `now`-relative expiry countdown is the same class as `generatedAt`.
+ *   That covers `lifecycle.expiring[].daysRemaining` and the day-count inside
+ *   an `EXPIRED`/`EXPIRING_SOON` finding message. A static `expiresAt`
+ *   produces a different number every day. So a committed artifact would go
+ *   "stale" with zero real edits. These are normalized to a constant, so
+ *   `--check` (and the golden tests) verify the substance, not the calendar.
+ *   The raw `expiresAt` strings stay compared.
  */
 export function normalizeEvidenceSnapshotForComparison(snapshot: EvidenceModel): EvidenceModel {
   return {
@@ -377,10 +371,10 @@ export function normalizeEvidenceSnapshotForComparison(snapshot: EvidenceModel):
   }
 }
 
-/** Everything reading a previous evidence snapshot and diffing the current run against it produces, in one call. Never writes anything itself -- writing the fresh snapshot stays a separate, explicit step on the real write path. */
+/** Everything reading a previous evidence snapshot and diffing the current run against it produces, in one call. Never writes anything itself: writing the fresh snapshot stays a separate, explicit step on the real write path. */
 export interface EvidenceChangesComputation {
   readonly report: ManifestChangeReport
-  /** Set only when the previous snapshot existed but was unusable (corrupt JSON or an unrecognized `schemaVersion`) -- never set for the ordinary "no snapshot yet" first-run case. */
+  /** Set only when the previous snapshot existed but was unusable (corrupt JSON or an unrecognized `schemaVersion`). Never set for the ordinary "no snapshot yet" first-run case. */
   readonly readWarning: ParseWarning | undefined
   readonly dynamicAccessAcknowledgments: ReadonlyMap<string, readonly DynamicAccessAssertion[]>
   readonly dynamicAccessCitationProblems: readonly DynamicAccessCitationProblem[]
@@ -388,11 +382,11 @@ export interface EvidenceChangesComputation {
 
 /**
  * The one I/O-performing helper every caller wanting change/citation-freshness
- * data shares: reads the previous evidence snapshot (if `snapshotPath` is
- * given and a file exists there), diffs the current run's `ContractModel`
+ * data shares. It reads the previous evidence snapshot (if `snapshotPath` is
+ * given and a file exists there). It diffs the current run's `ContractModel`
  * against it, and re-checks every current `dynamicAccess` citation's
- * freshness. `snapshotPath` is always caller-supplied, directly -- there is
- * no derivation from a manifest's own output path.
+ * freshness. `snapshotPath` is always caller-supplied, never derived from a
+ * manifest's own output path.
  */
 export async function computeEvidenceChanges(
   root: string,

@@ -5,27 +5,27 @@ import { compareGoldenArtifacts, isInstalled, runScript } from "../../../support
 
 /**
  * evidence-projections demonstrates env-cap's first-party reference
- * projections -- the original ten (ADR 0024/0031/0032) plus an eleventh,
+ * projections: the original ten (ADR 0024/0031/0032) plus an eleventh,
  * Joined Variable View, added afterward as a copyable cross-model join
- * example -- each built entirely through the public
- * API -- generateEvidenceModel() (@maverickcer/env-cap/build) and
- * defineEvidenceProjection() (@maverickcer/env-cap/evidence) -- with no
+ * example. Each is built entirely through the public API
+ * (generateEvidenceModel() from @maverickcer/env-cap/build and
+ * defineEvidenceProjection() from @maverickcer/env-cap/evidence), with no
  * privileged internal access, the same two entry points any consumer would
  * import. It reuses examples/application's exact schema (src/env.ts) so each
  * projection's output can be verified against the existing, already-tested
  * rendering path on the exact same input.
  *
  * Each `project:*` npm script already runs `generate:env` first as its own
- * baseline step (see package.json) -- these tests don't call it separately
+ * baseline step (see package.json): these tests don't call it separately
  * beforehand, to avoid redundant subprocess overhead across four tests each
  * spawning real `npm run` child processes.
  *
- * Phase 15: the ".env.example Artifact" -- byte-identical to the direct
+ * Phase 15: the ".env.example Artifact"; byte-identical to the direct
  * generateEnvArtifacts() path, by construction (see projections/env-example.mjs).
  * Phase 16-18: verified via the standard expected/ golden-file mechanism
  * instead of byte-identity, since Contract Model's canonical ordering
  * (contracts and variables alike) diverges from the direct path's
- * scan/declaration order for schemas like this one -- see each
+ * scan/declaration order for schemas like this one; see each
  * projection's own doc comment.
  */
 const EXAMPLE = "evidence-projections"
@@ -111,7 +111,7 @@ describe(EXAMPLE, () => {
   // covered by test/build/change-model.test.ts; this only exercises the
   // projection's own reshape over already-tested data.
   it.skipIf(!installed)(
-    "projected Configuration Migration matches its golden expected/ copy (empty -- no changes since the snapshot)",
+    "projected Configuration Migration matches its golden expected/ copy (empty: no changes since the snapshot)",
     async () => {
       const stdout = runScript(EXAMPLE_DIR, "project:migration")
       expect(stdout).toContain("No migration steps needed")
@@ -130,10 +130,10 @@ describe(EXAMPLE, () => {
 
   // Correctly empty for this fixture, same reason as Migration/Audit
   // Trail's. The correlation logic itself was verified manually against a
-  // fresh (no-snapshot) run during development -- every changed variable
+  // fresh (no-snapshot) run during development (every changed variable
   // and the contract correctly correlated to src/server.ts as their one
   // real consumer, with totalDistinctFilesAffected deduplicating across
-  // both -- see projections/change-impact-blast-radius.mjs's own doc
+  // both) see projections/change-impact-blast-radius.mjs's own doc
   // comment.
   it.skipIf(!installed)(
     "projected Change Impact B (blast radius) matches its golden expected/ copy",

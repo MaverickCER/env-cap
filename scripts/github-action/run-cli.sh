@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Runs `env-cap --json <args>` for the composite action. Every action input arrives as an
-# environment variable (never interpolated into this script's text, which is GitHub's documented
-# injection anti-pattern), and the package is never "whatever npm latest is at run time": it is the
-# project's own local install, or an explicit version.
+# environment variable, never interpolated into this script's text (GitHub's documented injection
+# anti-pattern). The package is the project's own install or an explicit version, never npm's latest.
 #
 #   INPUT_ARGS      arguments for `env-cap --json`, split on whitespace into an array
 #   INPUT_VERSION   version to fetch via npx when env-cap is not installed locally

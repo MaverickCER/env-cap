@@ -3,7 +3,7 @@ import { checkArtifactsFresh, isExampleInstalled, runExampleStart } from "./supp
 
 /**
  * application (examples/application) is the first of env-cap's three
- * flagship examples -- "how does this make my code better?" for an
+ * flagship examples: "how does this make my code better?" for an
  * individual developer. It demonstrates the simplest possible starting
  * point: one centralized `createEnv()` contract for a whole small app, no
  * capability-per-file ownership required. The manifest and persisted
@@ -16,7 +16,7 @@ import { checkArtifactsFresh, isExampleInstalled, runExampleStart } from "./supp
  *  - fail-fast `validateEnv()` startup against the real, committed `.env`
  *  - the committed generated output (manifest, docs/ENVIRONMENT.md,
  *    docs/OWNERSHIP.md, docs/env.evidence.json, .env.example) is exactly
- *    what a fresh run produces -- asserted through the example's own
+ *    what a fresh run produces; asserted through the example's own
  *    `check` script, against its real committed files, with no `expected/`
  *    mirror tree. See `support.ts`.
  */
@@ -24,7 +24,7 @@ const EXAMPLE = "application"
 const installed = isExampleInstalled(EXAMPLE)
 
 // Every test here shells out to a real npm script, which spawns its own Node
-// process -- Vitest's 5s default assumes an in-process unit test.
+// process: Vitest's 5s default assumes an in-process unit test.
 const SUBPROCESS_TIMEOUT_MS = 30_000
 
 describe(`example: ${EXAMPLE}`, () => {

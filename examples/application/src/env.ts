@@ -2,14 +2,14 @@ import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap";
 import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
- * Using the optional helpers subpath for common coercions -- entirely
+ * Using the optional helpers subpath for common coercions: entirely
  * equivalent to writing the processor/validator functions by hand.
  * In production, we highly recommend forgoing the helpers in favor of using
  * your existing env validation library of choice, be it Zod, envalid, Joi, or
  * something else.
  *
- * This example intentionally keeps every variable in one centralized schema --
- * the way most teams already have a single `env.ts` today -- to show that
+ * This example intentionally keeps every variable in one centralized schema (
+ * the way most teams already have a single `env.ts` today) to show that
  * env-cap doesn't require capability-per-file ownership on day one. This one
  * `createEnv()` call still gets fail-fast startup validation, generated
  * documentation, a generated `.env.example`, and an ownership/blast-radius
@@ -21,8 +21,8 @@ import { processors, validators } from "@maverickcer/env-cap/helpers";
  * for fully split, multi-contract examples.
  *
  * The schema (createEnv) and its documentation (documentEnv) are split on
- * purpose: createEnv only ever sees processor/validator/default -- the
- * fields validateEnv() actually reads -- so nothing here is retained in
+ * purpose: createEnv only ever sees processor/validator/default (the
+ * fields validateEnv() actually reads) so nothing here is retained in
  * memory beyond what's needed to process the environment.
  */
 const schema = {

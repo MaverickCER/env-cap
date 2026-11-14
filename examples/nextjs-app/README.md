@@ -31,7 +31,7 @@ Build the repository root first ([examples/README.md](../README.md#before-you-ru
 | 2    | `npm run build` | `0`                | ``[validate-env] Environment contract satisfied -- proceeding to `next build`.`` |
 | 3    | `npm start`     | runs until stopped | none; open the printed URL                                                       |
 
-CI's `examples` job runs step 2 only. That job does not yet block a merge, and nothing in CI runs `next start` or sends a request.
+CI's `examples` job runs step 2 only, and `required` waits for it. Nothing in CI runs `next start` or sends a request.
 
 `npm run build` runs, in order:
 

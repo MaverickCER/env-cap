@@ -47,12 +47,12 @@ describe("getStaticPropertyName", () => {
     expect(getStaticPropertyName(propertyNameOf(`{ [someExpr]: 1 }`))).toBeUndefined()
   })
 
-  it("returns undefined for a private-identifier-shaped key -- syntactically parseable (TS's error-tolerant parser still produces a PrivateIdentifier node here), even though it's not valid outside a class body", () => {
+  it("returns undefined for a private-identifier-shaped key: syntactically parseable (TS's error-tolerant parser still produces a PrivateIdentifier node here), even though it's not valid outside a class body", () => {
     // Every OTHER recognized `PropertyName` kind (Identifier, StringLiteral,
     // NumericLiteral) happens to share the exact same `.text` semantics, so
     // this is the one input that actually distinguishes "properly matched
     // by its own specific type guard" from "coincidentally read `.text` off
-    // whichever guard matched first" -- a `PrivateIdentifier`'s `.text`
+    // whichever guard matched first": a `PrivateIdentifier`'s `.text`
     // (`"#foo"`, confirmed via a real parse) is neither `undefined` nor any
     // other branch's value, so only the real, unmutated chain of checks
     // correctly falls through to `undefined` for it.
@@ -116,7 +116,7 @@ describe("evaluateLiteral", () => {
     expect(evaluateLiteral(expressionOf(`-"1"`))).toEqual({ ok: false })
   })
 
-  it("does not resolve a DIFFERENT prefix unary operator, even applied to a real number literal -- only a leading minus is a resolvable literal", () => {
+  it("does not resolve a DIFFERENT prefix unary operator, even applied to a real number literal: only a leading minus is a resolvable literal", () => {
     // `+1`/`~1`/`!1` are all `ts.isPrefixUnaryExpression` too; only the
     // specific `MinusToken` operator is meant to resolve.
     expect(evaluateLiteral(expressionOf(`+1`))).toEqual({ ok: false })

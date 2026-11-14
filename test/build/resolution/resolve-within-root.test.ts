@@ -53,7 +53,7 @@ describe("resolveWithinRoot", () => {
       expect(result.issue.files).toEqual(["../../etc/passwd"])
       expect(result.issue.reason).toBe(
         `"location" ("../../etc/passwd") resolves to "${path.resolve(root, "../../etc/passwd")}", which is outside "root" ("${root}"). ` +
-          "generateEnvManifest() refuses to write outside root -- use a path nested under root instead.",
+          "generateEnvManifest() refuses to write outside root. Use a path nested under root instead.",
       )
     }
   })
@@ -85,7 +85,7 @@ describe("resolveWithinRoot", () => {
       await fs.rm(tmpRoot, { recursive: true, force: true })
     })
 
-    it("does NOT resolve a symlink's real target -- purely lexical by design (realpath-aware containment for a path that already exists and crosses a real trust boundary is resolve-package-schema.ts's job, not this one's -- see ADR 0014)", async () => {
+    it("does NOT resolve a symlink's real target: purely lexical by design (realpath-aware containment for a path that already exists and crosses a real trust boundary is resolve-package-schema.ts's job, not this one's; see ADR 0014)", async () => {
       const outsideDir = await fs.mkdtemp(
         path.join(os.tmpdir(), "env-cap-resolve-within-root-outside-"),
       )
@@ -101,7 +101,7 @@ describe("resolveWithinRoot", () => {
           "generateEnvManifest",
         )
 
-        // Lexically, "escape-link.ts" resolves to a path inside tmpRoot --
+        // Lexically, "escape-link.ts" resolves to a path inside tmpRoot:
         // resolveWithinRoot must report ok:true (proving, not "fixing", the
         // intentional scope limit), even though the symlink's real target
         // is outside tmpRoot.

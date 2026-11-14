@@ -1,11 +1,11 @@
 ---
 name: env-cap
-description: Load when a task creates or edits an env.schema.ts, calls createEnv, documentEnv or validateEnv, or generates env-cap manifests, docs or reports. Skip it for other environment work.
+description: env-cap contracts. Load when a task writes or edits an env.schema.ts, calls createEnv, documentEnv or validateEnv, or generates the manifest, docs or reports from them.
 ---
 
 # @maverickcer/env-cap
 
-env-cap gives each capability (a feature, service or package) its own environment contract: declared once as a static schema, validated at startup, and documented and aggregated at build time.
+Each feature declares the environment variables it needs and their format. Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire. A feature is a folder or an installable package; the docs also call it a capability.
 
 Not for: loading .env files, storing secrets, or a single global env object.
 
@@ -49,17 +49,16 @@ From `examples/team-service/features/prisma/env.schema.ts`.
 
 ## Rules
 
-- Write each schema as a static literal in the module that owns it: schemas are parsed as source, never executed, so spreads, factories and re-exports are not understood.
-- Put `description`, `owner`, `expiresAt` and `category` in `documentEnv`. `createEnv` entries take `default`, `processor`, `validator`, `context`; its options `name` and `source: import.meta.url`.
-- Read a value through its owning contract (`paymentsEnv.STRIPE_KEY`). Never build a merged env object.
+- Write each schema as a static literal in the module that owns it. Schemas are parsed, never executed, so spreads, factories and re-exports stay unresolved.
+- Put `description`, `owner`, `expiresAt`, `refreshInstructions` and `category` in `documentEnv`. `createEnv` entries take `default`, `processor`, `validator`, `context`; its options `name` and `source: import.meta.url`.
+- Read a value through its owning contract (`paymentsEnv.STRIPE_KEY`).
 - Call `validateEnv` once at startup, directly. Run the `generate*` functions only in a build script or CI.
-- Import only from package.json exports; `/build`, `/node` and `/eslint-plugin` are Node-only, never in browser code.
 
 ## Rely on
 
 - Reading a contract before `validateEnv` has run throws `EnvNotReadyError`.
-- Errors never contain values. Keep raw values out of your own processor and validator messages, and do not spread a contract.
-- `required: true` in `documentEnv` only documents a variable as required. Enforcement is the validator rejecting an empty value.
+- Errors carry names, never values. Keep values out of your processor and validator messages; spreading a contract reads every value.
+- `required: true` in `documentEnv` only documents a variable; the validator must reject an empty value.
 - `context` is a plain string your application activates, not a security boundary.
 - Two contracts may declare one variable name. Conflicting processor return types and exclusive-group violations are errors; differing processor or validator sources warn, and block under `onIncompatibility: "throw"`.
 
@@ -67,15 +66,15 @@ From `examples/team-service/features/prisma/env.schema.ts`.
 
 | Instead of | Do this |
 | --- | --- |
-| `createEnv({ ...base })`, or a schema built by a function | Declare the schema as a literal object in the module that owns it, then pass that one binding to `createEnv` and `documentEnv`. |
+| `createEnv({ ...base })`, or a schema built by a function | One literal object, passed by the same binding to `createEnv` and `documentEnv`. |
 | `transformer` | `processor`. There is no alias. |
 | A live expiry fetched inside `env.schema.ts` | Keep a static `expiresAt`; pass `liveExpirationDates` to the generator. |
 
 ## Verify
 
-1. Run the project's type check and tests.
-2. After changing an `env.schema.ts`, update its `documentEnv()` entry and run `generate:env`. Commit generated files only if the project does; never hand-edit one.
-3. Check imports against package.json exports.
+1. The project's type check and tests pass.
+2. After changing an `env.schema.ts`, update its `documentEnv()` entry and rerun the generate script (`generate:env`, or `node scripts/generate-env.mjs`); it exits 0. Change generated files only through that script, and commit them only if the project does.
+3. Check imports against package.json `exports`.
 
 Report any check you could not run, and any assumption you made.
 
@@ -88,4 +87,4 @@ Report any check you could not run, and any assumption you made.
 
 ## Authority
 
-Target `@maverickcer/env-cap@0.7.5`. The installed package's exports and type declarations are the API: do not invent exports, options or return values. Behaviour is established by its tests and examples. If this skill and the code disagree, say so rather than guessing.
+Target `@maverickcer/env-cap@0.7.5`. The installed package's exports and type declarations are the API: use only what they declare. Its tests and examples establish its behaviour. When this skill and the code disagree, report the disagreement before acting on either.

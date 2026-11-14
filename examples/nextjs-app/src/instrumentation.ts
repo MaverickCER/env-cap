@@ -2,7 +2,7 @@
 // register() runs once, before the server starts handling requests, for both
 // `next dev` and `next start`. Importing the same "./env.js" next.config.ts
 // already imports at build time means this file adds no second copy of the
-// validation logic -- only a second trigger point, for the runtime paths
+// validation logic: only a second trigger point, for the runtime paths
 // next.config.ts's build-time evaluation doesn't cover.
 export async function register(): Promise<void> {
   if (process.env["NEXT_RUNTIME"] === "nodejs") {

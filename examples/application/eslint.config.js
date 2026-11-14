@@ -4,8 +4,8 @@ import tseslint from "typescript-eslint";
 
 /**
  * Wires up `env-cap/no-raw-process-env` (see the package README's "ESLint
- * plugin" section) across this example's own real application code -- not a
- * synthetic fixture -- so `npm run lint` proves the rule doesn't get in the
+ * plugin" section) across this example's own real application code (not a
+ * synthetic fixture) so `npm run lint` proves the rule doesn't get in the
  * way of correctly-structured code: `server.ts`/`startup.ts` only ever read
  * the environment through `env.ts`'s generated contract (or, for
  * `startup.ts`, pass the whole `process.env` object straight into

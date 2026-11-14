@@ -74,7 +74,7 @@ describe("checkEnvArtifacts", () => {
     expect(result.ok).toBe(true)
     expect(result.findings.every((f) => f.status === "ok")).toBe(true)
     expect(result.findings).toHaveLength(4)
-    // Every artifact's own `artifact` label, not just an overall count --
+    // Every artifact's own `artifact` label, not just an overall count:
     // proves the "usage" literal specifically (no existing test elsewhere
     // in this file names it).
     expect(result.findings.map((f) => f.artifact).sort()).toEqual([
@@ -84,7 +84,7 @@ describe("checkEnvArtifacts", () => {
       "usage",
     ])
     // exactOptionalPropertyTypes: `detail` must be genuinely ABSENT for an
-    // "ok" finding, not present-but-undefined -- `"detail" in f` (not
+    // "ok" finding, not present-but-undefined; `"detail" in f` (not
     // `f.detail === undefined`, which `toEqual`/`objectContaining` would
     // treat as equivalent to absent anyway) is what actually distinguishes
     // the two.
@@ -99,8 +99,8 @@ describe("checkEnvArtifacts", () => {
     expect(after).toEqual(before)
   })
 
-  it("reports the docs artifact as ok when it correctly lists an entirely UNDOCUMENTED contract and an undocumented variable -- both mappings must reproduce identically on re-check", async () => {
-    // The baseline fixture's STRIPE_KEY is fully documented -- every other
+  it("reports the docs artifact as ok when it correctly lists an entirely UNDOCUMENTED contract and an undocumented variable: both mappings must reproduce identically on re-check", async () => {
+    // The baseline fixture's STRIPE_KEY is fully documented: every other
     // test's `undocumentedContracts`/`undocumentedVariables` are empty
     // arrays, which a broken `.map()` callback can't be distinguished from
     // (mapping nothing produces `[]` either way). A contract with NO
@@ -132,7 +132,7 @@ export const undocumentedEnv = createEnv(schema, { name: "undocumented" });
   it("reports the docs artifact as ok on --check immediately after the project's very first-ever generation (no warm-up run needed)", async () => {
     // A true first-ever generateEnvArtifacts() call has no previousContent to
     // diff against, so renderDocs() must already render a self-consistent
-    // "No changes." summary rather than omitting the section -- see
+    // "No changes." summary rather than omitting the section: see
     // computeChangeSummary()'s docstring in docs.ts. Without that fix, a
     // single generation followed immediately by --check always reported docs
     // as stale, for a reason unrelated to any real drift.
@@ -152,7 +152,7 @@ export const undocumentedEnv = createEnv(schema, { name: "undocumented" });
 
     // Real time has moved forward since generation, so a naive byte-for-byte
     // comparison against a freshly-rendered "_Generated <now>_" line would
-    // always report "stale" -- normalizeGeneratedLine() must prevent that.
+    // always report "stale": normalizeGeneratedLine() must prevent that.
     const result = await checkEnvArtifacts({
       fs: nodeBuildFs,
       root: fixtureRoot,
@@ -171,7 +171,7 @@ export const undocumentedEnv = createEnv(schema, { name: "undocumented" });
     const beforeManifest = await fs.readFile(manifestPath, "utf8")
     const beforeDocs = await fs.readFile(docsPath, "utf8")
 
-    // Add a whole new contract -- manifest.ts's output is a list of imported
+    // Add a whole new contract: manifest.ts's output is a list of imported
     // contracts (agnostic to what's *inside* an existing one), so a new
     // variable on the existing "payments" contract alone wouldn't move it;
     // a new discovered contract changes both the manifest and docs output.
@@ -222,7 +222,7 @@ documentEnv(schema, {
       expect(evidenceFinding?.status).toBe("ok")
     })
 
-    it("reports the evidence artifact as stale once the schema changes -- content comparison is real, not vacuously always-ok", async () => {
+    it("reports the evidence artifact as stale once the schema changes: content comparison is real, not vacuously always-ok", async () => {
       await generateEnvArtifacts(evidenceOptions)
       await write(
         "features/notifications/env.schema.ts",
@@ -271,8 +271,8 @@ documentEnv(schema, {
     await expect(fs.access(docsPath)).rejects.toThrow()
   })
 
-  it("result.ok is false when only SOME findings are ok (mixed), not just when ALL are -- distinguishes .every() from .some()", async () => {
-    // Only the manifest pass has ever run -- its own finding is genuinely
+  it("result.ok is false when only SOME findings are ok (mixed), not just when ALL are: distinguishes .every() from .some()", async () => {
+    // Only the manifest pass has ever run: its own finding is genuinely
     // "ok", while docs (requested here for the first time) is "missing".
     // `.some((f) => f.status === "ok")` would wrongly report `ok: true`
     // here (the manifest finding alone satisfies it); only `.every()` is
@@ -386,7 +386,7 @@ documentEnv(legacySchema, { owner: "legacy-team", active: false });
     expect(envExampleFinding?.detail).toBe("1 stale, 1 to comment, 1 to add")
   })
 
-  it("reports drift from `variablesToAdd` alone (0 stale, 0 to comment) -- isolates one term of driftCount's 3-way sum", async () => {
+  it("reports drift from `variablesToAdd` alone (0 stale, 0 to comment): isolates one term of driftCount's 3-way sum", async () => {
     await generateEnvArtifacts({
       fs: nodeBuildFs,
       root: fixtureRoot,
@@ -422,14 +422,14 @@ documentEnv(schema, {
     expect(envExampleFinding?.detail).toBe("0 stale, 0 to comment, 1 to add")
   })
 
-  it("reports drift from `variablesToComment` alone (0 stale, 0 to add) -- isolates a different term of driftCount's 3-way sum", async () => {
+  it("reports drift from `variablesToComment` alone (0 stale, 0 to add): isolates a different term of driftCount's 3-way sum", async () => {
     await generateEnvArtifacts({
       fs: nodeBuildFs,
       root: fixtureRoot,
       docs: { location: "docs/ENVIRONMENT.md", envExample: { location: ".env.example" } },
     })
 
-    // "payments" deactivated -- STRIPE_KEY is still live in the committed
+    // "payments" deactivated: STRIPE_KEY is still live in the committed
     // .env.example, but no active contract needs it anymore.
     await write(
       "features/payments/env.schema.ts",
@@ -463,9 +463,9 @@ documentEnv(schema, { owner: "payments-team", active: false });
 
   it("throws on a blocking finding (a manifest exclusive-group violation, ADR 0009), distinct from the path-escape throw above", async () => {
     // The path-escape test above throws from inside computeArtifacts() before
-    // checkEnvArtifacts ever inspects `c.blocking` -- this is the only case
+    // checkEnvArtifacts ever inspects `c.blocking`: this is the only case
     // that reaches checkEnvArtifacts's own `if (c.blocking.length > 0) throw`.
-    // Docs/ownership never contribute to `blocking` at all (ADR 0038) -- the
+    // Docs/ownership never contribute to `blocking` at all (ADR 0038): the
     // manifest pass's provable exclusive-group/compatibility errors are the
     // only remaining source.
     await write(

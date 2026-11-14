@@ -1,19 +1,21 @@
 # Duplicate variable metadata example
 
-Two independently-owned, both-active features -- `notifications` and `audit-log` -- each need to
-receive webhook deliveries and both happen to declare a variable named `WEBHOOK_URL`. That's a
-naming coincidence, not a shared contract: each processes its own copy of the raw value, and each
-documents it differently (different `owner`, different `description`; `notifications` marks it
-`required`, `audit-log` sets an `expiresAt` instead).
+Two independently-owned, both-active features (`notifications` and `audit-log`) each need to
+receive webhook deliveries. Both happen to declare a variable named `WEBHOOK_URL`. That's a naming
+coincidence, not a shared contract: each processes its own copy of the raw value, and each
+documents it differently. They have a different `owner` and a different `description`;
+`notifications` marks it `required`, and `audit-log` sets an `expiresAt` instead.
 
 Unlike [`missing-env-var`](../../negative/invalid-config/missing-env-var/) and
 [`multiple-active-exclusive-capabilities`](../../negative/exclusive-violation/multiple-active-exclusive-capabilities/),
-**this example is not broken** -- `generate:env` succeeds. The divergence is reported as a
-`duplicate-variable-documentation` warning, not an error: static analysis can prove two
-`processor`s declare conflicting return types (that's an error, see
-[`missing-env-var`](../../negative/invalid-config/missing-env-var/)'s sibling case), but it can never prove two English descriptions are
-"wrong" -- only that they differ. The warning exists so a human notices and decides: align the
-documentation, or confirm these really are two unrelated variables that happen to share a name.
+**this example is not broken**: `generate:env` succeeds. The divergence is reported as a
+`duplicate-variable-documentation` warning, not an error.
+
+Static analysis can prove two `processor`s declare conflicting return types (that's an error, see
+[`missing-env-var`](../../negative/invalid-config/missing-env-var/)'s sibling case). But it can
+never prove two English descriptions are "wrong", only that they differ. The warning exists so a
+human notices and decides. Either align the documentation, or confirm these really are two
+unrelated variables that happen to share a name.
 
 ```
 features/
@@ -46,6 +48,6 @@ npm run generate:env
 npm run generate:env:strict
 ```
 
-The warning's `code` field is `"duplicate-variable-documentation"` -- a stable, machine-readable
-identifier (see the root README's manifest change-tracking section) a CI job could filter on
+The warning's `code` field is `"duplicate-variable-documentation"`, a stable, machine-readable
+identifier (see the root README's manifest change-tracking section). A CI job could filter on it
 without parsing the human-readable `reason` text.

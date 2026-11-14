@@ -4,7 +4,7 @@
  * (`internal-package-contract/config/stryker`), which sets the test runner, reporters, per-test
  * coverage, static-mutant handling and the single worker, with what is env-cap's own.
  *
- * The mutation-score threshold is NOT set here -- the `Mutation` check owns the policy
+ * The mutation-score threshold is NOT set here: the `Mutation` check owns the policy
  * (zero tolerance: every non-ignored mutant must be killed, or carry an exception record in
  * `.repo-contract/exceptions/mutation.json`) and reads the JSON report directly.
  *
@@ -26,7 +26,7 @@ export default {
     "src/**/*.ts",
     "!src/**/*.test.ts",
     // Type-only modules: interfaces/type aliases, zero runtime behavior to
-    // mutate meaningfully -- matches vitest.config.ts's own coverage.exclude
+    // mutate meaningfully; matches vitest.config.ts's own coverage.exclude
     // and each file's own module doc comment. `src/build/types.ts` is the
     // `BuildFileSystem` capability contract (ADR 0040).
     "!src/runtime/types.ts",

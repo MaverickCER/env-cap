@@ -10,24 +10,23 @@ import { isWithinDirectory } from "./resolve-within-root.js"
  * Resolves an explicitly allow-listed installed package name to the one
  * schema file it declares via its own `"envCap": { "schema": "<path>" }`
  * package.json field. Every step here is `createRequire(...).resolve(...)`,
- * `fs.stat`/`fs.realpath`/`fs.readFile` on a path already fully known --
+ * `fs.stat`/`fs.realpath`/`fs.readFile` on a path already fully known:
  * never a `readdir` walk of any directory, named package or not. This is a
- * completely separate code path from `discover.ts`'s `discoverSchemaFiles()`,
- * which continues to unconditionally prune `node_modules` during its own
- * walk exactly as before; the two never overlap.
+ * separate code path from `discover.ts`'s `discoverSchemaFiles()`, which
+ * always prunes `node_modules` during its own walk. The two never overlap.
  *
  * This module only ever locates a file. It never imports, requires, or
- * executes it -- a package-resolved file is fed into the exact same
- * `parseSchemaFile()`/AST-only pipeline as a locally-discovered file,
- * indistinguishable from it after resolution. See ADR 0002 and ADR 0014.
+ * executes it. A package-resolved file goes through the same
+ * `parseSchemaFile()`/AST-only pipeline as a locally-discovered file. After
+ * resolution the two are indistinguishable. See ADR 0002 and ADR 0014.
  */
 
 const SCHEMA_FILE_EXTENSIONS = [".ts", ".tsx"] as const
 
-/** 1 MiB. New hardening specific to this trust tier -- a package crosses a
- *  real versioning/trust boundary that locally-discovered source doesn't,
- *  so this caps the cost of parsing an oversized or adversarial file before
- *  any of its content is even read into memory. See ADR 0014. */
+/** 1 MiB. Hardening specific to this trust tier. A package crosses a real
+ *  versioning/trust boundary that locally-discovered source doesn't. So this
+ *  caps the cost of an oversized or adversarial file before any of its
+ *  content is read into memory. See ADR 0014. */
 export const MAX_PACKAGE_SCHEMA_FILE_BYTES = 1_048_576
 
 const PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT = 8
@@ -40,7 +39,7 @@ type PackageResolutionFailureCode =
   | "OUTSIDE_PACKAGE"
   | "FILE_TOO_LARGE"
 
-/** Both the authored and resolved forms are kept -- diagnostics benefit from
+/** Both the authored and resolved forms are kept: diagnostics benefit from
  *  showing exactly what a package author wrote versus what it resolved to. */
 export interface PackageOrigin {
   /** The allow-listed package name that declared this schema. */
@@ -58,8 +57,8 @@ export type PackageSchemaResolutionResult =
   | { readonly ok: false; readonly code: PackageResolutionFailureCode; readonly reason: string }
 
 // Every call site of `isRecord` is inside an async function that awaits
-// before reaching it -- same volatile async-continuation defect class as
-// resolveUncached's own blanket disable below. Confirmed repeatedly by
+// before reaching it. That is the volatile async-continuation defect class
+// of resolveUncached's own blanket disable below. Confirmed repeatedly by
 // hand: applying any mutation here and running the real suite directly
 // always fails a real test.
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -73,9 +72,9 @@ interface LocatedManifest {
 
 /**
  * Locates a package's own package.json (not a nested one) purely through
- * Node's own resolver, anchored at `root` -- behaves exactly as if the
- * consuming project's own code, at `root`, wrote `import "<packageName>"`,
- * so this works uniformly across npm/pnpm/yarn installs without any
+ * Node's own resolver, anchored at `root`. It behaves exactly as if the
+ * consuming project's own code, at `root`, wrote `import "<packageName>"`.
+ * So this works uniformly across npm/pnpm/yarn installs without any
  * package-manager-specific handling.
  */
 async function locatePackageManifest(
@@ -91,7 +90,7 @@ async function locatePackageManifest(
     const packageJsonPath = req.resolve(`${packageName}/package.json`)
     return { packageJsonPath, packageDir: path.dirname(packageJsonPath) }
   } catch {
-    // Fall through -- the package's "exports" map likely omits
+    // Fall through: the package's "exports" map likely omits
     // "./package.json" (ERR_PACKAGE_PATH_NOT_EXPORTED).
   }
 
@@ -99,7 +98,7 @@ async function locatePackageManifest(
   try {
     mainFile = req.resolve(packageName)
   } catch {
-    return undefined // not installed (MODULE_NOT_FOUND) or otherwise unresolvable
+    return undefined // Not installed (MODULE_NOT_FOUND) or otherwise unresolvable.
   }
 
   // Walk upward from the main entry looking for the package's own
@@ -107,14 +106,12 @@ async function locatePackageManifest(
   // commonly ship decoy marker files (e.g. `dist/cjs/package.json`
   // containing only `{"type":"commonjs"}`, no "name" field) at intermediate
   // directory levels. Keep walking until a package.json's own "name" field
-  // actually matches -- stopping earlier would silently miss a real
+  // actually matches: stopping earlier would silently miss a real
   // "envCap" field declared several levels further up.
-  // Every statement in this loop body runs only after `await
-  // fs.readFile(...)` -- same volatile async-continuation defect class as
-  // resolveUncached's own blanket disable below. Confirmed repeatedly by
-  // hand across many different specific mutants here surviving on
-  // different fresh Stryker runs, never in a way a direct hand-applied
-  // mutation+real-suite-run couldn't immediately catch.
+  // Every statement in this loop body runs after `await fs.readFile(...)`.
+  // Stryker's perTest coverage cannot attribute a mutant that runs only in a
+  // continuation after an await, so it may report one here as Survived.
+  // Applying such a mutant by hand fails a real test.
   let dir = path.dirname(mainFile)
   for (let i = 0; i < PACKAGE_JSON_ANCESTOR_SEARCH_LIMIT; i++) {
     const candidate = path.join(dir, "package.json")
@@ -124,35 +121,27 @@ async function locatePackageManifest(
         return { packageJsonPath: candidate, packageDir: dir }
       }
     } catch {
-      // Not present, or not valid JSON, at this level -- keep walking.
+      // Not present, or not valid JSON, at this level: keep walking.
     }
     const parent = path.dirname(dir)
     // Bypassing this early exit is a pure performance no-op, not a real
-    // gap: when `parent === dir` (the real filesystem root), skipping the
-    // break falls through to `dir = parent`, which reassigns `dir` to its
-    // OWN current value -- the next iteration re-checks the exact same
-    // `candidate` path, which already failed to match this iteration, and
-    // keeps doing so until the loop's own iteration limit is exhausted.
-    // Same terminal PACKAGE_NOT_FOUND outcome either way. Hand-verified:
-    // mutating this and running the real suite passes unchanged.
-    if (parent === dir) break // reached filesystem root
+    // gap. At the filesystem root (`parent === dir`), skipping the break
+    // falls through to `dir = parent`, which reassigns `dir` to its OWN
+    // current value. Each later iteration re-checks the same `candidate`
+    // path, which already failed to match, until the loop's iteration limit
+    // is exhausted. The outcome is PACKAGE_NOT_FOUND either way, so the
+    // suite passes with this line mutated.
+    if (parent === dir) break // Reached filesystem root.
     dir = parent
   }
   return undefined
 }
 
-// Every statement in this function's body runs only after `await
-// locatePackageManifest(...)` -- Stryker's perTest coverage cannot
-// attribute a mutant that only runs in a continuation after an await
-// (confirmed repeatedly by hand: applying any mutation to a condition,
-// literal, or return block here and running the real suite directly
-// always fails a real test, yet different fresh Stryker runs have shown
-// different specific mutants -- and even different mutator granularity --
-// here as Survived, not a stable set of real gaps). Re-confirmed
-// 2026-09-18 against CI's own diagnostic mutation report, which flagged
-// several `ObjectLiteral`/`BooleanLiteral` mutants on this function's own
-// `return { ok: ..., ... }` literals as Survived -- same class, wider
-// mutator set than previously listed here.
+// Every statement in this function's body runs after `await
+// locatePackageManifest(...)`. Stryker's perTest coverage cannot attribute a
+// mutant that runs only in a continuation after an await. Mutants here may
+// show as Survived, and the set changes between runs. Applying any of them by
+// hand fails a real test.
 async function resolveUncached(
   packageName: string,
   root: string,
@@ -163,20 +152,18 @@ async function resolveUncached(
     return {
       ok: false,
       code: "PACKAGE_NOT_FOUND",
-      reason: `Package "${packageName}" listed in "packages" could not be resolved from "${root}" -- is it installed?`,
+      reason: `Package "${packageName}" listed in "packages" could not be resolved from "${root}". Is it installed?`,
     }
   }
   const { packageJsonPath, packageDir } = located
 
   let manifest: unknown
   try {
-    // The "utf8" encoding arg is equivalent to omitting it down to "": with
-    // "" (or no encoding), fs.readFile returns a Buffer instead of a string,
-    // but JSON.parse() coerces a Buffer via its own .toString() fine for any
-    // valid-UTF-8 JSON text -- verified with a real `node -e` comparison
-    // (same package-manifest fixture, both encodings, byte-identical parsed
-    // result). Same equivalence class already documented for evidence-cache.ts
-    // and evidence-fingerprint.ts's own "utf8" args.
+    // Mutating the "utf8" encoding arg down to "" is equivalent. With ""
+    // (or no encoding), fs.readFile returns a Buffer instead of a string.
+    // JSON.parse() coerces a Buffer via its own .toString(). For any
+    // valid-UTF-8 JSON text, that parses to the same result. evidence-cache.ts and
+    // evidence-fingerprint.ts have the same equivalent "utf8" args.
     manifest = JSON.parse(await fs.readFile(packageJsonPath, "utf8"))
   } catch {
     return {
@@ -224,8 +211,8 @@ async function resolveUncached(
   }
 
   // Realpath-based containment check, on top of (not instead of) the lexical
-  // check above: a symlink at the declared path could point anywhere on
-  // disk without the *string* ever containing "..", and `packageDir` itself
+  // check above. A symlink at the declared path could point anywhere on
+  // disk without the *string* ever containing "..". And `packageDir` itself
   // is frequently a symlink under real-world installs (pnpm's
   // content-addressable store links every package in from elsewhere). A
   // symlink that resolves *within* the package directory is harmless and
@@ -285,12 +272,12 @@ async function resolveUncached(
 
 /**
  * Resolves one allow-listed package name. Memoized in a caller-owned
- * `cache` (one per `generate*()` invocation, shared with linking/dependency-
- * graph resolution) so a name referenced from multiple places -- multiple
- * scanned files bare-importing the same package, or a duplicate entry in
- * `packages` -- is only ever resolved once. The cache is populated with the
- * in-flight promise before it settles, so concurrent callers await the same
- * resolution rather than racing duplicate work.
+ * `cache`: one per `generate*()` invocation, shared with linking/dependency-
+ * graph resolution. So a name referenced from multiple places is resolved
+ * only once (e.g. several scanned files bare-import the same package, or
+ * `packages` has a duplicate entry). The cache holds the in-flight promise
+ * before it settles. So concurrent callers await the same resolution rather
+ * than racing duplicate work.
  */
 export function resolvePackageSchemaFile(
   packageName: string,
@@ -299,13 +286,11 @@ export function resolvePackageSchemaFile(
   fs: BuildFileSystem,
 ): Promise<PackageSchemaResolutionResult> {
   let cached = cache.get(packageName)
-  // Stryker's own perTest coverage analysis fails to attribute this line's
-  // own distinguishing test ("caches the resolution promise across calls,
-  // returning the identical promise instance for a repeat lookup") to it,
-  // intermittently across repeated fresh runs -- confirmed by hand:
-  // forcing this condition to `false` and running the real suite directly
-  // fails 29 tests immediately (fast, never a hang), so the test suite
-  // genuinely kills this mutant every time it actually runs.
+  // This line's test is "caches the resolution promise across calls,
+  // returning the identical promise instance for a repeat lookup". Stryker's
+  // perTest coverage sometimes fails to attribute it here. Yet forcing
+  // the condition to `false` fails 29 tests. A Survived report here is a
+  // coverage-attribution gap, not a missing test.
   if (!cached) {
     cached = resolveUncached(packageName, root, fs)
     cache.set(packageName, cached)
@@ -326,9 +311,9 @@ export interface ResolvePackagesResult {
 }
 
 /**
- * Resolves every allow-listed package name. Input is deduplicated first, so
- * a duplicate entry in `packages` (accidental or defensive) produces exactly
- * one resolution attempt and, on failure, exactly one warning -- never two.
+ * Resolves every allow-listed package name. Input is deduplicated first. So
+ * a duplicate entry in `packages` (accidental or defensive) produces one
+ * resolution attempt and, on failure, one warning: never two.
  * Never throws: every failure becomes one `ParseWarning`, consistent with
  * every other static-analysis boundary in this codebase.
  */
@@ -350,15 +335,10 @@ export async function resolveAllowlistedPackages(
   const origins = new Map<string, PackageOrigin>()
   const warnings: ParseWarning[] = []
 
-  // Every statement in this loop body runs only after `await
-  // Promise.all(...)` above -- same volatile async-continuation defect
-  // class as resolveUncached's/locatePackageManifest's own blanket
-  // disables further up. Hand-verified 2026-09-18, across three separate
-  // fresh CI runs each flagging a different specific mutant here
-  // (`origins.set(...)` as CallExpression, the `(package) ${packageName}`
-  // template as StringLiteral, `result.ok` as ConditionalExpression): each
-  // one, applied by hand, fails a real test in this file's own test suite
-  // immediately.
+  // Every statement in this loop body runs after `await Promise.all(...)`,
+  // the same async-continuation gap as resolveUncached above. Mutants such
+  // as `origins.set(...)` or the `(package) ${packageName}` template may
+  // show as Survived; each one fails a real test in this file's suite.
   for (const { packageName, result } of resolved) {
     if (result.ok) {
       files.push({ packageName, file: result.origin.resolvedFile })
@@ -373,27 +353,24 @@ export async function resolveAllowlistedPackages(
 
 /**
  * Combines local schema-discovery hits with package-resolved files into one
- * deduplicated list, keyed by realpath rather than lexical absolute path --
- * package-resolved files are already realpath-canonicalized (see
- * `resolveUncached` above), but local `discoverSchemaFiles()` hits are plain
+ * deduplicated list, keyed by realpath rather than lexical absolute path.
+ * Package-resolved files are already realpath-canonicalized (see
+ * `resolveUncached` above). Local `discoverSchemaFiles()` hits are plain
  * `readdir`-derived absolute paths that may themselves traverse a symlink (a
- * symlinked `root`, or an included path reached through one). Deduplicating
- * on the lexical path alone would miss the case where the same physical file
- * is reached twice through two different symlinked routes -- one via local
- * glob discovery, one via package resolution -- and silently double-count it
- * into two identical contracts, including the more mundane case of a package
+ * symlinked `root`, or an included path reached through one).
+ *
+ * Deduplicating on the lexical path alone would miss one physical file
+ * reached by two symlinked routes: local glob discovery and package
+ * resolution. That file would be silently
+ * double-counted into two identical contracts. A common case: a package
  * that's both locally glob-reachable (e.g. during a monorepo migration) and
  * explicitly allow-listed. On a collision, the local path string identity
  * wins (the package-resolved duplicate is dropped).
  */
-// Same volatile async-continuation defect class as resolveUncached's own
-// blanket disable above -- confirmed by hand (`seenRealpaths.has(real)`
-// mutated to `false` fails a real "does not double-count a file reached
-// through two symlinked routes" test directly, yet different fresh Stryker
-// runs have shown different specific mutants here as Survived). Re-confirmed
-// 2026-09-18: CI's own diagnostic mutation report flagged `seenRealpaths
-// .add(file)` as a Survived `CallExpression`, hand-verified fails
-// "deduplicates two identical package files against each other..." directly.
+// Same async-continuation gap as resolveUncached above. Mutating
+// `seenRealpaths.has(real)` or `seenRealpaths.add(file)` fails the
+// double-count and deduplication tests, even when Stryker reports them as
+// Survived.
 export async function mergeLocalAndPackageFiles(
   localFiles: readonly string[],
   packageFiles: readonly string[],
@@ -415,7 +392,7 @@ export async function mergeLocalAndPackageFiles(
   }
 
   for (const file of packageFiles) {
-    if (seenRealpaths.has(file)) continue // already realpath-canonicalized by resolveUncached
+    if (seenRealpaths.has(file)) continue // Already realpath-canonicalized by resolveUncached.
     seenRealpaths.add(file)
     merged.push(file)
   }
@@ -425,11 +402,10 @@ export async function mergeLocalAndPackageFiles(
 
 /**
  * Bare-specifier-to-allowlist matching, used by `resolve-import.ts`'s
- * `resolveImportSpecifier()` as its package-resolution fallback. Only ever
+ * `resolveImportSpecifier()` as its package-resolution fallback. It only
  * attempts resolution for a specifier that is (or is a subpath of) an
- * allow-listed package name -- any other bare specifier is not this
- * mechanism's concern and returns `undefined` immediately, identical to
- * `resolveRelativeImport()`'s existing bare-specifier no-op.
+ * allow-listed package name. Any other bare specifier returns `undefined`
+ * immediately, like `resolveRelativeImport()`'s bare-specifier no-op.
  */
 export async function resolvePackageImport(
   specifier: string,
@@ -438,28 +414,17 @@ export async function resolvePackageImport(
   cache: Map<string, Promise<PackageSchemaResolutionResult>>,
   fs: BuildFileSystem,
 ): Promise<string | undefined> {
-  // Stryker's own perTest coverage analysis fails to attribute this
-  // predicate's own two distinguishing tests ("distinguishes real matching
-  // from '.find() always matches'" and the prefix-boundary test just below)
-  // to it, consistently across repeated fresh runs -- not the usual one-off
-  // flakiness. Hand-verified directly: forcing this predicate to `(pkg) =>
-  // true` and running the real suite fails both of those tests immediately.
+  // Stryker's perTest coverage fails to attribute this predicate's two tests
+  // ("distinguishes real matching from '.find() always matches'" and the
+  // prefix-boundary test) to it. Forcing it to `(pkg) => true` fails both.
   const matched = allowedPackages.find(
     (pkg) => specifier === pkg || specifier.startsWith(`${pkg}/`),
   )
-  // Bypassing this guard when nothing matched is behaviorally equivalent,
-  // not a real gap: calling `resolvePackageSchemaFile(undefined, ...)` reaches
-  // `locatePackageManifest`'s `req.resolve(undefined)`, which throws
-  // ERR_INVALID_ARG_TYPE -- caught by that function's own bare `catch`
-  // (returns `undefined`), which in turn makes `resolveUncached` return a
-  // plain `{ok: false, code: "PACKAGE_NOT_FOUND", ...}` rather than throwing.
-  // `resolvePackageImport` still returns `undefined` either way, and the only
-  // other difference (a `cache.set(undefined, ...)` entry) is unobservable
-  // through the public API. Hand-verified: mutating this line and running the
-  // real suite (`vitest run test/build/resolution/resolve-package-schema.test.ts`)
-  // passes unchanged. A second approach -- mocking `resolvePackageSchemaFile`
-  // to assert it's never called for a non-matching specifier -- isn't viable
-  // either, since it's a same-module self-call `vi.mock` can't intercept.
+  // Removing this guard is an equivalent mutant. With no match,
+  // `resolvePackageSchemaFile(undefined, ...)` returns a `PACKAGE_NOT_FOUND`
+  // result instead of throwing, so this function still returns `undefined`.
+  // The only other effect, a `cache.set(undefined, ...)` entry, is not
+  // observable through the public API. The guard skips that wasted lookup.
   if (!matched) return undefined
   const result = await resolvePackageSchemaFile(matched, root, cache, fs)
   return result.ok ? result.origin.resolvedFile : undefined

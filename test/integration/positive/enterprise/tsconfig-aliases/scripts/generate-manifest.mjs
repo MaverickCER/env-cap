@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-// No `tsconfig` option passed -- this example's own root/tsconfig.json (its
+// No `tsconfig` option passed: this example's own root/tsconfig.json (its
 // "@/*" path alias) is auto-detected automatically (ADR 0023). See README.md.
 const result = await generateEnvArtifacts({ fs: nodeBuildFileSystem,
   root,
@@ -26,7 +26,7 @@ if (envExample?.writtenPath) {
 }
 
 // Evidence change-tracking since the committed evidence artifact
-// (docs/env.evidence.json) was last written -- see ADR 0038.
+// (docs/env.evidence.json) was last written: see ADR 0038.
 const changes = result.evidence.change.manifest;
 const total =
   changes.addedContracts.length + changes.addedVariables.length +
@@ -39,7 +39,7 @@ console.log(
 );
 
 // The actual point of this example: the payments contract is imported only
-// through the "@/*" alias (src/server.ts) -- without ADR 0023's alias
+// through the "@/*" alias (src/server.ts); without ADR 0023's alias
 // resolution, this section would list it as abandoned even though it's
 // plainly consumed. See docs/OWNERSHIP.md and README.md.
 if (result.usage?.abandonedContracts.length) {

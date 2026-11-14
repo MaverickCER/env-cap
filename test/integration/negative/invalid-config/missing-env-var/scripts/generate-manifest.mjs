@@ -1,7 +1,7 @@
 // Build-time script. Run via `npm run generate:env`. Never imported by application code.
 //
-// Static discovery/generation succeeds here regardless of what .env contains
-// -- generateEnvArtifacts() never reads environment values, only schema
+// Static discovery/generation succeeds here regardless of what .env contains:
+// generateEnvArtifacts() never reads environment values, only schema
 // shape (see ADR 0002). The failure this example demonstrates is a runtime
 // validateEnv() failure (see src/startup.ts), not a build-time one.
 import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
@@ -22,7 +22,7 @@ console.log(`Wrote manifest: ${result.manifest?.outputPath}`);
 console.log(`Wrote docs: ${result.docs?.docsPath}`);
 console.log(`Discovered ${result.manifest?.contracts.length ?? 0} contract(s).`);
 
-// .env.example is regenerated and overwritten directly on every run here --
+// .env.example is regenerated and overwritten directly on every run here:
 // it's a live, always-current teaching artifact, not something meant to be
 // hand-merged. See the "onExisting" option (README's CLI section).
 const envExample = result.docs?.envExample;
@@ -38,7 +38,7 @@ if (result.manifest?.warnings.length) {
 }
 
 // Evidence change-tracking since the committed evidence artifact
-// (docs/env.evidence.json) was last written -- see ADR 0038.
+// (docs/env.evidence.json) was last written: see ADR 0038.
 const changes = result.evidence.change.manifest;
 const total =
   changes.addedContracts.length + changes.addedVariables.length +

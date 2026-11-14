@@ -1,8 +1,8 @@
 # paypal-addon example
 
-A reusable internal package -- not an application feature folder -- that wraps
-the PayPal SDK (with placeholder calls; there is no real PayPal integration
-here) and owns its own environment contract:
+A reusable internal package (not an application feature folder) that wraps
+the PayPal SDK and owns its own environment contract. The SDK calls are
+placeholders; there is no real PayPal integration here.
 
 ```
 src/
@@ -14,26 +14,26 @@ src/
 ```
 
 This is the same ownership model as a `features/payments/env.schema.ts` in
-`examples/application` -- the only difference is that this capability ships as
+`examples/application`. The only difference is that this capability ships as
 its own installable package instead of living in the consuming application's
 source tree. See [`paypal-consumer`](../paypal-consumer/) for an
 application that installs and consumes it.
 
-There is no exported `paypalDoc` or similar -- `documentEnv()` returns `void`
+There is no exported `paypalDoc` or similar. `documentEnv()` returns `void`
 and is inert at runtime by design (see the Guide's
 [Capability-owned contracts](../../../../../GUIDE.md#capability-owned-contracts)
 section). Its only job is to exist as a static marker `generateEnvManifest()`
 can link back to `paypalSchema` during build-time discovery.
 
-This package has no runnable entry point of its own -- see
+This package has no runnable entry point of its own. See
 `paypal-consumer`'s README for how to run the two together with
 `validateEnv()` and `createCheckout()`.
 
 ## What makes this package discoverable across a real package boundary
 
 `paypal-consumer` installs this package from a **real packed tarball**, not a
-directory symlink or a monorepo workspace reference -- `npm pack` filters the
-tarball down to exactly what `package.json#files` lists, so
+directory symlink or a monorepo workspace reference. `npm pack` filters the
+tarball down to exactly what `package.json#files` lists. So
 `node_modules/@examples/paypal-addon` in the consumer ends up containing only
 `dist/`, `src/env.schema.ts`, and `package.json`. None of this package's other
 source (`checkout.ts`, `subscriptions.ts`, `refunds.ts`, `index.ts`) is
@@ -42,24 +42,25 @@ genuinely separately-published npm package from a different team or
 organization would have.
 
 Making the environment contract discoverable in that shape requires this
-package to take on two obligations -- both **Experimental**, see
+package to take on two obligations. Both are **Experimental**; see
 [ADR 0014](../../../../../specs/decisions/0014-cross-package-schema-discovery.md) and
 [`VERSIONING.md`](../../../../../VERSIONING.md):
 
 1. **Declare a `"envCap": { "schema": "./src/env.schema.ts" }` field in
    `package.json`.** This tells `generateEnvArtifacts({ packages: [...] })`
-   exactly which file to statically analyze -- still never imported or
-   executed, the same AST-only guarantee as local discovery (ADR 0002). It
-   points at the real, uncompiled `.ts` source, not `dist/env.schema.js`:
-   compiled/bundled output risks identifier renaming, a CJS/ESM shape
-   mismatch, or minification breaking the parser's `createEnv`/`documentEnv`
-   call-site matching. That's why `"files"` below includes the source file
+   exactly which file to statically analyze. The file is still never imported
+   or executed, the same AST-only behavior as local discovery (ADR 0002). It
+   points at the real, uncompiled `.ts` source, not `dist/env.schema.js`.
+   Compiled/bundled output risks breaking the parser's `createEnv`/`documentEnv`
+   call-site matching through identifier renaming, a CJS/ESM shape mismatch,
+   or minification. That's why `"files"` below includes the source file
    directly, alongside the compiled `dist/` used at runtime.
 2. **Re-export the contract under the same name from the main entry point.**
-   `src/index.ts` re-exports `paypalEnv` unchanged -- this is what lets
+   `src/index.ts` re-exports `paypalEnv` unchanged. This lets
    `paypal-consumer/src/app.ts`'s `import { paypalEnv } from "@examples/paypal-addon"`
-   resolve back to the exact contract discovery found, both for the generated
-   manifest's import line and for `generateUsageReport()`'s ownership graph.
+   resolve back to the exact contract discovery found. That matters both for
+   the generated manifest's import line and for `generateUsageReport()`'s
+   ownership graph.
 
 ```json
 {
@@ -77,11 +78,11 @@ npm install
 npm run pack:local
 ```
 
-`pack:local` runs `tsc` (via `tsconfig.build.json`) to produce `dist/`, then
-`npm pack --pack-destination .` and renames the versioned output to a stable
-`paypal-addon.tgz` -- so `paypal-consumer/package.json` doesn't need
+`pack:local` runs `tsc` (via `tsconfig.build.json`) to produce `dist/`. It then
+runs `npm pack --pack-destination .` and renames the versioned output to a
+stable `paypal-addon.tgz`, so `paypal-consumer/package.json` doesn't need
 hand-updating on every version bump. Both `dist/` and `*.tgz` are gitignored
-build artifacts; run this before installing `paypal-consumer`'s dependencies
+build artifacts. Run this before installing `paypal-consumer`'s dependencies
 (see that package's README).
 
 ## Generating this package's own contract, docs, and `.env.example`
@@ -90,10 +91,9 @@ build artifacts; run this before installing `paypal-consumer`'s dependencies
 npm run generate:env
 ```
 
-`scripts/generate-manifest.mjs` runs `generateEnvManifest()` scoped to just
-this package's own `root`, so `paypalSchema` is documented and browsable
+`scripts/generate-manifest.mjs` runs `generateEnvManifest()` scoped to only
+this package's own `root`. So `paypalSchema` is documented and browsable
 (`docs/ENVIRONMENT.md`, `.env.example`) even without installing this package
-into a consuming application. This is separate from
-`paypal-consumer`'s own `generate:env`, which discovers this same
-contract a second time via the `packages` allowlist -- see that package's
-README for why.
+into a consuming application. This is separate from `paypal-consumer`'s own
+`generate:env`, which discovers this same contract a second time via the
+`packages` allowlist (see that package's README for why).

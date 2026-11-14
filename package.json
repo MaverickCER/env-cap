@@ -1,18 +1,20 @@
 {
   "name": "@maverickcer/env-cap",
   "version": "0.7.5",
-  "description": "Secure, type-safe, framework-agnostic environment contracts. Contracts own the environment variables they consume; the package provides runtime validation and build-time contract discovery.",
+  "description": "Each feature declares the environment variables it needs and their format. Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire. A TypeScript library that works alongside dotenv, Zod or your secret manager.",
   "keywords": [
-    "environment",
+    "environment-variables",
     "env",
+    "dotenv",
     "config",
-    "configuration",
-    "documentation",
     "validation",
     "typescript",
-    "schema",
+    "ownership",
     "secrets",
-    "dotenv"
+    "environment",
+    "expiry",
+    "static-analysis",
+    "documentation"
   ],
   "license": "MIT",
   "repository": {
@@ -153,7 +155,7 @@
     "precommit": "npm run typecheck && npm run lint && npm run format && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:ambient && npm run verify:compiler-isolation && npm run docs:api:report:check && npm run verify:readme-example",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run schema && npm run test:coverage && npm run size && npm run verify:ambient && npm run verify:compiler-isolation && npm run docs:api:report:check && npm run verify:readme-example",
     "prepublishOnly": "npm run verify",
-    "version": "changeset version && npm run build && npm run examples:update-golden && internal-package-contract skill && internal-package-contract site",
+    "version": "changeset version && npm run build && internal-package-contract update-baseline && npm run examples:update-golden && internal-package-contract skill && internal-package-contract site",
     "release": "changeset publish",
     "benchmark:check": "node scripts/run-benchmarks.mjs --check",
     "package-managers": "node scripts/package-managers-smoke.mjs"
@@ -195,7 +197,7 @@
     "eslint-config-prettier": "10.1.8",
     "fast-check": "^4.10.2",
     "globals": "^17.9.0",
-    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.18.0",
+    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.19.0",
     "prettier": "3.9.10",
     "ts-json-schema-generator": "^2.9.0",
     "tsup": "^9.0.0",
@@ -272,6 +274,12 @@
         "bin",
         "./eslint-plugin"
       ]
-    }
+    },
+    "surfaceRenderers": [
+      "src/build/docs.ts",
+      "src/build/env-example.ts",
+      "src/build/usage-report.ts",
+      "scripts/github-action/report.mjs"
+    ]
   }
 }

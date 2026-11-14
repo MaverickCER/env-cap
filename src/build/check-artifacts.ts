@@ -44,14 +44,14 @@ function readIfExists(filePath: string, fs: BuildFileSystem): Promise<string | u
 
 /**
  * Parses `text` as an `EvidenceModel` and re-serializes it with
- * `provenance.generatedAt` normalized out (see `normalizeEvidenceSnapshotForComparison()`)
- * -- so `--check` never reports drift solely because a fresh render's
+ * `provenance.generatedAt` normalized out (see `normalizeEvidenceSnapshotForComparison()`):
+ * so `--check` never reports drift solely because a fresh render's
  * timestamp differs from the committed file's. A parse failure returns
  * `text` unchanged, so a corrupted on-disk file simply fails to match
  * `expected`'s normalized form (reported as `"stale"`), rather than
  * crashing `--check` itself.
  */
-/** @internal Exported for direct unit coverage -- reached through `checkEnvArtifacts()`'s `--evidence` pass in production, but the exact "returns text unchanged, not undefined/thrown" catch behavior isn't independently observable through that public path (any malformed `actual` already reads as "stale" against a well-formed `expected`, regardless of the catch's exact return value). */
+/** @internal Exported for direct unit coverage: reached through `checkEnvArtifacts()`'s `--evidence` pass in production, but the exact "returns text unchanged, not undefined/thrown" catch behavior isn't independently observable through that public path (any malformed `actual` already reads as "stale" against a well-formed `expected`, regardless of the catch's exact return value). */
 export function normalizeEvidenceJsonForComparison(text: string): string {
   try {
     const parsed = JSON.parse(text) as EvidenceModel
@@ -86,7 +86,7 @@ async function compareTextArtifact(
  * writing anything.
  *
  * @remarks
- * `--check` reports drift, it doesn't paper over a run that would otherwise fail --
+ * `--check` reports drift, it doesn't paper over a run that would otherwise fail:
  * see `@throws` below.
  *
  * @throws {EnvProjectGenerationError} On the same blocking findings a real run would throw on.
@@ -147,7 +147,7 @@ export async function checkEnvArtifacts(
           path: c.docs.envExamplePath,
           status: driftCount > 0 ? "stale" : "ok",
           // exactOptionalPropertyTypes: omit the key entirely rather than
-          // set it to `undefined` -- `detail` is absent when there's
+          // set it to `undefined`; `detail` is absent when there's
           // nothing to report, not present-but-empty.
           ...(driftCount > 0
             ? {

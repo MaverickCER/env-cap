@@ -11,7 +11,7 @@ import type { validateEnvOptions, validateEnvResult } from "./types.js"
  *
  * @remarks
  * Idempotent: the first successful (or failed) call is authoritative for the life of the
- * process -- later calls return (or re-throw) that same outcome without re-running any
+ * process; later calls return (or re-throw) that same outcome without re-running any
  * processor or validator. Concurrent in-flight calls share one underlying run. Call
  * `resetEnvCache()` to validate again, for example between test scenarios.
  *
@@ -51,7 +51,7 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
   } finally {
     // Not `= undefined`: `inFlight` is genuinely optional (absent between
     // runs), and exactOptionalPropertyTypes distinguishes "key absent" from
-    // "key present holding undefined" -- delete is the operation that
+    // "key present holding undefined"; delete is the operation that
     // actually means the former.
     delete state.inFlight
   }
@@ -61,7 +61,7 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
  * Whether a variable participates in a validation run: unset `context`
  * always participates; otherwise it participates only when `activeContexts`
  * contains that exact string (no prefix matching, no wildcards, no
- * hierarchy -- see ADR 0022's Formal Invariants).
+ * hierarchy; see ADR 0022's Formal Invariants).
  */
 function matchesContext(
   variableContext: string | undefined,
@@ -73,10 +73,9 @@ function matchesContext(
 // `async` is load-bearing here despite no internal `await`: `validateEnv()`
 // assigns this call's return value directly to `state.inFlight` so
 // concurrent callers can share one in-flight run (see its own doc comment).
-// That only works if this genuinely returns a Promise -- a synchronous
-// function returning/throwing a plain value would change both the
-// concurrent-sharing behavior and the timing of a thrown validation error.
-// eslint-disable-next-line @typescript-eslint/require-await -- deliberately async so a thrown error becomes a rejection (see the note above)
+// That only works if this returns a Promise. A plain return or throw would
+// break that sharing and change when a validation error surfaces.
+// eslint-disable-next-line @typescript-eslint/require-await -- deliberately async so a thrown error becomes a rejection (see the note above).
 async function runValidation(
   options: validateEnvOptions,
   state: CacheState,
@@ -84,8 +83,8 @@ async function runValidation(
   const failures: VariableFailure[] = []
   let variableCount = 0
 
-  // Allocated only when contexts are actually in play, so the (overwhelmingly
-  // common, and every pre-existing) zero-context path does no extra work.
+  // Allocated only when contexts are in play, so the common zero-context
+  // path does no extra work.
   const activeContexts = options.activeContexts?.length
     ? new Set(options.activeContexts)
     : undefined
@@ -95,11 +94,11 @@ async function runValidation(
     const values: Record<string, unknown> = {}
 
     for (const [key, definition] of Object.entries(internals.schema)) {
-      // A variable whose context isn't active is skipped entirely -- no
-      // default/processor/validator runs, it's never counted as validated,
-      // and it stays out of `values`, so `create.ts`'s getter finds it
-      // absent and throws EnvNotReadyError exactly as if this run had
-      // never happened for it. See ADR 0022.
+      // A variable whose context isn't active is skipped entirely: no
+      // default/processor/validator runs and it's never counted as validated.
+      // It stays out of `values`, so `create.ts`'s getter finds it absent and
+      // throws EnvNotReadyError exactly as if this run had never happened for
+      // it. See ADR 0022.
       if (!matchesContext(definition.context, activeContexts)) continue
 
       variableCount += 1

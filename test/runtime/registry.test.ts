@@ -20,14 +20,14 @@ describe("isEnvContract", () => {
     expect(isEnvContract("STRIPE_KEY")).toBe(false)
   })
 
-  it("returns false for a registered function -- the typeof guard excludes functions even though WeakMap accepts them as keys", () => {
+  it("returns false for a registered function: the typeof guard excludes functions even though WeakMap accepts them as keys", () => {
     // `object` (`registerContract`'s parameter type) structurally includes
-    // function types, and a function IS a valid `WeakMap` key -- so this is
+    // function types, and a function IS a valid `WeakMap` key: so this is
     // the one case that actually distinguishes the `typeof value ===
     // "object"` guard from a bare `internalsByContract.has(value)` call: a
     // registered non-object key must still read as "not a contract".
     const fn = (): void => {
-      /* no-op stand-in for a "contract" -- never actually called */
+      /* no-op stand-in for a "contract": never actually called */
     }
     registerContract(fn, { name: "fn-contract", schema: {}, id: Symbol("fn"), source: undefined })
     expect(isEnvContract(fn)).toBe(false)

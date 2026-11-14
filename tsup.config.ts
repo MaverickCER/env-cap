@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { defineConfig, type Options } from "tsup"
 
-// Read once, here, at build time -- NOT shipped in dist/. Substituted into
+// Read once, here, at build time: NOT shipped in dist/. Substituted into
 // `src/build/tool-version.ts` and `src/cli/json.ts` via `define` below, so
 // neither reads `package.json` from disk at runtime. See ADR 0040.
 const packageVersion: string = (
@@ -23,13 +23,13 @@ const bundles: Options[] = [
     platform: "neutral",
     target: "es2020",
     // Declarations (with declaration maps) are emitted separately by
-    // `tsc -p tsconfig.build.json` -- tsup's own dts bundling pipeline
+    // `tsc -p tsconfig.build.json`: tsup's own dts bundling pipeline
     // (rollup-plugin-dts) hardcodes declarationMap: false internally and
     // ignores dts.compilerOptions, so it can't produce them. See
     // scripts/emit-dts-shims.mjs.
     dts: false,
     sourcemap: true,
-    // NOT `clean: true` here -- tsup runs the whole bundle array concurrently, and cleaning from
+    // NOT `clean: true` here: tsup runs the whole bundle array concurrently, and cleaning from
     // inside one bundle races with the others writing into the same `dist/` (an intermittent
     // `ENOENT: unlink dist/index.js.map` whenever a dependent project's install re-ran the build).
     // `dist/` is cleaned once, deterministically, by `npm run clean` as the first step of `build`.
@@ -51,7 +51,7 @@ const bundles: Options[] = [
   },
   {
     name: "node",
-    // The `@maverickcer/env-cap/node` entry -- the Node-backed
+    // The `@maverickcer/env-cap/node` entry: the Node-backed
     // `BuildFileSystem` adapter (`src/cli/filesystem.ts`, re-exported through
     // `src/node/index.ts`). An executable-context entry like `bin` /
     // `./eslint-plugin`: it legitimately bundles `node:fs/promises`, and
@@ -89,7 +89,7 @@ const bundles: Options[] = [
     name: "evidence",
     entry: { evidence: "src/evidence/index.ts" },
     format: ["esm", "cjs"],
-    // Isomorphic, like runtime/helpers -- no node:fs, no `typescript`, safe
+    // Isomorphic, like runtime/helpers: no node:fs, no `typescript`, safe
     // in a browser/edge bundle. `EvidenceModel` is imported as a type only
     // (erased at compile time), so this platform/target pair matches
     // runtime/helpers, not build.
@@ -114,12 +114,12 @@ const bundles: Options[] = [
     // linting TypeScript with ESLint already has it through `typescript-eslint`.
     external: ["eslint", "typescript", "@typescript-eslint/utils"],
     // This entry point has both a default export (the plugin object) and a
-    // named export (`noRawProcessEnv`, re-exported for direct consumption --
+    // named export (`noRawProcessEnv`, re-exported for direct consumption:
     // see its own module doc comment). tsup's built-in `cjsInterop` option
     // only rewrites `module.exports` when a chunk has exactly one export
     // named "default" (see its source), so it silently no-ops for this
     // two-export chunk. See internal-package-contract tool cjs-interop for
-    // the actual fix -- it has to run as a post-build pass, since tsup's own
+    // the actual fix: it has to run as a post-build pass, since tsup's own
     // named-export assignments are appended after esbuild finishes (an
     // `esbuildOptions.footer` here would land too early, before those
     // assignments exist).

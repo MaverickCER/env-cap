@@ -43,7 +43,7 @@ A centralized environment object is often the right choice when:
 - one team owns the application
 - configuration is relatively small
 - all variables belong to the same deployment boundary
-- a single application schema is easy to maintain
+- a single application schema stays maintainable
 
 Example:
 
@@ -250,13 +250,13 @@ client.contract.ts
 The application build decides which contracts are included.
 
 This keeps the runtime small and avoids creating artificial package boundaries. This remains the
-recommended default, and the only mechanism that actually keeps a server-only variable's source out of a
-client bundle -- see [ADR 0004](../decisions/0004-no-client-server-package-split.md).
+recommended default. It is also the only mechanism that actually keeps a server-only variable's source out
+of a client bundle (see [ADR 0004](../decisions/0004-no-client-server-package-split.md)).
 
-If you'd rather keep `server`/`client` variables declared in one schema location instead of splitting into
-two contract files, `context`/`activeContexts` (see the README's ["Validation
-contexts"](../../GUIDE.md#validation-contexts) section, [ADR 0022](../decisions/0022-validation-contexts.md))
-is the closer analogue to t3-env's `server`/`client` grouping:
+You may prefer to keep `server`/`client` variables declared in one schema location instead of splitting into
+two contract files. In that case, `context`/`activeContexts` is the closer analogue to t3-env's
+`server`/`client` grouping (see GUIDE.md's ["Validation contexts"](../../GUIDE.md#validation-contexts)
+section and [ADR 0022](../decisions/0022-validation-contexts.md)):
 
 ```ts
 createEnv({
@@ -273,7 +273,7 @@ await validateEnv({ manifest, values: window.__ENV__, activeContexts: ["client"]
 ```
 
 This only controls whether `validateEnv()` processes a variable, not whether its definition ships to the
-browser -- it's a convenience for teams that don't need a hard module boundary, not a substitute for one. If
+browser. It's a convenience for teams that don't need a hard module boundary, not a substitute for one. If
 `DATABASE_URL` must never appear in a client bundle at all, use the two-manifest approach above instead.
 
 ## Migrating a Next.js application
@@ -366,7 +366,7 @@ The runtime remains modular while platform teams still have a complete inventory
 t3-env may remain the better choice when:
 
 - your application has one configuration owner
-- the centralized schema is easy to maintain
+- the centralized schema stays maintainable
 - capability boundaries are not important
 - documentation and lifecycle tracking are handled elsewhere
 

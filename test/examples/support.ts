@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url"
 import { isInstalled, runScript, runStart } from "../support/example-runner.js"
 
 /**
- * Shared, non-test plumbing for every `test/examples/<name>.test.ts` file --
+ * Shared, non-test plumbing for every `test/examples/<name>.test.ts` file:
  * kept out of the `*.test.ts` naming so Vitest never tries to run it
  * directly. Thin, deliberately: the real subprocess plumbing lives in
  * `test/support/example-runner.ts`, shared with the `test/integration/`
@@ -17,11 +17,11 @@ import { isInstalled, runScript, runStart } from "../support/example-runner.js"
  * `src/generated/env.manifest.ts` *are* the golden: a reader opening the
  * example sees the same bytes the test asserts on. A parallel `expected/`
  * tree meant every artifact existed twice, and a reader had no way to tell
- * which copy was authoritative -- so a stale mirror could sit next to
+ * which copy was authoritative: so a stale mirror could sit next to
  * correct output indefinitely without any test noticing (see ADR 0034's
  * three-tier split, which this supersedes for the flagship tier only).
  *
- * Freshness is asserted by running each example's own `check` script --
+ * Freshness is asserted by running each example's own `check` script:
  * `env-cap --check`, the exact command its README tells a reader to run in
  * CI. That both verifies the committed output and exercises the drift-guard
  * itself, rather than re-implementing a byte comparison the tool already
@@ -33,7 +33,7 @@ import { isInstalled, runScript, runStart } from "../support/example-runner.js"
  * Each example is its own npm project with its own node_modules, installed
  * by CI's `examples` job, not by the root `npm ci`. Every helper skips
  * gracefully rather than failing when that example's node_modules isn't
- * present -- via `isInstalled()`, which every test file gates on.
+ * present: via `isInstalled()`, which every test file gates on.
  */
 
 const examplesRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../examples")
@@ -43,7 +43,7 @@ export function exampleDir(name: string): string {
   return path.join(examplesRoot, name)
 }
 
-/** Whether this example's own `node_modules` is present -- see the module docstring. */
+/** Whether this example's own `node_modules` is present: see the module docstring. */
 export function isExampleInstalled(name: string): boolean {
   return isInstalled(exampleDir(name))
 }
@@ -66,8 +66,8 @@ export function runExampleStart(name: string): string {
  *
  * @remarks
  * Deliberately does not regenerate first. Regenerating and then checking
- * would assert only that the generator is deterministic -- which
- * `test/build/` already covers -- while silently repairing exactly the drift
+ * would assert only that the generator is deterministic (which
+ * `test/build/` already covers) while silently repairing exactly the drift
  * this is meant to catch: committed output that no longer matches its own
  * source. The committed bytes must already be correct.
  */

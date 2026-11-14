@@ -186,7 +186,7 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
   it("defaults root to process.cwd() when omitted", async () => {
     // A real `process.chdir()` (tried first) throws `ERR_WORKER_UNSUPPORTED_OPERATION`
     // under any worker-thread-based test runner (Stryker's own vitest-runner
-    // included, unlike this project's default `vitest run` pool) -- a Node.js
+    // included, unlike this project's default `vitest run` pool): a Node.js
     // platform restriction, not a vitest quirk. Mocking `process.cwd()` itself
     // proves the same "root defaults to cwd" behavior without touching real
     // process-wide state at all.
@@ -208,7 +208,7 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
 
   it("prunes node_modules/dist/.git by default, even though `exclude` is entirely omitted", async () => {
     // A syntactically-real, discoverable-if-not-pruned contract, deliberately
-    // placed under each of the three default-excluded directory names --
+    // placed under each of the three default-excluded directory names:
     // proves `defaultExclude()`'s own literal patterns, not just that
     // *some* exclude list is applied.
     await writeFixture(
@@ -261,7 +261,7 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
 
   it("onIncompatibility: throw escalates an ordinary warning-severity issue too, not just provable errors", async () => {
     // Differing processor implementations with no return-type annotations are
-    // only ever a "warning" (unprovable via static analysis alone) -- confirms
+    // only ever a "warning" (unprovable via static analysis alone): confirms
     // `onIncompatibility: throw` escalates *all* issues, not only the
     // always-blocking "error"-severity ones the conflicting-return-type test
     // above already covers.
@@ -362,11 +362,11 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
     expect(manifestModule.manifest).toHaveLength(1)
   })
 
-  describe("evidence artifact change-tracking (ContractModel fields added/removed/updated since the last persisted snapshot -- see ADR 0038)", () => {
+  describe("evidence artifact change-tracking (ContractModel fields added/removed/updated since the last persisted snapshot; see ADR 0038)", () => {
     // Uses generateEnvArtifacts(), not bare generateEvidenceModel(), so this
     // matches how a real project actually triggers this (its generate:env
     // script). envExample.onExisting: "skip" keeps that unrelated artifact
-    // out of the picture across the three repeated calls below -- the
+    // out of the picture across the three repeated calls below; the
     // default "keep-sibling" would otherwise spam a fresh timestamped
     // sibling file on every call, which this scenario has no interest in.
     const dir = "features/changes-demo"
@@ -444,7 +444,7 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
       )
 
       // onExisting: "skip" kept every call after the first from touching
-      // .env.example.changes-demo again -- exactly one file, no timestamped
+      // .env.example.changes-demo again; exactly one file, no timestamped
       // siblings, even though generation ran three times against it.
       const envExampleSiblings = (await fs.readdir(fixtureRoot)).filter((name) =>
         name.startsWith(".env.example.changes-demo"),
@@ -453,8 +453,8 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
     })
   })
 
-  it("omits any packages report entirely when options.packages is omitted -- exactly the one real (non-package) warning shows, no spurious `(package) ...` entry", async () => {
-    // An unresolvable schema factory reference -- `link.ts` can't statically
+  it("omits any packages report entirely when options.packages is omitted: exactly the one real (non-package) warning shows, no spurious `(package) ...` entry", async () => {
+    // An unresolvable schema factory reference: `link.ts` can't statically
     // evaluate `someFactory()`, so it emits a real parse warning, distinct
     // from any `(package) <name>` warning `resolveAllowlistedPackages()`
     // would emit for an unresolvable *package name*.
@@ -527,7 +527,7 @@ describe("generateEnvManifest (real filesystem, no code execution during generat
   })
 })
 
-describe("computeManifest (direct, pure -- no I/O)", () => {
+describe("computeManifest (direct and pure: no I/O)", () => {
   it("excludes an inactive contract from activeContracts, though contractSummaries still lists both", () => {
     const linkResult = makeLinkResult([
       makeContract({
@@ -604,10 +604,10 @@ describe("computeManifest (direct, pure -- no I/O)", () => {
       }),
       // Two DIFFERENT keys, otherwise-identical shape (same declared
       // `processorReturnType`), across two different active/non-exclusive-
-      // grouped contracts -- detectDuplicateVariableShapes()'s own "info"
+      // grouped contracts: detectDuplicateVariableShapes()'s own "info"
       // trigger. NOTE: `shapesMatch()` explicitly treats "unknown" (a bare
       // variable with no processorReturnType/default) as NEVER matching
-      // anything, including another "unknown" -- a matching PAIR needs a
+      // anything, including another "unknown"; a matching PAIR needs a
       // real, shared, non-"unknown" valueType, not just two bare variables.
       makeContract({
         file: "/repo/info-a/env.schema.ts",

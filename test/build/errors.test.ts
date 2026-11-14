@@ -98,7 +98,7 @@ describe("EnvProjectGenerationError", () => {
 })
 
 describe("Error.captureStackTrace availability", () => {
-  // `Error.captureStackTrace` is a V8-only extension -- guarded with `?.()`
+  // `Error.captureStackTrace` is a V8-only extension: guarded with `?.()`
   // in every constructor above so a non-V8 engine still constructs the error
   // successfully, just without the trimmed stack trace. Deleting it here
   // simulates that engine directly, rather than trusting V8 (always present

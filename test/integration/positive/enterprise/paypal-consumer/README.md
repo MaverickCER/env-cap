@@ -1,8 +1,8 @@
 # paypal-consumer example
 
 An application that installs [`paypal-addon`](../paypal-addon/) from a real
-packed tarball -- not a monorepo sibling, not a directory symlink -- and
-consumes its environment contract alongside its own local one:
+packed tarball (not a monorepo sibling, not a directory symlink). It consumes
+that package's environment contract alongside its own local one:
 
 ```
 src/
@@ -14,26 +14,26 @@ scripts/
   generate-manifest.mjs <- build-time only, never imported by the app
 ```
 
-This pair of examples exists to show that capability ownership does not
-depend on where a capability's code lives, and -- since
+This pair of examples shows that capability ownership does not depend on
+where a capability's code lives. Since
 [ADR 0014](../../specs/decisions/0014-cross-package-schema-discovery.md)
-(**Experimental**, see [`VERSIONING.md`](../../VERSIONING.md)) -- that this
-now holds even when the capability ships as a genuinely separate,
-independently-published package with no shared source tree, no monorepo, and
-no workspace protocol involved.
+(**Experimental**, see [`VERSIONING.md`](../../VERSIONING.md)), this holds even
+when the capability ships as a genuinely separate, independently-published
+package. No shared source tree, no monorepo, and no workspace protocol is
+involved.
 
 ## A real discovery boundary, actually crossed
 
 `generateEnvManifest()`'s general file-discovery walk still never looks
-inside `node_modules` -- that guarantee, and the performance/security
-reasoning behind it, is completely unchanged (see
+inside `node_modules`. That rule, and the performance/security reasoning
+behind it, is completely unchanged (see
 [`specs/architecture.md`](../../specs/architecture.md)'s "build/" section and
 [ADR 0002](../../specs/decisions/0002-static-analysis-never-execution.md)).
 What changed is a second, narrow, opt-in mechanism: `scripts/generate-manifest.mjs`
 passes `packages: ["@examples/paypal-addon"]` to `generateEnvArtifacts()`.
-That's the entire configuration required -- `root` is this package's own
-directory, exactly like `examples/application`, no shared-parent-directory
-workaround needed.
+That's the entire configuration required. `root` is this package's own
+directory, exactly like `examples/application`, with no
+shared-parent-directory workaround needed.
 
 Run it yourself and inspect what actually happens:
 
@@ -44,11 +44,11 @@ npm run generate:env
 ```
 
 The first line builds and packs `paypal-addon` into `paypal-addon.tgz` (see
-its README) -- do this before `npm install` here, since this package's
-`package.json` depends on `file:../paypal-addon/paypal-addon.tgz`, a real
-tarball install, not a directory reference. `npm install` here then
-populates `node_modules/@examples/paypal-addon` with **only** `dist/`,
-`src/env.schema.ts`, and `package.json` -- confirm it yourself:
+its README). Do this before `npm install` here. This package's `package.json`
+depends on `file:../paypal-addon/paypal-addon.tgz`, a real tarball install,
+not a directory reference. `npm install` here then populates
+`node_modules/@examples/paypal-addon` with **only** `dist/`,
+`src/env.schema.ts`, and `package.json`. Confirm it yourself:
 
 ```bash
 find node_modules/@examples/paypal-addon -type f
@@ -58,8 +58,7 @@ find node_modules/@examples/paypal-addon -type f
 with a genuine bare-package import for the cross-package one:
 
 ```ts
-// AUTO-GENERATED FILE.
-// DO NOT EDIT.
+// GENERATED FILE -- do not edit by hand. Run `npx env-cap` to regenerate.
 
 import { paypalEnv } from "@examples/paypal-addon";
 import { appEnv } from "./env.schema";
@@ -70,35 +69,34 @@ export const manifest = [
 ];
 ```
 
-That's not a relative path into `node_modules` (which would point at raw
-`.ts` source most bundlers don't compile and isn't a valid runtime import
-path) -- it's the same bare specifier `src/app.ts` already uses via ordinary
-Node module resolution. Discovery and runtime consumption remain two
-different mechanisms, as they always have in this architecture; they just
-now agree on the same import for a package-resolved contract too.
+That's the same bare specifier `src/app.ts` already uses via ordinary Node
+module resolution. It is not a relative path into `node_modules`. Such a path
+would point at raw `.ts` source most bundlers don't compile, and it isn't a
+valid runtime import path. Discovery and runtime consumption remain two different
+mechanisms, as they always have in this architecture. They now agree on the
+same import for a package-resolved contract too.
 
-The dependency-ownership report is correct across this boundary as well --
-`--ownership` is no longer a CLI flag (see [ADR
-0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)),
-so generating it is a `generateUsageReport()` call from `@maverickcer/env-cap/build`
-instead, with the same `packages: ["@examples/paypal-addon"]` option a
-`--package @examples/paypal-addon` CLI flag used to set -- see
-`examples/team-service/scripts/generate-docs/run.ts` for the pattern (this
-fixture has no such script of its own, since it's a behavioral fixture, not
-a reader-facing example).
+The dependency-ownership report is correct across this boundary as well.
+`--ownership` is no longer a CLI flag (see
+[ADR 0046](../../../../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)).
+Generating the report is a `generateUsageReport()` call from
+`@maverickcer/env-cap/build` instead. It takes the same
+`packages: ["@examples/paypal-addon"]` option a `--package @examples/paypal-addon`
+CLI flag used to set. See `examples/team-service/scripts/generate-docs/run.ts`
+for the pattern. This fixture has no such script of its own, since it's a
+behavioral fixture, not a reader-facing example.
 
 `paypal-addon`'s contract shows up with `src/app.ts` as a real consumer, not
-in the "Abandoned ownership" section -- resolving `@examples/paypal-addon` as
-a bare specifier during usage-scanning is exactly as load-bearing as
-resolving it for the manifest import, and both go through the same
-allowlisted resolution.
+in the "Abandoned ownership" section. Resolving `@examples/paypal-addon` as a
+bare specifier during usage-scanning is exactly as load-bearing as resolving
+it for the manifest import. Both go through the same allowlisted resolution.
 
 ## What the generated docs show
 
-`npm run generate:env` also writes `docs/ENVIRONMENT.md` covering both
-contracts from their `documentEnv()` calls -- `paypal-addon`'s three PayPal
-variables and this app's own `APP_NAME`/`PORT` -- in one generated artifact,
-without either package's schema being copied or redeclared in the other.
+`npm run generate:env` also writes `docs/ENVIRONMENT.md`, one generated
+artifact covering both contracts from their `documentEnv()` calls. It holds
+`paypal-addon`'s three PayPal variables and this app's own `APP_NAME`/`PORT`.
+Neither package's schema is copied or redeclared in the other.
 
 ## Run it
 
@@ -107,13 +105,13 @@ cp .env.example .env   # already committed with sandbox-safe placeholder values
 npm start
 ```
 
-`npm start` runs `generate:env` (writing `src/env.manifest.ts` and
-`docs/ENVIRONMENT.md` -- neither is gitignored; both are committed so you can
-see them change in a diff) and then boots `src/main.ts`, which
-validates both contracts and then runs `src/app.ts`, which logs the resolved
-config and calls `createCheckout()`.
+`npm start` runs `generate:env`, which writes `src/env.manifest.ts` and
+`docs/ENVIRONMENT.md`. Neither is gitignored; both are committed so you can
+see them change in a diff. It then boots `src/main.ts`, which validates both
+contracts and then runs `src/app.ts`. That file logs the resolved config and
+calls `createCheckout()`.
 
-Try deleting `PAYPAL_CLIENT_SECRET` from `.env` and re-running `npm start` --
-the aggregated `EnvValidationError` names `paypal-addon`'s contract, not this
+Try deleting `PAYPAL_CLIENT_SECRET` from `.env` and re-running `npm start`.
+The aggregated `EnvValidationError` names `paypal-addon`'s contract, not this
 application's, even though both were validated in the same `validateEnv()`
 call.

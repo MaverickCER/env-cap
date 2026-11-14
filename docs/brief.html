@@ -6,7 +6,7 @@
     <title>@maverickcer/env-cap: a one-page brief</title>
     <meta
       name="description"
-      content="env-cap gives every configuration setting an owner, a reason to exist and an expiry date, and shows what is unused or overdue."
+      content="Each feature declares its environment variables; env-cap checks them at startup and reports how each secret should be rotated before it expires."
     />
     <link rel="canonical" href="https://maverickcer.github.io/env-cap/brief.html" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -18,8 +18,8 @@
       <p class="brief-back"><a href="index.html">&larr; @maverickcer/env-cap</a></p>
       <h1>@maverickcer/env-cap: a one-page brief</h1>
       <p class="brief-oneline">
-        env-cap gives every configuration setting an owner, a reason to exist and an expiry date,
-        and shows what is unused or overdue.
+        Each feature declares its environment variables; env-cap checks them at startup and reports
+        how each secret should be rotated before it expires.
       </p>
       <section class="brief-block">
         <h2>The problem</h2>
@@ -31,9 +31,10 @@
       <section class="brief-block">
         <h2>What it does</h2>
         <p>
-          Each part of the application declares the settings it owns. A build step reports owners,
-          unused settings and coming expiry dates. The application checks its settings when it
-          starts.
+          Each feature declares the variables it needs and their format, with an owner, an expiry
+          date and rotation steps where they apply. The application validates them all in one place
+          at startup and stops on a bad value. A build step reports owners, unused variables and
+          secrets that expire soon.
         </p>
       </section>
       <section class="brief-block">

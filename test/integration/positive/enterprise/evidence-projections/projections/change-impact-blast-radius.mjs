@@ -2,7 +2,7 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 
 /**
  * The "Configuration Change Impact B (blast-radius correlation)" reference
- * projection (plan Phase 25) -- "the actual Change x Dependency join
+ * projection (plan Phase 25) ("the actual Change x Dependency join
  * `computeArtifacts()` never does today." The most complex of the ten by
  * the plan's own estimate: joins every changed contract/variable (Change
  * Model, ADR 0030) against its current real consumers (Dependency Model,
@@ -11,7 +11,7 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
  *
  * Known limitation, inherent to what each model can see: a **removed**
  * contract/variable's blast radius always reports `0` here, by
- * construction -- Dependency Model reflects *current* reality, and a
+ * construction) Dependency Model reflects *current* reality, and a
  * removed contract no longer exists in it to have consumers. A file that
  * still imports something just removed shows up as its own, separate
  * concern (an unresolved import) elsewhere, not as blast radius on the

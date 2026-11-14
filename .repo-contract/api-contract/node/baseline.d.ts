@@ -1,4 +1,24 @@
-/** One directory entry from {@link BuildFileSystem.readdir} -- the subset of Node's `Dirent` the build code reads. */
+/**
+ * The Node file system adapter for the build entry (`@maverickcer/env-cap/node`).
+ *
+ * `@maverickcer/env-cap/build` never imports `node:fs` (ADR 0040), so every generator takes the file
+ * system as a required `fs` option. A Node build script passes `nodeBuildFileSystem`:
+ *
+ * ```ts
+ * import { generateEnvArtifacts } from "@maverickcer/env-cap/build"
+ * import { nodeBuildFileSystem } from "@maverickcer/env-cap/node"
+ *
+ * await generateEnvArtifacts({ fs: nodeBuildFileSystem, root, manifest: { ... } })
+ * ```
+ *
+ * Like `bin` and `./eslint-plugin`, this entry runs only in Node, and it is the one place the build
+ * path loads `node:fs/promises`. In another runtime, implement the `BuildFileSystem` type that
+ * `./build` exports instead.
+ *
+ * @packageDocumentation
+ */
+
+/** One directory entry from {@link BuildFileSystem.readdir}: the subset of Node's `Dirent` the build code reads. */
 declare interface BuildDirent {
     readonly name: string;
     /** Same contract as Node's `Dirent.isDirectory()`. */
@@ -8,23 +28,18 @@ declare interface BuildDirent {
 }
 
 /**
- * The filesystem capability a package's `./build` entry requires from its caller.
+ * The filesystem a package's `./build` entry is handed by its caller.
  *
- * `./build` is a **library surface**: it must not acquire filesystem access
- * implicitly (no `node:fs` import outside the package's CLI). Every public options object carries a required
- * `fs` field of this type, and the caller supplies a concrete adapter: the CLI builds one over
- * `node:fs/promises`; a test builds either that same adapter or an in-memory fake.
+ * `./build` is a library surface, so it never imports `node:fs` itself (the `no-node-fs` rule enforces that).
+ * Every public options object carries a required `fs` of this type. The CLI builds one over `node:fs/promises`;
+ * a test hands in the same adapter or an in-memory fake. Real filesystem work still happens; the capability is
+ * handed in rather than acquired.
  *
- * "Ambient-fs-free" means specifically: `./build` never reaches for
- * `node:fs` itself. It still performs real filesystem operations -- the
- * capability is always handed in.
+ * The signatures mirror `node:fs/promises`, so a thin adapter is a drop-in value. The entry and stat types are
+ * structural ({@link BuildDirent}, {@link BuildStats}) rather than Node's own, so the boundary does not leak
+ * Node's types. Only the operations the build code calls are declared.
  *
- * The shape is modeled on `node:fs/promises`'s own signatures so a thin
- * adapter is a drop-in value, but uses minimal structural types
- * ({@link BuildDirent}/{@link BuildStats}) rather than Node's `Dirent`/
- * `Stats` -- the capability boundary shouldn't leak Node's type surface just
- * because the concrete adapter happens to be Node-backed. Only the
- * operations the build code actually calls are here.
+ * This file is the canonical source; a package carries a managed copy (`src/_ipc/build-fs.ts`, see `sync`).
  */
 declare interface BuildFileSystem {
     /** Read a UTF-8 text file. Rejects if the path doesn't exist or isn't readable. */
@@ -45,11 +60,11 @@ declare interface BuildFileSystem {
     readonly realpath: (path: string) => Promise<string>;
 }
 
-/** A path's stat info from {@link BuildFileSystem.stat} -- the subset of Node's `Stats` the build code reads. */
+/** A path's stat info from {@link BuildFileSystem.stat}: the subset of Node's `Stats` the build code reads. */
 declare interface BuildStats {
     /** Same contract as Node's `Stats.isFile()`. */
     readonly isFile: () => boolean;
-    /** Size in bytes -- read by the package-schema resolver to enforce a size ceiling. */
+    /** Size in bytes: read by the package-schema resolver to enforce a size ceiling. */
     readonly size: number;
 }
 

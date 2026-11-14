@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://maverickcer.github.io/env-cap/schema/contract-model.schema.json",
   "title": "env-cap Contract Model",
-  "description": "Canonical, versioned projection of every declared environment-variable contract, active or not (see ADR 0024, ADR 0025). Generated from src/build/contract-model.ts's ContractModel type -- never hand-authored.",
+  "description": "Canonical, versioned projection of every declared environment-variable contract, active or not (see ADR 0024, ADR 0025). Generated from src/build/contract-model.ts's ContractModel type, never by hand.",
   "$ref": "#/definitions/ContractModel",
   "definitions": {
     "ContractModel": {
@@ -24,7 +24,7 @@
         "contracts"
       ],
       "additionalProperties": false,
-      "description": "The versioned, JSON-serializable root of the Contract Model -- every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See ContractModelContract."
+      "description": "The versioned, JSON-serializable root of the Contract Model: every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See ContractModelContract."
     },
     "ContractModelContract": {
       "type": "object",
@@ -69,7 +69,7 @@
         },
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated -- matches `DiscoveredContractSummary.file`."
+          "description": "Root-relative, POSIX-separated: matches `DiscoveredContractSummary.file`."
         },
         "exportName": {
           "type": "string"
@@ -233,7 +233,7 @@
         },
         "evidence": {
           "$ref": "#/definitions/DiscoveredVariableEvidence",
-          "description": "The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See runtime.VariableEvidenceDocs and ADR 0037."
+          "description": "The `evidence` sub-object from this variable's linked documentation: re-verified every run, unlike every declared-only field above. See runtime.VariableEvidenceDocs and ADR 0037."
         },
         "declaration": {
           "$ref": "#/definitions/SourcePosition",
@@ -259,7 +259,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Well-formed `\"path:line:column\"` entries from `evidence.dynamicAccess`, if set to an array of string literals -- a malformed entry warns and is dropped, never included here. See ADR 0037."
+          "description": "Well-formed `\"path:line:column\"` entries from `evidence.dynamicAccess`, if set to an array of string literals: a malformed entry warns and is dropped, never included here. See ADR 0037."
         }
       },
       "additionalProperties": false,
@@ -287,7 +287,7 @@
         "column"
       ],
       "additionalProperties": false,
-      "description": "A precise pointer into a source file -- the shared shape every exact-position fact in the build pipeline (declaration sites, usage sites, dynamic-access sites) uses, so a consumer never has to reconcile three ad hoc `{ file; line; column }` shapes that happen to mean the same thing. See ADR 0036."
+      "description": "A precise pointer into a source file. Every exact-position fact in the build pipeline (declaration sites, usage sites, dynamic-access sites) shares this shape. So a consumer never has to reconcile three ad hoc `{ file; line; column }` shapes that happen to mean the same thing. See ADR 0036."
     },
     "PackageOrigin": {
       "type": "object",
@@ -316,7 +316,7 @@
         "packageDir"
       ],
       "additionalProperties": false,
-      "description": "Both the authored and resolved forms are kept -- diagnostics benefit from showing exactly what a package author wrote versus what it resolved to."
+      "description": "Both the authored and resolved forms are kept: diagnostics benefit from showing exactly what a package author wrote versus what it resolved to."
     }
   }
 }

@@ -50,7 +50,7 @@ Build the repository root first ([examples/README.md](../README.md#before-you-ru
 | 5    | `npm start`             | `0`                | `Headless smoke test passed`                 |
 | 6    | `npm run dev`           | runs until stopped | none; open the printed URL                   |
 
-CI's `examples` job runs steps 3, 4 and 5 (`test/examples/enterprise-platform.test.ts`). That job does not yet block a merge.
+CI's `examples` job runs steps 3, 4 and 5 (`test/examples/enterprise-platform.test.ts`). `required` waits for `examples`, so a failure blocks a merge.
 
 ## Two drift checks, for two kinds of drift
 

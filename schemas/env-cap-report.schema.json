@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://maverickcer.github.io/env-cap/schema/env-cap-report.schema.json",
   "title": "env-cap --json report",
-  "description": "Machine-readable envelope emitted by `env-cap --json` (see README's --json section and ADR 0013). Generated from src/cli/json.ts's JsonReportPayload type -- never hand-authored.",
+  "description": "Machine-readable envelope emitted by `env-cap --json` (see README's --json section and ADR 0013). Generated from src/cli/json.ts's JsonReportPayload type, never by hand.",
   "$ref": "#/definitions/JsonReportPayload",
   "definitions": {
     "JsonReportPayload": {
@@ -14,7 +14,7 @@
           "$ref": "#/definitions/JsonErrorPayload"
         }
       ],
-      "description": "The complete `--json` envelope shape, success or failure -- the target type the published JSON Schema (`schemas/env-cap-report.schema.json`, `npm run schema`) is generated from. See ADR 0019."
+      "description": "The complete `--json` envelope shape, success or failure: the target type the published JSON Schema (`schemas/env-cap-report.schema.json`, `npm run schema`) is generated from. See ADR 0019."
     },
     "JsonSuccessPayload": {
       "type": "object",
@@ -48,11 +48,11 @@
         },
         "requested": {
           "$ref": "#/definitions/JsonRequestedPasses",
-          "description": "Which passes this invocation requested -- always present, so \"not requested\" is never confused with \"computed empty.\" See JsonRequestedPasses."
+          "description": "Which passes this invocation requested: always present, so \"not requested\" is never confused with \"computed empty.\" See JsonRequestedPasses."
         },
         "evidence": {
           "$ref": "#/definitions/EvidenceModel",
-          "description": "Present only when the caller actually requested `--evidence` -- `GenerateEnvArtifactsResult.evidence` itself is always populated (ADR 0038, \"free to compute, always real\"), but the `--json` envelope omits it by default so an ordinary `--location`/`--docs`/`--ownership` report doesn't silently grow by the full evidence model every time."
+          "description": "Present only when the caller requested `--evidence`. `GenerateEnvArtifactsResult.evidence` itself is always populated (ADR 0038, \"free to compute, always real\"). The `--json` envelope omits it by default so an ordinary `--location` report doesn't silently grow by the full evidence model every time."
         },
         "checkResult": {
           "type": "object",
@@ -183,7 +183,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Every file declaring a conflicting definition. A pairwise comparison (compatibility.ts, exclusive-group.ts) always produces exactly two; a finding escalated from another family (generate-env-artifacts.ts's `escalatedFindings()`, via `findingFiles()`) can produce zero, one, or two, depending on what location information that finding actually carries -- genuinely variable arity, not a tuple."
+          "description": "Every file declaring a conflicting definition. A pairwise comparison (compatibility.ts, exclusive-group.ts) always produces exactly two. A finding escalated from another family (generate-env-artifacts.ts's `escalatedFindings()`, via `findingFiles()`) can produce zero, one, or two, depending on the location information that finding carries. So the arity varies, and this is not a tuple."
         },
         "reason": {
           "type": "string",
@@ -191,7 +191,7 @@
         },
         "code": {
           "$ref": "#/definitions/CompatibilityIssueCode",
-          "description": "Stable, machine-readable identifier for CI filtering / doc-linking / GitHub Action annotations / IDE integration. `undefined` only for checks that don't (yet) set one -- see CompatibilityIssueCode for the full enumerated list of values a check in this file can produce."
+          "description": "Stable, machine-readable identifier for CI filtering / doc-linking / GitHub Action annotations / IDE integration. `undefined` only for checks that don't set one yet. CompatibilityIssueCode lists every value a check in this file can produce."
         }
       },
       "required": [
@@ -212,7 +212,7 @@
         "DUPLICATE_VARIABLE_DOCUMENTATION",
         "DUPLICATE_VARIABLE_SHAPE_ACROSS_CONTRACTS"
       ],
-      "description": "Every stable `code` a check in this file (or `exclusive-group.ts`) can emit. Documented as an enumerated union so a consumer filtering/linking on `code` has a closed list to switch over, rather than an arbitrary string -- see ADR 0024/0026. `exclusive-group.ts`'s check does not (yet) set one; see that file's own comment for why."
+      "description": "Every stable `code` a check in this file (or `exclusive-group.ts`) can emit. Documented as an enumerated union so a consumer filtering/linking on `code` has a closed list to switch over, rather than an arbitrary string: see ADR 0024/0026. `exclusive-group.ts`'s check does not (yet) set one; see that file's own comment for why."
     },
     "ParseWarning": {
       "type": "object",
@@ -231,7 +231,7 @@
         "message"
       ],
       "additionalProperties": false,
-      "description": "A recoverable issue found while statically parsing or linking one schema file -- never fatal, always surfaced to the caller as data."
+      "description": "A recoverable issue found while statically parsing or linking one schema file: never fatal, always surfaced to the caller as data."
     },
     "GenerateDocumentationResult": {
       "type": "object",
@@ -256,7 +256,7 @@
           "items": {
             "$ref": "#/definitions/CatalogContract"
           },
-          "description": "Same descriptive content as the generated Markdown Catalog, reshaped for programmatic consumers -- see `buildCatalog()` in `docs.ts`."
+          "description": "Same descriptive content as the generated Markdown Catalog, reshaped for programmatic consumers: see `buildCatalog()` in `docs.ts`."
         },
         "parseWarnings": {
           "type": "array",
@@ -303,7 +303,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Variables live in an existing example file whose feature is no longer active, and that no other active feature still needs -- safe to comment out."
+          "description": "Variables live in an existing example file whose feature is no longer active, and that no other active feature still needs: safe to comment out."
         },
         "variablesToAdd": {
           "type": "array",
@@ -455,11 +455,11 @@
               },
               "context": {
                 "type": "string",
-                "description": "The variable's declared validation context, if any -- see ADR 0022. Participation data, not documentation: describes when `validateEnv()` processes this variable, not who may access it or what a bundler includes."
+                "description": "The variable's declared validation context, if any: see ADR 0022. Participation data, not documentation: describes when `validateEnv()` processes this variable, not who may access it or what a bundler includes."
               },
               "evidence": {
                 "$ref": "#/definitions/DiscoveredVariableEvidence",
-                "description": "The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See ADR 0037."
+                "description": "The `evidence` sub-object from this variable's linked documentation: re-verified every run, unlike every declared-only field above. See ADR 0037."
               }
             },
             "required": [
@@ -471,7 +471,7 @@
             "additionalProperties": false,
             "description": "Same data `renderCatalog()` renders to Markdown for one variable, reshaped for JSON/ programmatic consumers instead of prose."
           },
-          "description": "Keyed by variable name -- unique within one contract (a schema object-literal property name), unlike `contractName` at the top level."
+          "description": "Keyed by variable name: unique within one contract (a schema object-literal property name), unlike `contractName` at the top level."
         }
       },
       "required": [
@@ -492,7 +492,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Well-formed `\"path:line:column\"` entries from `evidence.dynamicAccess`, if set to an array of string literals -- a malformed entry warns and is dropped, never included here. See ADR 0037."
+          "description": "Well-formed `\"path:line:column\"` entries from `evidence.dynamicAccess`, if set to an array of string literals: a malformed entry warns and is dropped, never included here. See ADR 0037."
         }
       },
       "additionalProperties": false,
@@ -589,7 +589,7 @@
           "items": {
             "$ref": "#/definitions/NonstandardSensitivityEntry"
           },
-          "description": "Contract- or variable-level `sensitivity` values outside STANDARD_SENSITIVITY_LEVELS. Advisory only -- the declared level is always honored verbatim; this exists purely so vocabulary drift across a repo stays visible."
+          "description": "Contract- or variable-level `sensitivity` values outside STANDARD_SENSITIVITY_LEVELS. Advisory only: the declared level is always honored verbatim; this exists purely so vocabulary drift across a repo stays visible."
         },
         "unresolvedLinks": {
           "type": "array",
@@ -623,7 +623,7 @@
         "unresolvedLinks"
       ],
       "additionalProperties": false,
-      "description": "Everything generateDocumentation found that isn't fully documented or up to date -- never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the \"documentation\" family) from the persisted evidence artifact and decides for itself. See ADR 0038."
+      "description": "Everything generateDocumentation found that isn't fully documented or up to date: never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the \"documentation\" family) from the persisted evidence artifact and decides for itself. See ADR 0038."
     },
     "ExpiringEntry": {
       "type": "object",
@@ -708,7 +708,7 @@
           "items": {
             "$ref": "#/definitions/UnresolvedConsumerFinding"
           },
-          "description": "Advisory only, never gates `onOwnershipIssue` -- a contract only reaches here when an ambiguous barrel re-export makes \"abandoned\" or \"consumed\" both unprovable."
+          "description": "Advisory only, never gates `onOwnershipIssue`: a contract only reaches here when an ambiguous barrel re-export makes \"abandoned\" or \"consumed\" both unprovable."
         },
         "unconsumedOwnedVariables": {
           "type": "array",
@@ -729,21 +729,21 @@
           "items": {
             "$ref": "#/definitions/AssertedDynamicAccessFinding"
           },
-          "description": "Variables a developer has re-acknowledged via `dynamicAccess`, freshly -- see ADR 0037."
+          "description": "Variables a developer has re-acknowledged via `dynamicAccess`, freshly: see ADR 0037."
         },
         "parseWarnings": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ParseWarning"
           },
-          "description": "Schema-discovery parse warnings plus, since ADR 0014, any `packages` resolution failures -- surfaced here too (not just from `generateEnvManifest`/`generateDocumentation`) so a team relying only on `--ownership` output still learns when a cross-package contract failed to resolve."
+          "description": "Schema-discovery parse warnings plus, since ADR 0014, any `packages` resolution failures: surfaced here too (not just from `generateEnvManifest`/`generateDocumentation`) so a team relying only on `--ownership` output still learns when a cross-package contract failed to resolve."
         },
         "scannedSurfaces": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ScannedSurface"
           },
-          "description": "Every surface actually scanned for usage -- see ADR 0036. Named explicitly next to `unconsumedOwnedVariables` so \"no consumer found\" is never read as a stronger claim than what was actually searched."
+          "description": "Every surface actually scanned for usage: see ADR 0036. Named explicitly next to `unconsumedOwnedVariables` so \"no consumer found\" is never read as a stronger claim than what was actually searched."
         },
         "reportPath": {
           "type": "string",
@@ -787,7 +787,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Files coupled to this contract (imported it, referenced it, or read a member from it) -- contract-level \"who depends on this,\" NOT proof any specific variable was read. Blast radius if this contract changes is `consumers.length`, computed by callers/renderers on demand rather than stored redundantly here."
+          "description": "Files coupled to this contract (imported it, referenced it, or read a member from it): contract-level \"who depends on this,\" NOT proof any specific variable was read. Blast radius if this contract changes is `consumers.length`, computed by callers/renderers on demand rather than stored redundantly here."
         }
       },
       "required": [
@@ -844,7 +844,7 @@
         "reason"
       ],
       "additionalProperties": false,
-      "description": "A contract reachable only through an unresolved barrel re-export -- can't be proven abandoned or consumed."
+      "description": "A contract reachable only through an unresolved barrel re-export: can't be proven abandoned or consumed."
     },
     "UnconsumedOwnedVariableFinding": {
       "type": "object",
@@ -866,7 +866,7 @@
           "items": {
             "$ref": "#/definitions/DynamicAccessCitationProblem"
           },
-          "description": "Every `dynamicAccess` citation for this variable that's currently `\"stale\"` or `\"missing\"` (empty when none exist -- see ADR 0037). Empty is the *strongest* \"looks genuinely unused\" signal: no developer has ever claimed otherwise. A non-empty list means someone specifically claimed dynamic access here once and that claim can no longer be verified -- worth a human check before deleting, not a stronger reason to trust \"unconsumed.\" Exposed as the raw citations, not a collapsed `high`/`low` label, matching this codebase's \"show the receipt\" pattern (ADR 0036/0037) -- a reader can judge confidence from the actual evidence rather than trusting a derived summary. See ADR 0038."
+          "description": "Every `dynamicAccess` citation for this variable that's currently `\"stale\"` or `\"missing\"` (empty when none exist: see ADR 0037). Empty is the *strongest* \"looks unused\" signal: no developer has ever claimed otherwise. A non-empty list means someone specifically claimed dynamic access here once, and that claim can no longer be verified. That is worth a human check before deleting, not a stronger reason to trust \"unconsumed.\" The list holds the raw citations, not a collapsed `high`/`low` label, matching this codebase's \"show the receipt\" pattern (ADR 0036/0037). A reader can judge confidence from the actual evidence rather than trusting a derived summary. See ADR 0038."
         }
       },
       "required": [
@@ -896,7 +896,7 @@
         },
         "position": {
           "$ref": "#/definitions/SourcePosition",
-          "description": "Where the citation points -- not the variable's own declaration."
+          "description": "Where the citation points: not the variable's own declaration."
         },
         "acknowledgment": {
           "type": "string",
@@ -915,7 +915,7 @@
         "acknowledgment"
       ],
       "additionalProperties": false,
-      "description": "One `dynamicAccess` citation env-cap can no longer vouch for -- the direct input to `finding-model.ts`'s `\"STALE_DYNAMIC_ACCESS_CITATION\"`/`\"MISSING_DYNAMIC_ACCESS_CITATION\"` findings. See ADR 0037."
+      "description": "One `dynamicAccess` citation env-cap can no longer vouch for: the direct input to `finding-model.ts`'s `\"STALE_DYNAMIC_ACCESS_CITATION\"`/`\"MISSING_DYNAMIC_ACCESS_CITATION\"` findings. See ADR 0037."
     },
     "SourcePosition": {
       "type": "object",
@@ -939,7 +939,7 @@
         "column"
       ],
       "additionalProperties": false,
-      "description": "A precise pointer into a source file -- the shared shape every exact-position fact in the build pipeline (declaration sites, usage sites, dynamic-access sites) uses, so a consumer never has to reconcile three ad hoc `{ file; line; column }` shapes that happen to mean the same thing. See ADR 0036."
+      "description": "A precise pointer into a source file. Every exact-position fact in the build pipeline (declaration sites, usage sites, dynamic-access sites) shares this shape. So a consumer never has to reconcile three ad hoc `{ file; line; column }` shapes that happen to mean the same thing. See ADR 0036."
     },
     "IndeterminateOwnershipFinding": {
       "type": "object",
@@ -961,7 +961,7 @@
           "items": {
             "$ref": "#/definitions/SourcePosition"
           },
-          "description": "Every AST-observed dynamic-access site backing `reason`, structured -- see ADR 0036."
+          "description": "Every AST-observed dynamic-access site backing `reason`, structured: see ADR 0036."
         },
         "staleOrMissingCitations": {
           "type": "array",
@@ -979,7 +979,7 @@
         "staleOrMissingCitations"
       ],
       "additionalProperties": false,
-      "description": "A variable accessed only via dynamic (computed) property access -- usage cannot be determined statically."
+      "description": "A variable accessed only via dynamic (computed) property access: usage cannot be determined statically."
     },
     "AssertedDynamicAccessFinding": {
       "type": "object",
@@ -1015,7 +1015,7 @@
         "dynamicAccessAssertions"
       ],
       "additionalProperties": false,
-      "description": "A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `\"fresh\"` developer-declared `dynamicAccess` citation -- the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037."
+      "description": "A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `\"fresh\"` developer-declared `dynamicAccess` citation: the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037."
     },
     "DynamicAccessAssertion": {
       "type": "object",
@@ -1039,11 +1039,11 @@
             "stale",
             "missing"
           ],
-          "description": "`\"fresh\"` -- the cited file currently exists and either matches the committed baseline hash or has no baseline yet (a brand-new citation, nothing to contradict it yet). `\"stale\"` -- the cited file exists but its content has changed since the committed baseline. `\"missing\"` -- the cited file no longer exists at all. Re-derived from scratch every run; never cached across runs."
+          "description": "`\"fresh\"`: the cited file currently exists and either matches the committed baseline hash or has no baseline yet (a brand-new citation, nothing to contradict it yet). `\"stale\"`: the cited file exists but its content has changed since the committed baseline. `\"missing\"`: the cited file no longer exists at all. Re-derived from scratch every run; never cached across runs."
         },
         "contentHash": {
           "type": "string",
-          "description": "SHA-256 hex digest of the cited file's content *as observed this run* -- `undefined` iff `acknowledgment === \"missing\"` (nothing to hash). This is the one field that makes freshness checking possible without a snapshot-only shadow type: the live `EvidenceModel.dependency` a caller gets back and the persisted evidence snapshot a later run reads back as its baseline are the exact same shape -- this run's `contentHash` becomes next run's comparison target directly. See `evidence-snapshot.ts` and ADR 0037."
+          "description": "SHA-256 hex digest of the cited file's content *as observed this run*: `undefined` iff `acknowledgment === \"missing\"` (nothing to hash). This is the one field that makes freshness checking possible without a snapshot-only shadow type. The live `EvidenceModel.dependency` a caller gets back has the exact same shape as the persisted evidence snapshot a later run reads back as its baseline. So this run's `contentHash` becomes next run's comparison target directly. See `evidence-snapshot.ts` and ADR 0037."
         }
       },
       "required": [
@@ -1053,7 +1053,7 @@
         "line"
       ],
       "additionalProperties": false,
-      "description": "One developer-declared runtime.VariableEvidenceDocs.dynamicAccess citation's current acknowledgment state -- a claim, never an observation. Kept fully separate from `VariableAccessStatus` (which stays exactly 3-valued and purely AST-derived) so a developer's assertion can never make env-cap claim it observed something it didn't. See `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where this is computed) and ADR 0037."
+      "description": "One developer-declared runtime.VariableEvidenceDocs.dynamicAccess citation's current acknowledgment state: a claim, never an observation. Kept fully separate from `VariableAccessStatus` (which stays exactly 3-valued and purely AST-derived) so a developer's assertion can never make env-cap claim it observed something it didn't. See `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where this is computed) and ADR 0037."
     },
     "ScannedSurface": {
       "type": "object",
@@ -1072,7 +1072,7 @@
         "root"
       ],
       "additionalProperties": false,
-      "description": "One named surface `buildDependencyGraph()`'s scan actually covered -- the application's own root, plus one entry per allow-listed `packages` (ADR 0014) name whose source was also scanned. See ADR 0036: a claim like \"no consumer found\" is only ever as strong as what was actually searched, and this is what lets a renderer say so explicitly instead of implying an unbounded guarantee it can't back up."
+      "description": "One named surface `buildDependencyGraph()`'s scan actually covered: the application's own root, plus one entry per allow-listed `packages` (ADR 0014) name whose source was also scanned. See ADR 0036. A claim like \"no consumer found\" is only as strong as what was searched. This lets a renderer say so explicitly, not imply an unbounded guarantee."
     },
     "JsonRequestedPasses": {
       "type": "object",
@@ -1101,7 +1101,7 @@
         "evidence"
       ],
       "additionalProperties": false,
-      "description": "Which passes this invocation actually asked for -- recorded explicitly so a consumer never has to infer intent from which top-level keys happen to be present."
+      "description": "Which passes this invocation actually asked for: recorded explicitly so a consumer never has to infer intent from which top-level keys happen to be present."
     },
     "EvidenceModel": {
       "type": "object",
@@ -1163,7 +1163,7 @@
         "toolVersion"
       ],
       "additionalProperties": false,
-      "description": "Who/when/what produced a given `EvidenceModel` instance. Caller-supplied, never ambient-detected -- `generateEvidenceModel()` never shells out to `git` itself, mirroring ADR 0012's live-expiration-callback precedent."
+      "description": "Who/when/what produced a given `EvidenceModel` instance. Caller-supplied, never ambient-detected: `generateEvidenceModel()` never shells out to `git` itself, mirroring ADR 0012's live-expiration-callback precedent."
     },
     "ContractModel": {
       "type": "object",
@@ -1184,7 +1184,7 @@
         "contracts"
       ],
       "additionalProperties": false,
-      "description": "The versioned, JSON-serializable root of the Contract Model -- every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See ContractModelContract."
+      "description": "The versioned, JSON-serializable root of the Contract Model: every discovered `createEnv()` contract (active or not), each with its own full statically-discoverable shape. See ContractModelContract."
     },
     "ContractModelContract": {
       "type": "object",
@@ -1229,7 +1229,7 @@
         },
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated -- matches `DiscoveredContractSummary.file`."
+          "description": "Root-relative, POSIX-separated: matches `DiscoveredContractSummary.file`."
         },
         "exportName": {
           "type": "string"
@@ -1393,7 +1393,7 @@
         },
         "evidence": {
           "$ref": "#/definitions/DiscoveredVariableEvidence",
-          "description": "The `evidence` sub-object from this variable's linked documentation -- re-verified every run, unlike every declared-only field above. See runtime.VariableEvidenceDocs and ADR 0037."
+          "description": "The `evidence` sub-object from this variable's linked documentation: re-verified every run, unlike every declared-only field above. See runtime.VariableEvidenceDocs and ADR 0037."
         },
         "declaration": {
           "$ref": "#/definitions/SourcePosition",
@@ -1438,7 +1438,7 @@
         "packageDir"
       ],
       "additionalProperties": false,
-      "description": "Both the authored and resolved forms are kept -- diagnostics benefit from showing exactly what a package author wrote versus what it resolved to."
+      "description": "Both the authored and resolved forms are kept: diagnostics benefit from showing exactly what a package author wrote versus what it resolved to."
     },
     "DependencyModel": {
       "type": "object",
@@ -1458,7 +1458,7 @@
           "items": {
             "$ref": "#/definitions/DependencyModelConsumer"
           },
-          "description": "Inverse of `contracts[].consumingFiles` -- one entry per file that consumes at least one contract, listing which contracts it reads."
+          "description": "Inverse of `contracts[].consumingFiles`: one entry per file that consumes at least one contract, listing which contracts it reads."
         },
         "warnings": {
           "type": "array",
@@ -1471,7 +1471,7 @@
           "items": {
             "$ref": "#/definitions/ScannedSurface"
           },
-          "description": "Every surface actually scanned for usage -- see ADR 0036. Always has at least one entry (the application root)."
+          "description": "Every surface actually scanned for usage: see ADR 0036. Always has at least one entry (the application root)."
         }
       },
       "required": [
@@ -1482,14 +1482,14 @@
         "scannedSurfaces"
       ],
       "additionalProperties": false,
-      "description": "The versioned, JSON-serializable root of the Dependency Model -- see this module's own doc comment for the full picture."
+      "description": "The versioned, JSON-serializable root of the Dependency Model: see this module's own doc comment for the full picture."
     },
     "DependencyModelContract": {
       "type": "object",
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated -- matches `ContractModelContract.file`."
+          "description": "Root-relative, POSIX-separated: matches `ContractModelContract.file`."
         },
         "exportName": {
           "type": "string"
@@ -1514,7 +1514,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Every file coupled to this contract -- contract-level \"who depends on this,\" not proof any specific variable was read."
+          "description": "Every file coupled to this contract: contract-level \"who depends on this,\" not proof any specific variable was read."
         },
         "ambiguousBarrelFiles": {
           "type": "array",
@@ -1528,7 +1528,7 @@
           "items": {
             "$ref": "#/definitions/SourcePosition"
           },
-          "description": "Every computed (dynamic) property-access site observed anywhere on this contract -- see ADR 0036."
+          "description": "Every computed (dynamic) property-access site observed anywhere on this contract: see ADR 0036."
         }
       },
       "required": [
@@ -1559,14 +1559,14 @@
           "items": {
             "$ref": "#/definitions/SourcePosition"
           },
-          "description": "Empty unless `status === \"used\"`. Previously discarded before reaching any public type -- see ADR 0027 (line only) and ADR 0036 (full position, file included per entry)."
+          "description": "Empty unless `status === \"used\"`. Each entry is a full position with its file (ADR 0027, ADR 0036)."
         },
         "dynamicAccessAssertions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/DynamicAccessAssertion"
           },
-          "description": "Every developer-declared `dynamicAccess` citation's current freshness for this variable -- a wholly separate, independent fact from `status` above, never folded into it. Empty when no citation was declared, or when no manifest snapshot baseline was available to check against (the manifest pass wasn't also requested). See ADR 0037."
+          "description": "Every developer-declared `dynamicAccess` citation's current freshness for this variable: a wholly separate, independent fact from `status` above, never folded into it. Empty when no citation was declared, or when no manifest snapshot baseline was available to check against (the manifest pass wasn't also requested). See ADR 0037."
         }
       },
       "required": [
@@ -1585,7 +1585,7 @@
         "unconsumed",
         "indeterminate"
       ],
-      "description": "What env-cap's static scan could prove about one variable's consumption: it was member-accessed somewhere (`\"used\"`), it was never accessed at all within the scanned surfaces (`\"unconsumed\"`), or a computed (dynamic) property access on the owning contract makes the answer unprovable (`\"indeterminate\"`)."
+      "description": "What env-cap's static scan could prove about one variable's consumption. It was member-accessed somewhere (`\"used\"`), or never accessed within the scanned surfaces (`\"unconsumed\"`). Or a computed (dynamic) property access on the owning contract makes the answer unprovable (`\"indeterminate\"`)."
     },
     "DependencyModelConsumer": {
       "type": "object",
@@ -1606,18 +1606,18 @@
         "contracts"
       ],
       "additionalProperties": false,
-      "description": "One consuming file, and every contract it depends on -- the inverse of `DependencyModelContract.consumingFiles`."
+      "description": "One consuming file, and every contract it depends on: the inverse of `DependencyModelContract.consumingFiles`."
     },
     "DependencyModelContractRef": {
       "$ref": "#/definitions/ContractRef",
-      "description": "One contract, as referenced from the inverse (`consumers`) index -- see ContractRef for why no `contractName` is carried here."
+      "description": "One contract, as referenced from the inverse (`consumers`) index: see ContractRef for why no `contractName` is carried here."
     },
     "ContractRef": {
       "type": "object",
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated path of the file declaring the contract -- see `displayPath()`."
+          "description": "Root-relative, POSIX-separated path of the file declaring the contract: see `displayPath()`."
         },
         "exportName": {
           "type": "string",
@@ -1629,7 +1629,7 @@
         "exportName"
       ],
       "additionalProperties": false,
-      "description": "The one shape every model in this package uses to point at a declared contract: the file it's declared in, and the binding it's exported as. Nothing else -- see ADR 0039."
+      "description": "The one shape every model in this package uses to point at a declared contract: the file it's declared in, and the binding it's exported as. Nothing else: see ADR 0039."
     },
     "OwnershipModel": {
       "type": "object",
@@ -1666,14 +1666,14 @@
         "unownedVariables"
       ],
       "additionalProperties": false,
-      "description": "The versioned, JSON-serializable root of the Ownership Model -- see this module's own doc comment for the full picture."
+      "description": "The versioned, JSON-serializable root of the Ownership Model: see this module's own doc comment for the full picture."
     },
     "OwnershipModelContract": {
       "type": "object",
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated -- matches `ContractModelContract.file`."
+          "description": "Root-relative, POSIX-separated: matches `ContractModelContract.file`."
         },
         "exportName": {
           "type": "string"
@@ -1683,7 +1683,7 @@
         },
         "owner": {
           "type": "string",
-          "description": "The contract's own default owner -- not \"effective\" the way a variable's is, since there's no level above a contract to fall back to."
+          "description": "The contract's own default owner: not \"effective\" the way a variable's is, since there's no level above a contract to fall back to."
         },
         "variables": {
           "type": "array",
@@ -1709,7 +1709,7 @@
         },
         "owner": {
           "type": "string",
-          "description": "The variable's own `owner`, falling back to the contract's -- see `effectiveOwner()`."
+          "description": "The variable's own `owner`, falling back to the contract's: see `effectiveOwner()`."
         }
       },
       "required": [
@@ -1720,14 +1720,14 @@
     },
     "OwnershipModelContractRef": {
       "$ref": "#/definitions/ContractRef",
-      "description": "One contract, referenced by identity only -- see ContractRef for why no `contractName` is carried here. Resolve one from `ContractModel` when a renderer needs display text."
+      "description": "One contract, referenced by identity only: see ContractRef for why no `contractName` is carried here. Resolve one from `ContractModel` when a renderer needs display text."
     },
     "OwnershipModelVariableRef": {
       "type": "object",
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated path of the file declaring the contract -- see `displayPath()`."
+          "description": "Root-relative, POSIX-separated path of the file declaring the contract: see `displayPath()`."
         },
         "exportName": {
           "type": "string",
@@ -1743,7 +1743,7 @@
         "key"
       ],
       "additionalProperties": false,
-      "description": "One variable, referenced by its owning contract's identity plus its own key -- see ContractRef."
+      "description": "One variable, referenced by its owning contract's identity plus its own key: see ContractRef."
     },
     "LifecycleModel": {
       "type": "object",
@@ -1764,7 +1764,7 @@
           "items": {
             "$ref": "#/definitions/ExpiringEntry"
           },
-          "description": "Every contract-/variable-level `expiresAt` within the configured window, soonest-first -- see `computeExpiringEntries()`. `file` is root-relative and POSIX-separated here, matching `LifecycleModelContract.file`/every other canonical model -- unlike `ExpiringEntry`'s own doc comment, which describes its shape in `computeExpiringEntries()`'s other direct consumers (e.g. `DocumentationFindings.expiringSoon`), where `file` stays the absolute path `renderDocs()` itself expects."
+          "description": "Every contract-/variable-level `expiresAt` within the configured window, soonest-first: see `computeExpiringEntries()`. `file` is root-relative and POSIX-separated here, matching `LifecycleModelContract.file` and every other canonical model. `ExpiringEntry`'s own doc comment describes a different case: `computeExpiringEntries()`'s other direct consumers (e.g. `DocumentationFindings.expiringSoon`). There `file` stays the absolute path `renderDocs()` itself expects."
         }
       },
       "required": [
@@ -1773,14 +1773,14 @@
         "expiring"
       ],
       "additionalProperties": false,
-      "description": "The versioned, JSON-serializable root of the Lifecycle Model -- see this module's own doc comment for the full picture."
+      "description": "The versioned, JSON-serializable root of the Lifecycle Model: see this module's own doc comment for the full picture."
     },
     "LifecycleModelContract": {
       "type": "object",
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated -- matches `ContractModelContract.file`."
+          "description": "Root-relative, POSIX-separated: matches `ContractModelContract.file`."
         },
         "exportName": {
           "type": "string"
@@ -1806,7 +1806,7 @@
           "items": {
             "$ref": "#/definitions/LifecycleModelVariable"
           },
-          "description": "Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`, `authenticatorType`, `rotationPeriod`, `lastRotatedAt`, `rotationTriggerEvents`) -- same \"only what's relevant\" scope `renderLifecycleReport()` already uses for its rows."
+          "description": "Only variables with at least one lifecycle field set (`expiresAt`, `refreshInstructions`, `deprecated`, `removeBy`, `renamedFrom`, `retention`, `authenticatorType`, `rotationPeriod`, `lastRotatedAt`, `rotationTriggerEvents`). `renderLifecycleReport()` uses the same \"only what's relevant\" scope for its rows."
         }
       },
       "required": [
@@ -1841,11 +1841,11 @@
         },
         "renamedFrom": {
           "type": "string",
-          "description": "The previous variable name this one renames, if set -- see `ManifestChangeReport`'s rename correlation (ADR 0029/0030)."
+          "description": "The previous variable name this one renames, if set: see `ManifestChangeReport`'s rename correlation (ADR 0029/0030)."
         },
         "retention": {
           "type": "string",
-          "description": "Descriptive retention policy (e.g. \"delete after 90 days\") -- a policy statement, never computed or parsed, deliberately independent of `expiresAt`'s actual temporal constraint. See ADR 0035."
+          "description": "Descriptive retention policy (e.g. \"delete after 90 days\"): a policy statement, never computed or parsed, deliberately independent of `expiresAt`'s actual temporal constraint. See ADR 0035."
         },
         "authenticatorType": {
           "type": "string",
@@ -1868,7 +1868,7 @@
         },
         "rotationStatus": {
           "$ref": "#/definitions/RotationComplianceStatus",
-          "description": "Computed, not stored -- see RotationComplianceStatus and `computeRotationStatus()`."
+          "description": "Computed, not stored: see RotationComplianceStatus and `computeRotationStatus()`."
         }
       },
       "required": [
@@ -1886,7 +1886,7 @@
         "expired",
         "undeclared"
       ],
-      "description": "One variable's computed NIST SP 800-53 IA-5 rotation status (a policy-window judgement) -- see `computeRotationStatus()` for exactly how it's derived. Always present on a `LifecycleModelVariable` (never `undefined`) since a variable with literally nothing lifecycle-relevant set never reaches this model at all (`hasLifecycleData()` below) -- `\"undeclared\"` is itself the honest value for \"reached this model for some other lifecycle reason (e.g. `deprecated`) but declares none of the four rotation-specific fields.\"\n\nThis is a policy-window judgement from the declared metadata (\"within the declared rotation period\"), never a statement that any control is met or that a rotation happened; env-cap never checks a declaration against reality. The 1.0 release renames the value `\"compliant\"` to `\"withinPolicy\"` for that reason."
+      "description": "One variable's computed NIST SP 800-53 IA-5 rotation status (a policy-window judgement): see `computeRotationStatus()` for exactly how it's derived. Always present on a `LifecycleModelVariable` (never `undefined`). A variable with nothing lifecycle-relevant set never reaches this model (`hasLifecycleData()` below). So `\"undeclared\"` is the honest value for \"reached this model for another lifecycle reason (e.g. `deprecated`) but declares none of the four rotation-specific fields\".\n\nThis is a policy-window judgement from the declared metadata (\"within the declared rotation period\"). It never states that any control is met or that a rotation happened. env-cap never checks a declaration against reality. Renaming the value `\"compliant\"` would be a breaking change, so it can only happen in a major release."
     },
     "FindingModel": {
       "type": "object",
@@ -1907,7 +1907,7 @@
         "findings"
       ],
       "additionalProperties": false,
-      "description": "The versioned, JSON-serializable root of the Finding Model -- every rule violation and derived risk signal from this run, unified behind Finding 's one shape. See this module's own doc comment for the full picture."
+      "description": "The versioned, JSON-serializable root of the Finding Model: every rule violation and derived risk signal from this run, unified behind Finding 's one shape. See this module's own doc comment for the full picture."
     },
     "Finding": {
       "type": "object",
@@ -1919,11 +1919,11 @@
             "warning",
             "info"
           ],
-          "description": "`\"error\"` for a provable, always-blocking violation (e.g. an exclusive-group conflict); `\"warning\"` for everything gated by `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default \"warn\" behavior; `\"info\"` for an observation that is never actionable enough to block anything, even under `--strict` -- see `INFO_ONLY_CODES` in `generate-env-artifacts.ts`."
+          "description": "`\"error\"` for a provable, always-blocking violation (e.g. an exclusive-group conflict); `\"warning\"` for everything gated by `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default \"warn\" behavior; `\"info\"` for an observation that is never actionable enough to block anything, even under `--strict`: see `INFO_ONLY_CODES` in `generate-env-artifacts.ts`."
         },
         "code": {
           "$ref": "#/definitions/FindingCode",
-          "description": "Stable, machine-readable identifier -- always set, unlike CompatibilityIssue.code which stays optional on that narrower, pre-existing type."
+          "description": "Stable, machine-readable identifier: always set, unlike CompatibilityIssue.code which stays optional on that narrower, pre-existing type."
         },
         "family": {
           "$ref": "#/definitions/FindingFamily",
@@ -2028,7 +2028,7 @@
         "documentation",
         "ownership"
       ],
-      "description": "Which source check produced a Finding -- coarser than `code`, for a consumer that only wants to filter by kind (e.g. \"show me every documentation gap\") without enumerating every individual code."
+      "description": "Which source check produced a Finding: coarser than `code`, for a consumer that only wants to filter by kind (e.g. \"show me every documentation gap\") without enumerating every individual code."
     },
     "EvidenceReference": {
       "anyOf": [
@@ -2042,7 +2042,7 @@
           "$ref": "#/definitions/ChangeEvidenceReference"
         }
       ],
-      "description": "A structured pointer back to where a `Finding` (or, later, any other model's derived fact) came from -- never a formatted string. See ADR 0024 and ADR 0026."
+      "description": "A structured pointer back to where a `Finding` (or, later, any other model's derived fact) came from: never a formatted string. See ADR 0024 and ADR 0026."
     },
     "ContractEvidenceReference": {
       "type": "object",
@@ -2053,7 +2053,7 @@
         },
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated path of the file declaring the contract, when known -- see `displayPath()`."
+          "description": "Root-relative, POSIX-separated path of the file declaring the contract, when known: see `displayPath()`."
         },
         "exportName": {
           "type": "string",
@@ -2065,14 +2065,14 @@
         },
         "position": {
           "$ref": "#/definitions/SourcePosition",
-          "description": "Exact file:line:column this finding is about -- the contract's `createEnv()` declaration, its `documentEnv()` declaration, or the specific variable's own declaration, whichever is most relevant to the finding. `undefined` only when no single position is more relevant than another (e.g. an `indeterminate-ownership` finding, which can have multiple candidate sites -- see `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list instead). See ADR 0036."
+          "description": "Exact file:line:column this finding is about; the contract's `createEnv()` declaration, its `documentEnv()` declaration, or the specific variable's own declaration, whichever is most relevant to the finding. `undefined` only when no single position is more relevant than another (e.g. an `indeterminate-ownership` finding, which can have multiple candidate sites: see `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list instead). See ADR 0036."
         }
       },
       "required": [
         "model"
       ],
       "additionalProperties": false,
-      "description": "Points at a declared contract and, optionally, one of its variables -- the shape every `CompatibilityIssue`/documentation finding can be resolved to. Unlike ContractRef, both identity fields are optional here: a finding can legitimately know only the file (an unresolvable `documentEnv()` link) or neither."
+      "description": "Points at a declared contract and, optionally, one of its variables: the shape every `CompatibilityIssue`/documentation finding can be resolved to. Unlike ContractRef, both identity fields are optional here: a finding can legitimately know only the file (an unresolvable `documentEnv()` link) or neither."
     },
     "OwnershipEvidenceReference": {
       "type": "object",
@@ -2102,7 +2102,7 @@
         "contractName"
       ],
       "additionalProperties": false,
-      "description": "Points at a contract by name for an ownership/usage finding -- `usage-report.ts`'s finding types don't consistently carry `file`/`exportName` together, only `contractName`."
+      "description": "Points at a contract by name for an ownership/usage finding: `usage-report.ts`'s finding types don't consistently carry `file`/`exportName` together, only `contractName`."
     },
     "ChangeEvidenceReference": {
       "type": "object",
@@ -2121,7 +2121,7 @@
         "path"
       ],
       "additionalProperties": false,
-      "description": "Points at a generated artifact's path -- what `checkEnvArtifacts()`'s drift findings are about, not a declared contract or variable at all."
+      "description": "Points at a generated artifact's path: what `checkEnvArtifacts()`'s drift findings are about, not a declared contract or variable at all."
     },
     "ChangeModel": {
       "type": "object",
@@ -2132,7 +2132,7 @@
         },
         "manifest": {
           "$ref": "#/definitions/ManifestChangeReport",
-          "description": "The existing manifest change report, unmodified -- see ADR 0021. `addedVariables`/`removedVariables` still list a correlated rename's two halves separately; `renamedVariables` below is an additive, separately-computed view, not a filter over this field."
+          "description": "The existing manifest change report, unmodified: see ADR 0021. `addedVariables`/`removedVariables` still list a correlated rename's two halves separately; `renamedVariables` below is an additive, separately-computed view, not a filter over this field."
         },
         "renamedVariables": {
           "type": "array",
@@ -2148,7 +2148,7 @@
         "renamedVariables"
       ],
       "additionalProperties": false,
-      "description": "The versioned, JSON-serializable root of the Change Model -- what changed since the last persisted evidence snapshot. See this module's own doc comment for the full picture."
+      "description": "The versioned, JSON-serializable root of the Change Model: what changed since the last persisted evidence snapshot. See this module's own doc comment for the full picture."
     },
     "ManifestChangeReport": {
       "type": "object",
@@ -2205,18 +2205,18 @@
         "updatedVariables"
       ],
       "additionalProperties": false,
-      "description": "The result of diffing two `ContractModel.contracts` arrays -- see `diffContracts()`. Comprehensive by construction: every own field of `ContractModelContract`/`ContractModelVariable` (schema facts -- `hasDefault`/`processorSource`/`validatorSource`/... -- alongside documented metadata) participates, and every discovered contract is covered, not only active ones. A field-by-field, hand-maintained diff (this module's previous design) would need updating by hand every time Contract Model gains a field; the generic differ below can't drift out of sync with the model it diffs."
+      "description": "The result of diffing two `ContractModel.contracts` arrays: see `diffContracts()`. Comprehensive by construction. Every own field of `ContractModelContract`/`ContractModelVariable` participates: schema facts (`hasDefault`/`processorSource`/`validatorSource`/...) and documented metadata. Every discovered contract is covered, not only active ones. `diffContracts()` compares every field generically, so a new Contract Model field is diffed without an edit here."
     },
     "ManifestContractRef": {
       "$ref": "#/definitions/ContractRef",
-      "description": "Identifies one contract for ManifestChangeReport purposes -- see ContractRef for why neither a `contractName` nor a pre-formatted `identity` is carried here."
+      "description": "Identifies one contract for ManifestChangeReport purposes: see ContractRef for why neither a `contractName` nor a pre-formatted `identity` is carried here."
     },
     "ManifestVariableRef": {
       "type": "object",
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated path of the file declaring the contract -- see `displayPath()`."
+          "description": "Root-relative, POSIX-separated path of the file declaring the contract: see `displayPath()`."
         },
         "exportName": {
           "type": "string",
@@ -2233,14 +2233,14 @@
         "key"
       ],
       "additionalProperties": false,
-      "description": "Identifies one variable for ManifestChangeReport purposes -- its owning contract's identity plus its own key. See ContractRef."
+      "description": "Identifies one variable for ManifestChangeReport purposes: its owning contract's identity plus its own key. See ContractRef."
     },
     "ManifestContractUpdate": {
       "type": "object",
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated path of the file declaring the contract -- see `displayPath()`."
+          "description": "Root-relative, POSIX-separated path of the file declaring the contract: see `displayPath()`."
         },
         "exportName": {
           "type": "string",
@@ -2289,7 +2289,7 @@
       "properties": {
         "file": {
           "type": "string",
-          "description": "Root-relative, POSIX-separated path of the file declaring the contract -- see `displayPath()`."
+          "description": "Root-relative, POSIX-separated path of the file declaring the contract: see `displayPath()`."
         },
         "exportName": {
           "type": "string",
@@ -2321,7 +2321,7 @@
       "properties": {
         "contractIdentity": {
           "type": "string",
-          "description": "The owning contract's identity (`${file}#${exportName}`) -- a rename never crosses contracts."
+          "description": "The owning contract's identity (`${file}#${exportName}`): a rename never crosses contracts."
         },
         "file": {
           "type": "string"
@@ -2334,11 +2334,11 @@
         },
         "previousKey": {
           "type": "string",
-          "description": "The variable's key before the rename -- matches a `manifest.removedVariables` entry."
+          "description": "The variable's key before the rename: matches a `manifest.removedVariables` entry."
         },
         "currentKey": {
           "type": "string",
-          "description": "The variable's key after the rename -- matches a `manifest.addedVariables` entry."
+          "description": "The variable's key after the rename: matches a `manifest.addedVariables` entry."
         }
       },
       "required": [

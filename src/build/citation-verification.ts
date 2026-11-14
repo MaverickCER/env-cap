@@ -1,5 +1,5 @@
 /**
- * Re-verifies developer-declared `dynamicAccess` citations every run -- never
+ * Re-verifies developer-declared `dynamicAccess` citations every run: never
  * trusted forever (ADR 0037). Two independent steps, kept as two separate
  * functions rather than one, since they answer two different questions and
  * the second is a pure read over the first's result:
@@ -10,16 +10,16 @@
  *   label the citation `"fresh"` / `"stale"` / `"missing"`. Existence is
  *   always re-checked live, never trusted from either snapshot. A citation
  *   with no previous baseline (the first time it's ever been seen) is
- *   `"fresh"` -- there is nothing to contradict it yet. Never throws on a
+ *   `"fresh"`: there is nothing to contradict it yet. Never throws on a
  *   missing file; that citation is simply labeled `"missing"`.
  * - `verifyDynamicAccessCitations` (pure): flattens that result down to just
- *   the citations that need a human's attention -- every `"stale"`/`"missing"`
+ *   the citations that need a human's attention; every `"stale"`/`"missing"`
  *   assertion, enriched with the owning contract's display name. These are the
  *   direct input to `finding-model.ts`'s `STALE_DYNAMIC_ACCESS_CITATION` /
  *   `MISSING_DYNAMIC_ACCESS_CITATION` findings.
  *
  * Deliberately separate from `evidence-snapshot.ts`'s own `diffContracts()`,
- * which stays synchronous and pure -- these are the only filesystem-touching,
+ * which stays synchronous and pure: these are the only filesystem-touching,
  * citation-specific part of the evidence-snapshot lifecycle. A citation is
  * always a developer's *re-acknowledgment* that access happens, never a claim
  * env-cap itself observed anything: nothing here ever folds into the
@@ -34,12 +34,12 @@ import type { DiscoveredContract } from "./link.js"
 import { parsePositionCitation } from "./source-position.js"
 import type { DynamicAccessAssertion, SourcePosition } from "./source-position.js"
 
-/** SHA-256 hex digest of `content` -- the committed-baseline mechanism `DynamicAccessAssertion.contentHash` and its acknowledgment check both rely on (ADR 0037). */
+/** SHA-256 hex digest of `content`: the committed-baseline mechanism `DynamicAccessAssertion.contentHash` and its acknowledgment check both rely on (ADR 0037). */
 function hashContent(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex")
 }
 
-/** Stable key {@link buildCitationSnapshots} and `dependency-graph.ts`'s consumer of it agree on -- `file` must be root-relative, POSIX-separated on both sides for a lookup to ever hit. */
+/** Stable key {@link buildCitationSnapshots} and `dependency-graph.ts`'s consumer of it agree on: `file` must be root-relative, POSIX-separated on both sides for a lookup to ever hit. */
 export function dynamicAccessVariableIdentity(
   file: string,
   exportName: string,
@@ -48,7 +48,7 @@ export function dynamicAccessVariableIdentity(
   return `${file}#${exportName}#${key}`
 }
 
-/** Every `contentHash` a previous evidence snapshot recorded, keyed by `${variableIdentity}#${file}:${line}:${column}` -- the baseline {@link buildCitationSnapshots} compares this run's freshly-computed hashes against. */
+/** Every `contentHash` a previous evidence snapshot recorded, keyed by `${variableIdentity}#${file}:${line}:${column}`: the baseline {@link buildCitationSnapshots} compares this run's freshly-computed hashes against. */
 function previousContentHashes(
   previous: EvidenceModel | undefined,
 ): ReadonlyMap<string, string | undefined> {
@@ -74,11 +74,10 @@ function previousContentHashes(
 /**
  * Re-checks every current `dynamicAccess` citation against the previous
  * evidence snapshot's committed `contentHash` baseline. Existence is always
- * re-checked live (never trusted from either snapshot); content drift is
- * only detectable when a previous baseline exists at all -- a citation with
- * no previous baseline (first time it's ever been seen) is reported
- * `"fresh"`, matching the same "nothing to contradict yet" logic. See ADR
- * 0037.
+ * re-checked live (never trusted from either snapshot). Content drift is
+ * only detectable when a previous baseline exists. A citation with no
+ * previous baseline (the first time it's seen) is reported `"fresh"`,
+ * because nothing contradicts it yet. See ADR 0037.
  */
 export async function buildCitationSnapshots(
   activeContracts: readonly DiscoveredContract[],
@@ -122,7 +121,7 @@ export async function buildCitationSnapshots(
   return result
 }
 
-/** One `dynamicAccess` citation env-cap can no longer vouch for -- the direct input to `finding-model.ts`'s `"STALE_DYNAMIC_ACCESS_CITATION"`/`"MISSING_DYNAMIC_ACCESS_CITATION"` findings. See ADR 0037. */
+/** One `dynamicAccess` citation env-cap can no longer vouch for: the direct input to `finding-model.ts`'s `"STALE_DYNAMIC_ACCESS_CITATION"`/`"MISSING_DYNAMIC_ACCESS_CITATION"` findings. See ADR 0037. */
 export interface DynamicAccessCitationProblem {
   readonly contractName: string
   /** Root-relative, POSIX-separated. */
@@ -130,16 +129,16 @@ export interface DynamicAccessCitationProblem {
   readonly exportName: string
   /** The variable whose `dynamicAccess` citation this is. */
   readonly key: string
-  /** Where the citation points -- not the variable's own declaration. */
+  /** Where the citation points: not the variable's own declaration. */
   readonly position: SourcePosition
   readonly acknowledgment: "stale" | "missing"
 }
 
 /**
  * Flattens {@link buildCitationSnapshots}' result down to just the citations
- * that need attention -- every `"stale"`/`"missing"` assertion, enriched with
+ * that need attention: every `"stale"`/`"missing"` assertion, enriched with
  * the owning contract's display name. `"fresh"` assertions are silently
- * omitted -- nothing to report about a citation that's still trustworthy.
+ * omitted: nothing to report about a citation that's still trustworthy.
  */
 export function verifyDynamicAccessCitations(
   activeContracts: readonly DiscoveredContract[],
@@ -152,11 +151,10 @@ export function verifyDynamicAccessCitations(
     for (const variable of contract.variables) {
       const identity = dynamicAccessVariableIdentity(file, contract.exportName, variable.key)
       // This module's only production caller (`evidence-snapshot.ts`)
-      // always builds `acknowledgments` from these SAME `activeContracts`
-      // immediately before calling this -- an identity missing here
-      // corresponds exactly to a variable `buildCitationSnapshots()` itself
-      // skipped for having zero real citations, which has nothing to
-      // report either way. Hand-verified: replacing the fallback with a
+      // builds `acknowledgments` from these SAME `activeContracts` right
+      // before calling this. So an identity missing here is exactly a
+      // variable `buildCitationSnapshots()` skipped for having zero real
+      // citations, which has nothing to report either way. Hand-verified: replacing the fallback with a
       // poisoned single-string array (the exact shape Stryker's own
       // `ArrayDeclaration` mutant produces) and running the full
       // `vitest run` leaves every test passing.

@@ -20,7 +20,7 @@ import {
  * Deliberately narrow: only handles a direct relative specifier resolving to
  * a real `.ts`/`.tsx` file on disk. Bare/package specifiers, namespace
  * imports, and anything requiring real module resolution (re-export chains,
- * `exports` map lookups, etc.) return `undefined` -- the caller treats that
+ * `exports` map lookups, etc.) return `undefined`: the caller treats that
  * as "couldn't statically link" and warns rather than guesses, the same
  * philosophy `evaluateLiteral` already uses for non-literal expressions.
  *
@@ -31,7 +31,7 @@ export async function resolveRelativeImport(
   specifier: string,
   fs: BuildFileSystem,
 ): Promise<string | undefined> {
-  if (!specifier.startsWith("./") && !specifier.startsWith("../")) return undefined // bare/package specifier
+  if (!specifier.startsWith("./") && !specifier.startsWith("../")) return undefined // bare/package specifier.
 
   const withoutExt = specifier.replace(/\.(js|jsx|ts|tsx)$/, "")
   const base = path.resolve(path.dirname(importingFile), withoutExt)
@@ -60,17 +60,17 @@ export function fileExists(filePath: string, fs: BuildFileSystem): Promise<boole
 
 /** Shared inputs threaded through every call to {@link resolveImportSpecifier} for one discovery/link run. */
 export interface ImportResolutionContext {
-  /** The filesystem capability -- `./build` never imports `node:fs` (ADR 0040). */
+  /** The filesystem capability: `./build` never imports `node:fs` (ADR 0040). */
   readonly fs: BuildFileSystem
   /** Absolute path of the project root, used to resolve package specifiers. */
   readonly root: string
-  /** Explicit allowlist -- see ADR 0014. Empty/omitted means package resolution never fires, identical to today's behavior. */
+  /** Explicit allowlist: see ADR 0014. Empty/omitted means package resolution never fires, identical to today's behavior. */
   readonly packages: readonly string[]
-  /** Memoizes package resolution per specifier across the whole run -- see `resolvePackageImport`'s own doc comment for why. */
+  /** Memoizes package resolution per specifier across the whole run: see `resolvePackageImport`'s own doc comment for why. */
   readonly cache: Map<string, Promise<PackageSchemaResolutionResult>>
-  /** Parsed `tsconfig.json` `paths`/`baseUrl`, or `undefined` when alias resolution found nothing to do or was disabled -- see ADR 0023. */
+  /** Parsed `tsconfig.json` `paths`/`baseUrl`, or `undefined` when alias resolution found nothing to do or was disabled: see ADR 0023. */
   readonly tsconfigPaths: TsconfigPathsResolution | undefined
-  /** Memoizes alias resolution across the whole run -- see `resolveAliasImport`'s own doc comment for why. Always allocated, even when `tsconfigPaths` is `undefined`, mirroring `cache` above. */
+  /** Memoizes alias resolution across the whole run: see `resolveAliasImport`'s own doc comment for why. Always allocated, even when `tsconfigPaths` is `undefined`, mirroring `cache` above. */
   readonly aliasCache: AliasResolutionCache
 }
 
@@ -81,14 +81,18 @@ export interface ImportResolutionContext {
  * chain at every call site.
  *
  * @remarks
- * Purely a composition point -- no new resolution logic lives here. Tries, in order: the
- * relative resolver (cheap, no `fs.stat` beyond the local filesystem check it already
- * does); tsconfig path-alias resolution (ADR 0023, on by default) for a bare specifier
- * matching the project's own `tsconfig.json` `paths`/`baseUrl`; then package resolution
- * (ADR 0014) for a bare specifier matching an allow-listed package name. Alias resolution
- * runs before package resolution because it resolves the consuming project's own local
- * source (already-trusted, no versioning boundary), the same precedence relative
- * resolution already has over package resolution.
+ * Purely a composition point: no new resolution logic lives here. It tries, in order:
+ *
+ * 1. The relative resolver (cheap, no `fs.stat` beyond the local filesystem check it
+ *    already does).
+ * 2. tsconfig path-alias resolution (ADR 0023, on by default), for a bare specifier
+ *    matching the project's own `tsconfig.json` `paths`/`baseUrl`.
+ * 3. Package resolution (ADR 0014), for a bare specifier matching an allow-listed
+ *    package name.
+ *
+ * Alias resolution runs before package resolution because it resolves the consuming
+ * project's own local source (already-trusted, no versioning boundary). Relative
+ * resolution has the same precedence over package resolution.
  */
 export async function resolveImportSpecifier(
   importingFile: string,

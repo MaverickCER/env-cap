@@ -1,12 +1,12 @@
 # env-cap: performance and cost report
 
-What does adopting this package add to latency, CPU, memory and compute spend -- and how does that grow with workload? Three views, from the whole to the part: **(1)** the end-to-end total, **(2)** every function on its own, **(3)** which functions make up the total. New to benchmarks? Read [READING-BENCHMARKS.md](../READING-BENCHMARKS.md) first.
+What does adopting this package add to latency, CPU, memory and compute spend, and how does that grow with workload? Three views, from the whole to the part: **(1)** the end-to-end total, **(2)** every function on its own, **(3)** which functions make up the total. New to benchmarks? Read [READING-BENCHMARKS.md](../READING-BENCHMARKS.md) first.
 
 ## What adopting this package costs
 
 For a typical workload of **640 variables** per operation, routing the work through `env-cap` adds **187 µs** per operation compared with a bare-minimum baseline (**250% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 0.76). At list prices that is on the order of **~$0.001 – $0.01 per million operations** of compute.
 
-> The relative figure and the growth class are the steadier ones: both come from the same run, so they depend far less on the machine than a time does, though runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
+> The relative figure and the growth class are the steadier ones. Both come from the same run, so they depend far less on the machine than a time does. Runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below). They show scale, not a budget.
 
 | Cost | Typical (640 variables) | Largest (10240 variables) |
 | --- | --- | --- |
@@ -25,7 +25,7 @@ Shows what a service pays at startup, per validation, for declaring its environm
 - **Baseline (no package):** A loop reads each of n values from a plain object and stores it in a result object -- no env-cap.
 - **With the package:** `validateEnv` checks the same n values against a contract of n variables with identity processors.
 
-Both sides use empty or minimal functions on purpose, so the difference is the package's own cost -- not the cost of the work an application would plug into it. Real applications add their own work on top; this is the floor the package imposes.
+Both sides use empty or minimal functions on purpose. The difference is then the package's own cost, not the cost of the work an application would plug into it. Real applications add their own work on top; this is the floor the package imposes.
 
 **Variables that could change this result**
 
@@ -38,7 +38,7 @@ Both sides use empty or minimal functions on purpose, so the difference is the p
 | contract count | fixed at 1 | All variables live in one contract; splitting them across contracts adds a small constant per contract. |
 | validity | fixed at "every value valid" | The success path; failures add error-object construction and are cheaper to reach but costlier to report. |
 
-The baseline is an empty or minimal function, so it costs almost nothing and the _relative_ overhead can look enormous (shown as a multiple of the baseline). Read the absolute columns -- time, CPU and dollars added -- they are what a bill and a latency budget are made of.
+The baseline is an empty or minimal function, so it costs almost nothing. The _relative_ overhead can then look enormous (shown as a multiple of the baseline). Read the absolute columns (time, CPU and dollars added): they are what a bill and a latency budget are made of.
 
 | variables | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -57,7 +57,7 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 ## 2. Function by function
 
-Every function the package exposes is measured on its own across the full size ladder, then its measured growth rate is compared with the big-O we documented for it. A function whose measured class **differs** from its documented one is the most useful thing in this report: either the documentation or the code is wrong.
+Every function the package exposes is measured on its own across the full size ladder. Its measured growth rate is then compared with the big-O we documented for it. A function whose measured class **differs** from its documented one is the most useful thing in this report. Either the documentation or the code is wrong.
 
 | Function | Varies | Documented | Measured | Agreement | At 640 | At 10240 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -140,10 +140,10 @@ Every function the package exposes is measured on its own across the full size l
 
 **Deliberately not covered**
 
-- **warm module cache** -- A fresh process has no warm cache by definition.
-- **bundled loading** -- Measured through Node's native ESM loader; bundlers change module-evaluation cost and are application-specific.
+- **warm module cache**: A fresh process has no warm cache by definition.
+- **bundled loading**: Measured through Node's native ESM loader; bundlers change module-evaluation cost and are application-specific.
 
-**Measured: O(log n)** (exponent 0.59, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.59, 10 sizes): 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -210,7 +210,7 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** This is the end-to-end operation itself.
 
-**Measured: O(n)** (exponent 0.77, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.77, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -250,7 +250,7 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -284,9 +284,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 1.10, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 1.10, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -320,9 +320,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.95, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.95, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -356,9 +356,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.86, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.86, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -392,9 +392,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n log n)** (exponent 1.60, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.60, 10 sizes): 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -428,9 +428,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -464,9 +464,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -500,9 +500,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.02, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.02, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -536,9 +536,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.69, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.69, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -572,9 +572,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -608,9 +608,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.77, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.77, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -644,9 +644,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.02, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.02, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -680,9 +680,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.61, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.61, 10 sizes): 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -716,9 +716,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.75, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.75, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -752,9 +752,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.89, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.89, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -788,9 +788,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -824,9 +824,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.97, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.97, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -860,9 +860,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.99, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.99, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -896,9 +896,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -932,9 +932,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -968,9 +968,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.68, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.68, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1004,9 +1004,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.02, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.02, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1040,9 +1040,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1076,9 +1076,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1112,9 +1112,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.15, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.15, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1148,9 +1148,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1184,9 +1184,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1220,9 +1220,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.71, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.71, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1256,9 +1256,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1292,9 +1292,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1328,9 +1328,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1364,9 +1364,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1400,9 +1400,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1436,7 +1436,7 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1470,9 +1470,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1506,9 +1506,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.05, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.05, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1542,9 +1542,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n)** (exponent 0.82, 10 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.82, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1578,9 +1578,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1614,9 +1614,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1650,9 +1650,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1686,9 +1686,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1722,9 +1722,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.01, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1758,9 +1758,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1794,9 +1794,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1830,9 +1830,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(n log n)** (exponent 1.32, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.32, 10 sizes): 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1866,9 +1866,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(log n)** (exponent 0.62, 10 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(log n)** (exponent 0.62, 10 sizes): 🟡 close (neighbouring class).
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1902,9 +1902,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent 0.04, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent 0.04, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1938,9 +1938,9 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 **Deliberately not covered**
 
-- **locale and timezone** -- The helper's cost does not depend on the process locale or timezone for the inputs measured.
+- **locale and timezone**: The helper's cost does not depend on the process locale or timezone for the inputs measured.
 
-**Measured: O(1)** (exponent -0.00, 10 sizes) -- ✅ matches.
+**Measured: O(1)** (exponent -0.00, 10 sizes): ✅ matches.
 
 | variables | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
@@ -1957,7 +1957,7 @@ How many variables each contract declares (ten in the main sweep). With the tota
 
 ## 3. What makes up one end-to-end operation
 
-Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls, so where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time): every moment of the operation belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly -- not against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
+Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls. So where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time). Every moment of the operation then belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly. They are not measured against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
 **At 640 variables** (whole operation: 262 µs)
 
@@ -1975,14 +1975,14 @@ Each function's measured cost is multiplied by how many times one end-to-end ope
 
 ## Cost model
 
-Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 per vCPU-hour, billed on CPU time) and **high** = duration-and-memory-priced functions ($0.000017 per GB-second, billed on wall time, at least 128 MB reserved). Both are rounded list prices and change over time; override them in `benchmark.config.json` → `costRates` to match your platform and negotiated pricing.
+Estimates use two bracketing price shapes. **Low** is CPU-priced compute ($0.040 per vCPU-hour, billed on CPU time). **High** is duration-and-memory-priced functions ($0.000017 per GB-second, billed on wall time, at least 128 MB reserved). Both are rounded list prices and change over time; override them in `benchmark.config.json` → `costRates` to match your platform and negotiated pricing.
 
 ## Environment and method
 
 - Run: `2026-10-02T00:44:24.130Z` → `2026-10-02T00:45:43.444Z` (79 s), ci
 - Machine: AMD EPYC 9V45 96-Core Processor, 4 logical core(s) (2 physical), 15990 MB RAM, linux/x64, Node v22.23.3, GitHub Actions
 - Git: `77acd16d0d0b13e9c162061da6d6f7d739436547` on `chore/no-minify-no-dist-urls` (uncommitted changes)
-- Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240 variables -- One environment variable declared in a contract and validated at startup. 640 is a large but realistic service: a few dozen contracts of around ten variables each.
+- Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240 variables: One environment variable declared in a contract and validated at startup. 640 is a large but realistic service: a few dozen contracts of around ten variables each.
 
-**Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
+**Do not compare these numbers with another machine's, another day's, or another package's.** They show how _this_ package's cost changes between runs on comparable hardware, and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
 

@@ -5,7 +5,7 @@ import { VALUE_FIELDS, donatedTo } from "./merge-documentation.js"
 /**
  * Every stable `code` a check in this file (or `exclusive-group.ts`) can
  * emit. Documented as an enumerated union so a consumer filtering/linking on
- * `code` has a closed list to switch over, rather than an arbitrary string --
+ * `code` has a closed list to switch over, rather than an arbitrary string:
  * see ADR 0024/0026. `exclusive-group.ts`'s check does not (yet) set one; see
  * that file's own comment for why.
  */
@@ -24,11 +24,11 @@ export interface CompatibilityIssue {
   readonly variable: string
   /**
    * Every file declaring a conflicting definition. A pairwise comparison
-   * (compatibility.ts, exclusive-group.ts) always produces exactly two; a
+   * (compatibility.ts, exclusive-group.ts) always produces exactly two. A
    * finding escalated from another family (generate-env-artifacts.ts's
    * `escalatedFindings()`, via `findingFiles()`) can produce zero, one, or
-   * two, depending on what location information that finding actually
-   * carries -- genuinely variable arity, not a tuple.
+   * two, depending on the location information that finding carries. So
+   * the arity varies, and this is not a tuple.
    */
   readonly files: readonly string[]
   /** Human-readable explanation of the conflict. */
@@ -36,17 +36,17 @@ export interface CompatibilityIssue {
   /**
    * Stable, machine-readable identifier for CI filtering / doc-linking /
    * GitHub Action annotations / IDE integration. `undefined` only for checks
-   * that don't (yet) set one -- see {@link CompatibilityIssueCode} for the
-   * full enumerated list of values a check in this file can produce.
+   * that don't set one yet. {@link CompatibilityIssueCode} lists every value
+   * a check in this file can produce.
    */
   readonly code?: CompatibilityIssueCode
 }
 
-/** Field names (including `metadata.<key>`) that two documented declarations of the same variable both set, to different values -- empty when they agree or one leaves the field to the other. */
+/** Field names (including `metadata.<key>`) that two documented declarations of the same variable both set, to different values. Empty when they agree or one leaves the field to the other. */
 function documentationDivergences(a: DiscoveredVariable, b: DiscoveredVariable): string[] {
   const divergences: string[] = []
   // A field only one declaration sets is not a disagreement: the other leaves it to the first (see
-  // `mergeSharedDocumentation()`), so only a field both set, to different values, is.
+  // `mergeSharedDocumentation()`). Only a field both set, to different values, is one.
   // Every field the merge can fill, compared structurally: a list or an object that reads the same is the same.
   // A value one of them was given by the documentation merge is not one it wrote, so it is not compared.
   const given = new Set([...donatedTo(a), ...donatedTo(b)])
@@ -76,19 +76,19 @@ function documentationDivergences(a: DiscoveredVariable, b: DiscoveredVariable):
 
 /**
  * Flags cases where two contracts declare the same variable name but appear to
- * disagree about its shape, so a human can confirm they're still meant to be "the same" var.
+ * disagree about its shape. A human can then confirm they're still meant to be "the same" var.
  *
  * @remarks
- * Duplicate variable names across contracts are not a merge problem -- each
- * contract independently processes its own copy of the raw value, there is no
- * runtime merge at all. This is purely a build-time lint.
+ * Duplicate variable names across contracts are not a merge problem. Each
+ * contract processes its own copy of the raw value; there is no runtime
+ * merge at all. This is purely a build-time lint.
  *
  * Only one thing is treated as *provable* without executing code: two
  * processors with explicit, differing `: T` return type annotations. That is
  * a hard error. Everything else (differing processor/validator source text
- * with no annotation, or none at all) is a warning -- we cannot prove
- * semantic non-equivalence via static analysis alone, and the library never
- * executes schema code to check further (see literal-eval.ts).
+ * with no annotation, or none at all) is a warning. Static analysis alone
+ * cannot prove semantic non-equivalence. And the library never executes
+ * schema code to check further (see literal-eval.ts).
  */
 export function detectCompatibilityIssues(
   contracts: readonly DiscoveredContract[],
@@ -111,16 +111,10 @@ export function detectCompatibilityIssues(
   for (const [key, declarations] of [...declarationsByKey.entries()].sort((a, b) =>
     a[0].localeCompare(b[0]),
   )) {
-    // `.entries()`/`.slice()` pairwise iteration, not a manually-indexed
-    // `for (let i ...) for (let j = i + 1 ...)` double loop: besides needing
-    // no `a === undefined || b === undefined` bounds guard at all (`.entries()`
-    // yields real elements, never an out-of-bounds gap `noUncheckedIndexedAccess`
-    // would otherwise force a guard for), a hand-indexed loop here is a genuine
-    // liveness risk under mutation testing -- a mutant flipping `i++`/`j++` to
-    // `i--`/`j--`, or `<` to `>=`, makes the index walk away from the bound
-    // instead of toward it, looping until Stryker's own timeout rather than
-    // producing an observably wrong result a normal test could catch. Iterator
-    // protocol has no exposed counter for that class of mutation to target.
+    // Pairwise iteration uses `.entries()` and `.slice()`, not an indexed double loop, for two reasons.
+    // `.entries()` yields real elements, so `noUncheckedIndexedAccess` forces no `undefined` guard. And a
+    // mutant that flips `i++` or `<` in an indexed loop walks away from its bound. It loops until
+    // Stryker's timeout, which no test can kill.
     for (const [i, a] of declarations.entries()) {
       for (const b of declarations.slice(i + 1)) {
         if (
@@ -152,7 +146,7 @@ export function detectCompatibilityIssues(
             code: "PROCESSOR_SOURCE_CONFLICT",
             reason:
               `"${a.contractName}" and "${b.contractName}" both declare a processor for this variable with ` +
-              "different implementations. Return types could not be statically verified -- add explicit " +
+              "different implementations. Return types could not be statically verified. Add explicit " +
               "return type annotations, or confirm they produce equivalent output.",
           })
         }
@@ -169,11 +163,11 @@ export function detectCompatibilityIssues(
             code: "VALIDATOR_SOURCE_CONFLICT",
             reason:
               `"${a.contractName}" and "${b.contractName}" both declare a validator for this variable with ` +
-              "different implementations. Validator logic cannot be statically compared -- confirm they enforce compatible rules.",
+              "different implementations. Validator logic cannot be statically compared. Confirm they enforce compatible rules.",
           })
         }
 
-        // Only a field both set, to different values, disagrees, so a declaration that documents nothing has no
+        // Only a field both set, to different values, disagrees. So a declaration that documents nothing has no
         // disagreement to report and needs no test of its own.
         const divergences = documentationDivergences(a.variable, b.variable)
         if (divergences.length > 0) {
@@ -198,9 +192,9 @@ export function detectCompatibilityIssues(
 /**
  * One variable's statically-provable *type shape*, deliberately nothing more:
  * what type its value ends up as, and whether it is processed and/or
- * validated at all. Never its literal content -- two variables holding
- * different secrets are still the same shape, and comparing values would both
- * leak them into a report and answer the wrong question.
+ * validated at all. Never its literal content: two variables holding
+ * different secrets are still the same shape. Comparing values would leak
+ * them into a report, and would answer the wrong question.
  */
 interface VariableShape {
   /** The explicit `processorReturnType` when the variable declares one, else `typeof defaultValue.value` when a statically-evaluable default exists, else `"unknown"`. */
@@ -211,8 +205,8 @@ interface VariableShape {
 
 /**
  * `undefined` is never inferred from `processorSource`/`validatorSource`
- * text -- reading a type out of an unannotated function body is exactly the
- * guessing this codebase refuses to do (ADR 0010). Absent an annotation and
+ * text. Reading a type out of an unannotated function body is guessing,
+ * which this codebase refuses to do (ADR 0010). Absent an annotation and
  * absent a resolvable default, the honest answer is `"unknown"`, and an
  * `"unknown"` shape never matches anything, including another `"unknown"`.
  */
@@ -242,17 +236,17 @@ function shapesMatch(a: VariableShape, b: VariableShape): boolean {
 
 /**
  * Flags *differently-named* variables in different contracts that share an
- * identical type shape -- a soft signal that two features may be
- * independently modelling the same underlying configuration value under two
- * names, worth a human glance before they drift apart.
+ * identical type shape. It is a soft signal that two features may model the
+ * same configuration value under two names. That is worth a human glance
+ * before they drift apart.
  *
  * @remarks
  * Always `severity: "info"`, and never escalated to blocking by any flag,
- * including `--strict` -- an identical shape is genuinely common and
- * frequently correct (two unrelated features can both take a `number` timeout
- * with a validator, and that is not a defect). This is an observation offered
- * to a reader, not a rule; making it blockable would make it noise a team has
- * to suppress rather than a signal they can scan.
+ * including `--strict`. An identical shape is common and often correct. Two
+ * unrelated features can both take a `number` timeout with a validator, and
+ * that is not a defect. This is an observation for a reader, not a rule. A
+ * blockable version would be noise a team has to suppress, not a signal
+ * they can scan.
  *
  * Scope, deliberately narrow on every axis:
  *  - **Different keys only.** Same-key collisions across contracts are
@@ -263,11 +257,11 @@ function shapesMatch(a: VariableShape, b: VariableShape): boolean {
  *  - **Active contracts only.** An inactive contract is wired into nothing,
  *    so an overlap with it is not a live duplication.
  *  - **No exclusive-grouped contracts.** Members of an exclusive group are
- *    interchangeable alternatives by explicit authorial declaration --
+ *    interchangeable alternatives by explicit authorial declaration:
  *    matching shapes there are the *point*, not a smell.
  *  - **Pairwise, never transitive.** Three mutually-matching variables emit
- *    three independent findings (A-B, A-C, B-C), never one merged "cluster":
- *    each pair is its own question a reader answers on its own, and a cluster
+ *    three independent findings (A-B, A-C, B-C), never one merged "cluster".
+ *    Each pair is its own question a reader answers on its own. A cluster
  *    would imply a transitive relationship this check never established.
  */
 export function detectDuplicateVariableShapes(
@@ -291,7 +285,7 @@ export function detectDuplicateVariableShapes(
       })
     }
   }
-  // Deterministic output regardless of discovery order -- by key, then by the
+  // Deterministic output regardless of discovery order: by key, then by the
   // declaring contract, matching every other report in this package.
   declarations.sort(
     (a, b) =>
@@ -301,7 +295,7 @@ export function detectDuplicateVariableShapes(
   )
 
   const issues: CompatibilityIssue[] = []
-  // `.entries()`/`.slice()` pairwise iteration -- same rationale (no manual
+  // `.entries()`/`.slice()` pairwise iteration: same rationale (no manual
   // index for a mutant to walk away from the bound with) as
   // `detectCompatibilityIssues()`'s identical pairwise double loop above.
   for (const [i, a] of declarations.entries()) {
@@ -318,7 +312,7 @@ export function detectDuplicateVariableShapes(
         reason:
           `"${a.key}" (${a.contractName}) and "${b.key}" (${b.contractName}) declare an identical shape ` +
           `(type ${a.shape.valueType}, processor: ${a.shape.hasProcessor ? "yes" : "no"}, validator: ` +
-          `${a.shape.hasValidator ? "yes" : "no"}). Informational only -- they may be the same underlying ` +
+          `${a.shape.hasValidator ? "yes" : "no"}). Informational only: they may be the same underlying ` +
           "value modelled twice, or two unrelated values that happen to look alike. Nothing is required.",
       })
     }

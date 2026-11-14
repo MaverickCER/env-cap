@@ -12,11 +12,11 @@ import S3rver from "s3rver";
  * node:assert/strict checks, output.json diffed against a committed
  * golden"). Deliberately separate from evidence/configuration-governance.test.ts (which
  * proves the *evidence report* is correct, with no Mongo/server/browser
- * involved) -- this proves the *application* works, so a break in either is
+ * involved): this proves the *application* works, so a break in either is
  * never masked by, or confused with, a break in the other.
  *
  * Every capability's env.schema.ts calls createEnv() at module import time,
- * reading process.env immediately -- so MONGODB_URI/S3_* must be set
+ * reading process.env immediately: so MONGODB_URI/S3_* must be set
  * *before* any module that transitively imports a capability schema is
  * imported. Hence the dynamic imports below, run only after the ephemeral
  * Mongo/S3 servers are up and their real connection details are known.
@@ -40,8 +40,8 @@ async function main(): Promise<void> {
   process.env["S3_ENDPOINT"] = `http://localhost:${s3Port}`;
   process.env["S3_BUCKET"] = "case-file-attachments-smoke-test";
   process.env["S3_REGION"] = "us-east-1";
-  // s3rver only accepts this exact literal credential -- see its own README's
-  // client-configuration example -- not an arbitrary placeholder.
+  // s3rver accepts only this literal credential, not an arbitrary placeholder
+  // (see its README's client-configuration example).
   process.env["S3_ACCESS_KEY_ID"] = "S3RVER";
   process.env["S3_SECRET_ACCESS_KEY"] = "S3RVER";
   process.env["SESSION_SECRET"] = "smoke-test-session-secret-at-least-32-characters-long";
@@ -59,7 +59,7 @@ async function main(): Promise<void> {
   }).send(new CreateBucketCommand({ Bucket: process.env["S3_BUCKET"] }));
 
   // Imports the *Logic functions directly, never the createServerFn()-
-  // wrapped versions -- those can only run inside TanStack Start's own
+  // wrapped versions: those can only run inside TanStack Start's own
   // request context (an AsyncLocalStorage the framework sets up per-request),
   // which doesn't exist in this plain-Node headless run. See
   // server/functions/auth.ts's own comment on the split.
@@ -135,7 +135,7 @@ async function main(): Promise<void> {
   assert.equal(mattersAfterClose[0]?.status, "closed");
   output["matterClosedAfterClose"] = mattersAfterClose[0]?.status === "closed";
 
-  // email: RESEND_API_KEY is deliberately unset -- proves the console-fallback path, not the Resend SDK call.
+  // email: RESEND_API_KEY is deliberately unset; proves the console-fallback path, not the Resend SDK call.
   const notification = await sendNotification({
     to: user.userId,
     subject: "Task assigned",
@@ -144,7 +144,7 @@ async function main(): Promise<void> {
   assert.equal(notification.sent, false, "with no RESEND_API_KEY, sendNotification() must fall back, not throw");
   output["emailFallback"] = notification.sent === false;
 
-  // oauth-github: GITHUB_CLIENT_ID is set in this smoke test, so login is offered -- pure string construction, no real GitHub handshake (see README).
+  // oauth-github: GITHUB_CLIENT_ID is set in this smoke test, so login is offered; pure string construction, no real GitHub handshake (see README).
   assert.equal(githubLoginAvailable(), true);
   const authorizeUrl = githubAuthorizeUrl("http://localhost:3000/auth/github/callback");
   assert.ok(authorizeUrl.startsWith("https://github.com/login/oauth/authorize"));

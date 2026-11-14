@@ -21,7 +21,7 @@ For the overview and quick start, read [README.md](README.md). For the reasons b
 
 ### Capability-owned contracts
 
-Each feature declares the variables it owns, next to the validation it needs. This contract is illustrative. The contract CI runs is [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts).
+A capability is a feature of your code: a folder or an installable package. Each one declares the variables it owns, next to the validation it needs. This contract is illustrative. The contract CI runs is [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts).
 
 ```ts
 // features/payments/env.schema.ts
@@ -329,7 +329,7 @@ The publishing package does two things:
 1. Declare `"envCap": { "schema": "./src/env.schema.ts" }` in its `package.json`, and ship that `.ts` file in `files`.
 2. Re-export the `createEnv()` contract under the same name from its main entry.
 
-Resolution reads one `package.json` and one declared file per listed package, and never calls `readdir`. It rejects a symlink escaping the package and a file over the size cap (`test/build/resolution/resolve-package-schema.test.ts`). The runnable pair is [`paypal-addon`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-addon) and [`paypal-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-consumer); their CI job does not yet block a merge.
+Resolution reads one `package.json` and one declared file per listed package, and never calls `readdir`. It rejects a symlink escaping the package and a file over the size cap (`test/build/resolution/resolve-package-schema.test.ts`). The runnable pair is [`paypal-addon`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-addon) and [`paypal-consumer`](https://github.com/MaverickCER/env-cap/tree/main/test/integration/positive/enterprise/paypal-consumer); `required` waits for their CI job, `integration-fixtures`.
 
 An application can document a package's variable again with only its own fields, such as `expiresAt` and `owner`. Fields it leaves unset come from the package's declaration. A field both set differently is reported as `DUPLICATE_VARIABLE_DOCUMENTATION` ([ADR 0050](specs/decisions/0050-a-variable-declared-twice-is-documented-once.md)).
 
@@ -343,19 +343,33 @@ A contract imported through an alias such as `@/features/payments/env.schema.js`
 
 ### Requirements
 
-| Need                      | Detail                                                                                                                            |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js                   | `>=22`. CI tests 22 and 24; 26 runs as an informational job                                                                       |
-| TypeScript (optional)     | The build entry uses yours when it is 5 or 6, and otherwise the bundled TypeScript 6 (`test/build/typescript-bundled.test.ts`)    |
-| TypeScript versions in CI | The newest 5.x, 6.x and 7.x, in a job that does not yet block a merge; the `^5.0.0` floor is not tested                           |
-| `moduleResolution`        | `node16`, `nodenext` or `bundler`, checked by the `TypeResolution` check; `node10` cannot resolve subpath exports                 |
-| `./eslint-plugin`         | Also needs `eslint` and `@typescript-eslint/utils`; versions in [ADOPTION's dependency table](ADOPTION.md#security--threat-model) |
+The exact ranges, generated from `package.json`:
+
+<!-- ipc:begin supported-versions -->
+
+| Requirement                | Range                              | Needed   |
+| -------------------------- | ---------------------------------- | -------- |
+| Node.js                    | `>=22.0.0`                         | always   |
+| `@typescript-eslint/utils` | `^8.0.0`                           | optional |
+| `eslint`                   | `^8.57.0 \|\| ^9.0.0 \|\| ^10.0.0` | optional |
+| `typescript`               | `^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0`   | optional |
+
+<!-- ipc:end supported-versions -->
+
+The `verify` job tests Node.js 22 and 24 and blocks a merge. Node.js 26 runs in `verify-current`, which is informational.
+
+| Need                      | Detail                                                                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| TypeScript (optional)     | The build entry uses yours when it is 5 or 6, and otherwise the bundled TypeScript 6 (`test/build/typescript-bundled.test.ts`)       |
+| TypeScript versions in CI | The newest 5.x, 6.x and 7.x, in `typescript-5` and `typescript-compat`, which `required` waits for; the `^5.0.0` floor is not tested |
+| `moduleResolution`        | `node16`, `nodenext` or `bundler`, checked by the `TypeResolution` check; `node10` cannot resolve subpath exports                    |
+| `./eslint-plugin`         | Also needs `eslint` and `@typescript-eslint/utils`; versions in [ADOPTION's dependency table](ADOPTION.md#security--threat-model)    |
 
 The bundled TypeScript 6 compiler is the package's one dependency. Only the build entry loads it, and `compiler-isolation` fails the build if a runtime entry can reach it ([ADR 0049](specs/decisions/0049-typescript-7-scanner-uses-a-bundled-typescript-6.md)). It is the price of scanning TypeScript 7 projects, whose compiler has no classic API.
 
 ### Package managers
 
-npm is the supported package manager, and every CI job installs with it. The `package-managers` job checks pnpm, Yarn 1 and Yarn Berry with the `node-modules` linker. It checks one thing: the tarball installs and every entry imports as ESM and CommonJS. That job does not yet block a merge. Yarn Plug'n'Play and non-hoisted pnpm are unsupported.
+npm is the supported package manager, and every CI job installs with it. The `package-managers` job checks pnpm, Yarn 1 and Yarn Berry with the `node-modules` linker. It checks one thing: the tarball installs and every entry imports as ESM and CommonJS. `required` waits for `package-managers`, so a failure blocks a merge. Yarn Plug'n'Play and non-hoisted pnpm are unsupported.
 
 ## CLI
 
@@ -437,7 +451,7 @@ The report's schema is [`schemas/env-cap-report.schema.json`](schemas/env-cap-re
 
 - Real success, failure and `--check` payloads validate against it (`test/build/json-schema.test.ts`).
 - The committed evidence files of two examples validate against its `EvidenceModel` definition, in the same test file.
-- A changed or removed field is meant to bump `schemaVersion`. No check enforces that yet; the `SurfaceContract` check enforces the changeset level.
+- A removed, retyped or newly optional field must bump `schemaVersion`. `test/build/schema-version-bump.test.ts` compares each schema with the last release's copy in the surface baseline and fails otherwise. A change of meaning that keeps the same shape is not detected. The `SurfaceContract` check enforces the changeset level.
 
 ### `--check`
 
@@ -506,16 +520,20 @@ How the Action behaves, and what tests it:
 
 The report functions are unit-tested with a real CLI payload (`test/scripts/github-action-report.test.ts`). The `gh` calls that post comments and issues are not run in CI.
 
-| Input               | Default                 | Purpose                                                                                  |
-| ------------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
-| `args`              | _(required)_            | Arguments passed to `env-cap --json`, such as `--location`, `--evidence` and `--strict*` |
-| `working-directory` | `.`                     | Directory where `env-cap` runs                                                           |
-| `version`           | _(none; required then)_ | Version to run through `npx` when env-cap is not installed; pin one rather than `latest` |
-| `comment`           | `true`                  | Create or update one sticky summary comment on the pull request                          |
-| `annotations`       | `true`                  | Emit inline workflow annotations                                                         |
-| `rotation-alert`    | `true`                  | On runs with no pull request, report expiring variables in an issue                      |
-| `report-key`        | _(working-directory)_   | Identifies this report when several jobs comment on one pull request                     |
-| `github-token`      | `${{ github.token }}`   | Token for the `gh` calls that post comments and issues                                   |
+<!-- ipc:begin action-inputs -->
+
+| Input               | Required | Default               | What it does                                                                                                                                     |
+| ------------------- | -------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `args`              | yes      | none                  | Arguments passed to `env-cap --json`, for example '--location src/generated/env.manifest.ts --evidence docs/env.evidence.json --strict-docs'.    |
+| `working-directory` | no       | `.`                   | Directory to run env-cap from.                                                                                                                   |
+| `version`           | no       | none                  | env-cap version to run through npx when the project does not install env-cap.                                                                    |
+| `comment`           | no       | `true`                | Create or update one sticky summary comment on the PR.                                                                                           |
+| `report-key`        | no       | none                  | Identifies this invocation's sticky comment, so several calls on one PR (for example one per package in a monorepo) do not overwrite each other. |
+| `annotations`       | no       | `true`                | Emit inline ::warning and ::error annotations for findings.                                                                                      |
+| `rotation-alert`    | no       | `true`                | On a run with no PR, such as a scheduled run, open or update an issue listing expiring variables.                                                |
+| `github-token`      | no       | `${{ github.token }}` | Token for the gh calls that post the PR comment and the rotation-alert issue.                                                                    |
+
+<!-- ipc:end action-inputs -->
 
 ### Monorepos
 
@@ -694,9 +712,9 @@ A project can start with one central contract and split it later; the runtime mo
 
 ² Except `processors.base64()`, which returns a Node `Buffer`.
 
-³ `bun-version: latest` and Deno `v2.x`, in a job that does not yet block a merge.
+³ `bun-version: latest` and Deno `v2.x`, in `cross-runtime`, which `required` waits for.
 
-⁴ `./eslint-plugin`: unit tests block; its ESM and CJS import from the tarball runs only in the non-blocking `package-managers` job.
+⁴ `./eslint-plugin`: unit tests block; its ESM and CJS import from the tarball runs only in the `package-managers` job, which `required` waits for.
 
 ESM and CommonJS builds ship for every entry point, and the `PackedConsumer` check imports each one from the packed tarball except `./eslint-plugin`. A dual-package split fails fast with a `TypeError` instead of validating against the wrong schema ([SECURITY.md](SECURITY.md#dual-package-hazard)).
 
@@ -716,7 +734,7 @@ Adopt env-cap one contract at a time, and keep what you have:
 
 Validation runs once, at startup. After it, reading a value is a property lookup on the frozen record of validated values.
 
-The [benchmark suite](./benchmarks/README.md) measures runtime and build-time cost as the number of variables grows. Pull requests from this repository are benchmarked, and a regression fails the `benchmark-pr` job. That job does not yet block a merge, and fork and bot pull requests are not measured. The growth class of `createEnv` is not yet determined on CI, so this guide states no complexity bound.
+The [benchmark suite](./benchmarks/README.md) measures runtime and build-time cost as the number of variables grows. Pull requests from this repository are benchmarked, and a regression fails the `benchmark-pr` job, and `contract` fails with it, which blocks the merge. Fork and bot pull requests are not measured. The growth class of `createEnv` is not yet determined on CI, so this guide states no complexity bound.
 
 ## Documentation index
 

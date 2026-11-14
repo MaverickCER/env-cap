@@ -3,7 +3,7 @@
 //
 // Unlike every other example in this repo, this script needs a real JS value
 // from `src/` (the `liveExpirationDates` callback), not just plain strings and
-// booleans -- so it runs via `tsx`, not plain `node` (see this package's
+// booleans: so it runs via `tsx`, not plain `node` (see this package's
 // README, "Why tsx instead of node"). `tsx`'s loader hooks apply to the whole
 // module graph, so this `.mjs` entry point can still import a `.ts` module
 // the same way every other example's `src/index.ts` does.
@@ -27,7 +27,7 @@ console.log(`Wrote manifest: ${result.manifest?.outputPath}`);
 console.log(`Wrote docs: ${result.docs?.docsPath}`);
 console.log(`Discovered ${result.manifest?.contracts.length ?? 0} contract(s).`);
 
-// .env.example is regenerated and overwritten directly on every run here --
+// .env.example is regenerated and overwritten directly on every run here:
 // it's a live, always-current teaching artifact, not something meant to be
 // hand-merged. See the "onExisting" option (README's CLI section).
 const envExample = result.docs?.envExample;
@@ -49,7 +49,7 @@ if (result.manifest?.warnings.length) {
 }
 
 // Evidence change-tracking since the committed evidence artifact
-// (docs/env.evidence.json) was last written -- see ADR 0038.
+// (docs/env.evidence.json) was last written: see ADR 0038.
 const changes = result.evidence.change.manifest;
 const total =
   changes.addedContracts.length + changes.addedVariables.length +

@@ -3,8 +3,8 @@ import envCapPlugin from "@maverickcer/env-cap/eslint-plugin";
 import tseslint from "typescript-eslint";
 
 /**
- * Wires up `env-cap/no-raw-process-env` across `src/server/**` -- the real
- * application code that reads environment values -- proving the rule
+ * Wires up `env-cap/no-raw-process-env` across `src/server/**` (the real
+ * application code that reads environment values) proving the rule
  * doesn't get in the way of correctly-structured code: every service/
  * function only ever reads the environment through a capability's own
  * generated contract (`src/capabilities/*\/env.schema.ts`), never a bare

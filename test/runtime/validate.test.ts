@@ -5,7 +5,7 @@ import { EnvNotReadyError, EnvValidationError } from "../../src/runtime/errors.j
 import { resetEnvCache } from "../../src/runtime/reset.js"
 import { validateEnv } from "../../src/runtime/validate.js"
 
-// validateEnv() only ever initializes once per process -- every test gets a
+// validateEnv() only ever initializes once per process: every test gets a
 // clean slate so it can validate its own scenario from "uninitialized".
 beforeEach(() => {
   resetEnvCache()
@@ -58,7 +58,7 @@ describe("validateEnv pipeline", () => {
       {
         STRIPE_KEY: {
           // Same "coerce unknown to string" idiom as helpers/processors.ts's
-          // own String(value ?? "") -- see that file's lint-config comment.
+          // own String(value ?? ""): see that file's lint-config comment.
           // eslint-disable-next-line @typescript-eslint/no-base-to-string -- the default under test stringifies exactly like String(value ?? "")
           processor: (v) => String(v ?? ""),
           validator: (value: string, rawEnv) => {
@@ -221,7 +221,7 @@ describe("validateEnv pipeline", () => {
     }
   })
 
-  it('reports a plain object (no .message) thrown from a validator as "[object Object]" -- documenting today\'s actual, unideal behavior', async () => {
+  it('reports a plain object (no .message) thrown from a validator as "[object Object]": documenting today\'s actual, unideal behavior', async () => {
     const contract = createEnv(
       {
         PORT: {
@@ -241,7 +241,7 @@ describe("validateEnv pipeline", () => {
     } catch (error) {
       const validationError = error as EnvValidationError
       // Deliberately exercising the exact stringification this rule warns
-      // about -- the test's whole point is proving a thrown non-Error value
+      // about: the test's whole point is proving a thrown non-Error value
       // degrades to this default, not stringifying it safely.
       // eslint-disable-next-line @typescript-eslint/no-base-to-string -- asserts the unsafe stringification that default produces
       expect(validationError.failures[0]?.message).toBe(String({ code: 1 }))
@@ -323,7 +323,7 @@ describe("validateEnv idempotency", () => {
     // `runValidation()` has no internal `await`, so under any REAL caller
     // its whole body (including settling `state.result`) completes
     // synchronously before another call could ever observe `inFlight` as
-    // the relevant branch -- this manufactures the state directly (as
+    // the relevant branch: this manufactures the state directly (as
     // `runtime/cache.ts`'s own exported `getState()` is meant to allow) to
     // exercise the defensive "share an underway run" branch on its own
     // terms, distinct from idempotency-after-completion (already covered
@@ -556,7 +556,7 @@ describe("validation contexts", () => {
     expect(() => contract.PUBLIC_API_URL).toThrow(EnvNotReadyError)
 
     // Simulates a fresh process (server and client never share one in
-    // practice) -- validateEnv() itself stays one-shot per process; this
+    // practice): validateEnv() itself stays one-shot per process; this
     // is not a supported "switch contexts mid-process" API.
     resetEnvCache()
 

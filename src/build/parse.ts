@@ -7,21 +7,21 @@ import { parsePositionCitation, positionOf } from "./source-position.js"
 import type { SourcePosition } from "./source-position.js"
 
 // A quoted or computed property name (e.g. `"FOO\nBAR"`) can hold arbitrary
-// text, not just a valid identifier. Since a discovered key is later written
+// text, not just a valid identifier. A discovered key is later written
 // verbatim into generated docs/.env.example (as `KEY=` lines and Markdown
-// headings) and is used as the schema's own object key at runtime, reject
-// anything that isn't a plausible env var name up front rather than letting
-// stray whitespace/`=`/etc. propagate into generated files.
+// headings). It is also the schema's own object key at runtime. So anything
+// that isn't a plausible env var name is rejected up front. Stray
+// whitespace/`=`/etc. never reach generated files.
 //
 // The pattern itself is duplicated (not a shared module-level `const`)
-// between `isValidEnvKey()` and the warning message below, deliberately --
+// between `isValidEnvKey()` and the warning message below, deliberately.
 // Stryker marks a module-level regex literal `static: true` (evaluated once
-// at import time), which produces a false "Survived" on a mutant that's
-// genuinely, heavily test-covered (the same limitation already fixed for
-// `cli/index.ts`'s dispatch tables and `HELP_TEXT` this same drive). Keep
-// both copies in sync if the pattern ever changes.
+// at import time). That produces a false "Survived" on a mutant that's
+// heavily test-covered. `cli/index.ts`'s dispatch tables and `HELP_TEXT`
+// avoid the same limitation the same way. Keep both copies in sync if the
+// pattern ever changes.
 
-/** A recoverable issue found while statically parsing or linking one schema file -- never fatal, always surfaced to the caller as data. */
+/** A recoverable issue found while statically parsing or linking one schema file: never fatal, always surfaced to the caller as data. */
 export interface ParseWarning {
   /** Absolute path of the file the warning applies to. */
   readonly file: string
@@ -31,8 +31,8 @@ export interface ParseWarning {
 
 /**
  * How a `createEnv`/`documentEnv` call's first argument resolves, before any
- * cross-file linking is attempted (that's `link.ts`'s job, not this file's --
- * this module only ever looks at one file's own AST).
+ * cross-file linking is attempted. Linking is `link.ts`'s job; this module
+ * only ever looks at one file's own AST.
  */
 export type SchemaRef =
   | {
@@ -54,7 +54,7 @@ export type SchemaRef =
 
 /** One `createEnv(...)` call site, as found by {@link parseSchemaFile}, before cross-file linking. */
 interface RawCreateEnvCall {
-  /** The binding name the call result is assigned to (must be exported to be usable -- see {@link parseSchemaFile}). */
+  /** The binding name the call result is assigned to (must be exported to be usable: see {@link parseSchemaFile}). */
   readonly exportName: string
   /** How the first (schema) argument resolves within this file. */
   readonly schemaRef: SchemaRef
@@ -78,7 +78,7 @@ interface RawDocumentEnvCall {
 export interface ImportBinding {
   /** The raw module specifier as written in the import (e.g. `"./payments.schema.js"`). */
   readonly specifier: string
-  /** The name as exported by the source module -- accounts for `import { real as local }`. */
+  /** The name as exported by the source module: accounts for `import { real as local }`. */
   readonly importedName: string
 }
 
@@ -103,13 +103,13 @@ export interface FileParseResult {
 }
 
 /**
- * Structurally parses one file's AST for everything the generator needs:
- * `createEnv(...)`/`documentEnv(...)` call sites, the local `const`
- * declarations and imports needed to resolve an identifier passed to either
- * of them.
+ * Structurally parses one file's AST for everything the generator needs. That
+ * is the `createEnv(...)`/`documentEnv(...)` call sites, plus the local
+ * `const` declarations and imports that resolve an identifier passed to
+ * either.
  *
  * @remarks
- * Never type-checks or executes the file -- see `link.ts` for how
+ * Never type-checks or executes the file: see `link.ts` for how
  * these raw facts get resolved into actual schema/docs data, including
  * across files.
  */
@@ -168,7 +168,7 @@ export function parseSchemaFile(filePath: string, sourceText: string): FileParse
           })
         } else if (isCallToName(decl.initializer, "documentEnv")) {
           // `const x = documentEnv(...)` is unusual (it returns void) but not
-          // an error -- treat it the same as a bare statement below.
+          // an error: treat it the same as a bare statement below.
           const [schemaArg, docsArg] = decl.initializer.arguments
           documentEnvCalls.push({
             schemaRef: resolveSchemaRef(schemaArg),
@@ -180,7 +180,7 @@ export function parseSchemaFile(filePath: string, sourceText: string): FileParse
     }
   }
 
-  // documentEnv is normally a bare top-level statement: `documentEnv(schema, {...});`
+  // documentEnv is normally a bare top-level statement: `documentEnv(schema, {...});`.
   for (const statement of sourceFile.statements) {
     if (!ts.isExpressionStatement(statement)) continue
     const expr = statement.expression
@@ -212,10 +212,9 @@ function resolveSchemaRef(node: TS.Expression | undefined): SchemaRef {
  * Collects named import bindings from one `import` statement into `imports`, keyed by local name.
  *
  * @remarks
- * Exported for reuse by `scan-dependencies.ts`, which needs the same
- * alias-aware named-import tracking this file already does for schema
- * linking, just applied to arbitrary application source instead of schema
- * files.
+ * Exported for reuse by `scan-dependencies.ts`. It needs the same
+ * alias-aware named-import tracking this file does for schema linking. It
+ * applies it to arbitrary application source instead of schema files.
  *
  * @param imports - Mutated in place; a binding re-collected under the same local name overwrites the previous entry.
  */
@@ -244,20 +243,20 @@ function isCallToName(call: TS.CallExpression, name: string): boolean {
 
 /**
  * A quoted or computed property name (e.g. `"FOO\nBAR"`) can hold arbitrary
- * text -- reject anything that isn't a plausible env var name rather than
+ * text: reject anything that isn't a plausible env var name rather than
  * letting it propagate into generated files.
  */
 function isValidEnvKey(key: string): boolean {
   return /^[A-Za-z_][A-Za-z0-9_]*$/.test(key)
 }
 
-/** One schema entry's statically-discoverable shape -- presence facts, never evaluated/executed values. */
+/** One schema entry's statically-discoverable shape: presence facts, never evaluated/executed values. */
 export interface DiscoveredSchemaVariable {
   /** The environment variable name (the schema's object key). */
   readonly key: string
   /** Whether the entry declares a `default`. */
   readonly hasDefault: boolean
-  /** The default's statically-evaluated literal value, if `hasDefault` and it was a literal we could evaluate -- `{ ok: false }` when present but not statically resolvable, `undefined` when absent. */
+  /** The default's statically-evaluated literal value, if `hasDefault` and it was a literal we could evaluate: `{ ok: false }` when present but not statically resolvable, `undefined` when absent. */
   readonly defaultValue:
     | {
         /** Always `true` in this branch. */
@@ -274,7 +273,7 @@ export interface DiscoveredSchemaVariable {
   readonly hasProcessor: boolean
   /** The processor function's source text, normalized to single-line, if `hasProcessor`. */
   readonly processorSource: string | undefined
-  /** Only present when the processor has an explicit `: T` return type annotation -- the one thing we treat as provable. */
+  /** Only present when the processor has an explicit `: T` return type annotation: the one thing we treat as provable. */
   readonly processorReturnType: string | undefined
   /** Whether the entry declares a `validator`. */
   readonly hasValidator: boolean
@@ -282,7 +281,7 @@ export interface DiscoveredSchemaVariable {
   readonly validatorSource: string | undefined
   /** The variable's statically-resolved `context`, if set to a non-empty string literal (see ADR 0022). `undefined` when absent, non-literal, or empty. */
   readonly context: string | undefined
-  /** Where this variable's own schema property (e.g. `SESSION_SECRET: z.string()`) is declared -- distinct from the *contract's* `declaration`/`documentation` (`link.ts`); every variable has exactly one of these, always. See ADR 0036. */
+  /** Where this variable's own schema property (e.g. `SESSION_SECRET: z.string()`) is declared: distinct from the *contract's* `declaration`/`documentation` (`link.ts`); every variable has exactly one of these, always. See ADR 0036. */
   readonly declaration: SourcePosition
 }
 
@@ -370,7 +369,7 @@ function extractSchemaVariable(
       hasValidator = true
       validatorSource = normalizeSource(prop.initializer.getText())
     } else if (name === "context") {
-      // Never executed (ADR 0002) -- a non-literal (e.g. `context:
+      // Never executed (ADR 0002): a non-literal (e.g. `context:
       // getContext()`) is skipped entirely, same "warn/skip, never guess,
       // never execute" policy as every other field here.
       const evaluated = evaluateLiteral(prop.initializer)
@@ -381,7 +380,7 @@ function extractSchemaVariable(
           file: filePath,
           message:
             evaluated.ok && evaluated.value === ""
-              ? `"context" for "${key}" in "${contextLabel}" is an empty string; ignoring it -- validation contexts must be non-empty.`
+              ? `"context" for "${key}" in "${contextLabel}" is an empty string; ignoring it. Validation contexts must be non-empty.`
               : `"context" for "${key}" in "${contextLabel}" is not a statically-resolvable string literal; ignoring it.`,
         })
       }
@@ -413,7 +412,7 @@ function normalizeSource(text: string): string {
   return text.replace(/\s+/g, " ")
 }
 
-/** One variable's statically-extracted `documentEnv()` documentation, as declared in that call's `variables` entry for this key -- governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`, resolved from static literals. */
+/** One variable's statically-extracted `documentEnv()` documentation, as declared in that call's `variables` entry for this key: governance fields (`owner` .. `metadata`) are `EnvGovernanceFields`, resolved from static literals. */
 export interface DiscoveredVariableDocs extends EnvGovernanceFields {
   /** The environment variable name this documentation applies to. */
   readonly key: string
@@ -441,13 +440,13 @@ export interface DiscoveredVariableDocs extends EnvGovernanceFields {
   readonly removeBy: string | undefined
   /** Statically-resolved `renamedFrom`, if set to a string literal. */
   readonly renamedFrom: string | undefined
-  /** Statically-extracted `evidence` sub-object -- the re-verified-every-run half of a variable's documentation, kept structurally apart from the declared-only fields above. `undefined` when the declaration has no `evidence` key at all. See {@link runtime.VariableEvidenceDocs} and ADR 0037. */
+  /** Statically-extracted `evidence` sub-object: the re-verified-every-run half of a variable's documentation, kept structurally apart from the declared-only fields above. `undefined` when the declaration has no `evidence` key at all. See {@link runtime.VariableEvidenceDocs} and ADR 0037. */
   readonly evidence: DiscoveredVariableEvidence | undefined
 }
 
 /** The statically-extracted contents of one variable's `evidence` sub-object. See {@link runtime.VariableEvidenceDocs}. */
 export interface DiscoveredVariableEvidence {
-  /** Well-formed `"path:line:column"` entries from `evidence.dynamicAccess`, if set to an array of string literals -- a malformed entry warns and is dropped, never included here. See ADR 0037. */
+  /** Well-formed `"path:line:column"` entries from `evidence.dynamicAccess`, if set to an array of string literals: a malformed entry warns and is dropped, never included here. See ADR 0037. */
   readonly dynamicAccess: readonly string[] | undefined
 }
 
@@ -572,7 +571,7 @@ export function extractContractDocs(
       if (evaluated.ok && typeof evaluated.value === "string") owner = evaluated.value
     } else if (propName === "sensitivity") {
       const evaluated = evaluateLiteral(prop.initializer)
-      // Any string level is honored verbatim -- an org's own vocabulary is its
+      // Any string level is honored verbatim: an org's own vocabulary is its
       // own. A level outside the standard set is reported separately, as a
       // non-blocking `NONSTANDARD_SENSITIVITY_LEVEL` finding
       // (`generate-documentation.ts`), never dropped here.
@@ -801,12 +800,12 @@ function extractVariableDocsMap(
 
 /**
  * Well-formed `"path:line:column"` citations from an `evidence.dynamicAccess`
- * value, warning on (and dropping) each malformed entry individually rather
- * than discarding the whole array -- one typo'd citation must never silently
- * take three good ones with it. `undefined` when the key is absent entirely
- * or isn't an array at all; an array of entries that are all malformed
- * yields an empty array, which is a different, honest fact ("citations were
- * declared here, none of them usable").
+ * value. Each malformed entry is dropped with its own warning; the whole
+ * array is never discarded. One typo'd citation must never silently take
+ * three good ones with it. `undefined` when the key is absent or isn't an
+ * array at all. An array whose entries are all malformed yields an empty
+ * array. That is a different, honest fact ("citations were declared here,
+ * none of them usable").
  */
 function extractDynamicAccessCitations(
   value: unknown,
@@ -845,7 +844,7 @@ export function extractCreateEnvOptionsName(
 }
 
 /**
- * A plain object literal -- any value shape, since `evaluateLiteral()` already only ever produces
+ * A plain object literal: any value shape, since `evaluateLiteral()` already only ever produces
  * JSON-safe primitives/arrays/objects recursively (see literal-eval.ts). Deliberately not
  * `isStringRecord` anymore: `metadata` accepts any primitive or object value per key, not just
  * strings (ADR 0035).
@@ -860,10 +859,10 @@ function isStringOrStringArray(value: unknown): value is string | readonly strin
 }
 
 /**
- * Unlike {@link isStringOrStringArray} (which also accepts a lone string, for fields like
- * `dataResidency` that are conventionally either), `rotationTriggerEvents` is declared as
- * `readonly string[]` only (see {@link runtime.VariableDocs.rotationTriggerEvents}) -- a bare
- * string here is a type error at the call site, not an alternate accepted shape, so this rejects
+ * {@link isStringOrStringArray} also accepts a lone string, for fields like `dataResidency`
+ * that are conventionally either. `rotationTriggerEvents` is declared as `readonly string[]`
+ * only (see {@link runtime.VariableDocs.rotationTriggerEvents}). A bare
+ * string here is a type error at the call site, not an alternate accepted shape. So this rejects
  * one rather than silently wrapping it into a single-element array.
  */
 function isStringArray(value: unknown): value is readonly string[] {

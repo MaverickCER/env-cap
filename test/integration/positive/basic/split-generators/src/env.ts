@@ -2,7 +2,7 @@ import { createEnv, documentEnv, type RawEnv } from "@maverickcer/env-cap";
 import { processors, validators } from "@maverickcer/env-cap/helpers";
 
 /**
- * The same contract as `examples/application`, byte-for-byte -- deliberately,
+ * The same contract as `examples/application`, byte-for-byte: deliberately,
  * so this example's only new concept is *how* generation is invoked (see
  * scripts/generate-manifest.mjs and README.md), not a new schema-authoring
  * feature.

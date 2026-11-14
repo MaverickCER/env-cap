@@ -2,7 +2,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 
 /**
  * paypal-addon is a reusable internal package, not an application feature
- * folder -- it owns this contract the same way `features/payments/env.schema.ts`
+ * folder: it owns this contract the same way `features/payments/env.schema.ts`
  * owns its contract in `examples/application`. Capability ownership follows
  * whichever module calls `createEnv()`, not the directory it happens to live
  * in (see the root README's "Capability-owned configuration" section).
@@ -27,7 +27,7 @@ export const paypalEnv = createEnv(paypalSchema, {
   source: import.meta.url,
 });
 
-// documentEnv() returns void and is inert at runtime (src/runtime/document.ts) --
+// documentEnv() returns void and is inert at runtime (src/runtime/document.ts):
 // there is no exported "paypalDoc" to consume. generateEnvManifest() links this
 // call back to paypalSchema through static analysis; nothing here is retained
 // in memory or re-exported from index.ts.

@@ -1,17 +1,17 @@
-// Server-only capability contract -- declares and validates
+// Server-only capability contract: declares and validates
 // DATABASE_URL/SESSION_SECRET/INTERNAL_API_KEY, but deliberately does NOT
 // import the "server-only" package itself (unlike src/lib/session.ts and
 // src/lib/store.ts, its two real consumers). This file has to stay importable
 // from plain Node: scripts/validate-env.ts (the `next build`-time gate, run
 // via `tsx`, outside Next's own bundler) and the generated manifest both
 // import it, and "server-only" unconditionally throws the instant it's
-// required outside Next's webpack/Turbopack pipeline -- confirmed
+// required outside Next's webpack/Turbopack pipeline; confirmed
 // empirically, not assumed (see scripts/validate-env.ts's own history in
 // this example's git log for the exact error).
 //
 // The mechanical, build-time "never ships to the client" guarantee instead
-// lives on session.ts/store.ts -- the modules that actually read `serverEnv`'s
-// values -- which both DO import "server-only". This file's own values are
+// lives on session.ts/store.ts (the modules that actually read `serverEnv`'s
+// values) which both DO import "server-only". This file's own values are
 // inert until read, and this example's one client component (src/app/page.tsx)
 // imports env.public.schema.ts only, never this file; but that boundary here
 // is enforced by code review/lint discipline, not by a mechanical guard on

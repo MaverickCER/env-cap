@@ -13,24 +13,23 @@ import { serializeCheckSuccess, serializeFailure, serializeSuccess, writeJson } 
 
 /**
  * Thin, optional CLI wrapper around `generateEnvArtifacts()`. Nothing here is
- * required for library usage -- `generateEnvManifest`/`generateDocumentation`/
- * `generateUsageReport`/`generateEnvArtifacts` are fully usable as plain imports
- * from npm scripts, bundler plugins, or CI steps without this file.
+ * required for library usage. `generateEnvManifest`/`generateDocumentation`/
+ * `generateUsageReport`/`generateEnvArtifacts` work as plain imports from npm
+ * scripts, bundler plugins, or CI steps without this file.
  *
  * `../build/index.js` (and, transitively, `typescript`) is imported here as
- * TYPES ONLY at module scope, and loaded with a dynamic `import()` inside
- * `runCheckMode`/`runGenerateMode` instead of a static top-level import.
- * `typescript` is an optional peer dependency (README: "TypeScript 5+ is
- * only required for build-time manifest generation"), but a static import
- * is evaluated eagerly for every invocation of this file, including
- * `env-cap init` and `env-cap --help` -- neither of which touches
- * `../build/index.js` at all. Without this split, a fresh install with no
- * `typescript` present threw `ERR_MODULE_NOT_FOUND: Cannot find package
- * 'typescript'` on `env-cap init`, before `runInitCommand` (pure `node:fs`,
- * no TypeScript dependency -- see ADR 0042) ever ran.
+ * TYPES ONLY at module scope. `runCheckMode`/`runGenerateMode` load it with a
+ * dynamic `import()` instead of a static top-level import. `typescript` is
+ * an optional peer dependency (README: "TypeScript 5+ is only required for
+ * build-time manifest generation"). A static import is evaluated for every
+ * invocation of this file, including `env-cap init` and `env-cap --help`.
+ * Neither of those touches `../build/index.js`. With a static import, a
+ * fresh install without `typescript` would throw `ERR_MODULE_NOT_FOUND:
+ * Cannot find package 'typescript'` on `env-cap init`. That happens before
+ * `runInitCommand` (pure `node:fs`, no TypeScript dependency; ADR 0042) runs.
  */
 
-/** Parsed CLI flags -- see `helpText()` below for what each one means. */
+/** Parsed CLI flags: see `helpText()` below for what each one means. */
 export interface ParsedArgs {
   root?: string
   location?: string
@@ -48,13 +47,13 @@ export interface ParsedArgs {
 }
 
 // Every VALUE_FLAGS/BOOL_FLAGS entry below is a named function declaration,
-// not an inline arrow inside the dispatch table object literals -- Stryker
-// marks a module-level object literal's own arrow-shorthand properties
-// `static: true` (evaluated once at module load), which can produce a false
-// "Survived" on a mutant that real tests genuinely reach and would fail
-// against, even though `ignoreStatic` only suppresses a static mutant with
-// *zero* coverage (this one has real coverage, just misattributed). Named
-// function declarations don't have this problem -- their bodies are ordinary
+// not an inline arrow inside the dispatch table object literals. Stryker
+// marks a module-level object literal's arrow-shorthand properties
+// `static: true` (evaluated once at module load). That can report a false
+// "Survived" on a mutant that real tests reach and would fail against.
+// `ignoreStatic` only suppresses a static mutant with *zero* coverage, and
+// this one has real coverage, only misattributed. Named
+// function declarations don't have this problem: their bodies are ordinary
 // function-scope code, attributed normally. See the identical fix already
 // applied to `check-artifacts.ts`/`reference-projections.ts`'s `defineX({...})`
 // schema objects.
@@ -80,7 +79,7 @@ function setEvidence(a: ParsedArgs, v: string): void {
   a.evidence = v
 }
 
-/** Flags that consume the following argv token. A table, not a `switch`, so `parseArgs` stays a flat dispatch loop -- one branch per *kind* of flag. */
+/** Flags that consume the following argv token. A table, not a `switch`, so `parseArgs` stays a flat dispatch loop: one branch per *kind* of flag. */
 const VALUE_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs, value: string) => void>>> = {
   "--root": setRoot,
   "--location": setLocation,
@@ -114,17 +113,16 @@ function setHelp(a: ParsedArgs): void {
 }
 
 /** Flags that set a boolean and consume nothing further. */
-// This object literal itself is `static: true` (built once at module load),
-// which Stryker can misattribute a false "Survived" to even though it's
-// genuinely, heavily test-covered -- NOT an equivalent mutant. Hand-verified:
-// replacing this whole literal with `{}` and running the real suite
-// (`vitest run`, whole package) fails 21 tests across 2 files (every test
-// exercising `--strict`/`--json`/`--check`/`--help`/etc.), each throwing
-// "Unknown argument" instead of setting the flag. Extracting each entry to
-// its own named function (see above) already fixed the same class of false
-// "Survived" for every individual entry's own body; this fixes the entries,
-// the wrapper object literal's own collapse-to-`{}` mutant is a second,
-// distinct static-attribution target that the same fix doesn't reach.
+// This object literal itself is `static: true` (built once at module load).
+// Stryker can misattribute a false "Survived" to it, though tests cover it
+// heavily: it is NOT an equivalent mutant. Hand-verified: replacing this
+// whole literal with `{}` fails 21 tests across 2 files in the real suite
+// (`vitest run`, whole package). Those are every test exercising
+// `--strict`/`--json`/`--check`/`--help`/etc. Each throws "Unknown argument"
+// instead of setting the flag. Extracting each entry to
+// its own named function (see above) fixes the same false "Survived" for
+// each entry's body. The wrapper object literal's collapse-to-`{}` mutant is
+// a second static-attribution target, which those named functions do not reach.
 const BOOL_FLAGS: Readonly<Partial<Record<string, (args: ParsedArgs) => void>>> = {
   "--no-tsconfig": setNoTsconfig,
   "--strict": setStrict,
@@ -182,14 +180,14 @@ function nonEmpty(value: string | undefined, flag: string): string {
   return value
 }
 
-// A function, not a module-level `const` -- Stryker marks a module-level
-// template-literal `static: true` (evaluated once at import time), which can
-// under-attribute a real, test-covered mutant to a false "Survived" the same
-// way the VALUE_FLAGS/BOOL_FLAGS dispatch tables above did. Returning it from
-// a function makes the template literal ordinary function-scope code,
-// evaluated (and attributed) fresh on each of `main()`'s two call sites.
+// A function, not a module-level `const`. Stryker marks a module-level
+// template literal `static: true` (evaluated once at import time). It can
+// then report a real, test-covered mutant as a false "Survived", like the
+// VALUE_FLAGS/BOOL_FLAGS dispatch tables above. Inside a function, the
+// template literal is ordinary code, evaluated (and attributed) fresh on
+// each of `main()`'s two call sites.
 function helpText(): string {
-  return `env-cap - generate a manifest and/or a persisted evidence artifact from discovered env.schema.ts contracts
+  return `env-cap: from your env.schema.ts contracts, write the manifest your app passes to validateEnv(), an evidence file (owners, expiry dates, usage), or both
 
 Usage:
   env-cap init
@@ -198,7 +196,7 @@ Usage:
 Examples:
   env-cap init                                          Scaffold a first env.schema.ts and a generate script
   env-cap --location src/env.manifest.ts                Write the manifest
-  env-cap --evidence docs/env.evidence.json             Write the evidence artifact
+  env-cap --evidence docs/env.evidence.json             Write the evidence file
   env-cap --location src/env.manifest.ts --check        Fail if the manifest is out of date (for CI)
 
 Commands:
@@ -216,7 +214,7 @@ Where to look:
 
 What to write:
   --location <path>         Write the generated manifest at this path
-  --evidence <path>         Also write the persisted evidence artifact (the full EvidenceModel, plus a .fingerprint sidecar) at this path, for example docs/env.evidence.json. Needs no other flag
+  --evidence <path>         Also write the evidence file (the full EvidenceModel, plus a .fingerprint sidecar) at this path, for example docs/env.evidence.json. Needs no other flag
   --json                    Print a machine-readable report instead of text
   --check                   Write nothing; exit 1 if any generated artifact is stale or missing
 
@@ -227,6 +225,10 @@ What counts as an error:
 
   --help                    Show this message
 
+Exit codes:
+  0                         Success; with --check, every generated artifact is current
+  1                         A blocking finding, a stale or missing artifact under --check, no --location or --evidence, or any other error
+
 The documentation catalog, the dependency and ownership report and the reconciled .env.example are not generated by
 this CLI. Call \`generateDocumentation\` and \`generateUsageReport\` (or \`generateEnvArtifacts\` for everything at once)
 from \`@maverickcer/env-cap/build\` in your own build script. A worked example:
@@ -235,7 +237,7 @@ Every flag is described in https://github.com/MaverickCER/env-cap/blob/main/GUID
 `
 }
 
-/** @internal Exported for direct unit coverage -- reached through `main()`'s `--evidence` flow in production, but that path alone can't isolate this from `contractNameResolver()`/`writeEvidenceChanges()`'s own logic, nor cheaply exercise every field-change/added/updated/removed shape without a full real generation run per case. */
+/** @internal Exported for direct unit coverage: reached through `main()`'s `--evidence` flow in production, but that path alone can't isolate this from `contractNameResolver()`/`writeEvidenceChanges()`'s own logic, nor cheaply exercise every field-change/added/updated/removed shape without a full real generation run per case. */
 export function formatFieldChanges(
   changes: ManifestChangeReport["updatedContracts"][number]["changes"],
 ): string {
@@ -245,22 +247,22 @@ export function formatFieldChanges(
 }
 
 /**
- * Mirrors `docs.ts`'s "Changes since last report" section: a fixed
- * Added/Updated/Removed order, each printed only when non-empty, "No
- * changes." when all three are empty -- printed whenever `--evidence` was
- * requested, not only when something actually changed. See ADR 0038 (the
- * persisted evidence artifact -- not the manifest itself, which no longer
- * tracks its own change history; see ADR 0021's now-superseded design).
+ * Mirrors `docs.ts`'s "Changes since last report" section. The order is
+ * fixed: Added, Updated, Removed. Each prints only when non-empty, and "No
+ * changes." prints when all three are empty. The section prints whenever
+ * `--evidence` was requested, not only when something changed. The change
+ * history lives in the evidence file (ADR 0038), not in the manifest (ADR
+ * 0021 is superseded).
  */
 /**
  * Resolves a `${file}#${exportName}` reference to the contract's display
- * name, from `ContractModel` -- the one model that owns it. A change-report
- * ref carries identity only (see `ContractRef`), so this is the lookup any
- * renderer needing prose performs; a removed contract has no entry in the
- * *current* model at all, which is exactly why this falls back to the export
- * name rather than assuming one exists.
+ * name, from `ContractModel`: the one model that owns it. A change-report
+ * ref carries identity only (see `ContractRef`), so any renderer needing
+ * prose performs this lookup. A removed contract has no entry in the
+ * *current* model, so this falls back to the export name rather than
+ * assuming one exists.
  */
-/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+/** @internal Exported for direct unit coverage: see {@link formatFieldChanges}'s own doc comment for why. */
 export function contractNameResolver(
   contracts: readonly ContractModelContract[],
 ): (ref: { file: string; exportName: string }) => string {
@@ -268,7 +270,7 @@ export function contractNameResolver(
   return (ref) => byIdentity.get(`${ref.file}#${ref.exportName}`) ?? ref.exportName
 }
 
-/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+/** @internal Exported for direct unit coverage: see {@link formatFieldChanges}'s own doc comment for why. */
 export function writeEvidenceChanges(
   changes: ManifestChangeReport,
   contracts: readonly ContractModelContract[],
@@ -308,20 +310,17 @@ export function writeEvidenceChanges(
 }
 
 /**
- * Which passes this invocation asked for, straight off the parsed flags --
- * never inferred from which results came back populated, which is exactly the
- * ambiguity `requested` exists to remove. See `JsonRequestedPasses`.
+ * Which passes this invocation asked for, straight off the parsed flags. It
+ * is never inferred from which results came back populated. `requested`
+ * exists to remove exactly that ambiguity. See `JsonRequestedPasses`.
  */
-/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+/** @internal Exported for direct unit coverage: see {@link formatFieldChanges}'s own doc comment for why. */
 export function requestedPasses(args: ParsedArgs): JsonRequestedPasses {
   return {
     manifest: args.location !== undefined,
-    // The CLI can no longer request either pass -- `--docs`/`--ownership`
-    // were removed (see specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md);
-    // `JsonRequestedPasses` keeps both fields, unchanged in shape, for
-    // `--json` schema compatibility (see JSON_SCHEMA_VERSION's own doc
-    // comment -- an unused-but-still-`false` field is additive, not a
-    // meaning change), always reporting them as not requested.
+    // The CLI cannot request either pass: it has no `--docs` or `--ownership`
+    // flag (ADR 0046). `JsonRequestedPasses` keeps both fields, always
+    // `false`, so the `--json` schema stays compatible (see JSON_SCHEMA_VERSION).
     docs: false,
     usage: false,
     evidence: args.evidence !== undefined,
@@ -329,21 +328,20 @@ export function requestedPasses(args: ParsedArgs): JsonRequestedPasses {
 }
 
 /**
- * The CLI entry point: parses argv, runs `--check` or a real generate, and writes either
- * human-readable text or (`--json`) a machine-readable report to stdout, setting
+ * The CLI entry point: parses argv and runs `--check` or a real generate. It writes either
+ * human-readable text or (`--json`) a machine-readable report to stdout, and sets
  * `process.exitCode` accordingly (see ADR 0013 for the JSON report contract).
  */
 /**
- * The full `GenerateEnvArtifactsOptions` object, built once from parsed args --
+ * The full `GenerateEnvArtifactsOptions` object, built once from parsed args:
  * `checkEnvArtifacts` and `generateEnvArtifacts` take the same type, so both
- * call sites use this directly. `evidence` is included: `--check --evidence`
- * verifies the persisted evidence artifact for drift too, exactly as `--check`
- * already does for the manifest artifact.
+ * call sites use this directly. `evidence` is included, so `--check --evidence`
+ * checks the evidence file for drift as `--check` does for the manifest.
  */
 /**
- * Whether a findings group escalates to a hard error: when bare `--strict`
- * is on (ADR 0044 -- `--strict` alone means every group), or when the
- * group-specific `--strict-*` flag is. One place so every group's
+ * Whether a findings group escalates to a hard error. It does when bare
+ * `--strict` is on (ADR 0044; `--strict` alone means every group). It also
+ * does when the group-specific `--strict-*` flag is on. One place so every group's
  * escalation reads identically, matching `data-cap`'s own
  * `groupEscalates` (`src/build/generate-data-artifacts.ts`).
  */
@@ -351,7 +349,7 @@ function groupEscalates(strict: boolean, specificFlag: boolean): boolean {
   return strict || specificFlag
 }
 
-/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+/** @internal Exported for direct unit coverage: see {@link formatFieldChanges}'s own doc comment for why. */
 export function artifactOptions(args: ParsedArgs) {
   const listOrUndefined = (list: string[]): string[] | undefined =>
     list.length > 0 ? list : undefined
@@ -372,13 +370,13 @@ export function artifactOptions(args: ParsedArgs) {
         }
       : (false as const),
     // `docs`/`usage` are deliberately omitted (not set to `false`): the CLI
-    // no longer has `--docs`/`--ownership` flags to derive them from, and
-    // omitting an optional `GenerateEnvArtifactsOptions` field is already
-    // equivalent to passing `false` (`computeArtifacts()`'s `options.docs
-    // === false ? undefined : options.docs` treats a missing key and an
-    // explicit `false` identically). `computeDocumentation`/`computeUsage`
-    // themselves still run unconditionally inside `generateEnvArtifacts()`
-    // -- Finding Model needs both regardless (ADR 0038) -- only the CLI's
+    // has no `--docs`/`--ownership` flags to derive them from (ADR 0046).
+    // Omitting an optional `GenerateEnvArtifactsOptions` field is equivalent
+    // to passing `false`: `computeArtifacts()`'s `options.docs === false ?
+    // undefined : options.docs` treats a missing key and an explicit `false`
+    // identically. `computeDocumentation`/`computeUsage`
+    // themselves still run unconditionally inside `generateEnvArtifacts()`:
+    // Finding Model needs both regardless (ADR 0038); only the CLI's
     // ability to ALSO write a docs/ownership artifact is gone. See
     // specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md.
     evidence: args.evidence ? { location: args.evidence } : (false as const),
@@ -391,8 +389,8 @@ export function artifactOptions(args: ParsedArgs) {
   }
 }
 
-/** `if (items.length) { write header; write "  - <render(item)>" per item }` -- the summary-list shape `main`'s generate output repeats ~15 times. */
-/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+/** `if (items.length) { write header; write "  - <render(item)>" per item }`: the summary-list shape `main`'s generate output repeats ~15 times. */
+/** @internal Exported for direct unit coverage: see {@link formatFieldChanges}'s own doc comment for why. */
 export function printList<T>(
   items: readonly T[],
   header: string,
@@ -438,7 +436,7 @@ async function runCheckMode(args: ParsedArgs): Promise<void> {
 type GenerateResult = Awaited<ReturnType<typeof generateEnvArtifacts>>
 
 /** The human-readable manifest section of a generate run's summary. */
-/** @internal Exported for direct unit coverage -- see {@link formatFieldChanges}'s own doc comment for why. */
+/** @internal Exported for direct unit coverage: see {@link formatFieldChanges}'s own doc comment for why. */
 export function printManifestSummary(manifest: NonNullable<GenerateResult["manifest"]>): void {
   process.stdout.write(`Wrote manifest: ${manifest.outputPath}\n`)
   process.stdout.write(`Discovered ${String(manifest.contracts.length)} contract(s).\n`)
@@ -454,19 +452,10 @@ export function printManifestSummary(manifest: NonNullable<GenerateResult["manif
   )
 }
 
-// `printDocsSummary()`/`printUsageSummary()` (the docs/env-example and
-// dependency-ownership sections of the human-readable summary) were removed
-// along with `--docs`/`--ownership` themselves: `artifactOptions()` no
-// longer ever populates `GenerateEnvArtifactsOptions.docs`/`.usage`, so
-// `result.docs`/`result.usage` below are now unconditionally `undefined`
-// on every real CLI run -- keeping either function (or its now-permanently-
-// false `if (result.docs)`/`if (result.usage)` call site) would be dead code
-// no CLI-level test could ever legitimately cover. See
-// specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md.
-// `computeDocumentation`/`writeDocumentation`/`computeUsage`/
-// `writeUsageReport` themselves are unaffected -- see
-// `examples/nextjs-app/scripts/generate-docs` for the same rendering,
-// now invoked directly as application code instead of through this CLI.
+// The CLI has no `--docs` or `--ownership` flag (ADR 0046). So `result.docs`
+// and `result.usage` are always `undefined` on a CLI run, and the CLI has no
+// summary printer for them. The rendering functions stay in `./build`.
+// examples/nextjs-app/scripts/generate-docs calls them directly.
 
 /** A real generate run: write every requested artifact, then print a summary (or `--json` envelope). */
 async function runGenerateMode(args: ParsedArgs): Promise<void> {
@@ -475,7 +464,7 @@ async function runGenerateMode(args: ParsedArgs): Promise<void> {
     const { generateEnvArtifacts } = await import("../build/index.js")
     result = await generateEnvArtifacts(artifactOptions(args))
   } catch (error) {
-    if (!args.json) throw error // propagates to main().catch() exactly as before
+    if (!args.json) throw error // main().catch() reports it.
     writeJson(serializeFailure(error))
     process.exitCode = 1
     return
@@ -488,15 +477,13 @@ async function runGenerateMode(args: ParsedArgs): Promise<void> {
     return
   }
 
-  // Only the manifest pass's own parse warnings feed this banner now --
+  // Only the manifest pass's own parse warnings feed this banner.
   // `result.docs`/`result.usage` are always `undefined` from the CLI (see
-  // the comment above `runGenerateMode`), so their `parseWarnings`/
-  // `unresolvedLinks` terms were removed rather than kept as permanently-0
-  // addends.
+  // the comment above `runGenerateMode`), so they add nothing to it.
   const totalWarnings = result.manifest?.parseWarnings.length ?? 0
   if (totalWarnings > 0) {
     process.stdout.write(
-      `⚠ ${totalWarnings} unresolved/dropped-schema warning(s) found -- details below. Re-run with --json for a machine-readable report.\n\n`,
+      `⚠ ${totalWarnings} unresolved/dropped-schema warning(s) found. Details below. Re-run with --json for a machine-readable report.\n\n`,
     )
   }
 
@@ -512,7 +499,7 @@ export async function main(): Promise<void> {
   const argv = process.argv.slice(2)
 
   // Subcommand dispatch: `init` as the FIRST positional token routes to the
-  // scaffolder. Every existing flag-based invocation is untouched -- no flag
+  // scaffolder. Every existing flag-based invocation is untouched: no flag
   // is reinterpreted as a subcommand, `--help` alone still prints helpText().
   if (argv[0] === "init") {
     process.exitCode = runInitCommand(argv.slice(1))
@@ -543,18 +530,18 @@ export async function main(): Promise<void> {
 }
 
 // Only auto-run when this file is the process entry point, not when a test
-// imports `parseArgs`/`main` directly -- importing this module must never
-// have the side effect of running the CLI.
+// imports `parseArgs`/`main` directly. Importing this module must never run
+// the CLI as a side effect.
 //
 // npm installs `bin` entries as symlinks (e.g. `node_modules/.bin/env-cap`
 // -> `../env-cap/dist/cli/index.js`). Node resolves
 // `import.meta.url` through that symlink to this file's real, on-disk path,
-// but leaves `process.argv[1]` as the symlink path it was actually invoked
-// with -- so comparing the two directly never matches for a real `npx`/`.bin`
+// but leaves `process.argv[1]` as the symlink path it was invoked with.
+// Comparing the two directly never matches for a real `npx`/`.bin`
 // invocation, and the CLI would silently no-op. Resolving `argv[1]` through
-// `realpathSync` first makes the comparison symlink-aware; the try/catch
-// falls back to the unresolved path so this can't itself throw for an
-// argv[1] that doesn't resolve to a real file.
+// `realpathSync` first makes the comparison symlink-aware. The try/catch
+// falls back to the unresolved path, so an argv[1] that is not a real file
+// cannot make this throw.
 export function directRunUrl(): string | undefined {
   const entry = process.argv[1]
   if (!entry) return undefined

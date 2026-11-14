@@ -2,7 +2,7 @@ import { createEnv, documentEnv } from "@maverickcer/env-cap";
 import { processors } from "@maverickcer/env-cap/helpers";
 
 /**
- * A fully valid, fully satisfied capability -- every variable it declares is
+ * A fully valid, fully satisfied capability: every variable it declares is
  * present in the committed .env. It exists specifically to prove that
  * validateEnv() aggregation doesn't just report the one broken contract in
  * isolation: this capability's own validation succeeds, but the application

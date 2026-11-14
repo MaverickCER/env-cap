@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest"
 import { noRawProcessEnv } from "../../src/eslint-plugin/no-raw-process-env.js"
 
 // RuleTester's own `run()` registers cases via Mocha-style global
-// `describe`/`it` by default -- vitest doesn't inject those as true globals
+// `describe`/`it` by default: vitest doesn't inject those as true globals
 // (this repo doesn't set `test.globals: true`), so without this, vitest
 // reports "No test suite found in file". Wiring RuleTester's documented
 // static describe/it setters to vitest's own imports is the supported way
@@ -15,8 +15,8 @@ RuleTester.it = it
 const ruleTester = new RuleTester({ languageOptions: { ecmaVersion: 2022, sourceType: "module" } })
 
 // `noRawProcessEnv` is built via `@typescript-eslint/utils`'s `ESLintUtils.RuleCreator`,
-// whose generated type is structurally stricter than -- and not assignable
-// to -- plain `eslint`'s own `Rule.RuleModule` type that `RuleTester.run()`
+// whose generated type is structurally stricter than (and not assignable
+// to) plain `eslint`'s own `Rule.RuleModule` type that `RuleTester.run()`
 // expects. Both describe the same rule shape at runtime (this is a type-only
 // mismatch between the two packages' definitions), so a narrow cast here
 // avoids pulling in `@typescript-eslint/rule-tester` as a second, dedicated
@@ -37,7 +37,7 @@ ruleTester.run("no-raw-process-env", noRawProcessEnv as unknown as Rule.RuleModu
       options: [{ allow: ["scripts/**"] }],
     },
     { code: "// eslint-disable-next-line\nconst x = process.env.FOO;", filename: "src/app.ts" },
-    // Not a process.env access at all -- some other object's .env property.
+    // Not a process.env access at all: some other object's .env property.
     { code: "const x = config.env.FOO;", filename: "src/app.ts" },
     // A private field named `env` is not the environment.
     {
@@ -78,7 +78,7 @@ ruleTester.run("no-raw-process-env", noRawProcessEnv as unknown as Rule.RuleModu
     // itself: `@typescript-eslint/utils`'s `RuleCreator` always deep-merges
     // `context.options` onto `defaultOptions` (see `applyDefault`/`deepMerge`
     // in its dist), so `allow` is already `[]` by the time `create()` sees
-    // it -- that fallback is unreachable through the public API given the
+    // it; that fallback is unreachable through the public API given the
     // current `defaultOptions: [{ allow: [] }]`. Kept anyway as a real,
     // distinct input shape worth covering on its own.
     {

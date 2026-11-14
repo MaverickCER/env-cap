@@ -62,7 +62,7 @@ Build the repository root first ([examples/README.md](../README.md#before-you-ru
 
 `npm start` runs `docs:reports`, then boots `src/app.ts`, which also prints `Prisma provider: postgresql`. `docs:reports` runs the CLI for the manifest and `docs/env.evidence.json` ([ADR 0046](../../specs/decisions/0046-cli-restricted-to-runtime-and-evidence-output.md)), then `scripts/generate-docs/run.ts` for the Markdown reports and `.env.example`.
 
-`test/examples/team-service.test.ts` runs steps 2 and 3 in CI's `examples` job, which does not yet block a merge.
+`test/examples/team-service.test.ts` runs steps 2 and 3 in CI's `examples` job, which `required` waits for.
 
 ## The drift check: `npm run check`
 
@@ -88,7 +88,7 @@ Now set `mongodb` to `active: true` without touching `postgres`, and run `npm ru
 Exclusive group "database"
 --------------------------
 [error] "mongodb" and "postgres" are both active and both declare
-exclusiveGroup "database" -- only one active contract per exclusive group is
+exclusiveGroup "database". Only one active contract per exclusive group is
 allowed. Set active: false on whichever one isn't in use.
 ```
 

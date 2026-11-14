@@ -39,7 +39,7 @@ describe("generateDocumentation", () => {
       documentEnv(paymentsSchema, { variables: { STRIPE_KEY: { description: "Stripe secret key" } } });`,
     )
 
-    // Deliberately left undocumented -- exercises `result.documentation.undocumentedContracts`.
+    // Deliberately left undocumented: exercises `result.documentation.undocumentedContracts`.
     await writeFixture(
       "packages/database",
       `export const databaseEnv = createEnv({ PORT: { default: 3000, processor: (v): number => Number(v) } }, { name: "database" });`,
@@ -58,7 +58,7 @@ describe("generateDocumentation", () => {
     })
 
     expect(result.contracts).toHaveLength(2)
-    // Exact per-field content, not just length -- proves `contractSummaries`
+    // Exact per-field content, not just length: proves `contractSummaries`
     // is a real `summarizeContract()` mapping, not e.g. every entry
     // collapsing to the same value.
     expect(result.contracts.find((c) => c.exportName === "paymentsEnv")).toEqual({
@@ -91,7 +91,7 @@ describe("generateDocumentation", () => {
     // map (`writeDocumentation()`'s own `relativizeRef()` calls over
     // `documentation.undocumentedContracts`) matching identity
     // (`${file}#${exportName}`) against the root-relative `ContractModel`
-    // contracts `renderCatalog()` iterates -- if `relativizeRef()` ever lost
+    // contracts `renderCatalog()` iterates: if `relativizeRef()` ever lost
     // the `file` field, this identity match could never succeed for any
     // real contract, and the marker would silently never appear at all.
     expect(docsSource).toContain("⚠️ **Undocumented.**")
@@ -100,7 +100,7 @@ describe("generateDocumentation", () => {
   it("defaults root to process.cwd() when omitted", async () => {
     // A real `process.chdir()` (tried first) throws `ERR_WORKER_UNSUPPORTED_OPERATION`
     // under any worker-thread-based test runner (Stryker's own vitest-runner
-    // included, unlike this project's default `vitest run` pool) -- a Node.js
+    // included, unlike this project's default `vitest run` pool): a Node.js
     // platform restriction, not a vitest quirk. Mocking `process.cwd()` itself
     // proves the same "root defaults to cwd" behavior without touching real
     // process-wide state at all.
@@ -119,7 +119,7 @@ describe("generateDocumentation", () => {
   it("reports 'No changes.' on the very first run too, and reads back the previous run to compute it on a second run", async () => {
     // A true first-ever run must already report "No changes." (not omit the
     // section) so that --check's "regenerate using what's currently on disk
-    // as previousContent" comparison agrees with it -- see computeChangeSummary()'s
+    // as previousContent" comparison agrees with it: see computeChangeSummary()'s
     // docstring in docs.ts.
     const options = {
       fs: nodeBuildFs,
@@ -154,7 +154,7 @@ describe("generateDocumentation", () => {
     const firstSource = await fs.readFile(first.docsPath, "utf8")
     expect(firstSource).toContain("No changes.")
 
-    // A genuinely NEW key, not just an edited field -- `computeChangeSummary()`
+    // A genuinely NEW key, not just an edited field: `computeChangeSummary()`
     // diffs the previous report's own documented *headings* (variable keys),
     // never field-level content like `description`.
     await writeFixture(
@@ -171,7 +171,7 @@ describe("generateDocumentation", () => {
     // second run treated as if there were no previous run at all), this
     // would report NOTHING changed (a true first run's own definition of
     // "no previous content" is treated as "nothing changed", not "everything
-    // added" -- see computeChangeSummary()'s own doc comment) instead of a
+    // added": see computeChangeSummary()'s own doc comment) instead of a
     // real, specific "Added: `NEW_KEY`" diff against what's really on disk.
     expect(secondSource).not.toContain("No changes.")
     expect(secondSource).toContain("**Added:** `NEW_KEY`")
@@ -358,7 +358,7 @@ describe("generateDocumentation", () => {
       expect(docsSource).toContain("2099-01-01")
     })
 
-    it("propagates a rejecting callback's error unwrapped -- not an EnvDocumentationGenerationError", async () => {
+    it("propagates a rejecting callback's error unwrapped: not an EnvDocumentationGenerationError", async () => {
       const failure = new Error("secrets manager unavailable")
       let caught: unknown
       try {
@@ -382,8 +382,8 @@ describe("generateDocumentation", () => {
     })
   })
 
-  it("omits any packages report entirely when options.packages is omitted -- exactly the one real (non-package) warning shows, no spurious `(package) ...` entry", async () => {
-    // An unresolvable schema factory reference -- `link.ts` can't statically
+  it("omits any packages report entirely when options.packages is omitted: exactly the one real (non-package) warning shows, no spurious `(package) ...` entry", async () => {
+    // An unresolvable schema factory reference: `link.ts` can't statically
     // evaluate `someFactory()`, so it emits a real parse warning, distinct
     // from any `(package) <name>` warning `resolveAllowlistedPackages()`
     // would emit for an unresolvable *package name*.
@@ -487,7 +487,7 @@ describe("findNonstandardSensitivityLevels", () => {
     }) as unknown as DiscoveredContract
 
   it("returns nothing when every declared level is one of the standard four", () => {
-    // Hardcoded literals, not `[...STANDARD_SENSITIVITY_LEVELS]` -- spreading
+    // Hardcoded literals, not `[...STANDARD_SENSITIVITY_LEVELS]`: spreading
     // the very Set under test would make this tautological: a mutant that
     // corrupts one of the Set's own literal entries would corrupt this
     // test's INPUT the exact same way, so the assertion would trivially
@@ -533,7 +533,7 @@ describe("findNonstandardSensitivityLevels", () => {
 
   it("never reports a variable for merely inheriting its contract's nonstandard level", () => {
     // The contract itself is reported once; the two variables inherit that
-    // same level and must not each repeat it -- see the function's own note.
+    // same level and must not each repeat it: see the function's own note.
     const entries = findNonstandardSensitivityLevels([
       contract("top-secret", [{ key: "A" }, { key: "B" }]),
     ])

@@ -4,10 +4,10 @@ import { User } from "../db/models/user.model.js";
 import { createSessionToken, hashPassword, verifyPassword } from "../services/auth.service.js";
 
 /**
- * Whether this deployment even offers GitHub login -- both capability
+ * Whether this deployment even offers GitHub login: both capability
  * variables are required together, so checking one is enough. Drives the
  * login page's conditional rendering; real-tested (unlike the actual GitHub
- * handshake itself, which needs a live GitHub app -- see the README).
+ * handshake itself, which needs a live GitHub app: see the README).
  */
 export function githubLoginAvailable(): boolean {
   return oauthGithubEnv.GITHUB_CLIENT_ID.length > 0;
@@ -23,7 +23,7 @@ export function githubAuthorizeUrl(redirectUri: string): string {
 }
 
 /**
- * Builds the token-exchange request body GitHub's OAuth endpoint expects --
+ * Builds the token-exchange request body GitHub's OAuth endpoint expects:
  * real construction, genuinely reading `GITHUB_CLIENT_SECRET`, but (like
  * `githubAuthorizeUrl()`) never actually sent over the network in this
  * flagship's own tests: no local GitHub emulator exists to complete the
@@ -39,7 +39,7 @@ export function githubTokenExchangeBody(code: string): URLSearchParams {
 
 /**
  * The actual business logic, kept as plain, directly-callable async
- * functions -- `createServerFn()`-wrapped functions below can only run
+ * functions: `createServerFn()`-wrapped functions below can only run
  * inside TanStack Start's own request context (an `AsyncLocalStorage` the
  * framework sets up per-request), so they can't be invoked directly from
  * src/main-headless.ts's in-process smoke test. Separating logic from the

@@ -1,3 +1,18 @@
+/**
+ * Optional processors and validators for common cases (`@maverickcer/env-cap/helpers`), such as
+ * `processors.toNumber()` and `validators.range(1, 65535)`.
+ *
+ * A contract works the same without them: `createEnv` and `validateEnv` never import this module. Any
+ * function with the `Processor<T>` or `Validator<T>` shape plugs in the same way.
+ *
+ * The two objects are plain literals of named imports, not `export * as processors`. A bundler lowers
+ * `export * as` into a namespace helper call it cannot prove free of side effects. That call blocks
+ * tree-shaking in a consumer's own bundler, so importing `processors` alone would still ship
+ * `validators`. With plain literals, importing `processors` alone drops `validators` entirely.
+ *
+ * @packageDocumentation
+ */
+
 /** Passes when the date value is strictly after `date`. */
 declare function after(date: Date): Validator<Date>;
 
@@ -13,7 +28,7 @@ declare function base64(): Processor<Buffer>;
 /** Passes when the date value is strictly before `date`. */
 declare function before(date: Date): Validator<Date>;
 
-/** Identity wrapper for a hand-written `Validator<T>` -- no behavior change, just a fluent entry point alongside the other helpers. */
+/** Identity wrapper for a hand-written `Validator<T>`: no behavior change, just a fluent entry point alongside the other helpers. */
 declare function custom<T>(validator: Validator<T>): Validator<T>;
 
 /** Passes for a plausibly-shaped email address (`local@domain`). */
@@ -87,7 +102,7 @@ declare type Processor<T> = (value: unknown) => T;
  * patterns (e.g. `processors.toNumber()`).
  *
  * @remarks
- * Naming matches `data-cap`'s `helpers.processors` -- but these
+ * Naming matches `data-cap`'s `helpers.processors`: but these
  * throw with a formatted `Error` message on invalid input, where data-cap's
  * silently return `undefined`. Do not assume the same failure mode when
  * moving between packages.
@@ -133,19 +148,18 @@ declare function range(minimum: number, maximum: number): Validator<number>;
  *
  * These types are intentionally minimal: an `EnvDefinition` describes how to
  * turn one raw environment value into one typed, validated application
- * value. There is no `optional`/`required` flag anywhere in this file --
+ * value. There is no `optional`/`required` flag anywhere in this file:
  * requiredness is just a validator that rejects `undefined`/empty values.
  *
  * Documentation fields (description, owner, expiresAt, category, ...) live
- * entirely in {@link documentEnv} (see `document.ts`), not here -- this file is
+ * entirely in {@link documentEnv} (see `document.ts`), not here: this file is
  * the runtime's whole vocabulary, and every field in it is read by
  * `validate.ts`/`create.ts`/`errors.ts` at runtime. If a field is only ever
  * read by the generator, it belongs in `document.ts`, not here. `context` is
- * the one exception worth calling out: it's also read by the build package
- * for documentation display (see ADR 0022), but it belongs here rather than
- * in `documentEnv()` because `validate.ts` reads it too, to decide pipeline
- * participation -- the same bar `default`/`processor`/`validator` already
- * clear.
+ * the one exception. The build package also reads it for documentation
+ * display (see ADR 0022). It belongs here rather than in `documentEnv()`
+ * because `validate.ts` reads it too, to decide pipeline participation: the
+ * same bar `default`/`processor`/`validator` already clear.
  */
 /** The raw, unprocessed source of environment values (e.g. `process.env`, a resolved secrets bag). */
 declare type RawEnv = Readonly<Record<string, unknown>>;
@@ -207,7 +221,7 @@ declare function url(): Validator<string>;
 /** Passes when the string is a valid UUID of one of the given `versions` (default: any of 1-8). */
 declare function uuid(versions?: readonly number[]): Validator<string>;
 
-/** Shorthand for `uuid([version])` -- passes only for that exact UUID version. */
+/** Shorthand for `uuid([version])`: passes only for that exact UUID version. */
 declare function uuidVersion(number: number): Validator<string>;
 
 /**
@@ -229,13 +243,13 @@ export declare const validators: {
     any: typeof any;
     /** Passes when the date value is strictly before `date`. */
     before: typeof before;
-    /** Identity wrapper for a hand-written `Validator<T>` -- no behavior change, just a fluent entry point alongside the other helpers. */
+    /** Identity wrapper for a hand-written `Validator<T>`: no behavior change, just a fluent entry point alongside the other helpers. */
     custom: typeof custom;
     /** Passes for a plausibly-shaped email address (`local@domain`). */
     email: typeof email;
     /** Passes when the string ends with `suffix`. */
     endsWith: typeof endsWith;
-    /** Alias for `oneOf` -- passes when the value is one of the `allowed` values. */
+    /** Alias for `oneOf`: passes when the value is one of the `allowed` values. */
     enum: typeof oneOf;
     /** Passes when the number is finite (rejects `Infinity`/`-Infinity`/`NaN`). */
     finite: typeof finite;
@@ -277,7 +291,7 @@ export declare const validators: {
     range: typeof range;
     /** Runs the wrapped validator but replaces its failure message with `message`. */
     refine: typeof refine;
-    /** Alias for `matches` -- passes when the string matches `pattern`. */
+    /** Alias for `matches`: passes when the string matches `pattern`. */
     regex: typeof matches;
     /** Passes when the value is defined and, unless `allowEmptyString` is set, non-empty. */
     required: typeof required;
@@ -289,7 +303,7 @@ export declare const validators: {
     url: typeof url;
     /** Passes when the string is a valid UUID of one of the given `versions` (default: any of 1-8). */
     uuid: typeof uuid;
-    /** Shorthand for `uuid([version])` -- passes only for that exact UUID version. */
+    /** Shorthand for `uuid([version])`: passes only for that exact UUID version. */
     uuidVersion: typeof uuidVersion;
 };
 

@@ -7,7 +7,7 @@ function logLevel(value: unknown): string {
 }
 
 /**
- * A capability that's fully "complete" with zero variables set -- a distinct
+ * A capability that's fully "complete" with zero variables set: a distinct
  * pattern from every other capability here, all of which need at least one
  * value to do anything. `pino` genuinely runs regardless of credentials;
  * Sentry gracefully no-ops with no DSN (tested only for "doesn't throw").
@@ -35,7 +35,7 @@ documentEnv(observabilitySchema, {
     SENTRY_DSN: {
       description: "Sentry DSN for error reporting. Unset: Sentry is never initialized; pino logging still runs.",
       sensitivity: "credential",
-      legalBasis: "Legitimate interest -- operational error monitoring, not user tracking.",
+      legalBasis: "Legitimate interest: operational error monitoring, not user tracking.",
       metadata: {
         documentation: "https://docs.sentry.io/product/sentry-basics/dsn-explainer/",
       },

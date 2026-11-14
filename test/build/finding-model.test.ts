@@ -220,7 +220,7 @@ describe("buildFindingModel", () => {
         code: "NONSTANDARD_SENSITIVITY_LEVEL",
         family: "documentation",
         message:
-          '"WEIRD_KEY" declares sensitivity "top-secret", which isn\'t one of the standard levels (secret/credential/pii/config) -- still honored verbatim, just flagged for vocabulary drift.',
+          '"WEIRD_KEY" declares sensitivity "top-secret", which isn\'t one of the standard levels (secret/credential/pii/config). It is still honored verbatim, only flagged for vocabulary drift.',
         location: {
           model: "contract",
           file: "a/env.schema.ts",
@@ -274,7 +274,7 @@ describe("buildFindingModel", () => {
     expect(model.findings[1]?.message).toContain('"aEnv" declares sensitivity "top-secret"')
   })
 
-  it("treats daysRemaining exactly 0 (expires today) as NOT yet expired -- the boundary, not just clearly-past/clearly-future values", () => {
+  it("treats daysRemaining exactly 0 (expires today) as NOT yet expired: the boundary, not just clearly-past/clearly-future values", () => {
     const documentation: DocumentationFindings = {
       undocumentedContracts: [],
       undocumentedVariables: [],

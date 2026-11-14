@@ -22,10 +22,10 @@ function countedHeader(
  * finding, or an output path escaping `root`.
  *
  * @remarks
- * Nothing is written when this throws -- generation fails atomically, same as
+ * Nothing is written when this throws: generation fails atomically, same as
  * {@link runtime.validateEnv} fails atomically at runtime.
  *
- * `code` is a stable, Stable-tier discriminant for programmatic handling --
+ * `code` is a stable, Stable-tier discriminant for programmatic handling:
  * prefer it over `.name`/`instanceof` when a message-independent switch is needed.
  */
 export class EnvManifestGenerationError extends Error {
@@ -58,7 +58,7 @@ export class EnvManifestGenerationError extends Error {
  * when this throws.
  *
  * @remarks
- * `code` is a stable, Stable-tier discriminant for programmatic handling --
+ * `code` is a stable, Stable-tier discriminant for programmatic handling:
  * prefer it over `.name`/`instanceof` when a message-independent switch is needed.
  */
 export class EnvDocumentationGenerationError extends Error {
@@ -90,10 +90,10 @@ export class EnvDocumentationGenerationError extends Error {
  * output path (`report.location`) escaping `root`.
  *
  * @remarks
- * Never thrown for `unresolvedConsumers` or `indeterminate` findings -- both are "we don't
+ * Never thrown for `unresolvedConsumers` or `indeterminate` findings: both are "we don't
  * know" states, and uncertainty is never promoted to a failure.
  *
- * `code` is a stable, Stable-tier discriminant for programmatic handling --
+ * `code` is a stable, Stable-tier discriminant for programmatic handling:
  * prefer it over `.name`/`instanceof` when a message-independent switch is needed.
  */
 export class EnvUsageAnalysisError extends Error {
@@ -121,13 +121,13 @@ export class EnvUsageAnalysisError extends Error {
  * one error.
  *
  * @remarks
- * Nothing from any pass is written when this throws -- see
+ * Nothing from any pass is written when this throws: see
  * `generate-env-artifacts.ts`'s compute-atomic guarantee (ADR 0011). Write-phase failures
  * (a real I/O error after all computes already passed) are NOT wrapped in
- * this type -- they propagate as whatever `fs.writeFile` itself throws,
+ * this type: they propagate as whatever `fs.writeFile` itself throws,
  * since by that point some artifacts may already be on disk.
  *
- * `code` is a stable, Stable-tier discriminant for programmatic handling --
+ * `code` is a stable, Stable-tier discriminant for programmatic handling:
  * prefer it over `.name`/`instanceof` when a message-independent switch is needed.
  */
 export class EnvProjectGenerationError extends Error {

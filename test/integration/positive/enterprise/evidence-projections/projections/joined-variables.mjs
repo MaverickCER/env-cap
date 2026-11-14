@@ -2,32 +2,32 @@ import { defineEvidenceProjection } from "@maverickcer/env-cap/evidence";
 import { effectiveOwner } from "@maverickcer/env-cap/build";
 
 /**
- * The "Joined Variable View" reference projection -- an eleventh, added after the original ten
+ * The "Joined Variable View" reference projection: an eleventh, added after the original ten
  * (see README.md's "This is the tenth and last..." note, now superseded by this one). Not part of
  * ADR 0024's original plan: added to give a `defineEvidenceProjection()` author a working,
  * copyable example of the join every one of the ten projections above performs its own version of
  * (Contract Model + Dependency Model + Lifecycle Model, correlated by `${file}#${exportName}#${key}`
  * identity), instead of each author re-deriving it from scratch.
  *
- * Deliberately **not** shipped as a package export -- see ADR 0033's "Alternatives considered":
+ * Deliberately **not** shipped as a package export: see ADR 0033's "Alternatives considered":
  * a 6th public entry point exporting ready-made projections was rejected precisely to avoid
  * committing env-cap to a Stable-track output shape before real usage validates it. This
  * projection is an examples/-pattern to copy, the same as the other ten, not an importable
  * convenience function.
  *
- * One row per declared variable, with a fixed, deliberately narrow field list -- resist widening
+ * One row per declared variable, with a fixed, deliberately narrow field list (resist widening
  * it ad hoc; a genuinely new need is a new projection, not a growing "everything view":
  *
  * - identity: `file`, `exportName`, `contractName`, `key` (Contract Model)
  * - `description`, `hasDefault`, `hasProcessor`, `hasValidator` (Contract Model, as declared)
- * - `owner`: `effectiveOwner()` (`@maverickcer/env-cap/build`, public) -- variable's own value,
+ * - `owner`: `effectiveOwner()` (`@maverickcer/env-cap/build`, public)) variable's own value,
  *   falling back to the contract's.
  * - `sensitivity`: the same fallback, computed inline (`variable.sensitivity ??
- *   contract.sensitivity`) since -- unlike `owner` -- no `effectiveSensitivity()` is part of
+ *   contract.sensitivity`) since (unlike `owner`) no `effectiveSensitivity()` is part of
  *   the public `@maverickcer/env-cap/build` surface (only `effectiveOwner()` is; see
  *   `inventory.mjs`'s own doc comment for this same asymmetry). A real consumer hitting this gap
  *   would have to do the same inline fallback this projection does.
- * - `expiresAt`: `variable.expiresAt` exactly as Contract Model stores it -- **not** a fallback to
+ * - `expiresAt`: `variable.expiresAt` exactly as Contract Model stores it; **not** a fallback to
  *   `contract.expiresAt`. No `effectiveExpiresAt()` exists anywhere in `@maverickcer/env-cap/build`,
  *   and nothing else in env-cap treats contract-/variable-level `expiresAt` as one falling back to
  *   the other (`docs.ts`'s own catalog/lifecycle rendering reports them as two independent facts).
@@ -37,7 +37,7 @@ import { effectiveOwner } from "@maverickcer/env-cap/build";
  *   (`"used"|"unconsumed"|"indeterminate"`) and, when used, every member-access position.
  * - `deprecated`/`deprecatedReason`/`removeBy`/`renamedFrom`: Lifecycle Model's per-variable
  *   fields, present only for a variable Lifecycle Model itself tracks (it only includes a variable
- *   at all when at least one lifecycle field is set) -- absent here means genuinely absent
+ *   at all when at least one lifecycle field is set); absent here means genuinely absent
  *   upstream, never synthesized into a default like `deprecated: false`.
  */
 export const joinedVariablesProjection = defineEvidenceProjection({

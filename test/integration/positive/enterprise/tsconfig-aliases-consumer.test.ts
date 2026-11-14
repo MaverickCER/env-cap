@@ -20,7 +20,7 @@ import {
  * verifies:
  *  - `validateEnv()` succeeds against both contracts together, and both
  *    resolved values are read
- *  - neither contract is reported abandoned -- the actual bug both ADRs fix
+ *  - neither contract is reported abandoned; the actual bug both ADRs fix
  *  - every generated artifact byte-for-byte matches its `expected/` golden
  *    copy
  */
@@ -62,13 +62,13 @@ describe(EXAMPLE, () => {
   )
 
   it.skipIf(!installed)(
-    "BILLING_WEBHOOK_SECRET and STRIPE_KEY -- both actually member-accessed in src/app.ts -- are neither unconsumed nor indeterminate",
+    "BILLING_WEBHOOK_SECRET and STRIPE_KEY (both actually member-accessed in src/app.ts) are neither unconsumed nor indeterminate",
     async () => {
       runScript(EXAMPLE_DIR, "generate:env")
       const report = await fs.readFile(path.join(EXAMPLE_DIR, "docs/OWNERSHIP.md"), "utf8")
       // These section headers only ever render when their findings array is
       // non-empty (see renderUnconsumedOwned()/renderIndeterminate() in
-      // src/build/usage-report.ts) -- their absence here is a direct,
+      // src/build/usage-report.ts): their absence here is a direct,
       // explicit assertion, not just an inference from the golden byte-diff
       // the next test already performs.
       expect(report).not.toContain("## Unconsumed owned dependencies")

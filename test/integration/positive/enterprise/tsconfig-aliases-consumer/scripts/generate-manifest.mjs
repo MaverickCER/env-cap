@@ -3,10 +3,10 @@
 // root is this package's own directory, exactly like paypal-consumer.
 // This app's own local contract (src/features/billing/env.schema.ts) is
 // found via the default include glob and linked through its consumer
-// (src/app.ts) via this example's own "@/*" tsconfig path alias --
+// (src/app.ts) via this example's own "@/*" tsconfig path alias:
 // auto-detected, no `tsconfig` option needed (ADR 0023). The
 // @examples/tsconfig-aliases contract, which lives only inside this
-// package's node_modules copy (installed from a real packed tarball -- see
+// package's node_modules copy (installed from a real packed tarball: see
 // ../tsconfig-aliases/README.md), is discovered through the explicit,
 // opt-in `packages` allowlist instead (ADR 0014, Experimental).
 import { generateEnvArtifacts } from "@maverickcer/env-cap/build";
@@ -32,7 +32,7 @@ for (const contract of result.manifest?.contracts ?? []) {
   console.log(` - ${contract.exportName} (${contract.file})`);
 }
 
-// .env.example is regenerated and overwritten directly on every run here --
+// .env.example is regenerated and overwritten directly on every run here:
 // it's a live, always-current teaching artifact, not something meant to be
 // hand-merged. See the "onExisting" option (README's CLI section).
 const envExample = result.docs?.envExample;
@@ -55,7 +55,7 @@ if (result.manifest?.parseWarnings.length) {
 }
 
 // Evidence change-tracking since the committed evidence artifact
-// (docs/env.evidence.json) was last written -- see ADR 0038.
+// (docs/env.evidence.json) was last written: see ADR 0038.
 const changes = result.evidence.change.manifest;
 const total =
   changes.addedContracts.length + changes.addedVariables.length +
@@ -67,10 +67,10 @@ console.log(
     : "\nEvidence changes since last execution: none.",
 );
 
-// The actual point of this example: both contracts -- the local one
-// (organized through this app's own tsconfig alias) and the cross-package
-// one (installed from a real tarball) -- must show up as consumed, never
-// abandoned, in the same run. See docs/OWNERSHIP.md and README.md.
+// The point of this example: the local contract (reached through this app's
+// tsconfig alias) and the cross-package one (installed from a tarball) must
+// both show up as consumed, never abandoned, in the same run. See
+// docs/OWNERSHIP.md and README.md.
 if (result.usage?.abandonedContracts.length) {
   console.warn(`\n${result.usage.abandonedContracts.length} abandoned contract(s) (never imported anywhere):`);
   for (const finding of result.usage.abandonedContracts) {

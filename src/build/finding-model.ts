@@ -12,7 +12,7 @@ import type {
 } from "./usage-report.js"
 
 /**
- * The fourth of env-cap's seven canonical fact models (ADR 0024) -- every
+ * The fourth of env-cap's seven canonical fact models (ADR 0024): every
  * rule violation and derived risk signal, unified behind one shape, with a
  * stable `code` and a structured {@link EvidenceReference} instead of four
  * independently-shaped finding families. See ADR 0026.
@@ -38,7 +38,7 @@ export type FindingCode =
   | "STALE_DYNAMIC_ACCESS_CITATION"
   | "NONSTANDARD_SENSITIVITY_LEVEL"
 
-/** Which source check produced a {@link Finding} -- coarser than `code`, for a consumer that only wants to filter by kind (e.g. "show me every documentation gap") without enumerating every individual code. */
+/** Which source check produced a {@link Finding}: coarser than `code`, for a consumer that only wants to filter by kind (e.g. "show me every documentation gap") without enumerating every individual code. */
 export type FindingFamily = "compatibility" | "drift" | "documentation" | "ownership"
 
 /** One rule violation or derived signal, in the Finding Model's canonical shape. */
@@ -48,11 +48,11 @@ export interface Finding {
    * exclusive-group conflict); `"warning"` for everything gated by
    * `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default "warn"
    * behavior; `"info"` for an observation that is never actionable enough to
-   * block anything, even under `--strict` -- see `INFO_ONLY_CODES` in
+   * block anything, even under `--strict`: see `INFO_ONLY_CODES` in
    * `generate-env-artifacts.ts`.
    */
   readonly severity: "error" | "warning" | "info"
-  /** Stable, machine-readable identifier -- always set, unlike {@link CompatibilityIssue.code} which stays optional on that narrower, pre-existing type. */
+  /** Stable, machine-readable identifier: always set, unlike {@link CompatibilityIssue.code} which stays optional on that narrower, pre-existing type. */
   readonly code: FindingCode
   /** Which source check produced this finding. */
   readonly family: FindingFamily
@@ -62,29 +62,29 @@ export interface Finding {
   readonly location: EvidenceReference
 }
 
-/** Bump only when a reader could misinterpret the new shape -- same discipline every other canonical model's `schemaVersion` follows. */
+/** Bump only when a reader could misinterpret the new shape: same discipline every other canonical model's `schemaVersion` follows. */
 export const FINDING_MODEL_SCHEMA_VERSION = 3
 
-/** The versioned, JSON-serializable root of the Finding Model -- every rule violation and derived risk signal from this run, unified behind {@link Finding}'s one shape. See this module's own doc comment for the full picture. */
+/** The versioned, JSON-serializable root of the Finding Model: every rule violation and derived risk signal from this run, unified behind {@link Finding}'s one shape. See this module's own doc comment for the full picture. */
 export interface FindingModel {
   readonly schemaVersion: typeof FINDING_MODEL_SCHEMA_VERSION
   readonly findings: readonly Finding[]
 }
 
 /**
- * Every source a {@link buildFindingModel} call can adapt, all optional --
+ * Every source a {@link buildFindingModel} call can adapt, all optional:
  * a caller passes whichever of `generateEnvArtifacts()`'s `manifest`/`docs`/
  * `usage` results it actually requested, exactly like that result's own
  * top-level fields are each independently optional.
  */
 export interface BuildFindingModelInput {
-  /** Every `EvidenceReference.file` below is rendered relative to this, matching every other rendered path in this package's output -- see `displayPath()`. */
+  /** Every `EvidenceReference.file` below is rendered relative to this, matching every other rendered path in this package's output: see `displayPath()`. */
   readonly root: string
   /** From `detectCompatibilityIssues()`. */
   readonly compatibilityIssues?: readonly CompatibilityIssue[]
-  /** From `detectExclusiveGroupIssues()` -- kept separate from `compatibilityIssues` since it never sets its own `code` yet (ADR 0009), so this adapter synthesizes `"EXCLUSIVE_GROUP_VIOLATION"` for every entry. */
+  /** From `detectExclusiveGroupIssues()`: kept separate from `compatibilityIssues` since it never sets its own `code` yet (ADR 0009), so this adapter synthesizes `"EXCLUSIVE_GROUP_VIOLATION"` for every entry. */
   readonly exclusiveGroupIssues?: readonly CompatibilityIssue[]
-  /** From `checkEnvArtifacts()`'s result. Only `"stale"`/`"missing"` findings become a `Finding` -- `"ok"` means nothing to report. */
+  /** From `checkEnvArtifacts()`'s result. Only `"stale"`/`"missing"` findings become a `Finding`: `"ok"` means nothing to report. */
   readonly artifactCheckFindings?: readonly ArtifactCheckFinding[]
   /** From `generateDocumentation()`'s result. */
   readonly documentation?: DocumentationFindings
@@ -96,21 +96,15 @@ export interface BuildFindingModelInput {
   readonly unconsumedOwnedVariables?: readonly UnconsumedOwnedVariableFinding[]
   /** From `generateUsageReport()`'s result. */
   readonly indeterminateOwnership?: readonly IndeterminateOwnershipFinding[]
-  /** From `computeManifestChanges()`'s result -- every `dynamicAccess` citation that's gone `"stale"` or `"missing"` since it was last acknowledged. See ADR 0037. */
+  /** From `computeManifestChanges()`'s result: every `dynamicAccess` citation that's gone `"stale"` or `"missing"` since it was last acknowledged. See ADR 0037. */
   readonly dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[] | undefined
 }
 
-// None of `finding-model.ts`'s current inputs (`CompatibilityIssue`,
-// `DocumentationFindings`'s sub-types, `usage-report.ts`'s finding types)
-// carry a `SourcePosition` themselves yet -- each is built one layer above
-// this file, from a `DiscoveredContract`/`DiscoveredVariable` that now
-// *does* carry `declaration`/`documentation` (ADR 0036), but threading that
-// through each of those intermediate finding types is real, separate,
-// currently-unstarted work, not something to fake here. `position:
-// undefined` is an honest value (the field's own type is `SourcePosition |
-// undefined`), not a placeholder -- every `EvidenceReference` below is
-// deliberately left at that default until its upstream finding type is
-// extended to carry one.
+// No input of this file (`CompatibilityIssue`, the `DocumentationFindings`
+// sub-types, the `usage-report.ts` finding types) carries a `SourcePosition`
+// yet, although the discovered contracts they come from do (ADR 0036). Every
+// `EvidenceReference` below therefore reports `position: undefined`, which its
+// type allows, until its upstream finding type carries a position.
 const NO_POSITION = undefined
 
 function fromCompatibilityIssue(
@@ -119,12 +113,11 @@ function fromCompatibilityIssue(
   code: FindingCode,
 ): Finding {
   // Unlike every other call site in this file, `issue.files` isn't always
-  // populated: a pairwise comparison (compatibility.ts, exclusive-group.ts)
-  // always supplies two, but an escalated finding from another family
+  // populated. A pairwise comparison (compatibility.ts, exclusive-group.ts)
+  // always supplies two. An escalated finding from another family
   // (generate-env-artifacts.ts's escalatedFindings(), via findingFiles())
-  // can genuinely supply none -- honest `file: undefined` then, the same
-  // convention this file already uses below for findings with no file of
-  // their own, not a fabricated path.
+  // can supply none. Then `file` is honestly `undefined`, as below for other
+  // findings with no file of their own, never a fabricated path.
   const file = issue.files[0]
   return {
     severity: issue.severity,
@@ -143,7 +136,7 @@ function fromCompatibilityIssue(
 
 /**
  * Adapts every existing finding family into the Finding Model's unified
- * shape -- an adapter over data that already exists, not a new source of
+ * shape: an adapter over data that already exists, not a new source of
  * truth. Order of the returned array mirrors the order sources are given
  * above; a consumer wanting a specific order (by severity, by file, ...)
  * sorts it themselves.
@@ -153,7 +146,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
   const findings: Finding[] = []
 
   for (const issue of input.compatibilityIssues ?? []) {
-    // Every check in detectCompatibilityIssues() sets a code as of ADR 0026 --
+    // Every check in detectCompatibilityIssues() sets a code as of ADR 0026:
     // the fallback exists only for defense against a future check that forgets to.
     findings.push(
       fromCompatibilityIssue(root, issue, issue.code ?? "DUPLICATE_VARIABLE_DOCUMENTATION"),
@@ -247,7 +240,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
         family: "documentation",
         message:
           `"${n.key ?? n.exportName}" declares sensitivity "${n.sensitivity}", which isn't one of the standard ` +
-          "levels (secret/credential/pii/config) -- still honored verbatim, just flagged for vocabulary drift.",
+          "levels (secret/credential/pii/config). It is still honored verbatim, only flagged for vocabulary drift.",
         location: {
           model: "contract",
           file: displayPath(root, n.file),
@@ -332,7 +325,7 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
         contractName: i.contractName,
         file: undefined,
         variable: i.key,
-        // Multiple candidate sites, never one representative pointer -- see
+        // Multiple candidate sites, never one representative pointer: see
         // `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list.
         position: NO_POSITION,
       },
@@ -352,12 +345,12 @@ export function buildFindingModel(input: BuildFindingModelInput): FindingModel {
         model: "ownership",
         contractName: p.contractName,
         // p.file (DynamicAccessCitationProblem.file) is already
-        // root-relative -- unlike every other .file above, not a raw
-        // absolute path -- so no displayPath() conversion here.
+        // root-relative (unlike every other .file above, not a raw
+        // absolute path) so no displayPath() conversion here.
         file: p.file,
         variable: p.key,
         // The one ownership-family finding with a genuinely meaningful
-        // position -- exactly where the (now-stale/missing) citation points.
+        // position: exactly where the (now-stale/missing) citation points.
         position: p.position,
       },
     })

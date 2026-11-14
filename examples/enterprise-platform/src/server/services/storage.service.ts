@@ -3,7 +3,7 @@ import { storageEnv } from "../../capabilities/storage/env.schema.js";
 
 /**
  * `S3_ENDPOINT` (optional) points at s3rver's local endpoint in tests;
- * unset in production, where the real AWS endpoint is used -- the same
+ * unset in production, where the real AWS endpoint is used: the same
  * "declared, gracefully degraded" shape every other capability here follows,
  * just for a target endpoint instead of a present/absent credential.
  */

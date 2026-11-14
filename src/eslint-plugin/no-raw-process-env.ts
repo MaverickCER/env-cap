@@ -11,10 +11,10 @@ const createRule = RuleCreator(
 
 export interface RuleOptions {
   /** Glob-array of files this rule doesn't apply to, beyond the built-in
-   *  env.schema.ts allowance below -- for a consuming project's own
-   *  Node-only, build-time bootstrap code (see the README section this
-   *  rule ships with for the canonical worked example: a live-expiration
-   *  resolver authenticating to a secrets manager). Empty by default --
+   *  env.schema.ts allowance below. It is for a consuming project's own
+   *  Node-only, build-time bootstrap code. The README section this rule
+   *  ships with has the canonical worked example: a live-expiration
+   *  resolver authenticating to a secrets manager. Empty by default:
    *  MUST be populated explicitly by the consuming project; env-cap never
    *  guesses at what counts as "trusted bootstrap code." */
   allow?: string[]

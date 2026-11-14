@@ -9,24 +9,24 @@ import type { EvidenceModel } from "../../src/build/evidence-model.js"
 
 /**
  * Shared, non-test plumbing for `test/integration/{positive,negative}/**\/*.test.ts`
- * and (via `test/examples/support.ts`) the three flagship example tests --
+ * and (via `test/examples/support.ts`) the three flagship example tests:
  * kept out of the `*.test.ts` naming so Vitest never tries to run it
  * directly. `examples/` (human-facing flagships) and `test/integration/`
  * (behavioral fixtures) are two categories of executable material sharing
- * one runner, not two forks of the same file -- every caller resolves its
+ * one runner, not two forks of the same file: every caller resolves its
  * own target directory and passes it in, rather than this module assuming
  * one fixed root.
  *
  * `compareGoldenArtifacts()` below serves the `test/integration/` fixture
  * tier only. The flagships deliberately have no `expected/` mirror; they
- * assert on their own committed output through their own `check` script --
+ * assert on their own committed output through their own `check` script:
  * see `test/examples/support.ts` for why.
  *
  * Each target is its own npm project with its own node_modules, installed by
  * CI's `examples`/`integration-fixtures` jobs (.github/workflows/ci.yml), not
  * by the root `npm ci`. Every helper below skips gracefully rather than
- * failing when that project's node_modules isn't present -- e.g. a local
- * `npm test` run that hasn't gone through the per-project install steps --
+ * failing when that project's node_modules isn't present: e.g. a local
+ * `npm test` run that hasn't gone through the per-project install steps:
  * via `isInstalled()`, which every test file gates on.
  */
 
@@ -41,7 +41,7 @@ interface RunResult {
 }
 
 /**
- * `spawnSync`, not `execFileSync` -- deliberately. `execFileSync` only
+ * `spawnSync`, not `execFileSync`: deliberately. `execFileSync` only
  * returns captured output on a *throw* (a non-zero exit); on success it
  * returns stdout alone and silently discards stderr, which would drop any
  * `console.warn`-emitted content (every example script's compatibility-
@@ -51,7 +51,7 @@ interface RunResult {
  *
  * `--silent` suppresses only npm's own `> script\n> command\n` preamble
  * (confirmed: the child process's real stdout/stderr, including on
- * failure, is untouched) -- required for `generate:env:json`'s output to
+ * failure, is untouched); required for `generate:env:json`'s output to
  * be parseable JSON at all, and incidentally keeps every other golden
  * comparison free of npm-version-dependent preamble formatting too.
  */
@@ -82,7 +82,7 @@ export function runStart(exampleDir: string): string {
 /**
  * Runs an npm script expected to exit non-zero and returns its combined
  * stdout+stderr for assertion. Fails the test itself if the command
- * unexpectedly succeeds -- these fixtures exist specifically to prove a
+ * unexpectedly succeeds: these fixtures exist specifically to prove a
  * failure is reported correctly, so a silent "it started passing" is a
  * regression too, not a pleasant surprise.
  */
@@ -95,13 +95,13 @@ export function runExpectingFailure(exampleDir: string, script: string): string 
 
 /**
  * Parses `text` as an `EvidenceModel` and normalizes out `provenance.generatedAt` (see
- * `normalizeEvidenceSnapshotForComparison()`) before re-serializing -- so the persisted evidence
- * artifact's one live timestamp never false-positives a golden comparison. A parse failure returns
- * `text` unchanged, matching `check-artifacts.ts`'s own identically-purposed helper.
+ * `normalizeEvidenceSnapshotForComparison()`) before re-serializing, so the persisted evidence
+ * artifact's one live timestamp never fails a golden comparison. A parse failure returns
+ * `text` unchanged, matching `check-artifacts.ts`'s own helper for the same purpose.
  *
  * Also blanks `provenance.toolVersion`: `normalizeEvidenceSnapshotForComparison()` deliberately
  * compares it as-is for its own purpose (verifying a `--check` run against the `generate` run it's
- * checking, within the same process, where the version genuinely never changes mid-run -- see that
+ * checking, within the same process, where the version genuinely never changes mid-run; see that
  * function's own doc comment). A golden fixture spans real time instead, and a package version bump
  * between when the fixture was committed and when this test runs is routine, expected, and not what
  * this comparison exists to catch.
@@ -121,7 +121,7 @@ function normalizeEvidenceJsonForComparison(text: string): string {
 }
 
 /**
- * Blanks the `now`-relative expiry countdown out of any JSON golden -- a static
+ * Blanks the `now`-relative expiry countdown out of any JSON golden: a static
  * `expiresAt` yields a different `daysRemaining` (and "expires in N day(s)"
  * message) every day, which would make a committed projection artifact rot with
  * zero real edits. The parallel of `normalizeEvidenceSnapshotForComparison`'s
@@ -136,13 +136,13 @@ function normalizeExpiryCountdowns(text: string): string {
 
 /**
  * Byte-for-byte comparison of each of `relativePaths` against its
- * `expected/<same path>` golden copy -- see `examples/README.md`'s
+ * `expected/<same path>` golden copy: see `examples/README.md`'s
  * "expected/" section. Three artifact types carry a value that would
  * otherwise false-positive across a real package version bump between when
  * the golden was captured and when this test runs: Markdown
  * (`normalizeDocsForComparison`), the persisted evidence artifact,
  * `docs/env.evidence.json` (`normalizeEvidenceJsonForComparison`, ADR 0038),
- * and that artifact's own `.fingerprint` sidecar -- `computeSourceFingerprint()`
+ * and that artifact's own `.fingerprint` sidecar; `computeSourceFingerprint()`
  * deliberately hashes in `readToolVersion()` alongside real file content
  * (see its own doc comment), so unlike a `--check` run's own live
  * self-consistency (where the version can't change mid-run), a golden
@@ -196,16 +196,16 @@ export function normalizeExampleCliOutput(output: string, exampleDir: string): s
 
 /**
  * Same substitution `normalizeExampleCliOutput` does, applied to a raw
- * --json payload string before `JSON.parse` -- keeps absolute paths out of
+ * --json payload string before `JSON.parse`: keeps absolute paths out of
  * the parsed comparison too. When `--evidence` was requested alongside
  * `--json`, the envelope's own `evidence` field is a full `EvidenceModel`
  * carrying the same live `provenance.generatedAt`/`change` that
  * `compareGoldenArtifacts()` already normalizes out of the standalone
- * `docs/env.evidence.json` file (ADR 0038) -- apply the identical
+ * `docs/env.evidence.json` file (ADR 0038): apply the identical
  * normalization here so the embedded copy doesn't false-positive on every
  * run the same way the standalone file would have without it. Also blanks the embedded evidence's
  * `provenance.toolVersion`, and the envelope's own top-level `toolVersion`
- * (`JsonSuccessPayload`/`JsonErrorPayload`, `src/cli/json.ts`) -- see
+ * (`JsonSuccessPayload`/`JsonErrorPayload`, `src/cli/json.ts`): see
  * `normalizeEvidenceJsonForComparison()`'s doc comment for why a golden fixture must tolerate a
  * real package version bump that a same-process `--check` never sees.
  */

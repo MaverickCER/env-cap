@@ -1,5 +1,5 @@
 // Build-time script. Run via `npm run project:drift` (after `generate:env`
-// has produced the committed artifacts this compares against -- see
+// has produced the committed artifacts this compares against: see
 // package.json). Never imported by application code.
 import { checkEnvArtifacts, generateEvidenceModel } from "@maverickcer/env-cap/build";
 import { nodeBuildFileSystem } from "@maverickcer/env-cap/node";
@@ -25,10 +25,10 @@ const [checkResult, evidence] = await Promise.all([
 ]);
 
 // ArtifactCheckFinding.path is documented as absolute ("Absolute path the
-// artifact would be written to") -- unlike EvidenceModel's own portable,
+// artifact would be written to"): unlike EvidenceModel's own portable,
 // root-relative convention. Since this is closed-over context supplied by
 // the *script* (not derived from `evidence`), relativizing happens here,
-// where `root` is actually available -- the projection itself never sees
+// where `root` is actually available: the projection itself never sees
 // an absolute path to normalize in the first place.
 const relativeFindings = checkResult.findings.map((finding) => ({
   ...finding,

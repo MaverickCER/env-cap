@@ -699,7 +699,7 @@ export default defineSuite({
       description:
         "`validateEnv` checks the same n values against a contract of n variables with identity processors.",
       // `validateEnv` is idempotent for the life of the process (a second call returns the cached
-      // outcome), so every sample starts from a freshly reset cache -- otherwise only the first
+      // outcome), so every sample starts from a freshly reset cache: otherwise only the first
       // sample would do any work.
       fresh: true,
       setup: (n) => {

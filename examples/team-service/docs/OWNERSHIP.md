@@ -23,7 +23,7 @@ Who owns each contract, who depends on it, and the blast radius if it changes.
 
 ## Abandoned ownership
 
-Contracts never imported anywhere in the scanned repository -- a feature's schema outliving the feature.
+Contracts never imported anywhere in the scanned repository: a feature's schema outliving the feature.
 
 | Contract | Owner | File |
 |---|---|---|
