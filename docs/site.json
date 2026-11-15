@@ -9,7 +9,7 @@
     "eyebrow": "Configuration, owned",
     "heading": "Each feature declares the environment variables it needs and their format.",
     "lede": "Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire.",
-    "support": "A feature is a folder or an installable package; the docs also call it a capability. Its **contract** says how to check each value and, for a secret, when it expires and how to rotate it. A build step writes the **manifest** that `validateEnv()` checks, and docs that flag secrets expiring within 30 days.",
+    "support": "A feature is a folder or an installable package in your code. Its **contract** says how to check each value and, for a secret, when it expires and how to rotate it. A build step writes the **manifest** that `validateEnv()` checks, and docs that flag secrets expiring within 30 days.",
     "outcome": "A bad value stops startup with an error that names the variable, never its value."
   },
   "install": {

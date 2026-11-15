@@ -7,7 +7,7 @@ alongside its own, separately alias-organized, local one:
 ```
 tsconfig.json                        <- this app's OWN "@/*" -> "src/*" path alias (separate from the addon's)
 src/
-  features/billing/env.schema.ts     <- this app's own local capability contract ("billing")
+  features/billing/env.schema.ts     <- this app's own local feature contract ("billing")
   app.ts                             <- imports billingEnv via "@/*", paymentsEnv via the installed package
   generated/env.manifest.ts          <- generated: both contracts
   main.ts                            <- validateEnv() runs here, once

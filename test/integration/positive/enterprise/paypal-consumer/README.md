@@ -6,19 +6,19 @@ that package's environment contract alongside its own local one:
 
 ```
 src/
-  env.schema.ts   <- this app's own local capability contract ("app")
+  env.schema.ts   <- this app's own local feature contract ("app")
   env.manifest.ts <- generated: both the local contract and paypal-addon's
   main.ts         <- validateEnv() runs here, once
-  app.ts          <- capability code imports both contracts directly
+  app.ts          <- feature code imports both contracts directly
 scripts/
   generate-manifest.mjs <- build-time only, never imported by the app
 ```
 
-This pair of examples shows that capability ownership does not depend on
-where a capability's code lives. Since
+This pair of examples shows that feature ownership does not depend on
+where a feature's code lives. Since
 [ADR 0014](../../specs/decisions/0014-cross-package-schema-discovery.md)
 (**Experimental**, see [`VERSIONING.md`](../../VERSIONING.md)), this holds even
-when the capability ships as a genuinely separate, independently-published
+when the feature ships as a genuinely separate, independently-published
 package. No shared source tree, no monorepo, and no workspace protocol is
 involved.
 

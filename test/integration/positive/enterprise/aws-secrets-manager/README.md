@@ -7,7 +7,7 @@ static `expiresAt` values set in `documentEnv()` calls.
 
 ```
 src/
-  env.schema.ts       <- the capability's contract: createEnv() + documentEnv(),
+  env.schema.ts       <- the feature's contract: createEnv() + documentEnv(),
                           with static fallback expiresAt values
   live-expirations.ts <- the liveExpirationDates implementation
   index.ts             <- public export: secretsEnv

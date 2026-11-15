@@ -25,10 +25,10 @@ export function isWithinDirectory(baseDir: string, targetPath: string): boolean 
  * branch of the filesystem entirely). Discovery (`include`/`exclude`) is
  * already safe by construction: it only ever walks *down* from `root` via
  * `readdir`, so a pattern can't make it read outside `root`. Output
- * locations have no such structural guarantee, since `path.resolve` happily
- * walks back out via `..` segments, so this is a plain lexical bounds-check
- * (not a symlink-aware `realpath` check: these are *output* paths that
- * usually don't exist yet).
+ * locations have no such guarantee, since `path.resolve` walks back out
+ * through `..` segments. So this is a lexical bounds-check. It is not a
+ * symlink-aware `realpath` check, because *output* paths usually don't
+ * exist yet.
  *
  * Never throws itself: returns a `CompatibilityIssue`-shaped finding on
  * escape so each generator function (`generateEnvManifest`, `generateDocumentation`,

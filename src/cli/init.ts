@@ -3,7 +3,7 @@ import path from "node:path"
 
 /**
  * `env-cap init`: scaffolds a minimal, working env-cap starting point into
- * the current project: one discoverable capability contract and one
+ * the current project: one discoverable feature contract and one
  * artifact-generation script. Nothing more.
  *
  * Deliberately filesystem-only and non-executing, matching this package's
@@ -16,9 +16,9 @@ import path from "node:path"
  * still needs afterwards is printed as a `Next:` step, not performed here.
  * See ADR 0042.
  *
- * `src/cli/**` is the sanctioned place for direct `node:fs` use (ADR 0040):
- * this file is bundled into the `bin` target, exempt from the
- * `AmbientCapabilities` check's tarball guard exactly as `src/cli/index.ts` is.
+ * `src/cli/**` is the sanctioned place for direct `node:fs` use (ADR 0040).
+ * This file is bundled into the `bin` target. Like `src/cli/index.ts`, it is
+ * exempt from the tarball guard of the `AmbientCapabilities` check.
  */
 
 // USAGE/SCHEMA_TEMPLATE/GENERATOR_TEMPLATE are functions, not module-level
@@ -149,9 +149,9 @@ function schemaDirectory(cwd: string): string {
 }
 
 /**
- * Computes the two scaffold targets and rejects any whose path is already
- * blocked by a wrong-typed entry (a directory where a file must go, or a
- * non-directory where `scripts/` must go). A failure here means zero writes.
+ * Computes the two scaffold targets and rejects any whose path holds the wrong
+ * kind of entry. That is a directory where a file must go, or a non-directory
+ * where `scripts/` must go. A failure here means zero writes.
  */
 // Always exactly two: the schema file and the generator script. Typed as a
 // tuple (not ScaffoldTarget[]) so runInit()'s targets[0] doesn't need a

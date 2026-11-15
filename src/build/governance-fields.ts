@@ -27,9 +27,9 @@ export interface EnvGovernanceFields {
 
 /**
  * Copies exactly the `EnvGovernanceFields` out of a value that carries
- * them: for projecting one pipeline stage's contract/variable into the next
- * (`link` -> `contract-model` -> `docs` catalog, ...) without re-listing all
- * nine fields at every hop.
+ * them. Each pipeline stage (`link` -> `contract-model` -> `docs` catalog,
+ * ...) projects its contract or variable into the next without re-listing
+ * all nine fields.
  */
 export function governanceFieldsOf(source: EnvGovernanceFields): EnvGovernanceFields {
   return {

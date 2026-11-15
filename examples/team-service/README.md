@@ -2,7 +2,7 @@
 
 _"How does this help my team?"_ This is the second flagship [example](../README.md). It is for a team running a service with several features, several owners and a drift check in CI.
 
-Four capabilities, two teams:
+Four features, two teams:
 
 ```text
 features/
@@ -36,7 +36,7 @@ No feature imports another or a shared `env.ts`. Each schema has a `createEnv()`
 `effectiveOwner()` from `@maverickcer/env-cap/build` reads the variable's own `owner` first, then the contract's. The reports differ by level, on purpose:
 
 - `docs/ENVIRONMENT.md` shows `security-team` for `DATABASE_URL`, in the catalog and the ownership matrix.
-- `docs/OWNERSHIP.md` lists contracts, so it still shows `data-platform-team` for `postgres`. It answers "who runs this capability".
+- `docs/OWNERSHIP.md` lists contracts, so it still shows `data-platform-team` for `postgres`. It answers "who runs this feature".
 
 ## Rotation reminders
 

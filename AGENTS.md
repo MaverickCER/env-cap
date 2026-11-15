@@ -7,9 +7,8 @@ application rules, generated from the package.
 
 ## What this package is
 
-In `env-cap`, each feature (a folder or an installable package; the docs also call it a
-capability) declares its environment variables in a **contract**: a static schema object passed to
-`createEnv()` and `documentEnv()`. The application validates every contract once at startup. A build
+In `env-cap`, each feature (a folder or an installable package) declares its environment
+variables in a **contract**: a static schema object passed to `createEnv()` and `documentEnv()`. The application validates every contract once at startup. A build
 step reads the contracts as source and writes the manifest, docs, `.env.example` and ownership
 report. Values are always read through the contract that owns them.
 

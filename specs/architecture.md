@@ -18,11 +18,11 @@ integration guidance, see [README.md](../README.md) and [GUIDE.md](../GUIDE.md).
 
 ## Purpose
 
-`env-cap` treats an application's environment configuration as a set of capability-owned contracts,
+`env-cap` treats an application's environment configuration as a set of feature-owned contracts,
 not as loose strings read off `process.env`. It does not perform secret storage, rotation, or
 retrieval itself.
 
-- A capability declares the environment variables it depends on (`createEnv()`). Optionally, it
+- A feature declares the environment variables it depends on (`createEnv()`). Optionally, it
   also declares the documentation metadata that describes them (`documentEnv()`).
 - At startup, `env-cap` validates those declarations against real values.
 - Separately, at build time, it discovers every declared contract across a project. From those it
@@ -31,7 +31,7 @@ retrieval itself.
 The architecture keeps two concerns from collapsing into one:
 
 ```text
-runtime           -> validated, typed access to configuration a capability already declared owning
+runtime           -> validated, typed access to configuration a feature already declared owning
 build-time         -> project-wide discovery, documentation, and ownership visibility
 ```
 
@@ -135,7 +135,7 @@ src/
 ├── helpers/        @maverickcer/env-cap/helpers           (optional utilities)
 ├── evidence/       @maverickcer/env-cap/evidence          (Evidence Model projections)
 ├── node/           @maverickcer/env-cap/node              (the Node-backed BuildFileSystem adapter)
-└── eslint-plugin/  @maverickcer/env-cap/eslint-plugin      (capability-owned-access lint rules)
+└── eslint-plugin/  @maverickcer/env-cap/eslint-plugin      (feature-owned-access lint rules)
 
 ```
 
@@ -427,7 +427,7 @@ consumers:
 
 ```mermaid
 flowchart TB
-    subgraph AUTHOR["1 - Author time (capability owner)"]
+    subgraph AUTHOR["1 - Author time (feature owner)"]
         SCHEMA["features/payments/env.schema.ts<br/>createEnv(schema) + documentEnv(schema, docs)"]
     end
 
@@ -637,7 +637,7 @@ dependency rules between them.
 | Cross-package schema discovery via explicit allowlist (Stable since ADR 0045)                                          | [0014](decisions/0014-cross-package-schema-discovery.md)                           |
 | Post-1.0 security-fix backport window (one major back, ≥6 months, never shortened once stated)                         | [0015](decisions/0015-security-backport-window.md)                                 |
 | `--check` computes fully before comparing, and never partially writes                                                  | [0016](decisions/0016-check-mode-compute-before-compare-never-partial-write.md)    |
-| A 4th public entry point (`./eslint-plugin`) for a capability-owned-access lint rule                                   | [0017](decisions/0017-eslint-plugin-entry-point.md)                                |
+| A 4th public entry point (`./eslint-plugin`) for a feature-owned-access lint rule                                      | [0017](decisions/0017-eslint-plugin-entry-point.md)                                |
 | Rotation-alert GitHub issue on non-PR Action runs (opens/auto-closes based on expiringSoon)                            | [0018](decisions/0018-rotation-alert-issue-on-non-pr-runs.md)                      |
 | The published `--json` schema is generated from types, never hand-authored                                             | [0019](decisions/0019-published-json-schema-generated-from-types.md)               |
 | Declaration maps emitted by a separate `tsc` pass, not tsup's own `dts` pipeline                                       | [0020](decisions/0020-declaration-maps-via-separate-tsc-pass.md)                   |

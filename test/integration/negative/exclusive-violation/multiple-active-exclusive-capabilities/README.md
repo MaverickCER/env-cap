@@ -1,7 +1,7 @@
 # multiple-active-exclusive-capabilities example
 
 This example is deliberately broken, on purpose. It starts from the same three
-capabilities as [`examples/team-service`](../../../../../examples/team-service/)
+features as [`examples/team-service`](../../../../../examples/team-service/)
 (`postgres`, `mongodb`, `prisma`), with one change.
 [`features/mongodb/env.schema.ts`](features/mongodb/env.schema.ts) now sets
 `active: true`, while [`features/postgres/env.schema.ts`](features/postgres/env.schema.ts)

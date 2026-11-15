@@ -1,7 +1,7 @@
 // Installs the packed tarball with each package manager a consumer may use and imports every entry
-// point from it, both as ESM and as CommonJS. What is proven is exactly that: the tarball installs
-// and resolves under npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker); nothing else about
-// those managers is claimed. Yarn Plug'n'Play and pnpm without hoisting are not covered.
+// point from it, both as ESM and as CommonJS. It proves only that the tarball installs and resolves
+// under npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker). Yarn Plug'n'Play and pnpm without
+// hoisting are not covered.
 //
 // Usage: node scripts/package-managers-smoke.mjs [npm|pnpm|yarn1|yarn-berry ...]
 // Needs: the package built (`npm run build`), `corepack` (ships with Node), network access to the registry.
@@ -41,8 +41,8 @@ function run(command, args, cwd, env = {}) {
   return result.stdout
 }
 
-// An entry such as an ESLint plugin needs the package's peer dependencies to load, so the consumer
-// installs them too, at the ranges the package declares: as a real consumer of that entry would.
+// An entry such as an ESLint plugin needs the package's peer dependencies to load. So the consumer
+// installs them at the declared ranges, as a real consumer of that entry would.
 const peers = Object.entries(manifest.peerDependencies ?? {}).map(
   ([peer, range]) => `${peer}@${range}`,
 )
@@ -63,8 +63,8 @@ for (const subpath of entries) {
   const esmKeys = Object.keys(esm).filter((k) => k !== "default").sort()
   const cjsKeys = Object.keys(cjs).filter((k) => k !== "default" && k !== "__esModule").sort()
   if (esmKeys.length === 0) throw new Error(specifier + " exports nothing from ESM")
-  // CommonJS may expose the default export's own fields as extra keys (a plugin object's \`rules\`); every
-  // ESM named export must be there, and nothing ESM has may be missing from CommonJS.
+  // CommonJS may expose the default export's fields as extra keys (a plugin object's \`rules\`). Every
+  // ESM named export must also be there.
   const missing = esmKeys.filter((k) => !cjsKeys.includes(k))
   if (missing.length > 0) throw new Error(specifier + " is missing from CommonJS: " + missing.join(","))
 }

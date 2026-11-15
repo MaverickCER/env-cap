@@ -117,10 +117,9 @@ export function classifyFindings(result) {
 }
 
 /**
- * Looks up a variable's `metadata` bag (the Contract Model's open extension
- * point, ADR 0037: e.g. a `compliance` tag) so the summary can enrich a
- * row without re-deriving anything: a rendering nicety, not required for
- * correctness.
+ * Looks up a variable's `metadata` bag, the Contract Model's open extension
+ * point (ADR 0037), such as a `compliance` tag. The summary uses it to enrich
+ * a row without re-deriving anything. Correctness never depends on it.
  * @param {unknown} evidence
  * @param {string | undefined} file
  * @param {string} exportName
@@ -136,10 +135,9 @@ function findMetadata(evidence, file, exportName, key) {
 
 /**
  * Joins the Ownership Model (per-contract `owner`) with the Dependency
- * Model (per-contract `consumingFiles`, this Action's "blast radius") by
- * contract identity (`file`+`exportName`): the same join
- * `usage-report.ts`'s now-CLI-unreachable `dependencyOwnership` field used
- * to do internally.
+ * Model (per-contract `consumingFiles`, this Action's "blast radius"). The
+ * join key is contract identity (`file`+`exportName`), the same key
+ * `usage-report.ts`'s `dependencyOwnership` field joins on.
  * @param {unknown} evidence
  * @returns {{ contractName: string, owner: string | undefined, consumers: number }[]}
  */
@@ -389,10 +387,10 @@ function main() {
   try {
     result = JSON.parse(readFileSync(resultPath, "utf8"))
   } catch (error) {
-    // A malformed/missing result file means the `npx env-cap --json` step
-    // itself failed to produce valid output (package resolution failure,
-    // network error, ...): surface that plainly instead of letting a raw
-    // SyntaxError/ENOENT stack trace be this Action's only diagnostic.
+    // A malformed or missing result file means the `npx env-cap --json` step
+    // failed, for example on package resolution or the network. Say so
+    // plainly, so a raw SyntaxError or ENOENT stack trace is never this
+    // Action's only diagnostic.
     const message = error instanceof Error ? error.message : String(error)
     process.stderr.write(
       `Failed to read or parse the env-cap result file at "${resultPath}": ${message}\n`,

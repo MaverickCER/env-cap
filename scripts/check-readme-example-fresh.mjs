@@ -51,9 +51,9 @@ if (!existsSync(path.join(exampleDir, "node_modules"))) {
   process.exit(0)
 }
 
-// The exact two invocations README.md's "See it run" fenced block shows:
-// kept as a single source of truth here so a future change to either shown
-// command or its flags can't quietly drift the two apart.
+// The exact two invocations README.md's "See it run" fenced block shows.
+// They live here once, so a change to either command or its flags cannot
+// drift the two apart.
 //
 // Split in two, matching examples/application's own `docs`/`docs:reports`
 // npm scripts. The CLI has no `--docs`/`--ownership` flags (ADR 0046). So
@@ -77,12 +77,11 @@ const SECTION_HEADERS = [
 ]
 
 /**
- * Pulls out each `SECTION_HEADERS` block (its header line plus every
- * following non-blank "  - ..." bullet, stopping at the first blank line or
- * non-bullet line) from a block of CLI-style text. Blank-line placement
- * differs between real stdout (single newlines) and README's fenced block
- * (a blank line between every line, for Markdown-source readability):
- * this normalizes both to the same shape so only the actual content is
+ * Pulls out each `SECTION_HEADERS` block from a block of CLI-style text. A
+ * block is its header line plus every following "  - ..." bullet, up to the
+ * first blank or non-bullet line. Real stdout uses single newlines, while
+ * README's fenced block puts a blank line between lines for readable
+ * Markdown source. Both are normalized to one shape, so only the content is
  * compared.
  */
 function extractSections(text) {
@@ -113,7 +112,7 @@ function renderSections(sections) {
 }
 
 // The "expiring soon or already expired" day count grows every day with no
-// source change: `STRIPE_KEY`'s `expiresAt` in examples/application/src/env.ts
+// source change. `STRIPE_KEY`'s `expiresAt` in examples/application/src/env.ts
 // is a fixed past date, so "expired Nd ago" keeps rising. Masking the digits
 // matches the golden comparisons (src/build/evidence-snapshot.ts's
 // `EXPIRY_DAY_COUNT`, test/support/example-runner.ts's
@@ -153,10 +152,10 @@ try {
       return !EXCLUDED_TOP_LEVEL.has(top)
     },
   })
-  // node_modules is excluded above and symlinked back in below (so the copy
-  // resolves the real, already-installed `env-cap` package). docs/ and
-  // .env.example are excluded since the run below regenerates them fresh
-  // anyway (src/generated/ is copied but gets overwritten the same way).
+  // node_modules is excluded above and symlinked back in below, so the copy
+  // resolves the installed `env-cap` package. The run below regenerates
+  // docs/ and .env.example, so they are excluded. It also overwrites the
+  // copied src/generated/.
   symlinkSync(path.join(exampleDir, "node_modules"), path.join(fresh, "node_modules"))
   mkdirSync(path.join(fresh, "docs"), { recursive: true })
   mkdirSync(path.join(fresh, "src/generated"), { recursive: true })
@@ -166,11 +165,11 @@ try {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   })
-  // The second, application-level step README.md's fenced block now shows
-  // too (ADR 0046): same temp dir, same `tsx` resolved off the symlinked
-  // node_modules, writing docs/ENVIRONMENT.md/docs/OWNERSHIP.md/.env.example
-  // and printing the "expiring soon"/"unconsumed owned variable(s)"
-  // sections this check actually compares.
+  // The second, application-level step of README.md's fenced block (ADR 0046).
+  // It runs in the same temp dir, with `tsx` resolved off the symlinked
+  // node_modules. It writes docs/ENVIRONMENT.md, docs/OWNERSHIP.md and
+  // .env.example, and prints the "expiring soon" and "unconsumed owned
+  // variable(s)" sections this check compares.
   const docsStdout = execFileSync("npx", ["tsx", GENERATE_DOCS_SCRIPT], {
     cwd: fresh,
     encoding: "utf8",

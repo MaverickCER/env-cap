@@ -1,13 +1,12 @@
 /**
  * Re-verifies developer-declared `dynamicAccess` citations every run: never
- * trusted forever (ADR 0037). Two independent steps, kept as two separate
- * functions rather than one, since they answer two different questions and
- * the second is a pure read over the first's result:
+ * trusted forever (ADR 0037). Two functions do it, because they answer two
+ * different questions and the second is a pure read over the first's result:
  *
- * - `buildCitationSnapshots` (this run, I/O): for every currently-declared
- *   citation, resolves the cited file and computes a whole-file SHA-256, then
- *   compares it against the *previous* evidence snapshot's recorded hash to
- *   label the citation `"fresh"` / `"stale"` / `"missing"`. Existence is
+ * - `buildCitationSnapshots` (this run, I/O): for every declared citation, it
+ *   resolves the cited file and computes a whole-file SHA-256. It compares that
+ *   with the hash in the *previous* evidence snapshot to label the citation
+ *   `"fresh"` / `"stale"` / `"missing"`. Existence is
  *   always re-checked live, never trusted from either snapshot. A citation
  *   with no previous baseline (the first time it's ever been seen) is
  *   `"fresh"`: there is nothing to contradict it yet. Never throws on a
@@ -154,10 +153,9 @@ export function verifyDynamicAccessCitations(
       // builds `acknowledgments` from these SAME `activeContracts` right
       // before calling this. So an identity missing here is exactly a
       // variable `buildCitationSnapshots()` skipped for having zero real
-      // citations, which has nothing to report either way. Hand-verified: replacing the fallback with a
-      // poisoned single-string array (the exact shape Stryker's own
-      // `ArrayDeclaration` mutant produces) and running the full
-      // `vitest run` leaves every test passing.
+      // citations, which has nothing to report either way. So the `?? []` fallback is unreachable.
+      // Replacing it with the single-string array of Stryker's `ArrayDeclaration` mutant leaves every
+      // test passing.
       for (const assertion of acknowledgments.get(identity) ?? []) {
         if (assertion.acknowledgment === "fresh") continue
         problems.push({

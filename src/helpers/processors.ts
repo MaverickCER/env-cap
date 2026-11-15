@@ -116,9 +116,9 @@ export function toLowerCase(): Processor<string> {
 /** Coerces a value to a number, rejecting empty/whitespace-only strings instead of silently resolving to `0`. */
 export function toNumber(): Processor<number> {
   return (value) => {
-    // `Number("")` is `0`, not `NaN`: without this check a blank env var would
-    // silently resolve to the number 0 instead of failing, slipping past
-    // validators.required() too (that checks the processed value, not the raw string).
+    // `Number("")` is `0`, not `NaN`. Without this check a blank env var would
+    // resolve to the number 0 instead of failing. It would also pass
+    // validators.required(), which checks the processed value, not the raw string.
     if (typeof value === "string" && value.trim() === "") {
       throw new Error("Expected a numeric value, received an empty string.")
     }

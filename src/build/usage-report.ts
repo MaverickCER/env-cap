@@ -19,9 +19,9 @@ export interface OwnershipDependencyEntry {
   readonly owner: string | undefined
   /** Number of variables declared in this contract's schema. */
   readonly variableCount: number
-  /** Files coupled to this contract (imported it, referenced it, or read a
-   *  member from it): contract-level "who depends on this," NOT proof any
-   *  specific variable was read. Blast radius if this contract changes is
+  /** Files coupled to this contract: they import it, reference it, or read a
+   *  member from it. This answers "who depends on this" per contract; it does
+   *  not prove any variable was read. Blast radius if this contract changes is
    *  `consumers.length`, computed by callers/renderers on demand rather than
    *  stored redundantly here. */
   readonly consumers: readonly string[]
@@ -60,7 +60,7 @@ export interface UnconsumedOwnedVariableFinding {
    * claimed otherwise. A non-empty list means someone specifically claimed
    * dynamic access here once, and that claim can no longer be verified. That
    * is worth a human check before deleting, not a stronger reason to trust
-   * "unconsumed." The list holds the raw citations, not a collapsed
+   * "unconsumed". The list holds the raw citations, not a collapsed
    * `high`/`low` label, matching this codebase's "show the receipt" pattern
    * (ADR 0036/0037). A reader can judge confidence from the actual evidence
    * rather than trusting a derived summary. See ADR 0038.
@@ -80,7 +80,7 @@ export interface IndeterminateOwnershipFinding {
   /** See {@link UnconsumedOwnedVariableFinding.staleOrMissingCitations}. */
   readonly staleOrMissingCitations: readonly DynamicAccessCitationProblem[]
 }
-/** A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `"fresh"` developer-declared `dynamicAccess` citation: the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037. */
+/** A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate` but has at least one `"fresh"` developer-declared `dynamicAccess` citation. The raw static status is shown beside the assertion, never replaced by it. See ADR 0037. */
 export interface AssertedDynamicAccessFinding {
   /** Resolved display name (see {@link DiscoveredContract.contractName}). */
   readonly contractName: string
@@ -93,10 +93,9 @@ export interface AssertedDynamicAccessFinding {
 }
 
 /** Everything {@link renderUsageReport} needs to render the Dependency &
- *  Ownership Report: deliberately independent of (not derived from)
- *  `GenerateUsageReportResult` in `generate-usage.js`, the same way
- *  `RenderDocsOptions` in `docs.ts` doesn't derive from
- *  `GenerateDocumentationResult`. `generate-usage.ts` composes its own
+ *  Ownership Report. It is not derived from `GenerateUsageReportResult` in
+ *  `generate-usage.js`, as `RenderDocsOptions` in `docs.ts` is not derived
+ *  from `GenerateDocumentationResult`. `generate-usage.ts` composes its own
  *  public result type from these building blocks instead, keeping this
  *  renderer module importable without its orchestrator. */
 export interface RenderUsageReportOptions {
@@ -114,11 +113,11 @@ export interface RenderUsageReportOptions {
   readonly indeterminate: readonly IndeterminateOwnershipFinding[]
   /** Variables a developer has re-acknowledged via `dynamicAccess`, freshly: see ADR 0037. */
   readonly asserted: readonly AssertedDynamicAccessFinding[]
-  /** Schema-discovery parse warnings plus, since ADR 0014, any `packages`
-   *  resolution failures: surfaced here too (not just from
-   *  `generateEnvManifest`/`generateDocumentation`) so a team relying only
-   *  on `--ownership` output still learns when a cross-package contract
-   *  failed to resolve. */
+  /** Schema-discovery parse warnings plus any `packages` resolution failures
+   *  (ADR 0014). They appear here as well as in
+   *  `generateEnvManifest`/`generateDocumentation`, so a team that reads only
+   *  this report still learns when a cross-package contract failed to
+   *  resolve. */
   readonly parseWarnings: readonly ParseWarning[]
   /** Every surface actually scanned for usage: see ADR 0036. Named explicitly next to `unconsumedOwnedVariables` so "no consumer found" is never read as a stronger claim than what was actually searched. */
   readonly scannedSurfaces: readonly ScannedSurface[]
@@ -274,9 +273,9 @@ function renderParseWarnings(warnings: readonly ParseWarning[]): string[] {
 
 /**
  * Renders the Dependency & Ownership Report: who owns each variable, which
- * features consume each contract, and what the blast radius is if it
- * changes; structured around exactly those three questions, never generic
- * "dead code"/"unused symbol" language.
+ * features consume each contract, and the blast radius of a change. It
+ * answers those three questions, never in generic "dead code" or "unused
+ * symbol" terms.
  */
 export function renderUsageReport(computed: RenderUsageReportOptions): string {
   const lines = [

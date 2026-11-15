@@ -28,11 +28,10 @@ export interface GenerateEnvManifestOptions {
   /** Glob patterns to exclude. Defaults to node_modules/dist/.git. */
   exclude?: string[] | undefined
   /**
-   * Explicit allowlist of installed
-   * package names whose declared `"envCap": { "schema": "<path>" }` entry
-   * point should also be discovered, so a contract that ships as its own
-   * separately-published package (no monorepo required) can be included in
-   * the manifest. Opt-in only: a package is never considered unless its
+   * Explicit allowlist of installed package names whose declared
+   * `"envCap": { "schema": "<path>" }` entry point is also discovered. It lets
+   * the manifest include a contract published as a separate package, with no
+   * monorepo required. Opt-in only: a package is never considered unless its
    * exact name appears here. See ADR 0014.
    */
   packages?: readonly string[] | undefined
@@ -41,9 +40,9 @@ export interface GenerateEnvManifestOptions {
    * whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.
    * `"@/lib/env.schema.js"`) encountered during static analysis, so a contract or consumer
    * reached only through an alias isn't misreported as abandoned/unresolved. Defaults to
-   * `"tsconfig.json"` at `root`: on automatically, no opt-in required, since (unlike
-   * `packages`) this never crosses a trust/versioning boundary: every resolved file is
-   * already local, already-trusted project source. Pass `false` to disable entirely. See
+   * `"tsconfig.json"` at `root`, so it is on with no opt-in. Unlike `packages`, it never
+   * crosses a trust or versioning boundary: every resolved file is local, trusted project
+   * source. Pass `false` to disable entirely. See
    * ADR 0023.
    */
   tsconfig?: string | false | undefined
@@ -83,14 +82,11 @@ export function defaultInclude(): string[] {
 /** Default value for {@link GenerateEnvManifestOptions.exclude}. Same reasoning as {@link defaultInclude}. */
 export function defaultExclude(): string[] {
   return [
-    // `discoverSchemaFiles()`'s own walk (`discover.ts`) hardcodes skipping
-    // a directory literally named "node_modules" or ".git" via its own
-    // `isAlwaysSkippedDirName()` check, regardless of `exclude`: it never
-    // even descends into either to test a glob pattern against it. These
-    // two entries are provably redundant (kept for readers/tooling that
-    // inspect `exclude` directly, and as defense if that hardcoding ever
-    // changes). Hand-verified: emptying both and running the full
-    // `vitest run` leaves all 1243 tests passing.
+    // The walk in `discoverSchemaFiles()` (`discover.ts`) never descends into a
+    // directory named "node_modules" or ".git", whatever `exclude` says
+    // (`isAlwaysSkippedDirName()`). So these two entries are redundant, and
+    // emptying both leaves every test passing. They stay for readers and tools
+    // that inspect `exclude`, and as a fallback if that skip ever changes.
     "**/node_modules/**",
     "**/dist/**",
     "**/.git/**",
@@ -158,16 +154,15 @@ export async function writeManifest(
 }
 
 /**
- * Build-time only. Discovers `env.schema.ts` files, statically analyzes them
- * (never executes them) to link `createEnv()`/`documentEnv()` calls, checks
- * for provable incompatibilities between duplicate variable declarations,
- * and writes a deterministic manifest file that re-exports every discovered
- * active contract.
+ * Build-time only. Discovers `env.schema.ts` files and analyzes them
+ * statically, never executing them, to link `createEnv()`/`documentEnv()`
+ * calls. It checks duplicate variable declarations for provable
+ * incompatibilities. Then it writes a deterministic manifest file that
+ * re-exports every discovered active contract.
  *
  * @remarks
- * Never call this at application startup or import it from
- * runtime code: wire it into an npm script, a bundler plugin, or a CI
- * step instead.
+ * Run it from an npm script, a bundler plugin or a CI step. Application
+ * startup and runtime code never call or import it.
  *
  * @throws {EnvManifestGenerationError} If `location` escapes `root`, or if a blocking compatibility/exclusive-group issue is found.
  */

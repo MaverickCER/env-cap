@@ -17,7 +17,7 @@ export interface CacheState {
  *
  * There is a single global state, not one per "runtime": a process validates
  * its environment once, at startup. Server and client contexts never share a
- * process (server code and a browser bundle are two separate processes), so
+ * process: server code and a browser bundle run in separate processes. So
  * there's nothing to key a second state by.
  */
 let state: CacheState = createState()

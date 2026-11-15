@@ -60,7 +60,7 @@ npm run examples:update-golden
 4. Run `npx changeset` and describe what changes for someone who installs the package. Pick `patch`, `minor` or `major` by [`VERSIONING.md`](VERSIONING.md). If you add none, the release workflow generates one from `feat`, `fix`, `perf` and `revert` commit messages; other types release nothing.
 5. Open a pull request. A merge needs the `contract`, `lint` and `required` checks; `contract` fails when `verify` or `lint` fails.
 
-The `required` check also waits for `cross-runtime` (Bun and Deno), `examples`, `integration-fixtures`, `typescript-5`, `typescript-compat` and `package-managers`, so a red one blocks a merge.
+The `required` check also waits for `cross-runtime` (Bun and Deno), `examples`, `integration-fixtures`, `typescript-5`, `typescript-compat`, `eslint-compat` and `package-managers`, so a red one blocks a merge.
 
 A `benchmark-pr` failure skips `lint` and `verify`. `contract` and `required` still run and fail on it, so it blocks a merge too.
 

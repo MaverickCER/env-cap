@@ -22,10 +22,9 @@ import type { BuildFileSystem } from "./types.js"
  * current `EvidenceModel` without silently-stale data. Such a consumer
  * avoids a full `generateEvidenceModel()` recompute on every invocation
  * (schema parsing, cross-file linking, the dependency-graph AST scan, all six
- * model builds). The mechanism: a cheap content fingerprint,
- * computed from raw file bytes with zero AST work, lets a caller cheaply
- * prove "nothing relevant to evidence generation has changed since this file
- * was last written" before trusting it.
+ * model builds). A content fingerprint over raw file bytes costs no AST work.
+ * It lets the caller prove that nothing relevant to evidence generation
+ * changed since the file was written, before trusting it.
  */
 
 /** Options for {@link computeSourceFingerprint}. */
@@ -39,9 +38,9 @@ export interface ComputeSourceFingerprintOptions {
 }
 
 /**
- * SHA-256 over the raw bytes of every schema file and every usage-scan-
- * surface file (the same file sets `assembleProject()`/`computeScanSurface()`
- * touch), plus env-cap's own installed version: zero AST parsing or
+ * SHA-256 over the raw bytes of every schema file and every usage-scan
+ * surface file, plus the installed env-cap version. Those are the file sets
+ * `assembleProject()`/`computeScanSurface()` touch. It does no AST parsing or
  * linking. Still requires the discovery/glob walk itself (fingerprinting has
  * to know which files matter), but skips everything after it. Deterministic:
  * file paths are deduplicated and sorted before hashing, so the result never
@@ -105,16 +104,15 @@ function fingerprintPathFor(evidencePath: string): string {
   return `${evidencePath}.fingerprint`
 }
 
-/** Writes `fingerprint`'s paired sidecar for `evidencePath`: call immediately after writing the evidence artifact itself, so the two files always describe the same moment in the source tree's history. */
+/** Writes `fingerprint`'s paired sidecar for `evidencePath`. Call it right after writing the evidence artifact, so both files describe the same moment in the source tree. */
 export async function writeEvidenceFingerprint(
   evidencePath: string,
   fingerprint: string,
   fs: BuildFileSystem,
 ): Promise<void> {
-  // Empirically confirmed equivalent (real `node -e` byte comparison): the
-  // written content is always a sha256 hex digest plus a newline, pure
-  // ASCII, which "utf8" and an invalid/empty encoding write out to
-  // byte-identical files either way.
+  // The encoding argument cannot change the output, confirmed by a `node -e` byte comparison.
+  // The content is a sha256 hex digest plus a newline, pure ASCII. "utf8" and an invalid or
+  // empty encoding write the same bytes for it.
   await fs.writeFile(fingerprintPathFor(evidencePath), `${fingerprint}\n`, "utf8")
 }
 
@@ -135,12 +133,11 @@ export interface GetEvidenceModelResult {
 
 /**
  * Trusts the committed evidence artifact at `options.location` only when its
- * paired `.fingerprint` sidecar matches a freshly (cheaply) computed
- * {@link computeSourceFingerprint}: never on file presence alone, never on
- * a timestamp. On any mismatch (stale fingerprint, missing/corrupt evidence
- * file, no fingerprint sidecar at all), falls back to a real
- * `generateEvidenceModel()` call: never hard-fails, never silently serves
- * data that might be stale.
+ * paired `.fingerprint` sidecar matches a fresh {@link computeSourceFingerprint}.
+ * File presence or a timestamp never earns that trust. On any mismatch (a
+ * stale fingerprint, a missing or corrupt evidence file, no sidecar), it falls
+ * back to a real `generateEvidenceModel()` call. So it never fails hard and
+ * never serves stale data.
  *
  * @remarks
  * Never writes anything. A cache miss here does not self-heal the cache.

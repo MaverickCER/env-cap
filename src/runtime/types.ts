@@ -7,9 +7,9 @@
  * requiredness is just a validator that rejects `undefined`/empty values.
  *
  * Documentation fields (description, owner, expiresAt, category, ...) live
- * entirely in {@link documentEnv} (see `document.ts`), not here: this file is
- * the runtime's whole vocabulary, and every field in it is read by
- * `validate.ts`/`create.ts`/`errors.ts` at runtime. If a field is only ever
+ * in {@link documentEnv} (see `document.ts`), not here. This file is the
+ * runtime's whole vocabulary. `validate.ts`, `create.ts` and `errors.ts` read
+ * every field in it at runtime. If a field is only ever
  * read by the generator, it belongs in `document.ts`, not here. `context` is
  * the one exception. The build package also reads it for documentation
  * display (see ADR 0022). It belongs here rather than in `documentEnv()`
@@ -38,8 +38,8 @@ export type Validator<T> = (value: T, rawEnv: RawEnv) => true | string
  *
  * @remarks
  * The union is redundant at the type level (`unknown` alone already accepts a
- * function). It's kept because this type is public API: collapsing it to bare `unknown`
- * would erase the one thing a reader of the generated `.d.ts` needs to learn here.
+ * function). It's kept because this type is public API. A reader of the generated `.d.ts`
+ * learns the thunk form from it, and bare `unknown` would hide that.
  */
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- `unknown | (() => unknown)` keeps the function form visible in the documented type
 export type DefaultValue = unknown | (() => unknown)
@@ -75,9 +75,9 @@ export interface EnvDefinition<T> {
  * A schema is a map of variable name -> definition.
  *
  * @remarks
- * `EnvDefinition<any>` is used only as the generic *bound* here (never surfaced to consumers):
+ * `EnvDefinition<any>` is used only as the generic *bound* here, never surfaced to consumers.
  * TypeScript infers a precise, per-key literal type for `S` from the object passed to
- * {@link createEnv}, so the resolved contract type (see {@link InferEnvValue}) stays fully
+ * {@link createEnv}. So the resolved contract type (see {@link InferEnvValue}) stays fully
  * strict. This is the same variance workaround used by schema libraries like zod/trpc for
  * heterogeneous generic maps.
  */
@@ -121,9 +121,9 @@ export interface ContractInternals<S extends EnvSchema = EnvSchema> {
  * runtime cache: there is no global env object, only per-feature contracts like this one.
  *
  * @remarks
- * `toString()` is intersected in (rather than left to the ambient `Object.prototype`
- * declaration) because `create.ts` genuinely overrides it to return a redacted
- * `EnvContract("name")` representation, never resolved values: see ADR 0006. Declaring
+ * `toString()` is intersected in, rather than left to the ambient `Object.prototype`
+ * declaration. `create.ts` overrides it to return a redacted `EnvContract("name")`
+ * representation, never resolved values (ADR 0006). Declaring
  * it here means the type accurately describes what calling `String(contract)` returns.
  */
 export type EnvContract<S extends EnvSchema> = {
@@ -147,9 +147,9 @@ export interface validateEnvOptions {
   /**
    * Every contract to validate: typically the `contracts` array imported
    * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them
-   * in one call: {@link validateEnv} only ever initializes once per process, so
-   * a second call returns the first call's cached result without
-   * re-running anything, even if it passes a different manifest.
+   * in one call. {@link validateEnv} initializes once per process. A second call
+   * returns the first call's cached result without re-running anything, even if
+   * it passes a different manifest.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the manifest holds contracts of every schema, so the type argument is deliberately open
   manifest: readonly EnvContract<any>[]
@@ -158,9 +158,8 @@ export interface validateEnvOptions {
    * "production"]`): entirely application-defined; env-cap never
    * detects or infers these, the caller always computes and passes them
    * explicitly. A variable whose `context` isn't in this list is skipped
-   * entirely (no default/processor/validator runs for it, and it stays in
-   * its not-ready state, exactly as if this run had never happened for
-   * it): see ADR 0022. A variable with no `context` always participates,
+   * (ADR 0022). No default, processor or validator runs for it. It stays
+   * not ready, as if this run had never happened. A variable with no `context` always participates,
    * regardless of what's passed here. Omitted (the default) behaves as an
    * empty list: only variables with no `context` participate.
    *
@@ -202,10 +201,9 @@ export interface CreateEnvOptions {
   /**
    * Pass `import.meta.url` here so validation errors point at the file that
    * declared the failing variable (e.g. "features/payments/env.schema.ts")
-   * instead of just the short `name` label. There is no portable way for
-   * `createEnv` to discover its caller's module URL on its own: this is
-   * always correct and never goes stale, since it's supplied by the JS
-   * engine rather than hand-typed.
+   * instead of the short `name` label. `createEnv` has no portable way to
+   * discover its caller's module URL. The JS engine supplies
+   * `import.meta.url`, so it is always correct and never goes stale.
    */
   source?: string
 }

@@ -6,9 +6,9 @@ import type { DiscoveredContract } from "./link.js"
  * e.g. two interchangeable database backends both left enabled at once.
  *
  * @remarks
- * Unlike `detectCompatibilityIssues`, this is never a heuristic warning: an
- * author explicitly declared these contracts mutually exclusive, so any
- * violation is always a hard error, regardless of `onIncompatibility`. See
+ * Unlike `detectCompatibilityIssues`, this is never a heuristic warning. An
+ * author declared these contracts mutually exclusive, so a violation is
+ * always a hard error, whatever `onIncompatibility` says. See
  * ADR 0009 for why this doesn't follow 0005's warn-by-default policy.
  *
  * Inactive contracts are ignored entirely here (filtered internally, not by

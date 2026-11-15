@@ -24,7 +24,7 @@ Validation libraries answer one question: is this value well-formed? They do not
 - Node.js `>=22`. CI tests 22 and 24 in blocking jobs.
 - npm. pnpm, Yarn 1 and Yarn Berry are tested only for installing the tarball and importing every entry. `required` waits for that job (`package-managers`), so a failure blocks a merge.
 - TypeScript `moduleResolution` set to `node16`, `nodenext` or `bundler` if you type-check against the subpath exports.
-- Your own TypeScript is optional. The build entry uses it when it is version 5 or 6, and the bundled TypeScript 6 otherwise.
+- Your own TypeScript is optional and must be 5.8 or later. The build entry uses it when it is version 5 or 6, and the bundled TypeScript 6 otherwise.
 - Schemas written as static object literals. A schema built by a function, or a spread at the top of a schema object, produces a parse warning. A spread nested inside a variable's definition or its `documentEnv()` entry is skipped without one. Nothing is guessed.
 
 ## What it refuses to do
@@ -60,9 +60,9 @@ Installing `@maverickcer/env-cap` installs 1 package directly, and whatever it d
 | Package                    | Kind          | Range                              | Why                                                                                                                                                                                                           |
 | -------------------------- | ------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@typescript/typescript6`  | dependency    | `^6.0.2`                           | The TypeScript 6 compiler the build entry parses schemas with when the project's own TypeScript is 7 or missing (ADR 0049). Bundled inside the tarball. No runtime entry can reach it (`compiler-isolation`). |
-| `@typescript-eslint/utils` | optional peer | `^8.0.0`                           | Only for `@maverickcer/env-cap/eslint-plugin`; projects linting TypeScript already have it through `typescript-eslint`.                                                                                       |
-| `eslint`                   | optional peer | `^8.57.0 \|\| ^9.0.0 \|\| ^10.0.0` | Only for `@maverickcer/env-cap/eslint-plugin`, which runs inside the project's own ESLint. CI runs the rules on ESLint 10 only.                                                                               |
-| `typescript`               | optional peer | `^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0`   | The project's own compiler, used by the build entry instead of `@typescript/typescript6` when it is version 5 or 6. CI tests the newest 5.x, 6.x and 7.x, not the 5.0 floor.                                  |
+| `@typescript-eslint/utils` | optional peer | `^8.0.0`                           | Only for `@maverickcer/env-cap/eslint-plugin`; projects linting TypeScript already have it through `typescript-eslint`. The `eslint-compat` CI job tests the floor of this range and its newest release.      |
+| `eslint`                   | optional peer | `^8.57.0 \|\| ^9.0.0 \|\| ^10.0.0` | Only for `@maverickcer/env-cap/eslint-plugin`, which runs inside the project's ESLint. The `eslint-compat` CI job tests the lowest and newest release of each major in this range.                            |
+| `typescript`               | optional peer | `^5.8.0 \|\| ^6.0.0 \|\| ^7.0.0`   | The project's own compiler, used by the build entry instead of `@typescript/typescript6` when it is version 5 or 6. CI tests the lowest and newest release of each major, from the 5.8 floor.                 |
 
 <!-- ipc:end dependencies -->
 

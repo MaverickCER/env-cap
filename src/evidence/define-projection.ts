@@ -2,10 +2,10 @@ import type { EvidenceModel } from "../build/evidence-model.js"
 
 /**
  * A pure function from the full Evidence Model to one field of a
- * projection's output shape. Must not mutate `evidence` (the membrane
- * `defineEvidenceProjection()` wraps it in enforces that at runtime, see
- * `createTrackingProxy()` below) and must not perform I/O; env-cap can
- * enforce the read-only half of purity but not the "no side effects" half.
+ * projection's output shape. It reads `evidence` and performs no I/O.
+ * The membrane `defineEvidenceProjection()` wraps around `evidence` throws on
+ * any write (see `createTrackingProxy()` below). That enforces the read-only
+ * half of purity. The "no side effects" half is the author's job.
  */
 export type EvidenceProjector<T> = (evidence: EvidenceModel) => T
 
@@ -33,8 +33,8 @@ export interface EvidenceProjection<T extends Record<string, unknown>> {
 
 /**
  * Declares a projection: a named, pure transform from the immutable
- * `EvidenceModel` to any consumer-defined output shape, built entirely from
- * `schema`'s independent per-field projector functions; see ADR 0031/0032.
+ * `EvidenceModel` to any consumer-defined output shape. It is built from the
+ * independent per-field projector functions in `schema` (ADR 0031, ADR 0032).
  *
  * The reference projections env-cap ships (`.env.example`, Environment
  * Configuration Reference, Configuration Ownership, etc.) are built through
@@ -91,10 +91,9 @@ export function readOnlyMembraneError(): TypeError {
  * nested properties (see ADR 0032). The membrane's own
  * `set`/`deleteProperty`/`defineProperty`/`setPrototypeOf` traps enforce
  * immutability instead, which works on an unfrozen target. The caller's
- * `evidence` (typically already `deepFreeze()`-d by `generateEvidenceModel()`)
- * is never mutated: `structuredClone()` gives this membrane its own
- * disposable copy to wrap, so a genuinely frozen `EvidenceModel` can still
- * be projected.
+ * `evidence` (usually frozen by `generateEvidenceModel()`) is never mutated.
+ * `structuredClone()` gives this membrane a disposable copy to wrap, so a
+ * frozen `EvidenceModel` can still be projected.
  */
 function createTrackingProxy(evidence: EvidenceModel): {
   proxy: EvidenceModel

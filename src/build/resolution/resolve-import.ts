@@ -11,18 +11,17 @@ import {
 } from "./resolve-tsconfig-paths.js"
 
 /**
- * Resolves a relative import specifier (as written in source: `"./schema.js"`,
- * matching this codebase's own convention of `.js`-suffixed relative imports
- * pointing at `.ts` source files) to an absolute file path, relative to the
- * file that contains the import.
+ * Resolves a relative import specifier, as written in source (`"./schema.js"`),
+ * to an absolute file path. It resolves against the file that contains the
+ * import. A `.js` suffix points at the `.ts` source file, as in this codebase.
  *
  * @remarks
  * Deliberately narrow: only handles a direct relative specifier resolving to
- * a real `.ts`/`.tsx` file on disk. Bare/package specifiers, namespace
- * imports, and anything requiring real module resolution (re-export chains,
- * `exports` map lookups, etc.) return `undefined`: the caller treats that
- * as "couldn't statically link" and warns rather than guesses, the same
- * philosophy `evaluateLiteral` already uses for non-literal expressions.
+ * a real `.ts`/`.tsx` file on disk. Anything else returns `undefined`: bare
+ * or package specifiers, namespace imports, and anything that needs real
+ * module resolution (re-export chains, `exports` map lookups). The caller
+ * reads that as "couldn't statically link" and warns rather than guesses.
+ * `evaluateLiteral` treats non-literal expressions the same way.
  *
  * @returns The resolved absolute path, or `undefined` when the specifier isn't relative or doesn't resolve to a real file.
  */

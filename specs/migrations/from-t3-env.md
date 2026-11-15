@@ -32,7 +32,7 @@ This provides:
 The difference is architectural:
 
 - `t3-env` focuses on **validating an application's environment**.
-- `env-cap` focuses on **organizing configuration ownership across application capabilities**.
+- `env-cap` focuses on **organizing configuration ownership across application features**.
 
 Both approaches solve real problems. The correct choice depends on the scale and structure of the application.
 
@@ -59,7 +59,7 @@ src/
 
 In this structure, a shared environment object is simple and effective.
 
-## When capability ownership becomes important
+## When feature ownership becomes important
 
 As applications grow, configuration often follows business domains:
 
@@ -75,7 +75,7 @@ src/
 └── billing/
 ```
 
-Each capability has different owners, deployment concerns, and operational requirements.
+Each feature has different owners, deployment concerns, and operational requirements.
 
 A centralized environment file becomes a shared coordination point:
 
@@ -93,7 +93,7 @@ env.ts
 
 The problem is not validation. The problem is ownership.
 
-Every capability change now modifies shared configuration code.
+Every feature change now modifies shared configuration code.
 
 ## Migration strategy
 
@@ -102,8 +102,8 @@ Migrating from t3-env does not require removing Zod or rewriting validation logi
 The recommended migration is:
 
 1. Keep existing validation rules.
-2. Move variables into capability-owned contracts.
-3. Replace global `env` imports with capability-owned imports.
+2. Move variables into feature-owned contracts.
+3. Replace global `env` imports with feature-owned imports.
 4. Add documentation metadata where operational visibility is needed.
 5. Remove the centralized environment object after migration.
 
@@ -134,11 +134,11 @@ import { env } from "@/env"
 stripe.connect(env.STRIPE_SECRET_KEY)
 ```
 
-The capability depends on the application-wide environment object.
+The feature depends on the application-wide environment object.
 
-## After: capability-owned env-cap schema
+## After: feature-owned env-cap schema
 
-Move the configuration requirement into the owning capability:
+Move the configuration requirement into the owning feature:
 
 ```ts
 // features/payments/env.schema.ts
@@ -181,7 +181,7 @@ stripe.connect(paymentsEnv.STRIPE_SECRET_KEY)
 
 The dependency is now explicit.
 
-The payments capability depends on payments configuration, not the entire application's configuration object.
+The payments feature depends on payments configuration, not the entire application's configuration object.
 
 ## Reusing Zod validation
 
@@ -207,13 +207,13 @@ const paymentsSchema = {
 
 The responsibilities become:
 
-| Responsibility         | Tool                 |
-| ---------------------- | -------------------- |
-| Environment validation | Zod                  |
-| Capability ownership   | env-cap              |
-| Runtime access         | Capability contracts |
-| Documentation metadata | `documentEnv()`      |
-| Project inventory      | Build tooling        |
+| Responsibility         | Tool              |
+| ---------------------- | ----------------- |
+| Environment validation | Zod               |
+| Feature ownership      | env-cap           |
+| Runtime access         | Feature contracts |
+| Documentation metadata | `documentEnv()`   |
+| Project inventory      | Build tooling     |
 
 ## Migrating client and server variables
 
@@ -298,7 +298,7 @@ export async function createPayment() {
 }
 ```
 
-The capability now declares its own configuration dependency.
+The feature now declares its own configuration dependency.
 
 ## Handling shared variables
 
@@ -308,7 +308,7 @@ A centralized environment object assumes one global interpretation:
 env.SOME_VARIABLE
 ```
 
-However, different capabilities may require different transformations.
+However, different features may require different transformations.
 
 Example:
 
@@ -316,7 +316,7 @@ Example:
 CACHE_TIMEOUT=60000
 ```
 
-A caching capability may require:
+A caching feature may require:
 
 ```ts
 cacheEnv.CACHE_TIMEOUT
@@ -325,7 +325,7 @@ cacheEnv.CACHE_TIMEOUT
 
 because it performs calculations.
 
-A monitoring capability may require:
+A monitoring feature may require:
 
 ```ts
 monitoringEnv.CACHE_TIMEOUT
@@ -336,7 +336,7 @@ because it reports configuration values.
 
 A single global object cannot represent both interpretations without choosing one as the default.
 
-Capability-owned contracts allow each capability to define the meaning it requires.
+Feature-owned contracts allow each feature to define the meaning it requires.
 
 ## Generating project-wide visibility
 
@@ -367,7 +367,7 @@ t3-env may remain the better choice when:
 
 - your application has one configuration owner
 - the centralized schema stays maintainable
-- capability boundaries are not important
+- feature boundaries are not important
 - documentation and lifecycle tracking are handled elsewhere
 
 `t3-env` is an excellent validation solution.
@@ -413,4 +413,4 @@ application
 
 > "Who owns these environment variables, where are they used, and how do we operate them as the system grows?"
 
-The two approaches can also coexist. Existing validation logic can remain while configuration ownership gradually moves closer to the capabilities that depend on it.
+The two approaches can also coexist. Existing validation logic can remain while configuration ownership gradually moves closer to the features that depend on it.

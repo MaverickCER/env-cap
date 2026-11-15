@@ -20,8 +20,8 @@ import { serializeCheckSuccess, serializeFailure, serializeSuccess, writeJson } 
  * `../build/index.js` (and, transitively, `typescript`) is imported here as
  * TYPES ONLY at module scope. `runCheckMode`/`runGenerateMode` load it with a
  * dynamic `import()` instead of a static top-level import. `typescript` is
- * an optional peer dependency (README: "TypeScript 5+ is only required for
- * build-time manifest generation"). A static import is evaluated for every
+ * an optional peer dependency, needed only for build-time manifest generation.
+ * A static import is evaluated for every
  * invocation of this file, including `env-cap init` and `env-cap --help`.
  * Neither of those touches `../build/index.js`. With a static import, a
  * fresh install without `typescript` would throw `ERR_MODULE_NOT_FOUND:

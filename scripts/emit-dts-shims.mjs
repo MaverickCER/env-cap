@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 // Writes thin re-export shims for the .d.ts/.d.cts files of the bundled
-// entry points, because tsup does not generate them here. tsup's own dts pipeline
-// (rollup-plugin-dts) hardcodes declarationMap: false and can't produce
-// declaration maps; see tsup.config.ts's `dts: false` comment and
-// tsconfig.build.json. Real per-file declarations (with working maps) are
-// emitted separately by `tsc -p tsconfig.build.json` into dist/.dts/,
-// mirroring src/'s structure; this script just points each package.json
-// #exports entry-point filename at the right file inside that tree.
+// entry points, because tsup does not generate them here. The tsup dts pipeline
+// (rollup-plugin-dts) hardcodes declarationMap: false, so it cannot produce
+// declaration maps. See tsup.config.ts's `dts: false` comment and
+// tsconfig.build.json. `tsc -p tsconfig.build.json` emits per-file
+// declarations with working maps into dist/.dts/, mirroring src/. This
+// script points each package.json #exports entry point at its file there.
 
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
@@ -35,13 +34,13 @@ for (const { name, dtsPath } of ENTRIES) {
 }
 
 // A second declaration tree for TypeScript 7 consumers (package.json's `types@>=7` export
-// conditions). The build and evidence declarations name compiler-API types from `typescript`; a
-// TypeScript 7 root has none (its package ships no compiler-API declarations), so under 7 those
-// imports cannot even be read without `skipLibCheck`. This copy points them at the bundled
-// `@typescript/typescript6`, which every install carries. It is served to 7 ONLY: a TypeScript 5 or 6
-// consumer keeps the primary declarations typed from its own `typescript`, because two copies of
-// `SyntaxKind` are distinct enums and such a consumer passes its own nodes into these entry points
-// (ADR 0049, "Consequences"). Under 7 there is no second copy to clash with.
+// conditions). The build and evidence declarations name compiler-API types from `typescript`.
+// TypeScript 7's package ships no compiler-API declarations. So under 7 those imports cannot be
+// read without `skipLibCheck`. This copy points them at the bundled `@typescript/typescript6`,
+// which every install carries. Only TypeScript 7 is served this copy. A TypeScript 5 or 6 consumer
+// keeps the primary declarations, typed from its `typescript`. Two copies of `SyntaxKind` are
+// distinct enums, and such a consumer passes its nodes into these entry points (ADR 0049,
+// "Consequences"). Under 7 there is no second copy to clash with.
 const ts7Root = path.join(root, "dist", ".dts7")
 rmSync(ts7Root, { recursive: true, force: true })
 cpSync(path.join(root, "dist", ".dts"), ts7Root, { recursive: true })

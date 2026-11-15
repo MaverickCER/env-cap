@@ -249,9 +249,9 @@ export function parseRotationPeriodDays(value: string): number | undefined {
  *   `lastRotatedAt` and/or `rotationTriggerEvents`), with no `rotationPeriod` and no past-due
  *   `expiresAt`. Nothing states a time-based obligation this variable could be failing to meet.
  *
- * `rotationTriggerEvents` (the event-based trigger) deliberately never changes the returned status
- * by itself. env-cap cannot observe whether a listed event (a suspected compromise, a personnel
- * change, ...) actually occurred. Treating its mere presence as either compliant or overdue would
+ * `rotationTriggerEvents` (the event-based trigger) never changes the returned status by itself.
+ * Nothing in env-cap can observe whether a listed event occurred, such as a suspected compromise or
+ * a personnel change. Treating its mere presence as either compliant or overdue would
  * fabricate a signal. It's presence-only evidence that the event-based half of IA-5's
  * two-trigger model was at least *declared*. A generator should still surface it, but never fold
  * it into this computed status.

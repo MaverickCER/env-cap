@@ -13,7 +13,7 @@ Every other example is a plain Node script. This one is a running [TanStack Star
 
 The domain is disposable. Removing the matter and task code must leave the env-cap integration pattern obvious and intact.
 
-## Six capabilities
+## Six features
 
 ```text
 src/capabilities/
@@ -26,14 +26,14 @@ src/capabilities/
   observability/env.schema.ts  LOG_LEVEL, SENTRY_DSN?                      platform-team
 ```
 
-| Capability                              | What it shows                                                | What the smoke test exercises                                      |
+| Feature                                 | What it shows                                                | What the smoke test exercises                                      |
 | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ |
 | `database` (mongoose)                   | A real embedded MongoDB                                      | Every query, against `mongodb-memory-server`                       |
 | `auth` (bcryptjs, jose)                 | Local sessions with no external service                      | Sign-up and session handling                                       |
 | `oauth-github` (plain `fetch`)          | Several secrets that must be classified and rotated together | Redirect-URL building and the login page; not the GitHub handshake |
 | `email` (resend)                        | One secret paired with one non-secret setting                | The console fallback when `RESEND_API_KEY` is unset                |
 | `storage` (`@aws-sdk/client-s3`)        | A storage credential set                                     | Upload and download against a local `s3rver`                       |
-| `observability` (pino, optional Sentry) | A capability that works with no variables set                | That Sentry does not throw without a DSN                           |
+| `observability` (pino, optional Sentry) | A feature that works with no variables set                   | That Sentry does not throw without a DSN                           |
 
 Every processor and validator here is hand-written; the example does not use `./helpers`.
 
@@ -54,7 +54,7 @@ CI's `examples` job runs steps 3, 4 and 5 (`test/examples/enterprise-platform.te
 
 ## Two drift checks, for two kinds of drift
 
-1. **`npm run check`** recomputes the manifest, docs, `.env.example`, ownership report and evidence file in memory. It compares each with the committed copy and exits `1` on any difference, without writing. Edit a capability's `description` and run it again without `generate:env`: it reports `docs/ENVIRONMENT.md` as stale.
+1. **`npm run check`** recomputes the manifest, docs, `.env.example`, ownership report and evidence file in memory. It compares each with the committed copy and exits `1` on any difference, without writing. Edit a feature's `description` and run it again without `generate:env`: it reports `docs/ENVIRONMENT.md` as stale.
 2. **`npm run test:evidence`** catches configuration that is undocumented, not stale. A new secret with no documentation link would pass `check`, because the docs would regenerate cleanly. It fails this test.
 
 ## The configuration-governance report

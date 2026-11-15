@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 // Generates schemas/*.schema.json directly from their source types: never
 // hand-authored, so a schema and the type it describes cannot silently drift
-// apart. Regenerated as part of `npm run verify`; each schema's own test
-// (e.g. test/build/json-schema.test.ts, test/build/contract-model-json-schema.test.ts)
-// fails the build if its committed file is stale relative to a fresh
-// generation. See ADR 0019 (the original --json envelope schema) and ADR
+// apart. `npm run verify` regenerates them. Each schema's test (such as
+// test/build/json-schema.test.ts or test/build/contract-model-json-schema.test.ts)
+// fails the build when the committed file differs from a fresh generation. See ADR 0019 (the original --json envelope schema) and ADR
 // 0024/0025 (one target per canonical fact model, added incrementally as
 // each model ships).
 
@@ -15,10 +14,9 @@ import { createGenerator } from "ts-json-schema-generator"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
-// TSDoc `{@link Target}`/`{@link Target|label}` tags are meant for TypeDoc to resolve into
-// hyperlinks (see typedoc.json): ts-json-schema-generator has no such resolution and would
-// otherwise emit the raw `{@link ...}` tag text verbatim into a schema's "description"
-// fields, which are read by external tools/humans with no TSDoc awareness.
+// TypeDoc resolves TSDoc `{@link Target}` and `{@link Target|label}` tags into hyperlinks
+// (see typedoc.json). The schema generator does not, and would copy the raw tag text into a
+// schema's "description" fields. Tools and people read those fields with no TSDoc awareness.
 function stripLinkTags(value) {
   return value
     .replace(/\{@link\s+([^\s}|]+)(?:\s*\|\s*([^}]+))?\s*\}/g, (_match, target, label) =>

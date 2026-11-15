@@ -7,11 +7,10 @@ import type { BuildDirent, BuildFileSystem, BuildStats } from "../build/types.js
  * `@maverickcer/env-cap/node` entry point (`src/node/index.ts`) for a
  * consumer running the generators from their own Node build script.
  *
- * This is the deliberate injection boundary: mirrors `repo-contract`'s own
- * `repo-contract.config.ts` (`spawn: crossSpawn, env: process.env`): a
- * **library surface** (`./build`) must not acquire filesystem access
- * implicitly; an **executable-context** entry (this CLI, or `./node`)
- * constructs the adapter and passes it in. `src/cli/**` is the sanctioned
+ * This is the injection boundary, the same shape as `repo-contract.config.ts` in `repo-contract`
+ * (`spawn: crossSpawn, env: process.env`). A **library surface** (`./build`) receives filesystem
+ * access from its caller. An **executable-context** entry (this CLI, or `./node`) constructs the
+ * adapter and passes it in. `src/cli/**` is the sanctioned
  * executable-source carve-out: `node:fs` lives only here. See ADR 0040.
  *
  * A thin structural pass-through: each method delegates straight to
