@@ -1,6 +1,6 @@
 {
   "packageName": "@maverickcer/env-cap",
-  "packageVersion": "0.7.6",
+  "packageVersion": "0.7.7",
   "surface": {
     "action": {
       "inputs": {
