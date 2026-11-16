@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "@maverickcer/env-cap!",
-  "docComment": "/**\n * The env-cap runtime entry point: declare contracts, validate them once at startup, and read\n * typed values through the contract that owns them.\n *\n * It imports no Node module and reads no Node global; it takes values only from the `values`\n * you pass to `validateEnv()`. `test/runtime/browser-bundle.test.ts` checks the built bundle for\n * Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.\n * Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.\n *\n * `documentEnv` is exported here, not from `./build`, because it is called inline in the same\n * schema file as `createEnv`, which may end up in any bundle. It must be as cheap to import as\n * `createEnv` (see `document.ts`).\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * The env-cap runtime entry point: declare contracts, validate them once at startup, and read\n * typed values through the contract that owns them.\n *\n * It imports no Node module and reads no Node global; it takes values only from the `values`\n * you pass to `validateEnv()`. `test/runtime/browser-bundle.test.ts` checks the built bundle for\n * Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.\n * Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.\n *\n * `documentEnv` is exported here, not from `./build`. It is called inline in the same schema file\n * as `createEnv`, and that file may end up in any bundle. It must be as cheap to import as\n * `createEnv` (see `document.ts`).\n *\n * @packageDocumentation\n */\n",
   "name": "@maverickcer/env-cap",
   "preserveMemberOrder": false,
   "members": [
@@ -686,7 +686,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!createEnv:function(1)",
-          "docComment": "/**\n * Declares a feature's environment contract. Colocate this call with the\n * feature that consumes the variables (e.g. `features/payments/env.schema.ts`).\n *\n * @remarks\n *\n * `createEnv` is runtime-only: `processor`/`validator`/`default` are the\n * whole vocabulary, because they're the only fields {@link validateEnv} actually\n * reads. Documentation (description, ownership, lifecycle, category, and\n * everything else that only exists to generate docs) lives in a separate\n * {@link documentEnv} call (see `document.ts`), which is entirely optional and\n * never required for this to work.\n *\n * @returns An {@link EnvContract} exposing one read-only getter per key: there is no\n * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a\n * key throws until {@link validateEnv} has run successfully for the runtime this contract\n * was passed to.\n *\n * The contract redacts itself under `console.log`, `String()`, `JSON.stringify` and template\n * interpolation. Spreading it or calling `Object.entries()` on it reads every value, so do not.\n */\n",
+          "docComment": "/**\n * Declares a feature's environment contract. Colocate this call with the\n * feature that consumes the variables (e.g. `features/payments/env.schema.ts`).\n *\n * @remarks\n *\n * `createEnv` is runtime-only: `processor`/`validator`/`default` are the\n * whole vocabulary, because they're the only fields {@link validateEnv} actually\n * reads. Documentation (description, ownership, lifecycle, category, and\n * everything else that only feeds generated docs) lives in a separate\n * {@link documentEnv} call (see `document.ts`). That call is optional.\n *\n * @returns An {@link EnvContract} exposing one read-only getter per key: there is no\n * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a\n * key throws until {@link validateEnv} has run successfully for the runtime this contract\n * was passed to.\n *\n * The contract redacts itself under `console.log`, `String()`, `JSON.stringify` and template\n * interpolation. Spreading it or calling `Object.entries()` on it reads every value, so do not.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -817,7 +817,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!CreateEnvOptions#source:member",
-              "docComment": "/**\n * Pass `import.meta.url` here so validation errors point at the file that\n * declared the failing variable (e.g. \"features/payments/env.schema.ts\")\n * instead of just the short `name` label. There is no portable way for\n * `createEnv` to discover its caller's module URL on its own: this is\n * always correct and never goes stale, since it's supplied by the JS\n * engine rather than hand-typed.\n */\n",
+              "docComment": "/**\n * Pass `import.meta.url` here so validation errors point at the file that\n * declared the failing variable (e.g. \"features/payments/env.schema.ts\")\n * instead of the short `name` label. `createEnv` has no portable way to\n * discover its caller's module URL. The JS engine supplies\n * `import.meta.url`, so it is always correct and never goes stale.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -847,7 +847,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!DefaultValue:type",
-          "docComment": "/**\n * A default may be a literal value, or a zero-arg thunk evaluated lazily when the raw value is\n * undefined.\n *\n * @remarks\n *\n * The union is redundant at the type level (`unknown` alone already accepts a\n * function). It's kept because this type is public API: collapsing it to bare `unknown`\n * would erase the one thing a reader of the generated `.d.ts` needs to learn here.\n */\n",
+          "docComment": "/**\n * A default may be a literal value, or a zero-arg thunk evaluated lazily when the raw value is\n * undefined.\n *\n * @remarks\n *\n * The union is redundant at the type level (`unknown` alone already accepts a\n * function). It's kept because this type is public API. A reader of the generated `.d.ts`\n * learns the thunk form from it, and bare `unknown` would hide that.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -961,7 +961,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!EnvContract:type",
-          "docComment": "/**\n * The object returned by {@link createEnv}. Each key is a lazily-resolved getter backed by the\n * runtime cache: there is no global env object, only per-feature contracts like this one.\n *\n * @remarks\n *\n * `toString()` is intersected in (rather than left to the ambient `Object.prototype`\n * declaration) because `create.ts` genuinely overrides it to return a redacted\n * `EnvContract(\"name\")` representation, never resolved values: see ADR 0006. Declaring\n * it here means the type accurately describes what calling `String(contract)` returns.\n */\n",
+          "docComment": "/**\n * The object returned by {@link createEnv}. Each key is a lazily-resolved getter backed by the\n * runtime cache: there is no global env object, only per-feature contracts like this one.\n *\n * @remarks\n *\n * `toString()` is intersected in, rather than left to the ambient `Object.prototype`\n * declaration. `create.ts` overrides it to return a redacted `EnvContract(\"name\")`\n * representation, never resolved values (ADR 0006). Declaring\n * it here means the type accurately describes what calling `String(contract)` returns.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1282,7 +1282,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!EnvSchema:type",
-          "docComment": "/**\n * A schema is a map of variable name -> definition.\n *\n * @remarks\n *\n * `EnvDefinition<any>` is used only as the generic *bound* here (never surfaced to consumers):\n * TypeScript infers a precise, per-key literal type for `S` from the object passed to\n * {@link createEnv}, so the resolved contract type (see {@link InferEnvValue}) stays fully\n * strict. This is the same variance workaround used by schema libraries like zod/trpc for\n * heterogeneous generic maps.\n */\n",
+          "docComment": "/**\n * A schema is a map of variable name -> definition.\n *\n * @remarks\n *\n * `EnvDefinition<any>` is used only as the generic *bound* here, never surfaced to consumers.\n * TypeScript infers a precise, per-key literal type for `S` from the object passed to\n * {@link createEnv}. So the resolved contract type (see {@link InferEnvValue}) stays fully\n * strict. This is the same variance workaround used by schema libraries like zod/trpc for\n * heterogeneous generic maps.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1704,7 +1704,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!validateEnv:function(1)",
-          "docComment": "/**\n * Validates every variable in every contract in `options.manifest` against\n * `options.values`, then caches the results.\n *\n * @remarks\n *\n * Idempotent: the first successful (or failed) call is authoritative for the life of the\n * process; later calls return (or re-throw) that same outcome without re-running any\n * processor or validator. Concurrent in-flight calls share one underlying run. Call\n * `resetEnvCache()` to validate again, for example between test scenarios.\n *\n * The record of validated values is frozen, but only one level deep: an object, array or `URL`\n * a processor returns stays mutable. A failure message carries variable and contract names and\n * the message your processor or validator produced, never the value itself.\n *\n * @example\n * ```ts\n * import { validateEnv } from \"@maverickcer/env-cap\"\n * import { manifest } from \"./generated/env.manifest\"\n *\n * await validateEnv({ manifest, values: process.env })\n * ```\n *\n * @throws\n *\n * {EnvValidationError} If any variable fails processing or validation.\n */\n",
+          "docComment": "/**\n * Validates every variable in every contract in `options.manifest` against\n * `options.values`, then caches the results.\n *\n * @remarks\n *\n * Idempotent: the first call's outcome, success or failure, holds for the life of the\n * process. Later calls return (or re-throw) that same outcome without re-running any\n * processor or validator. Concurrent in-flight calls share one underlying run. Call\n * `resetEnvCache()` to validate again, for example between test scenarios.\n *\n * The record of validated values is frozen, but only one level deep: an object, array or `URL`\n * a processor returns stays mutable. A failure message carries variable and contract names and\n * the message your processor or validator produced, never the value itself.\n *\n * @example\n * ```ts\n * import { validateEnv } from \"@maverickcer/env-cap\"\n * import { manifest } from \"./generated/env.manifest\"\n *\n * await validateEnv({ manifest, values: process.env })\n * ```\n *\n * @throws\n *\n * {EnvValidationError} If any variable fails processing or validation.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1779,7 +1779,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!validateEnvOptions#activeContexts:member",
-              "docComment": "/**\n * The validation contexts active for this run (e.g. `[\"server\",\n * \"production\"]`): entirely application-defined; env-cap never\n * detects or infers these, the caller always computes and passes them\n * explicitly. A variable whose `context` isn't in this list is skipped\n * entirely (no default/processor/validator runs for it, and it stays in\n * its not-ready state, exactly as if this run had never happened for\n * it): see ADR 0022. A variable with no `context` always participates,\n * regardless of what's passed here. Omitted (the default) behaves as an\n * empty list: only variables with no `context` participate.\n *\n * @remarks\n *\n * Not part of the validation cache's identity: {@link validateEnv}\n * remains one-shot per process whatever this option holds. A\n * second call does not re-evaluate `activeContexts`; it returns the\n * first call's result outright. Different active contexts belong to\n * different processes (e.g. a server process and a browser bundle),\n * never to two calls within the same one.\n */\n",
+              "docComment": "/**\n * The validation contexts active for this run (e.g. `[\"server\",\n * \"production\"]`): entirely application-defined; env-cap never\n * detects or infers these, the caller always computes and passes them\n * explicitly. A variable whose `context` isn't in this list is skipped\n * (ADR 0022). No default, processor or validator runs for it. It stays\n * not ready, as if this run had never happened. A variable with no `context` always participates,\n * regardless of what's passed here. Omitted (the default) behaves as an\n * empty list: only variables with no `context` participate.\n *\n * @remarks\n *\n * Not part of the validation cache's identity: {@link validateEnv}\n * remains one-shot per process whatever this option holds. A\n * second call does not re-evaluate `activeContexts`; it returns the\n * first call's result outright. Different active contexts belong to\n * different processes (e.g. a server process and a browser bundle),\n * never to two calls within the same one.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1806,7 +1806,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!validateEnvOptions#manifest:member",
-              "docComment": "/**\n * Every contract to validate: typically the `contracts` array imported\n * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them\n * in one call: {@link validateEnv} only ever initializes once per process, so\n * a second call returns the first call's cached result without\n * re-running anything, even if it passes a different manifest.\n */\n",
+              "docComment": "/**\n * Every contract to validate: typically the `contracts` array imported\n * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them\n * in one call. {@link validateEnv} initializes once per process. A second call\n * returns the first call's cached result without re-running anything, even if\n * it passes a different manifest.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",

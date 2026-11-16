@@ -152,9 +152,9 @@ declare function range(minimum: number, maximum: number): Validator<number>;
  * requiredness is just a validator that rejects `undefined`/empty values.
  *
  * Documentation fields (description, owner, expiresAt, category, ...) live
- * entirely in {@link documentEnv} (see `document.ts`), not here: this file is
- * the runtime's whole vocabulary, and every field in it is read by
- * `validate.ts`/`create.ts`/`errors.ts` at runtime. If a field is only ever
+ * in {@link documentEnv} (see `document.ts`), not here. This file is the
+ * runtime's whole vocabulary. `validate.ts`, `create.ts` and `errors.ts` read
+ * every field in it at runtime. If a field is only ever
  * read by the generator, it belongs in `document.ts`, not here. `context` is
  * the one exception. The build package also reads it for documentation
  * display (see ADR 0022). It belongs here rather than in `documentEnv()`

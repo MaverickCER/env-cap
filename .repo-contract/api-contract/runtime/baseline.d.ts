@@ -7,8 +7,8 @@
  * Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.
  * Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.
  *
- * `documentEnv` is exported here, not from `./build`, because it is called inline in the same
- * schema file as `createEnv`, which may end up in any bundle. It must be as cheap to import as
+ * `documentEnv` is exported here, not from `./build`. It is called inline in the same schema file
+ * as `createEnv`, and that file may end up in any bundle. It must be as cheap to import as
  * `createEnv` (see `document.ts`).
  *
  * @packageDocumentation
@@ -76,9 +76,8 @@ export declare interface ContractDocs<S extends EnvSchema = EnvSchema> {
  * `createEnv` is runtime-only: `processor`/`validator`/`default` are the
  * whole vocabulary, because they're the only fields {@link validateEnv} actually
  * reads. Documentation (description, ownership, lifecycle, category, and
- * everything else that only exists to generate docs) lives in a separate
- * {@link documentEnv} call (see `document.ts`), which is entirely optional and
- * never required for this to work.
+ * everything else that only feeds generated docs) lives in a separate
+ * {@link documentEnv} call (see `document.ts`). That call is optional.
  *
  * @returns An {@link EnvContract} exposing one read-only getter per key: there is no
  * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a
@@ -109,10 +108,9 @@ export declare interface CreateEnvOptions {
     /**
      * Pass `import.meta.url` here so validation errors point at the file that
      * declared the failing variable (e.g. "features/payments/env.schema.ts")
-     * instead of just the short `name` label. There is no portable way for
-     * `createEnv` to discover its caller's module URL on its own: this is
-     * always correct and never goes stale, since it's supplied by the JS
-     * engine rather than hand-typed.
+     * instead of the short `name` label. `createEnv` has no portable way to
+     * discover its caller's module URL. The JS engine supplies
+     * `import.meta.url`, so it is always correct and never goes stale.
      */
     source?: string;
 }
@@ -123,8 +121,8 @@ export declare interface CreateEnvOptions {
  *
  * @remarks
  * The union is redundant at the type level (`unknown` alone already accepts a
- * function). It's kept because this type is public API: collapsing it to bare `unknown`
- * would erase the one thing a reader of the generated `.d.ts` needs to learn here.
+ * function). It's kept because this type is public API. A reader of the generated `.d.ts`
+ * learns the thunk form from it, and bare `unknown` would hide that.
  */
 export declare type DefaultValue = unknown | (() => unknown);
 
@@ -162,9 +160,9 @@ export declare function documentEnv<S extends EnvSchema>(schema: S, docs: Contra
  * runtime cache: there is no global env object, only per-feature contracts like this one.
  *
  * @remarks
- * `toString()` is intersected in (rather than left to the ambient `Object.prototype`
- * declaration) because `create.ts` genuinely overrides it to return a redacted
- * `EnvContract("name")` representation, never resolved values: see ADR 0006. Declaring
+ * `toString()` is intersected in, rather than left to the ambient `Object.prototype`
+ * declaration. `create.ts` overrides it to return a redacted `EnvContract("name")`
+ * representation, never resolved values (ADR 0006). Declaring
  * it here means the type accurately describes what calling `String(contract)` returns.
  */
 export declare type EnvContract<S extends EnvSchema> = {
@@ -219,9 +217,9 @@ export declare class EnvNotReadyError extends Error {
  * A schema is a map of variable name -> definition.
  *
  * @remarks
- * `EnvDefinition<any>` is used only as the generic *bound* here (never surfaced to consumers):
+ * `EnvDefinition<any>` is used only as the generic *bound* here, never surfaced to consumers.
  * TypeScript infers a precise, per-key literal type for `S` from the object passed to
- * {@link createEnv}, so the resolved contract type (see {@link InferEnvValue}) stays fully
+ * {@link createEnv}. So the resolved contract type (see {@link InferEnvValue}) stays fully
  * strict. This is the same variance workaround used by schema libraries like zod/trpc for
  * heterogeneous generic maps.
  */
@@ -272,9 +270,9 @@ export declare type Processor<T> = (value: unknown) => T;
  * requiredness is just a validator that rejects `undefined`/empty values.
  *
  * Documentation fields (description, owner, expiresAt, category, ...) live
- * entirely in {@link documentEnv} (see `document.ts`), not here: this file is
- * the runtime's whole vocabulary, and every field in it is read by
- * `validate.ts`/`create.ts`/`errors.ts` at runtime. If a field is only ever
+ * in {@link documentEnv} (see `document.ts`), not here. This file is the
+ * runtime's whole vocabulary. `validate.ts`, `create.ts` and `errors.ts` read
+ * every field in it at runtime. If a field is only ever
  * read by the generator, it belongs in `document.ts`, not here. `context` is
  * the one exception. The build package also reads it for documentation
  * display (see ADR 0022). It belongs here rather than in `documentEnv()`
@@ -301,8 +299,8 @@ declare type UnwrapDefault<D> = D extends {
  * `options.values`, then caches the results.
  *
  * @remarks
- * Idempotent: the first successful (or failed) call is authoritative for the life of the
- * process; later calls return (or re-throw) that same outcome without re-running any
+ * Idempotent: the first call's outcome, success or failure, holds for the life of the
+ * process. Later calls return (or re-throw) that same outcome without re-running any
  * processor or validator. Concurrent in-flight calls share one underlying run. Call
  * `resetEnvCache()` to validate again, for example between test scenarios.
  *
@@ -336,9 +334,9 @@ export declare interface validateEnvOptions {
     /**
      * Every contract to validate: typically the `contracts` array imported
      * from a generated manifest (see {@link build.generateEnvManifest}). Pass all of them
-     * in one call: {@link validateEnv} only ever initializes once per process, so
-     * a second call returns the first call's cached result without
-     * re-running anything, even if it passes a different manifest.
+     * in one call. {@link validateEnv} initializes once per process. A second call
+     * returns the first call's cached result without re-running anything, even if
+     * it passes a different manifest.
      */
     manifest: readonly EnvContract<any>[];
     /**
@@ -346,9 +344,8 @@ export declare interface validateEnvOptions {
      * "production"]`): entirely application-defined; env-cap never
      * detects or infers these, the caller always computes and passes them
      * explicitly. A variable whose `context` isn't in this list is skipped
-     * entirely (no default/processor/validator runs for it, and it stays in
-     * its not-ready state, exactly as if this run had never happened for
-     * it): see ADR 0022. A variable with no `context` always participates,
+     * (ADR 0022). No default, processor or validator runs for it. It stays
+     * not ready, as if this run had never happened. A variable with no `context` always participates,
      * regardless of what's passed here. Omitted (the default) behaves as an
      * empty list: only variables with no `context` participate.
      *
@@ -514,16 +511,15 @@ export declare interface VariableEvidenceDocs {
 }
 
 /**
- * Every error type here is constructed only from: the variable name, the
- * declaring contract's name, the failure kind, and a message string that the
- * *developer's own* processor/validator produced. Raw or processed environment
- * values are never read into an error: see the Security section in the README.
+ * Every error type here is built from four things only. They are the variable
+ * name, the declaring contract's name, the failure kind, and a message from
+ * the developer's processor or validator. Raw or processed environment values
+ * never reach an error: see the Security section in the README.
  *
  * Documentation (description, owner, etc.) never appears here, even when a
- * {@link documentEnv} call exists for this variable: `documentEnv` is
- * build-time-only and its data is never retained anywhere {@link validateEnv}
- * could read it back out. This is a deliberate consequence of keeping the
- * runtime minimal, not an oversight.
+ * {@link documentEnv} call exists for this variable. `documentEnv` is
+ * build-time-only, and {@link validateEnv} has nowhere to read its data from.
+ * That follows from keeping the runtime minimal.
  */
 /** One variable's processing or validation failure, as recorded by {@link validateEnv}. */
 export declare interface VariableFailure {

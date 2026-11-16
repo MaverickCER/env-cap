@@ -68,7 +68,7 @@ declare interface ContractEvidenceReference {
     readonly exportName: string | undefined;
     /** The environment variable name, when the finding is variable-level rather than contract-level. */
     readonly variable: string | undefined;
-    /** Exact file:line:column this finding is about; the contract's `createEnv()` declaration, its `documentEnv()` declaration, or the specific variable's own declaration, whichever is most relevant to the finding. `undefined` only when no single position is more relevant than another (e.g. an `indeterminate-ownership` finding, which can have multiple candidate sites: see `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list instead). See ADR 0036. */
+    /** Exact file:line:column this finding is about. It is the contract's `createEnv()` declaration, its `documentEnv()` declaration or the variable's declaration, whichever is most relevant. `undefined` only when no single position is more relevant than another. An `indeterminate-ownership` finding is one: `IndeterminateOwnershipFinding.dynamicAccessSites` lists its candidate sites. See ADR 0036. */
     readonly position: SourcePosition | undefined;
 }
 
@@ -134,7 +134,7 @@ declare interface ContractModelVariable extends EnvGovernanceFields {
 
 /**
  * The one shape every model in this package uses to point at a declared
- * contract: the file it's declared in, and the binding it's exported as.
+ * contract: its file and its exported binding.
  * Nothing else: see ADR 0039.
  *
  * @remarks
@@ -142,10 +142,10 @@ declare interface ContractModelVariable extends EnvGovernanceFields {
  * concern. A renderer that needs prose resolves it on demand from
  * `ContractModel`, the one model that owns it. A copy on every reference
  * would go stale independently, since the name can change under a
- * `documentEnv()` edit. Deliberately not carrying a
- * pre-formatted `identity` string either: `${file}#${exportName}` is
- * trivially derivable, and a stored copy is one more thing that can disagree
- * with the two fields it was built from. Code that genuinely needs a map key
+ * `documentEnv()` edit. It carries no pre-formatted
+ * `identity` string either, since `${file}#${exportName}` is derivable. A
+ * stored copy could disagree with the two fields it was built from. Code that
+ * needs a map key
  * builds that string locally, at the point of use.
  */
 declare interface ContractRef {
@@ -157,8 +157,8 @@ declare interface ContractRef {
 
 /**
  * Declares a projection: a named, pure transform from the immutable
- * `EvidenceModel` to any consumer-defined output shape, built entirely from
- * `schema`'s independent per-field projector functions; see ADR 0031/0032.
+ * `EvidenceModel` to any consumer-defined output shape. It is built from the
+ * independent per-field projector functions in `schema` (ADR 0031, ADR 0032).
  *
  * The reference projections env-cap ships (`.env.example`, Environment
  * Configuration Reference, Configuration Ownership, etc.) are built through
@@ -231,18 +231,17 @@ declare interface DiscoveredVariableEvidence {
 
 /**
  * One developer-declared {@link runtime.VariableEvidenceDocs.dynamicAccess} citation's
- * current acknowledgment state: a claim, never an observation. Kept fully
- * separate from `VariableAccessStatus` (which stays exactly 3-valued and
- * purely AST-derived) so a developer's assertion can never make env-cap
- * claim it observed something it didn't. See
+ * current acknowledgment state: a claim, never an observation. It stays
+ * separate from `VariableAccessStatus`, which is 3-valued and AST-derived only.
+ * So a developer's assertion can never make env-cap claim an observation it
+ * did not make. See
  * `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where
  * this is computed) and ADR 0037.
  */
 declare interface DynamicAccessAssertion extends SourcePosition {
     /**
-     * `"fresh"`: the cited file currently exists and either matches the
-     * committed baseline hash or has no baseline yet (a brand-new citation,
-     * nothing to contradict it yet). `"stale"`: the cited file exists but its
+     * `"fresh"`: the cited file exists and matches the committed baseline
+     * hash, or has no baseline yet (a new citation). `"stale"`: the cited file exists but its
      * content has changed since the committed baseline. `"missing"`: the
      * cited file no longer exists at all. Re-derived from scratch every run;
      * never cached across runs.
@@ -290,8 +289,8 @@ declare interface EnvGovernanceFields {
 
 /**
  * Bump only when a reader could misinterpret the new shape of `EvidenceModel`
- * itself (not any one sub-model's own `<MODEL>_SCHEMA_VERSION`, which is
- * versioned independently): same rule every other canonical model follows.
+ * itself. Each sub-model's `<MODEL>_SCHEMA_VERSION` is versioned separately.
+ * Every other canonical model follows the same rule.
  */
 declare const EVIDENCE_MODEL_SCHEMA_VERSION = 1;
 
@@ -302,11 +301,10 @@ declare const EVIDENCE_MODEL_SCHEMA_VERSION = 1;
  * ADR 0031).
  *
  * @remarks
- * This type is the one intentional exception to `src/build/`'s zero-
- * cross-folder-import rule: `src/evidence/` imports it with `import type`
- * only (fully erased at compile time under `verbatimModuleSyntax`), the same
- * shape as `helpers`' single sanctioned edge onto `runtime`; see
- * `specs/architecture.md`. `src/evidence/` never imports a *value* from
+ * This type is the one exception to the rule that nothing imports across
+ * `src/build/`. `src/evidence/` imports it with `import type` only, which
+ * `verbatimModuleSyntax` erases at compile time. The sanctioned edge from
+ * `helpers` onto `runtime` has the same shape (see `specs/architecture.md`). `src/evidence/` never imports a *value* from
  * here, only this shape, so it stays isomorphic and Node-free. An actual
  * `EvidenceModel` instance is produced by {@link generateEvidenceModel}
  * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,
@@ -347,10 +345,10 @@ export declare type EvidenceProjectionSchema<T extends Record<string, unknown>> 
 
 /**
  * A pure function from the full Evidence Model to one field of a
- * projection's output shape. Must not mutate `evidence` (the membrane
- * `defineEvidenceProjection()` wraps it in enforces that at runtime, see
- * `createTrackingProxy()` below) and must not perform I/O; env-cap can
- * enforce the read-only half of purity but not the "no side effects" half.
+ * projection's output shape. It reads `evidence` and performs no I/O.
+ * The membrane `defineEvidenceProjection()` wraps around `evidence` throws on
+ * any write (see `createTrackingProxy()` below). That enforces the read-only
+ * half of purity. The "no side effects" half is the author's job.
  */
 export declare type EvidenceProjector<T> = (evidence: EvidenceModel) => T;
 
@@ -397,12 +395,11 @@ declare interface ExpiringEntry {
 /** One rule violation or derived signal, in the Finding Model's canonical shape. */
 declare interface Finding {
     /**
-     * `"error"` for a provable, always-blocking violation (e.g. an
-     * exclusive-group conflict); `"warning"` for everything gated by
-     * `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default "warn"
-     * behavior; `"info"` for an observation that is never actionable enough to
-     * block anything, even under `--strict`: see `INFO_ONLY_CODES` in
-     * `generate-env-artifacts.ts`.
+     * `"error"` for a provable, always-blocking violation, such as an
+     * exclusive-group conflict. `"warning"` for everything gated by the default
+     * "warn" of `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`.
+     * `"info"` for an observation that never blocks, even under `--strict` (see
+     * `INFO_ONLY_CODES` in `generate-env-artifacts.ts`).
      */
     readonly severity: "error" | "warning" | "info";
     /** Stable, machine-readable identifier: always set, unlike {@link CompatibilityIssue.code} which stays optional on that narrower, pre-existing type. */
@@ -420,9 +417,9 @@ declare const FINDING_MODEL_SCHEMA_VERSION = 3;
 
 /**
  * The fourth of env-cap's seven canonical fact models (ADR 0024): every
- * rule violation and derived risk signal, unified behind one shape, with a
- * stable `code` and a structured {@link EvidenceReference} instead of four
- * independently-shaped finding families. See ADR 0026.
+ * rule violation and derived risk signal behind one shape. Each has a stable
+ * `code` and a structured {@link EvidenceReference}, replacing four
+ * differently shaped finding families. See ADR 0026.
  */
 /** Every stable `code` a {@link Finding} can carry. A superset of {@link CompatibilityIssueCode} plus one code per non-compatibility source family this model adapts. */
 declare type FindingCode = CompatibilityIssueCode | "EXCLUSIVE_GROUP_VIOLATION" | "ARTIFACT_STALE" | "ARTIFACT_MISSING" | "UNDOCUMENTED_CONTRACT" | "UNDOCUMENTED_VARIABLE" | "STALE_DOC_ENTRY" | "EXPIRED" | "EXPIRING_SOON" | "UNRESOLVED_DOCUMENTENV_LINK" | "ABANDONED_CONTRACT" | "UNRESOLVED_CONSUMER" | "UNCONSUMED_OWNED_VARIABLE" | "INDETERMINATE_OWNERSHIP" | "MISSING_DYNAMIC_ACCESS_CITATION" | "STALE_DYNAMIC_ACCESS_CITATION" | "NONSTANDARD_SENSITIVITY_LEVEL";

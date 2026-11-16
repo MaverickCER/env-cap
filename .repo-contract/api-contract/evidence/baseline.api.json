@@ -191,7 +191,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!defineEvidenceProjection:function(1)",
-          "docComment": "/**\n * Declares a projection: a named, pure transform from the immutable\n * `EvidenceModel` to any consumer-defined output shape, built entirely from\n * `schema`'s independent per-field projector functions; see ADR 0031/0032.\n *\n * The reference projections env-cap ships (`.env.example`, Environment\n * Configuration Reference, Configuration Ownership, etc.) are built through\n * this exact function, with no privileged internal path. A consumer's own\n * projection is a first-class citizen, not a lesser one.\n */\n",
+          "docComment": "/**\n * Declares a projection: a named, pure transform from the immutable\n * `EvidenceModel` to any consumer-defined output shape. It is built from the\n * independent per-field projector functions in `schema` (ADR 0031, ADR 0032).\n *\n * The reference projections env-cap ships (`.env.example`, Environment\n * Configuration Reference, Configuration Ownership, etc.) are built through\n * this exact function, with no privileged internal path. A consumer's own\n * projection is a first-class citizen, not a lesser one.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -272,7 +272,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!EvidenceModel:interface",
-          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one intentional exception to `src/build/`'s zero-\n * cross-folder-import rule: `src/evidence/` imports it with `import type`\n * only (fully erased at compile time under `verbatimModuleSyntax`), the same\n * shape as `helpers`' single sanctioned edge onto `runtime`; see\n * `specs/architecture.md`. `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
+          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one exception to the rule that nothing imports across\n * `src/build/`. `src/evidence/` imports it with `import type` only, which\n * `verbatimModuleSyntax` erases at compile time. The sanctioned edge from\n * `helpers` onto `runtime` has the same shape (see `specs/architecture.md`). `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -830,7 +830,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!EvidenceProjector:type",
-          "docComment": "/**\n * A pure function from the full Evidence Model to one field of a\n * projection's output shape. Must not mutate `evidence` (the membrane\n * `defineEvidenceProjection()` wraps it in enforces that at runtime, see\n * `createTrackingProxy()` below) and must not perform I/O; env-cap can\n * enforce the read-only half of purity but not the \"no side effects\" half.\n */\n",
+          "docComment": "/**\n * A pure function from the full Evidence Model to one field of a\n * projection's output shape. It reads `evidence` and performs no I/O.\n * The membrane `defineEvidenceProjection()` wraps around `evidence` throws on\n * any write (see `createTrackingProxy()` below). That enforces the read-only\n * half of purity. The \"no side effects\" half is the author's job.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

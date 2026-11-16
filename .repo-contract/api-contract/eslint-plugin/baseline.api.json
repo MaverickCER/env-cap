@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "@maverickcer/env-cap!",
-  "docComment": "/**\n * Lint rules that keep environment reads inside contracts (`@maverickcer/env-cap/eslint-plugin`).\n *\n * `no-raw-process-env` flags direct `process.env` reads outside `env.schema.ts` files. `no-node-fs` flags\n * `node:fs` imports in library code, which should take its file system from the caller. The plugin runs\n * inside the project's own ESLint; CI runs the rules on ESLint 10 only.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Lint rules that keep environment reads inside contracts (`@maverickcer/env-cap/eslint-plugin`).\n *\n * `no-raw-process-env` flags direct `process.env` reads outside `env.schema.ts` files. `no-node-fs` flags\n * `node:fs` imports in library code, which should take its file system from the caller. The plugin runs\n * inside the project's ESLint. The `eslint-compat` CI job tests it on the lowest and newest release of each\n * ESLint major in the peer range.\n *\n * @packageDocumentation\n */\n",
   "name": "@maverickcer/env-cap",
   "preserveMemberOrder": false,
   "members": [
@@ -191,7 +191,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!noNodeFs:var",
-          "docComment": "/**\n * Flags any `import`/`require`/dynamic `import()` of `node:fs` in library code, so a library surface acquires\n * its filesystem capability from the caller instead of reaching for `node:fs` itself.\n *\n * @remarks\n *\n * Nothing is exempt by default. A package's own config allows its CLI folder (for example `src/cli/**`),\n * which builds the `node:fs/promises` adapter, and a consuming project sets the `allow` option for its own CLI\n * or script entry points. The rule itself lives in `../_ipc/no-node-fs.ts`, a managed copy of\n * internal-package-contract's `runtime/no-node-fs.ts`; this supplies env-cap's documentation link and the decision\n * record the message cites.\n */\n",
+          "docComment": "/**\n * Flags any `import`, `require` or dynamic `import()` of `node:fs` in library code. A library surface then\n * receives its filesystem capability from the caller instead of importing `node:fs`.\n *\n * @remarks\n *\n * Nothing is exempt by default. A package's config allows its CLI folder (for example `src/cli/**`), which\n * builds the `node:fs/promises` adapter. A consuming project sets the `allow` option for its CLI or script\n * entry points. The rule itself lives in `../_ipc/no-node-fs.ts`, a managed copy of\n * internal-package-contract's `runtime/no-node-fs.ts`; this supplies env-cap's documentation link and the decision\n * record the message cites.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -241,7 +241,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!noRawProcessEnv:var",
-          "docComment": "/**\n * Flags any direct `process.env.X`/`process.env[\"X\"]` read in application code, so environment\n * access always goes through a capability's own `createEnv()` contract instead.\n *\n * @remarks\n *\n * `env.schema.ts`/`env.schema.tsx` files are always exempt (that's where `createEnv()` itself\n * reads `process.env`); the rule's `allow` option extends that exemption to a consuming\n * project's own trusted bootstrap code.\n */\n",
+          "docComment": "/**\n * Flags any direct `process.env.X`/`process.env[\"X\"]` read in application code, so environment\n * access always goes through the `createEnv()` contract of the feature that owns the variable.\n *\n * @remarks\n *\n * `env.schema.ts`/`env.schema.tsx` files are always exempt, because `createEnv()` reads\n * `process.env` there. The rule's `allow` option extends that exemption to a consuming\n * project's trusted bootstrap code.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
