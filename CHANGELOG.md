@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- f234bb8: The optional `typescript` peer range now starts at 5.8: `^5.8.0 || ^6.0.0 || ^7.0.0`. TypeScript 5.0 to 5.7
+  cannot read the CommonJS declarations (`dist/*.d.cts`) under `moduleResolution: nodenext`. Each one
+  re-exports an ES module, and those releases reject that with TS1479. A project on 5.0 to 5.7 should upgrade
+  TypeScript before upgrading env-cap.
+  
+  The `typescript-compat` CI job now derives its releases from the peer range. It installs the lowest and
+  newest release of each major: 5.8.2, 5.9.3, 6.0.2, 6.0.3 and 7.0.2 today. Each one type-checks the
+  declarations from an ES module file and a CommonJS file, and runs the scanner. The `eslint-compat` job also
+  installs `@typescript-eslint/utils` 8.0.0, the floor of its range, beside ESLint 8.57.0. That pair passed,
+  so the `@typescript-eslint/utils` range is unchanged.
+
+### Patch Changes
+
+- f234bb8: CI now tests the ESLint plugin across its whole `eslint` peer range. A new `eslint-compat` job installs the
+  packed tarball beside the lowest and newest release of each ESLint major in the range. It runs both rules
+  under flat config, under eslintrc where that ESLint still ships it, and through the ESLint CLI. Every
+  version passed, so the range is unchanged. The guide, the dependency table and the plugin's TSDoc now name
+  this job instead of saying only ESLint 10 is tested.
+- f234bb8: The docs now use one word, "feature", for a folder or installable package that owns a contract. The
+  GUIDE heading "Capability-owned contracts" is now "Feature-owned contracts", so its link anchor changes
+  to `#feature-owned-contracts`. TSDoc comments in the published declarations are split into sentences of
+  25 words or fewer. No code or behaviour changes.
+
 ## 0.7.7
 
 ### Patch Changes

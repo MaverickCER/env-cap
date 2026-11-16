@@ -290,7 +290,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!applyLiveExpirationOverrides:function(1)",
-          "docComment": "/**\n * Applies `overrides` onto a fresh copy of `contracts`. Every contract and\n * every variable (and their nested `metadata`/`extra` records) is rebuilt\n * into a new object, never the original reference. The returned structure\n * therefore shares no mutable object identity with `contracts` at any depth.\n *\n * @remarks\n *\n * A key absent from `overrides`, or present but not a `parseIsoDate`-parseable\n * ISO-8601 string, leaves that variable's static `expiresAt` untouched:\n * same \"warn/skip, never guess\" policy the rest of the generator uses for\n * malformed data. Contract-level `expiresAt` is never touched; only\n * variable-level `expiresAt` is in scope for override.\n */\n",
+          "docComment": "/**\n * Applies `overrides` onto a fresh copy of `contracts`. Every contract and\n * every variable (and their nested `metadata`/`extra` records) is rebuilt\n * into a new object, never the original reference. The returned structure\n * therefore shares no mutable object identity with `contracts` at any depth.\n *\n * @remarks\n *\n * A key absent from `overrides`, or present but not a `parseIsoDate`-parseable\n * ISO-8601 string, leaves that variable's static `expiresAt` untouched. The\n * rest of the generator treats malformed data the same way: warn or skip,\n * never guess. Contract-level `expiresAt` is never touched; only\n * variable-level `expiresAt` is in scope for override.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -509,7 +509,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!AssertedDynamicAccessFinding:interface",
-          "docComment": "/**\n * A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `\"fresh\"` developer-declared `dynamicAccess` citation: the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037.\n */\n",
+          "docComment": "/**\n * A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate` but has at least one `\"fresh\"` developer-declared `dynamicAccess` citation. The raw static status is shown beside the assertion, never replaced by it. See ADR 0037.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -644,7 +644,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!buildChangeModel:function(1)",
-          "docComment": "/**\n * Wraps an already-computed `ManifestChangeReport` (e.g.\n * `generateEnvArtifacts()`'s internal `evidenceChanges.report`) in the Change Model's versioned\n * shape, and correlates renames using the current run's `renamedFrom`\n * declarations. `currentContracts` should be the same contracts the\n * manifest was generated from (active contracts only, matching\n * `renderManifest()`'s own scope: same as every other input to this\n * report family).\n */\n",
+          "docComment": "/**\n * Wraps an already-computed `ManifestChangeReport` (e.g.\n * `generateEnvArtifacts()`'s internal `evidenceChanges.report`) in the Change Model's versioned\n * shape, and correlates renames using the current run's `renamedFrom`\n * declarations. `currentContracts` should be the contracts the manifest was\n * generated from: active contracts only, the scope of `renderManifest()`.\n * Every other input to this report family uses that scope too.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -803,7 +803,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!buildDependencyModel:function(1)",
-          "docComment": "/**\n * Runs the dependency-ownership engine (`buildDependencyGraph()`, Private)\n * and projects its result into the Dependency Model's versioned,\n * JSON-serializable shape: including the inverse file-\\>contracts index\n * neither `dependency-graph.ts` nor `usage-report.ts` exposes today.\n *\n * @param scannedSurfaces - See `buildDependencyGraph()`'s own parameter of\n * the same name: passed straight through to the published model.\n *\n * @param dynamicAccessAcknowledgments - See `buildDependencyGraph()`'s own\n * parameter of the same name (ADR 0037): passed straight through.\n */\n",
+          "docComment": "/**\n * Runs the dependency-ownership engine (`buildDependencyGraph()`, Private)\n * and projects its result into the Dependency Model's versioned,\n * JSON-serializable shape. That shape adds the inverse file-\\>contracts index,\n * which neither `dependency-graph.ts` nor `usage-report.ts` exposes.\n *\n * @param scannedSurfaces - See `buildDependencyGraph()`'s own parameter of\n * the same name: passed straight through to the published model.\n *\n * @param dynamicAccessAcknowledgments - See `buildDependencyGraph()`'s own\n * parameter of the same name (ADR 0037): passed straight through.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1398,7 +1398,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!BuildFindingModelInput:interface",
-          "docComment": "/**\n * Every source a {@link buildFindingModel} call can adapt, all optional:\n * a caller passes whichever of `generateEnvArtifacts()`'s `manifest`/`docs`/\n * `usage` results it actually requested, exactly like that result's own\n * top-level fields are each independently optional.\n */\n",
+          "docComment": "/**\n * Every source a {@link buildFindingModel} call can adapt, all optional. A\n * caller passes whichever `manifest`/`docs`/`usage` results of\n * `generateEnvArtifacts()` it requested. Those top-level result fields are\n * optional in the same way.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1934,7 +1934,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!buildSarifLog:function(1)",
-          "docComment": "/**\n * Projects Finding Model into a SARIF 2.1.0 log.\n *\n * @remarks\n *\n * `rules` lists every distinct `FindingCode` actually present in this run,\n * sorted: not the full `FindingCode` union. A SARIF consumer treats the\n * rules array as \"what this tool reported\", and advertising rules that\n * produced no result makes a clean run look like it has unexplained silent\n * rules. `results` preserves Finding Model's own order, which a caller wanting\n * a different one sorts themselves.\n */\n",
+          "docComment": "/**\n * Projects Finding Model into a SARIF 2.1.0 log.\n *\n * @remarks\n *\n * `rules` lists every distinct `FindingCode` actually present in this run,\n * sorted: not the full `FindingCode` union. A SARIF consumer reads the rules\n * array as \"what this tool reported\". Rules with no result would make a clean\n * run look like it has unexplained silent rules. `results` preserves Finding Model's own order, which a caller wanting\n * a different one sorts themselves.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2804,7 +2804,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!computeRotationStatus:function(1)",
-          "docComment": "/**\n * Computes one variable's NIST SP 800-53 IA-5 rotation status (a policy-window judgement) from its lifecycle facts,\n * relative to `now`.\n *\n * @remarks\n *\n * **The judgment call this function makes.** IA-5's main statement only says \"change or refresh\n * authenticators [by an organization-defined period] or when [organization-defined events]\n * occur\". It doesn't define how a *pre-existing* `expiresAt` and a *new* `rotationPeriod`/\n * `lastRotatedAt` pair interact when both are declared on the same variable. This function\n * decides:\n *\n * - No rotation field declared at all (`hasRotationData()` false) -> `\"undeclared\"`. Not an error.\n *  Most variables aren't authenticators. Saying nothing about rotation is the common, correct\n *  case, not a violation to report.\n * - `expiresAt` is treated as authoritative and checked first, independent of everything else. If\n *  it's a valid date already in the past, the status is `\"expired\"`, full stop. The reason:\n *  `expiresAt` is a pre-existing, often externally-imposed hard deadline (an API key's own\n *  issuer-enforced expiry, a certificate's NotAfter). Once that date passes, the value has\n *  *literally* stopped being valid. That is categorically worse than being overdue for an internal policy rotation,\n *  and no internal rotation record can retroactively un-expire it.\n * - Otherwise, if `rotationPeriod` is declared, it's checked against `lastRotatedAt`. The good\n *  case: both present, both parseable (see `parseRotationPeriodDays()`), *and* `lastRotatedAt` no\n *  later than `now`. Then compute `lastRotatedAt + rotationPeriod` and compare to `now`. The\n *  status is `\"overdue\"` if that due date has passed, else `\"compliant\"`. Any other case with\n *  `rotationPeriod` declared fails closed to `\"overdue\"`. That covers `lastRotatedAt` missing,\n *  either value not statically parseable, or `lastRotatedAt` in the future. A future rotation\n *  can't have happened yet. Trusting it would let a bad timestamp manufacture false compliance. IA-5 asks for evidence a rotation\n *  happened on schedule. A declared obligation that can't be shown to have been met is reported\n *  as non-compliant rather than silently passed as compliant.\n * - Otherwise -> `\"compliant\"`. Here rotation metadata is declared (`authenticatorType` and/or\n *  `lastRotatedAt` and/or `rotationTriggerEvents`), with no `rotationPeriod` and no past-due\n *  `expiresAt`. Nothing states a time-based obligation this variable could be failing to meet.\n *\n * `rotationTriggerEvents` (the event-based trigger) deliberately never changes the returned status\n * by itself. env-cap cannot observe whether a listed event (a suspected compromise, a personnel\n * change, ...) actually occurred. Treating its mere presence as either compliant or overdue would\n * fabricate a signal. It's presence-only evidence that the event-based half of IA-5's\n * two-trigger model was at least *declared*. A generator should still surface it, but never fold\n * it into this computed status.\n */\n",
+          "docComment": "/**\n * Computes one variable's NIST SP 800-53 IA-5 rotation status (a policy-window judgement) from its lifecycle facts,\n * relative to `now`.\n *\n * @remarks\n *\n * **The judgment call this function makes.** IA-5's main statement only says \"change or refresh\n * authenticators [by an organization-defined period] or when [organization-defined events]\n * occur\". It doesn't define how a *pre-existing* `expiresAt` and a *new* `rotationPeriod`/\n * `lastRotatedAt` pair interact when both are declared on the same variable. This function\n * decides:\n *\n * - No rotation field declared at all (`hasRotationData()` false) -> `\"undeclared\"`. Not an error.\n *  Most variables aren't authenticators. Saying nothing about rotation is the common, correct\n *  case, not a violation to report.\n * - `expiresAt` is treated as authoritative and checked first, independent of everything else. If\n *  it's a valid date already in the past, the status is `\"expired\"`, full stop. The reason:\n *  `expiresAt` is a pre-existing, often externally-imposed hard deadline (an API key's own\n *  issuer-enforced expiry, a certificate's NotAfter). Once that date passes, the value has\n *  *literally* stopped being valid. That is categorically worse than being overdue for an internal policy rotation,\n *  and no internal rotation record can retroactively un-expire it.\n * - Otherwise, if `rotationPeriod` is declared, it's checked against `lastRotatedAt`. The good\n *  case: both present, both parseable (see `parseRotationPeriodDays()`), *and* `lastRotatedAt` no\n *  later than `now`. Then compute `lastRotatedAt + rotationPeriod` and compare to `now`. The\n *  status is `\"overdue\"` if that due date has passed, else `\"compliant\"`. Any other case with\n *  `rotationPeriod` declared fails closed to `\"overdue\"`. That covers `lastRotatedAt` missing,\n *  either value not statically parseable, or `lastRotatedAt` in the future. A future rotation\n *  can't have happened yet. Trusting it would let a bad timestamp manufacture false compliance. IA-5 asks for evidence a rotation\n *  happened on schedule. A declared obligation that can't be shown to have been met is reported\n *  as non-compliant rather than silently passed as compliant.\n * - Otherwise -> `\"compliant\"`. Here rotation metadata is declared (`authenticatorType` and/or\n *  `lastRotatedAt` and/or `rotationTriggerEvents`), with no `rotationPeriod` and no past-due\n *  `expiresAt`. Nothing states a time-based obligation this variable could be failing to meet.\n *\n * `rotationTriggerEvents` (the event-based trigger) never changes the returned status by itself.\n * Nothing in env-cap can observe whether a listed event occurred, such as a suspected compromise or\n * a personnel change. Treating its mere presence as either compliant or overdue would\n * fabricate a signal. It's presence-only evidence that the event-based half of IA-5's\n * two-trigger model was at least *declared*. A generator should still surface it, but never fold\n * it into this computed status.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2987,7 +2987,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!computeSourceFingerprint:function(1)",
-          "docComment": "/**\n * SHA-256 over the raw bytes of every schema file and every usage-scan-\n * surface file (the same file sets `assembleProject()`/`computeScanSurface()`\n * touch), plus env-cap's own installed version: zero AST parsing or\n * linking. Still requires the discovery/glob walk itself (fingerprinting has\n * to know which files matter), but skips everything after it. Deterministic:\n * file paths are deduplicated and sorted before hashing, so the result never\n * depends on filesystem enumeration order.\n *\n * @remarks\n *\n * Not a timestamp, and never compared as one. A fresh mtime doesn't prove\n * content is unchanged (a checkout, a rebase, or a touch can all bump it\n * with no real edit). Content is the only thing that invalidates a cached\n * evidence artifact.\n */\n",
+          "docComment": "/**\n * SHA-256 over the raw bytes of every schema file and every usage-scan\n * surface file, plus the installed env-cap version. Those are the file sets\n * `assembleProject()`/`computeScanSurface()` touch. It does no AST parsing or\n * linking. Still requires the discovery/glob walk itself (fingerprinting has\n * to know which files matter), but skips everything after it. Deterministic:\n * file paths are deduplicated and sorted before hashing, so the result never\n * depends on filesystem enumeration order.\n *\n * @remarks\n *\n * Not a timestamp, and never compared as one. A fresh mtime doesn't prove\n * content is unchanged (a checkout, a rebase, or a touch can all bump it\n * with no real edit). Content is the only thing that invalidates a cached\n * evidence artifact.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3874,7 +3874,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!ContractEvidenceReference#position:member",
-              "docComment": "/**\n * Exact file:line:column this finding is about; the contract's `createEnv()` declaration, its `documentEnv()` declaration, or the specific variable's own declaration, whichever is most relevant to the finding. `undefined` only when no single position is more relevant than another (e.g. an `indeterminate-ownership` finding, which can have multiple candidate sites: see `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list instead). See ADR 0036.\n */\n",
+              "docComment": "/**\n * Exact file:line:column this finding is about. It is the contract's `createEnv()` declaration, its `documentEnv()` declaration or the variable's declaration, whichever is most relevant. `undefined` only when no single position is more relevant than another. An `indeterminate-ownership` finding is one: `IndeterminateOwnershipFinding.dynamicAccessSites` lists its candidate sites. See ADR 0036.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4841,7 +4841,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!ContractRef:interface",
-          "docComment": "/**\n * The one shape every model in this package uses to point at a declared\n * contract: the file it's declared in, and the binding it's exported as.\n * Nothing else: see ADR 0039.\n *\n * @remarks\n *\n * Deliberately *not* carrying `contractName`. A display name is a rendering\n * concern. A renderer that needs prose resolves it on demand from\n * `ContractModel`, the one model that owns it. A copy on every reference\n * would go stale independently, since the name can change under a\n * `documentEnv()` edit. Deliberately not carrying a\n * pre-formatted `identity` string either: `${file}#${exportName}` is\n * trivially derivable, and a stored copy is one more thing that can disagree\n * with the two fields it was built from. Code that genuinely needs a map key\n * builds that string locally, at the point of use.\n */\n",
+          "docComment": "/**\n * The one shape every model in this package uses to point at a declared\n * contract: its file and its exported binding.\n * Nothing else: see ADR 0039.\n *\n * @remarks\n *\n * Deliberately *not* carrying `contractName`. A display name is a rendering\n * concern. A renderer that needs prose resolves it on demand from\n * `ContractModel`, the one model that owns it. A copy on every reference\n * would go stale independently, since the name can change under a\n * `documentEnv()` edit. It carries no pre-formatted\n * `identity` string either, since `${file}#${exportName}` is derivable. A\n * stored copy could disagree with the two fields it was built from. Code that\n * needs a map key\n * builds that string locally, at the point of use.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4913,7 +4913,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!deepFreeze:function(1)",
-          "docComment": "/**\n * Recursively freezes `value` and everything reachable from it (array\n * elements, plain-object property values), so a mutation anywhere in the\n * structure throws instead of silently succeeding.\n *\n * @remarks\n *\n * Generalized from `live-expirations.ts`'s former `DiscoveredContract[]`-\n * hardcoded `deepFreezeContracts()` (see ADR 0012) into a truly generic\n * utility, so Evidence Model's own immutability guarantee (a later phase)\n * can reuse it instead of duplicating the recursion.\n *\n * Only recurses into arrays and plain objects (`{}` or `Object.create(null)`):\n * a `Map`, `Set`, or class instance is frozen at its own top level but not\n * walked further. This codebase's fact models are plain JSON-serializable\n * data, never class instances, so this is deliberately narrow rather than a\n * general-purpose deep-freeze library. A `WeakSet` guards against infinite\n * recursion if a cyclic reference is ever passed in.\n */\n",
+          "docComment": "/**\n * Recursively freezes `value` and everything reachable from it (array\n * elements, plain-object property values), so a mutation anywhere in the\n * structure throws instead of silently succeeding.\n *\n * @remarks\n *\n * Generic, so the live-expiration override (ADR 0012) and Evidence Model's\n * immutability guarantee share one recursion.\n *\n * Only recurses into arrays and plain objects (`{}` or `Object.create(null)`).\n * A `Map`, `Set` or class instance is frozen at its top level but not walked\n * further. This codebase's fact models are plain JSON-serializable\n * data, never class instances, so this is deliberately narrow rather than a\n * general-purpose deep-freeze library. A `WeakSet` guards against infinite\n * recursion if a cyclic reference is ever passed in.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5842,7 +5842,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!detectExclusiveGroupIssues:function(1)",
-          "docComment": "/**\n * Detects two *active* contracts declaring the same `exclusiveGroup`:\n * e.g. two interchangeable database backends both left enabled at once.\n *\n * @remarks\n *\n * Unlike `detectCompatibilityIssues`, this is never a heuristic warning: an\n * author explicitly declared these contracts mutually exclusive, so any\n * violation is always a hard error, regardless of `onIncompatibility`. See\n * ADR 0009 for why this doesn't follow 0005's warn-by-default policy.\n *\n * Inactive contracts are ignored entirely here (filtered internally, not by\n * the caller), so this stays correct when called directly via the `/build`\n * export. An inactive contract can share a group with an active one with no\n * conflict, since it was never wired into anything.\n */\n",
+          "docComment": "/**\n * Detects two *active* contracts declaring the same `exclusiveGroup`:\n * e.g. two interchangeable database backends both left enabled at once.\n *\n * @remarks\n *\n * Unlike `detectCompatibilityIssues`, this is never a heuristic warning. An\n * author declared these contracts mutually exclusive, so a violation is\n * always a hard error, whatever `onIncompatibility` says. See\n * ADR 0009 for why this doesn't follow 0005's warn-by-default policy.\n *\n * Inactive contracts are ignored entirely here (filtered internally, not by\n * the caller), so this stays correct when called directly via the `/build`\n * export. An inactive contract can share a group with an active one with no\n * conflict, since it was never wired into anything.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -7896,7 +7896,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!discoverSchemaFiles:function(1)",
-          "docComment": "/**\n * Finds every schema file matching `include`/`exclude` under `root`, returned\n * as absolute paths in deterministic (alphabetically sorted) order: the\n * same walk as `discoverFiles`, plus a sanity limit on the count.\n *\n * @remarks\n *\n * No external glob dependency. Directories are pruned *during* the walk\n * (both a hardcoded node_modules/.git skip and the caller's `exclude`\n * patterns), not walked in full and filtered afterward. Walking an entire\n * node_modules tree just to discard it is not acceptable for a tool meant to\n * run against real projects.\n */\n",
+          "docComment": "/**\n * Finds every schema file matching `include`/`exclude` under `root`, as\n * absolute paths in alphabetical order. It is the walk of `discoverFiles`,\n * plus a sanity limit on the count.\n *\n * @remarks\n *\n * No external glob dependency. Directories are pruned *during* the walk\n * (both a hardcoded node_modules/.git skip and the caller's `exclude`\n * patterns), not walked in full and filtered afterward. Walking an entire\n * node_modules tree just to discard it is not acceptable for a tool meant to\n * run against real projects.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -8008,7 +8008,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!DocumentationFindings:interface",
-          "docComment": "/**\n * Everything {@link generateDocumentation} found that isn't fully documented or up to date: never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the \"documentation\" family) from the persisted evidence artifact and decides for itself. See ADR 0038.\n */\n",
+          "docComment": "/**\n * Everything {@link generateDocumentation} found that isn't fully documented or up to date. It never blocks generation. To gate CI on it, read the \"documentation\" family of `Finding[]` from the persisted evidence artifact. See ADR 0038.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -8206,7 +8206,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!DynamicAccessAssertion:interface",
-          "docComment": "/**\n * One developer-declared {@link runtime.VariableEvidenceDocs.dynamicAccess} citation's\n * current acknowledgment state: a claim, never an observation. Kept fully\n * separate from `VariableAccessStatus` (which stays exactly 3-valued and\n * purely AST-derived) so a developer's assertion can never make env-cap\n * claim it observed something it didn't. See\n * `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where\n * this is computed) and ADR 0037.\n */\n",
+          "docComment": "/**\n * One developer-declared {@link runtime.VariableEvidenceDocs.dynamicAccess} citation's\n * current acknowledgment state: a claim, never an observation. It stays\n * separate from `VariableAccessStatus`, which is 3-valued and AST-derived only.\n * So a developer's assertion can never make env-cap claim an observation it\n * did not make. See\n * `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where\n * this is computed) and ADR 0037.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -8230,7 +8230,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!DynamicAccessAssertion#acknowledgment:member",
-              "docComment": "/**\n * `\"fresh\"`: the cited file currently exists and either matches the\n * committed baseline hash or has no baseline yet (a brand-new citation,\n * nothing to contradict it yet). `\"stale\"`: the cited file exists but its\n * content has changed since the committed baseline. `\"missing\"`: the\n * cited file no longer exists at all. Re-derived from scratch every run;\n * never cached across runs.\n */\n",
+              "docComment": "/**\n * `\"fresh\"`: the cited file exists and matches the committed baseline\n * hash, or has no baseline yet (a new citation). `\"stale\"`: the cited file exists but its\n * content has changed since the committed baseline. `\"missing\"`: the\n * cited file no longer exists at all. Re-derived from scratch every run;\n * never cached across runs.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -8721,7 +8721,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!EnvExampleResult#skippedExistingPath:member",
-              "docComment": "/**\n * Set when a file already existed at the requested location and was left\n * untouched: with the default `\"keep-sibling\"`, `writtenPath` is a fresh\n * timestamped sibling instead; with `\"skip\"`, this is the only outcome and\n * `writtenPath` is `undefined`. Always `undefined` with `\"overwrite\"`.\n */\n",
+              "docComment": "/**\n * Set when a file already existed at the requested location and was left\n * untouched. With the default `\"keep-sibling\"`, `writtenPath` is a fresh\n * timestamped sibling instead. With `\"skip\"`, this is the only outcome and\n * `writtenPath` is `undefined`. Always `undefined` with `\"overwrite\"`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -9005,7 +9005,7 @@
         {
           "kind": "Class",
           "canonicalReference": "@maverickcer/env-cap!EnvProjectGenerationError:class",
-          "docComment": "/**\n * Thrown by {@link generateEnvArtifacts} when any requested pass (manifest/docs/usage)\n * reports a blocking finding, aggregated across all requested passes into\n * one error.\n *\n * @remarks\n *\n * Nothing from any pass is written when this throws: see\n * `generate-env-artifacts.ts`'s compute-atomic guarantee (ADR 0011). Write-phase failures\n * (a real I/O error after all computes already passed) are NOT wrapped in\n * this type: they propagate as whatever `fs.writeFile` itself throws,\n * since by that point some artifacts may already be on disk.\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling:\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
+          "docComment": "/**\n * Thrown by {@link generateEnvArtifacts} when any requested pass (manifest/docs/usage)\n * reports a blocking finding, aggregated across all requested passes into\n * one error.\n *\n * @remarks\n *\n * Nothing from any pass is written when this throws: see\n * `generate-env-artifacts.ts`'s compute-atomic guarantee (ADR 0011). A write-phase\n * failure, an I/O error after every compute passed, is not wrapped in this type.\n * It propagates as whatever `fs.writeFile` throws, because some artifacts may\n * already be on disk by then.\n *\n * `code` is a stable, Stable-tier discriminant for programmatic handling:\n * prefer it over `.name`/`instanceof` when a message-independent switch is needed.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -9297,7 +9297,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@maverickcer/env-cap!EVIDENCE_MODEL_SCHEMA_VERSION:var",
-          "docComment": "/**\n * Bump only when a reader could misinterpret the new shape of `EvidenceModel`\n * itself (not any one sub-model's own `<MODEL>_SCHEMA_VERSION`, which is\n * versioned independently): same rule every other canonical model follows.\n */\n",
+          "docComment": "/**\n * Bump only when a reader could misinterpret the new shape of `EvidenceModel`\n * itself. Each sub-model's `<MODEL>_SCHEMA_VERSION` is versioned separately.\n * Every other canonical model follows the same rule.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -9324,7 +9324,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!EvidenceModel:interface",
-          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one intentional exception to `src/build/`'s zero-\n * cross-folder-import rule: `src/evidence/` imports it with `import type`\n * only (fully erased at compile time under `verbatimModuleSyntax`), the same\n * shape as `helpers`' single sanctioned edge onto `runtime`; see\n * `specs/architecture.md`. `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
+          "docComment": "/**\n * The seventh canonical fact model (ADR 0024): the assembled union of the\n * other six, plus provenance, the immutable input every\n * `defineEvidenceProjection()` projector runs over (`@maverickcer/env-cap/evidence`,\n * ADR 0031).\n *\n * @remarks\n *\n * This type is the one exception to the rule that nothing imports across\n * `src/build/`. `src/evidence/` imports it with `import type` only, which\n * `verbatimModuleSyntax` erases at compile time. The sanctioned edge from\n * `helpers` onto `runtime` has the same shape (see `specs/architecture.md`). `src/evidence/` never imports a *value* from\n * here, only this shape, so it stays isomorphic and Node-free. An actual\n * `EvidenceModel` instance is produced by {@link generateEvidenceModel}\n * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,\n * builds all six sub-models, and `deepFreeze()`s the result.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -11158,7 +11158,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!Finding#severity:member",
-              "docComment": "/**\n * `\"error\"` for a provable, always-blocking violation (e.g. an\n * exclusive-group conflict); `\"warning\"` for everything gated by\n * `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default \"warn\"\n * behavior; `\"info\"` for an observation that is never actionable enough to\n * block anything, even under `--strict`: see `INFO_ONLY_CODES` in\n * `generate-env-artifacts.ts`.\n */\n",
+              "docComment": "/**\n * `\"error\"` for a provable, always-blocking violation, such as an\n * exclusive-group conflict. `\"warning\"` for everything gated by the default\n * \"warn\" of `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`.\n * `\"info\"` for an observation that never blocks, even under `--strict` (see\n * `INFO_ONLY_CODES` in `generate-env-artifacts.ts`).\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -11331,7 +11331,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!generateDocumentation:function(1)",
-          "docComment": "/**\n * Build-time only. Discovers and links `env.schema.ts` files (same static\n * analysis as {@link generateEnvManifest}) and writes the rich Markdown\n * \"Catalog\": every variable, its description, default, processor/validator\n * flags, owner, and expiry. Application developers use it as the single\n * onboarding reference for what configuration a feature needs and how to set\n * it up. Optionally also writes a reconciling `.env.example`.\n *\n * @remarks\n *\n * Documents every discovered contract, active or not, unlike {@link generateEnvManifest}.\n *\n * @throws\n *\n * {EnvDocumentationGenerationError} If `location`/`envExample.location` escape `root`.\n */\n",
+          "docComment": "/**\n * Build-time only. Discovers and links `env.schema.ts` files, with the static\n * analysis of {@link generateEnvManifest}. Then it writes the Markdown\n * \"Catalog\": every variable, its description, default, processor/validator\n * flags, owner, and expiry. Application developers use it as the single\n * onboarding reference for what configuration a feature needs and how to set\n * it up. Optionally also writes a reconciling `.env.example`.\n *\n * @remarks\n *\n * Documents every discovered contract, active or not, unlike {@link generateEnvManifest}.\n *\n * @throws\n *\n * {EnvDocumentationGenerationError} If `location`/`envExample.location` escape `root`.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -12526,7 +12526,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!generateEnvManifest:function(1)",
-          "docComment": "/**\n * Build-time only. Discovers `env.schema.ts` files, statically analyzes them\n * (never executes them) to link `createEnv()`/`documentEnv()` calls, checks\n * for provable incompatibilities between duplicate variable declarations,\n * and writes a deterministic manifest file that re-exports every discovered\n * active contract.\n *\n * @remarks\n *\n * Never call this at application startup or import it from\n * runtime code: wire it into an npm script, a bundler plugin, or a CI\n * step instead.\n *\n * @throws\n *\n * {EnvManifestGenerationError} If `location` escapes `root`, or if a blocking compatibility/exclusive-group issue is found.\n */\n",
+          "docComment": "/**\n * Build-time only. Discovers `env.schema.ts` files and analyzes them\n * statically, never executing them, to link `createEnv()`/`documentEnv()`\n * calls. It checks duplicate variable declarations for provable\n * incompatibilities. Then it writes a deterministic manifest file that\n * re-exports every discovered active contract.\n *\n * @remarks\n *\n * Run it from an npm script, a bundler plugin or a CI step. Application\n * startup and runtime code never call or import it.\n *\n * @throws\n *\n * {EnvManifestGenerationError} If `location` escapes `root`, or if a blocking compatibility/exclusive-group issue is found.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -12737,7 +12737,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!GenerateEnvManifestOptions#packages:member",
-              "docComment": "/**\n * Explicit allowlist of installed\n * package names whose declared `\"envCap\": { \"schema\": \"<path>\" }` entry\n * point should also be discovered, so a contract that ships as its own\n * separately-published package (no monorepo required) can be included in\n * the manifest. Opt-in only: a package is never considered unless its\n * exact name appears here. See ADR 0014.\n */\n",
+              "docComment": "/**\n * Explicit allowlist of installed package names whose declared\n * `\"envCap\": { \"schema\": \"<path>\" }` entry point is also discovered. It lets\n * the manifest include a contract published as a separate package, with no\n * monorepo required. Opt-in only: a package is never considered unless its\n * exact name appears here. See ADR 0014.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12791,7 +12791,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!GenerateEnvManifestOptions#tsconfig:member",
-              "docComment": "/**\n * Path to a tsconfig.json (relative to `root`)\n * whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.\n * `\"@/lib/env.schema.js\"`) encountered during static analysis, so a contract or consumer\n * reached only through an alias isn't misreported as abandoned/unresolved. Defaults to\n * `\"tsconfig.json\"` at `root`: on automatically, no opt-in required, since (unlike\n * `packages`) this never crosses a trust/versioning boundary: every resolved file is\n * already local, already-trusted project source. Pass `false` to disable entirely. See\n * ADR 0023.\n */\n",
+              "docComment": "/**\n * Path to a tsconfig.json (relative to `root`)\n * whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.\n * `\"@/lib/env.schema.js\"`) encountered during static analysis, so a contract or consumer\n * reached only through an alias isn't misreported as abandoned/unresolved. Defaults to\n * `\"tsconfig.json\"` at `root`, so it is on with no opt-in. Unlike `packages`, it never\n * crosses a trust or versioning boundary: every resolved file is local, trusted project\n * source. Pass `false` to disable entirely. See\n * ADR 0023.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -12974,7 +12974,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!generateEvidenceModel:function(1)",
-          "docComment": "/**\n * Node-only assembly orchestrator (ADR 0024, ADR 0031). It runs schema\n * discovery and linking once (via `assembleProject()`, shared with\n * `computeArtifacts()`). It then builds all seven canonical fact models by\n * calling each model's own public builder directly. This function adds no\n * derivation logic of its own, only sequencing and the shared\n * discovery/linking every builder needs. The result is `deepFreeze()`-d\n * before being returned.\n *\n * @remarks\n *\n * Deliberately never throws on a data-quality finding (a compatibility\n * issue, an undocumented variable, an abandoned contract, ...): every one\n * of those becomes a `Finding` in the returned model's `finding` field\n * instead. This differs from `generateEnvManifest()`, which throws by\n * default, because that is a \"should I write this artifact\" gate. Evidence\n * Model assembly is a read-only snapshot. Its purpose is to represent such\n * issues as data for a consumer's own projection to act on (see ADR 0024's\n * mission statement). It still throws\n * `EnvProjectGenerationError` for a genuine configuration error:\n * `previousSnapshotLocation` escaping `root`.\n *\n * The dependency-graph scan underlying Dependency Model (via\n * `buildDependencyModel()`) and the one underlying Finding Model's\n * ownership-related findings (via `computeUsage()`) each run their own,\n * independent pass over the repository. That cost is accepted: each half's\n * already-tested public building block is called directly, rather than a\n * second copy of either's logic being hand-derived here. Both are Node-only,\n * dev/CI-time-only work (never a runtime hot path), so the redundant I/O is\n * an honest tradeoff, not an oversight.\n */\n",
+          "docComment": "/**\n * Node-only assembly orchestrator (ADR 0024, ADR 0031). It runs schema\n * discovery and linking once (via `assembleProject()`, shared with\n * `computeArtifacts()`). It then builds all seven canonical fact models by\n * calling each model's own public builder directly. This function adds no\n * derivation logic of its own, only sequencing and the shared\n * discovery/linking every builder needs. The result is `deepFreeze()`-d\n * before being returned.\n *\n * @remarks\n *\n * Never throws on a data-quality finding, such as a compatibility issue,\n * an undocumented variable or an abandoned contract. Each becomes a\n * `Finding` in the returned model's `finding` field instead. This differs from `generateEnvManifest()`, which throws by\n * default, because that is a \"should I write this artifact\" gate. Evidence\n * Model assembly is a read-only snapshot. Its purpose is to represent such\n * issues as data for a consumer's own projection to act on (see ADR 0024's\n * mission statement). It still throws\n * `EnvProjectGenerationError` for a genuine configuration error:\n * `previousSnapshotLocation` escaping `root`.\n *\n * Dependency Model (via `buildDependencyModel()`) and Finding Model's\n * ownership findings (via `computeUsage()`) each run a dependency-graph scan.\n * The two scans are separate passes over the repository. That cost is accepted: each half's\n * already-tested public building block is called directly, rather than a\n * second copy of either's logic being hand-derived here. Both are Node-only,\n * dev/CI-time-only work (never a runtime hot path), so the redundant I/O is\n * an honest tradeoff, not an oversight.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -13194,7 +13194,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!GenerateEvidenceModelOptions#liveExpirationDates:member",
-              "docComment": "/**\n * Supplies expiration metadata from a live source as a post-discovery\n * override, applied to Lifecycle Model's (and Finding Model's\n * `expiring-soon` findings') data only: Contract Model still reflects the\n * schema's own static `expiresAt`. See `live-expirations.ts` and ADR 0012.\n */\n",
+              "docComment": "/**\n * Supplies expiration metadata from a live source as a post-discovery\n * override. It applies only to Lifecycle Model and Finding Model's\n * `expiring-soon` findings. Contract Model still reflects the schema's\n * static `expiresAt`. See `live-expirations.ts` and ADR 0012.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -13253,7 +13253,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!GenerateEvidenceModelOptions#previousSnapshotLocation:member",
-              "docComment": "/**\n * Where a previously-persisted evidence artifact lives, relative to\n * `root`: read (never written) as the baseline Change Model diffs\n * against and dynamic-access citation freshness (ADR 0037) compares\n * content hashes to. Independent of any `.ts` manifest a project may or\n * may not also generate: there is no derivation from a manifest's own\n * location. Omitted: treated as the normal first-run state (everything\n * reads as added, no citation-freshness baseline to compare against),\n * never an error.\n */\n",
+              "docComment": "/**\n * Where a previously persisted evidence artifact lives, relative to\n * `root`. It is read, never written. Change Model diffs against it, and\n * dynamic-access citation freshness (ADR 0037) compares content hashes\n * with it. Independent of any `.ts` manifest a project may or\n * may not also generate: there is no derivation from a manifest's own\n * location. Omitted: treated as the normal first-run state (everything\n * reads as added, no citation-freshness baseline to compare against),\n * never an error.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -13664,7 +13664,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!getEvidenceModel:function(1)",
-          "docComment": "/**\n * Trusts the committed evidence artifact at `options.location` only when its\n * paired `.fingerprint` sidecar matches a freshly (cheaply) computed\n * {@link computeSourceFingerprint}: never on file presence alone, never on\n * a timestamp. On any mismatch (stale fingerprint, missing/corrupt evidence\n * file, no fingerprint sidecar at all), falls back to a real\n * `generateEvidenceModel()` call: never hard-fails, never silently serves\n * data that might be stale.\n *\n * @remarks\n *\n * Never writes anything. A cache miss here does not self-heal the cache.\n * Only an explicit write (`generateEnvArtifacts()`'s `evidence` option)\n * refreshes the committed artifact and its fingerprint together. That keeps\n * \"when was this last regenerated\" under explicit control, never an implicit\n * side effect of a read. Two independent callers hitting the same\n * stale cache both recompute independently; neither one's recompute updates\n * the file the other reads.\n */\n",
+          "docComment": "/**\n * Trusts the committed evidence artifact at `options.location` only when its\n * paired `.fingerprint` sidecar matches a fresh {@link computeSourceFingerprint}.\n * File presence or a timestamp never earns that trust. On any mismatch (a\n * stale fingerprint, a missing or corrupt evidence file, no sidecar), it falls\n * back to a real `generateEvidenceModel()` call. So it never fails hard and\n * never serves stale data.\n *\n * @remarks\n *\n * Never writes anything. A cache miss here does not self-heal the cache.\n * Only an explicit write (`generateEnvArtifacts()`'s `evidence` option)\n * refreshes the committed artifact and its fingerprint together. That keeps\n * \"when was this last regenerated\" under explicit control, never an implicit\n * side effect of a read. Two independent callers hitting the same\n * stale cache both recompute independently; neither one's recompute updates\n * the file the other reads.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -15332,7 +15332,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@maverickcer/env-cap!LiveExpirationDates:type",
-          "docComment": "/**\n * Supplies expiration metadata from a live source (a secrets manager, an\n * internal inventory API, ...) as a post-discovery override: the one\n * sanctioned escape hatch from static-only `expiresAt`.\n *\n * @remarks\n *\n * Invoked exactly once per generation run, from the orchestration layer, after AST discovery/\n * linking completes and before documentation is rendered. Never invoked\n * during AST parsing or runtime validation: see ADR 0012 for why a\n * function embedded in a schema file itself was rejected instead.\n */\n",
+          "docComment": "/**\n * Supplies expiration metadata from a live source, such as a secrets manager\n * or an inventory API, as a post-discovery override. It is the one sanctioned\n * escape hatch from static-only `expiresAt`.\n *\n * @remarks\n *\n * Invoked exactly once per generation run, from the orchestration layer, after AST discovery/\n * linking completes and before documentation is rendered. Never invoked\n * during AST parsing or runtime validation: see ADR 0012 for why a\n * function embedded in a schema file itself was rejected instead.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -16180,7 +16180,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!OwnershipDependencyEntry#consumers:member",
-              "docComment": "/**\n * Files coupled to this contract (imported it, referenced it, or read a\n *  member from it): contract-level \"who depends on this,\" NOT proof any\n *  specific variable was read. Blast radius if this contract changes is\n *  `consumers.length`, computed by callers/renderers on demand rather than\n *  stored redundantly here.\n */\n",
+              "docComment": "/**\n * Files coupled to this contract: they import it, reference it, or read a\n *  member from it. This answers \"who depends on this\" per contract; it does\n *  not prove any variable was read. Blast radius if this contract changes is\n *  `consumers.length`, computed by callers/renderers on demand rather than\n *  stored redundantly here.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -18195,7 +18195,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!renderManifest:function(1)",
-          "docComment": "/**\n * Renders the deterministic manifest source: sorted imports (aliased on name\n * collision) plus a `contracts` array, in the exact banner format schema\n * authors will recognize as generated. No timestamps, no randomness: same\n * input files always produce byte-identical output.\n *\n * @remarks\n *\n * When at least one discovered variable declares a `context` (ADR 0022),\n * this also emits `activeContexts`: every validation context found across\n * `contracts`, as a plain array. Its name matches {@link runtime.validateEnvOptions}'s\n * own `activeContexts` field, so application code can import it alongside\n * `manifest` and pass it straight through: `validateEnv({ manifest, values, activeContexts })`.\n * It's every context this manifest has, meant as a starting point to narrow\n * per process/deployment, not a pre-scoped default: see the README's\n * \"Validation contexts\" section. Omitted entirely (not even an empty array)\n * when no variable declares a `context` at all, so generated output for\n * projects that don't use this feature is untouched.\n */\n",
+          "docComment": "/**\n * Renders the deterministic manifest source: sorted imports (aliased on name\n * collision) plus a `contracts` array. The banner marks the file as generated\n * for schema authors. No timestamps, no randomness: same\n * input files always produce byte-identical output.\n *\n * @remarks\n *\n * When at least one discovered variable declares a `context` (ADR 0022),\n * this also emits `activeContexts`: every validation context found across\n * `contracts`, as a plain array. Its name matches {@link runtime.validateEnvOptions}'s\n * own `activeContexts` field, so application code can import it alongside\n * `manifest` and pass it straight through: `validateEnv({ manifest, values, activeContexts })`.\n * It's every context this manifest has, meant as a starting point to narrow\n * per process/deployment, not a pre-scoped default: see the README's\n * \"Validation contexts\" section. It is omitted, not even an empty array, when\n * no variable declares a `context`. So projects that don't use contexts get\n * unchanged output.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -18265,7 +18265,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!renderUsageReport:function(1)",
-          "docComment": "/**\n * Renders the Dependency & Ownership Report: who owns each variable, which\n * features consume each contract, and what the blast radius is if it\n * changes; structured around exactly those three questions, never generic\n * \"dead code\"/\"unused symbol\" language.\n */\n",
+          "docComment": "/**\n * Renders the Dependency & Ownership Report: who owns each variable, which\n * features consume each contract, and the blast radius of a change. It\n * answers those three questions, never in generic \"dead code\" or \"unused\n * symbol\" terms.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -18311,7 +18311,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@maverickcer/env-cap!RenderUsageReportOptions:interface",
-          "docComment": "/**\n * Everything {@link renderUsageReport} needs to render the Dependency &\n *  Ownership Report: deliberately independent of (not derived from)\n *  `GenerateUsageReportResult` in `generate-usage.js`, the same way\n *  `RenderDocsOptions` in `docs.ts` doesn't derive from\n *  `GenerateDocumentationResult`. `generate-usage.ts` composes its own\n *  public result type from these building blocks instead, keeping this\n *  renderer module importable without its orchestrator.\n */\n",
+          "docComment": "/**\n * Everything {@link renderUsageReport} needs to render the Dependency &\n *  Ownership Report. It is not derived from `GenerateUsageReportResult` in\n *  `generate-usage.js`, as `RenderDocsOptions` in `docs.ts` is not derived\n *  from `GenerateDocumentationResult`. `generate-usage.ts` composes its own\n *  public result type from these building blocks instead, keeping this\n *  renderer module importable without its orchestrator.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -18470,7 +18470,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!RenderUsageReportOptions#parseWarnings:member",
-              "docComment": "/**\n * Schema-discovery parse warnings plus, since ADR 0014, any `packages`\n *  resolution failures: surfaced here too (not just from\n *  `generateEnvManifest`/`generateDocumentation`) so a team relying only\n *  on `--ownership` output still learns when a cross-package contract\n *  failed to resolve.\n */\n",
+              "docComment": "/**\n * Schema-discovery parse warnings plus any `packages` resolution failures\n *  (ADR 0014). They appear here as well as in\n *  `generateEnvManifest`/`generateDocumentation`, so a team that reads only\n *  this report still learns when a cross-package contract failed to\n *  resolve.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -18617,7 +18617,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!resolveLiveExpirationDates:function(1)",
-          "docComment": "/**\n * Orchestration entry point: the only place `liveExpirationDates` is ever invoked.\n *\n * @remarks\n *\n * No-ops (returns the exact same array reference, zero invocations)\n * when `liveExpirationDates` is undefined, which is what guarantees \"omitted ->\n * behavior unchanged.\" Otherwise it collects the unique discovered variable\n * names, invokes the callback exactly once and applies the result. It\n * deep-freezes the returned structure so no mutation of it can reach\n * `contracts` or anything else downstream. `contracts` is used elsewhere too,\n * e.g. by the manifest and usage passes in the same\n * {@link generateEnvArtifacts} run.\n */\n",
+          "docComment": "/**\n * Orchestration entry point: the only place `liveExpirationDates` is ever invoked.\n *\n * @remarks\n *\n * When `liveExpirationDates` is undefined it does nothing: it returns the same\n * array reference and invokes nothing. That keeps behavior unchanged when the\n * option is omitted. Otherwise it collects the unique discovered variable\n * names, invokes the callback exactly once and applies the result. It\n * deep-freezes the returned structure so no mutation of it can reach\n * `contracts` or anything else downstream. `contracts` is used elsewhere too,\n * e.g. by the manifest and usage passes in the same\n * {@link generateEnvArtifacts} run.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -18706,7 +18706,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!resolveRelativeImport:function(1)",
-          "docComment": "/**\n * Resolves a relative import specifier (as written in source: `\"./schema.js\"`,\n * matching this codebase's own convention of `.js`-suffixed relative imports\n * pointing at `.ts` source files) to an absolute file path, relative to the\n * file that contains the import.\n *\n * @remarks\n *\n * Deliberately narrow: only handles a direct relative specifier resolving to\n * a real `.ts`/`.tsx` file on disk. Bare/package specifiers, namespace\n * imports, and anything requiring real module resolution (re-export chains,\n * `exports` map lookups, etc.) return `undefined`: the caller treats that\n * as \"couldn't statically link\" and warns rather than guesses, the same\n * philosophy `evaluateLiteral` already uses for non-literal expressions.\n *\n * @returns The resolved absolute path, or `undefined` when the specifier isn't relative or doesn't resolve to a real file.\n */\n",
+          "docComment": "/**\n * Resolves a relative import specifier, as written in source (`\"./schema.js\"`),\n * to an absolute file path. It resolves against the file that contains the\n * import. A `.js` suffix points at the `.ts` source file, as in this codebase.\n *\n * @remarks\n *\n * Deliberately narrow: only handles a direct relative specifier resolving to\n * a real `.ts`/`.tsx` file on disk. Anything else returns `undefined`: bare\n * or package specifiers, namespace imports, and anything that needs real\n * module resolution (re-export chains, `exports` map lookups). The caller\n * reads that as \"couldn't statically link\" and warns rather than guesses.\n * `evaluateLiteral` treats non-literal expressions the same way.\n *\n * @returns The resolved absolute path, or `undefined` when the specifier isn't relative or doesn't resolve to a real file.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -19622,7 +19622,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@maverickcer/env-cap!UnconsumedOwnedVariableFinding#staleOrMissingCitations:member",
-              "docComment": "/**\n * Every `dynamicAccess` citation for this variable that's currently\n * `\"stale\"` or `\"missing\"` (empty when none exist: see ADR 0037).\n * Empty is the *strongest* \"looks unused\" signal: no developer has ever\n * claimed otherwise. A non-empty list means someone specifically claimed\n * dynamic access here once, and that claim can no longer be verified. That\n * is worth a human check before deleting, not a stronger reason to trust\n * \"unconsumed.\" The list holds the raw citations, not a collapsed\n * `high`/`low` label, matching this codebase's \"show the receipt\" pattern\n * (ADR 0036/0037). A reader can judge confidence from the actual evidence\n * rather than trusting a derived summary. See ADR 0038.\n */\n",
+              "docComment": "/**\n * Every `dynamicAccess` citation for this variable that's currently\n * `\"stale\"` or `\"missing\"` (empty when none exist: see ADR 0037).\n * Empty is the *strongest* \"looks unused\" signal: no developer has ever\n * claimed otherwise. A non-empty list means someone specifically claimed\n * dynamic access here once, and that claim can no longer be verified. That\n * is worth a human check before deleting, not a stronger reason to trust\n * \"unconsumed\". The list holds the raw citations, not a collapsed\n * `high`/`low` label, matching this codebase's \"show the receipt\" pattern\n * (ADR 0036/0037). A reader can judge confidence from the actual evidence\n * rather than trusting a derived summary. See ADR 0038.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -20029,7 +20029,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@maverickcer/env-cap!writeEnvExample:function(1)",
-          "docComment": "/**\n * Writes a rendered `.env.example` to `location`. Behavior when a file\n * already exists there is governed by `options.onExisting` (default\n * `\"keep-sibling\"`, see `EnvExampleOnExisting`):\n *  - `\"keep-sibling\"`: the existing file is left alone; freshly generated\n *  content is written to a timestamped sibling instead\n *  (`<location>.<epoch-ms>`), prefixed with a reconciliation header\n *  comparing it against the existing file (omitted when there's nothing\n *  to report).\n *  - `\"overwrite\"`: the existing file is replaced directly with freshly\n *  rendered content; no reconciliation header (the changes it would\n *  describe are already applied).\n *  - `\"skip\"`: nothing is written.\n * When no file exists yet at `location`, all three modes behave the same:\n * write fresh content, nothing to reconcile against. `staleVariables`/\n * `variablesToComment`/`variablesToAdd` are always computed and returned\n * when a prior file existed, even under `\"overwrite\"`/`\"skip\"`, as a\n * diagnostic: independent of whether anything was actually written.\n */\n",
+          "docComment": "/**\n * Writes a rendered `.env.example` to `location`. Behavior when a file\n * already exists there is governed by `options.onExisting` (default\n * `\"keep-sibling\"`, see `EnvExampleOnExisting`):\n *  - `\"keep-sibling\"`: the existing file is left alone. Fresh content goes\n *  to a timestamped sibling (`<location>.<epoch-ms>`) instead. A\n *  reconciliation header compares it with the existing file, unless there\n *  is nothing to report.\n *  - `\"overwrite\"`: the existing file is replaced directly with freshly\n *  rendered content; no reconciliation header (the changes it would\n *  describe are already applied).\n *  - `\"skip\"`: nothing is written.\n * When no file exists yet at `location`, all three modes behave the same:\n * write fresh content, nothing to reconcile against. `staleVariables`/\n * `variablesToComment`/`variablesToAdd` are always computed and returned\n * when a prior file existed, even under `\"overwrite\"`/`\"skip\"`, as a\n * diagnostic: independent of whether anything was actually written.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
