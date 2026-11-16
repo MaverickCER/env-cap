@@ -1,5 +1,5 @@
-// `@typescript-eslint/utils` is an external optional peer (ADR 0048), resolved by the consumer's own
-// module loader, so its main entry is safe to import from; `RuleCreator` still comes from the
+// `@typescript-eslint/utils` is an external optional peer (ADR 0048), resolved by the consumer's
+// module loader, so its main entry is safe to import from. `RuleCreator` comes from the
 // `eslint-utils` subpath to keep the loaded surface small.
 import { RuleCreator } from "@typescript-eslint/utils/eslint-utils"
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils"
@@ -27,18 +27,18 @@ const DEFAULT_RULE_OPTIONS = [{ allow: [] as string[] }] as const
 
 // `@typescript-eslint/utils` before 8.55 reads a rule's default options from this top-level property only.
 // Later releases read `meta.defaultOptions` and mark the top-level one deprecated. The optional peer range
-// (`^8.0.0`) still covers the earlier releases, so it is passed too, spread from a plain object so the call
-// does not name the deprecated property itself.
+// (`^8.0.0`) still covers the earlier releases, so the rule passes both. The top-level one is spread from a
+// plain object so the call does not name the deprecated property.
 const LEGACY_DEFAULT_OPTIONS = { defaultOptions: DEFAULT_RULE_OPTIONS }
 
 /**
  * Flags any direct `process.env.X`/`process.env["X"]` read in application code, so environment
- * access always goes through a capability's own `createEnv()` contract instead.
+ * access always goes through the `createEnv()` contract of the feature that owns the variable.
  *
  * @remarks
- * `env.schema.ts`/`env.schema.tsx` files are always exempt (that's where `createEnv()` itself
- * reads `process.env`); the rule's `allow` option extends that exemption to a consuming
- * project's own trusted bootstrap code.
+ * `env.schema.ts`/`env.schema.tsx` files are always exempt, because `createEnv()` reads
+ * `process.env` there. The rule's `allow` option extends that exemption to a consuming
+ * project's trusted bootstrap code.
  */
 export const noRawProcessEnv = createRule<[RuleOptions], "noRawProcessEnv">({
   name: "no-raw-process-env",

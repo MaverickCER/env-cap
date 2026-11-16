@@ -13,7 +13,7 @@ The migration is not a replacement of validation capabilities. `envalid` and
 
 `env-cap` can use the same validation approach you already have today,
 including custom validators and processors. The primary change is moving
-from a centralized configuration object to capability-owned environment
+from a centralized configuration object to feature-owned environment
 contracts.
 
 ## Before: centralized environment validation
@@ -50,18 +50,18 @@ src/
 └── notifications/
 ```
 
-Every capability that requires configuration modifies the same file.
+Every feature that requires configuration modifies the same file.
 
 Common consequences:
 
 - configuration ownership becomes unclear
-- unrelated capabilities modify the same schema
-- removing capabilities requires cleaning up centralized variables
+- unrelated features modify the same schema
+- removing features requires cleaning up centralized variables
 - platform teams need separate tooling to understand ownership
 
-## After: capability-owned contracts
+## After: feature-owned contracts
 
-With `env-cap`, move configuration ownership into the capability that uses
+With `env-cap`, move configuration ownership into the feature that uses
 it.
 
 Example:
@@ -76,7 +76,7 @@ src/
     └── env.schema.ts
 ```
 
-The database capability owns database configuration:
+The database feature owns database configuration:
 
 ```ts
 // database/env.schema.ts
@@ -96,7 +96,7 @@ export const databaseEnv = createEnv(databaseSchema, {
 })
 ```
 
-The payments capability owns payment configuration:
+The payments feature owns payment configuration:
 
 ```ts
 // payments/env.schema.ts
@@ -116,7 +116,7 @@ export const paymentsEnv = createEnv(paymentsSchema, {
 })
 ```
 
-Application code imports configuration from the capability that owns it:
+Application code imports configuration from the feature that owns it:
 
 ```ts
 import { databaseEnv } from "./database/env.schema"
@@ -161,7 +161,7 @@ The package only validates and exposes configuration.
 
 ---
 
-### Step 2: Identify capability ownership
+### Step 2: Identify feature ownership
 
 Start by grouping existing variables by the code that consumes them.
 
@@ -252,7 +252,7 @@ PORT: {
 
 The important distinction is that transformation and validation are explicit.
 
-The runtime contract defines how the capability consumes the value.
+The runtime contract defines how the feature consumes the value.
 
 ---
 
@@ -326,7 +326,7 @@ export function createPayment() {
 }
 ```
 
-Continue migrating capability by capability until the centralized environment object
+Continue migrating feature by feature until the centralized environment object
 is no longer needed.
 
 ---
@@ -351,7 +351,7 @@ The difference is the ownership model.
 
 `env-cap` answers:
 
-> "Which capability owns this configuration, how is it validated, and how is it
+> "Which feature owns this configuration, how is it validated, and how is it
 > operated over time?"
 
 ---
@@ -388,7 +388,7 @@ timeout: "5000"
 A library integration may require a string because it serializes directly into
 headers or configuration.
 
-Another capability may require:
+Another feature may require:
 
 ```ts
 timeout: 5000
@@ -402,7 +402,7 @@ timeout + retryDelay
 
 The environment value is the same. The consumer requirement is different.
 
-`env-cap` allows each owning capability to define its own processing boundary:
+`env-cap` allows each owning feature to define its own processing boundary:
 
 ```ts
 apiClientEnv.TIMEOUT
@@ -471,7 +471,7 @@ These tools solve environment parsing and validation.
 
 `env-cap` adds the organizational layer:
 
-- capability ownership
+- feature ownership
 - static discovery
 - generated documentation
 - lifecycle visibility

@@ -11,13 +11,12 @@ import type { ManifestChangeReport, ManifestVariableRef } from "./evidence-snaps
  *
  * @remarks
  * Wraps `ManifestChangeReport` (`evidence-snapshot.ts`) rather than
- * replacing it: this model exists to give the change report a versioned,
- * model-namespaced shape Evidence Model can assemble against, alongside the
- * other six models. Empty (no adds/removes/updates) whenever no previous
- * evidence snapshot location was configured for this run: there is
- * nothing to diff against, which is a genuinely different state from a
- * first-ever run *with* tracking configured (where everything reads as
- * added).
+ * replacing it. The model gives the change report a versioned,
+ * model-namespaced shape, so Evidence Model can assemble it beside the other
+ * six. It is empty (no adds, removes or updates) when the run configures no
+ * previous evidence snapshot location. Then there is nothing to diff against.
+ * That differs from a first run *with* tracking configured, where everything
+ * reads as added.
  */
 
 /** Bump only when a reader could misinterpret the new shape: same discipline every other canonical model's `schemaVersion` follows. */
@@ -79,10 +78,9 @@ function findByContractAndKey(
  * Wraps an already-computed `ManifestChangeReport` (e.g.
  * `generateEnvArtifacts()`'s internal `evidenceChanges.report`) in the Change Model's versioned
  * shape, and correlates renames using the current run's `renamedFrom`
- * declarations. `currentContracts` should be the same contracts the
- * manifest was generated from (active contracts only, matching
- * `renderManifest()`'s own scope: same as every other input to this
- * report family).
+ * declarations. `currentContracts` should be the contracts the manifest was
+ * generated from: active contracts only, the scope of `renderManifest()`.
+ * Every other input to this report family uses that scope too.
  */
 export function buildChangeModel(
   manifest: ManifestChangeReport,

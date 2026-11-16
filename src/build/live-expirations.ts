@@ -3,9 +3,9 @@ import { parseIsoDate } from "./docs.js"
 import type { DiscoveredContract, DiscoveredVariable } from "./link.js"
 
 /**
- * Supplies expiration metadata from a live source (a secrets manager, an
- * internal inventory API, ...) as a post-discovery override: the one
- * sanctioned escape hatch from static-only `expiresAt`.
+ * Supplies expiration metadata from a live source, such as a secrets manager
+ * or an inventory API, as a post-discovery override. It is the one sanctioned
+ * escape hatch from static-only `expiresAt`.
  *
  * @remarks
  * Invoked exactly once per generation run, from the orchestration layer, after AST discovery/
@@ -53,9 +53,9 @@ function overrideVariable(
  *
  * @remarks
  * A key absent from `overrides`, or present but not a `parseIsoDate`-parseable
- * ISO-8601 string, leaves that variable's static `expiresAt` untouched:
- * same "warn/skip, never guess" policy the rest of the generator uses for
- * malformed data. Contract-level `expiresAt` is never touched; only
+ * ISO-8601 string, leaves that variable's static `expiresAt` untouched. The
+ * rest of the generator treats malformed data the same way: warn or skip,
+ * never guess. Contract-level `expiresAt` is never touched; only
  * variable-level `expiresAt` is in scope for override.
  */
 export function applyLiveExpirationOverrides(
@@ -73,9 +73,9 @@ export function applyLiveExpirationOverrides(
  * Orchestration entry point: the only place `liveExpirationDates` is ever invoked.
  *
  * @remarks
- * No-ops (returns the exact same array reference, zero invocations)
- * when `liveExpirationDates` is undefined, which is what guarantees "omitted ->
- * behavior unchanged." Otherwise it collects the unique discovered variable
+ * When `liveExpirationDates` is undefined it does nothing: it returns the same
+ * array reference and invokes nothing. That keeps behavior unchanged when the
+ * option is omitted. Otherwise it collects the unique discovered variable
  * names, invokes the callback exactly once and applies the result. It
  * deep-freezes the returned structure so no mutation of it can reach
  * `contracts` or anything else downstream. `contracts` is used elsewhere too,

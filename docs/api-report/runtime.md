@@ -8,8 +8,8 @@ you pass to `validateEnv()`. `test/runtime/browser-bundle.test.ts` checks the bu
 Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.
 Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.
 
-`documentEnv` is exported here, not from `./build`, because it is called inline in the same
-schema file as `createEnv`, which may end up in any bundle. It must be as cheap to import as
+`documentEnv` is exported here, not from `./build`. It is called inline in the same schema file
+as `createEnv`, and that file may end up in any bundle. It must be as cheap to import as
 `createEnv` (see `document.ts`).
 
 ## Classes
@@ -590,10 +590,9 @@ source?: string;
 
 Pass `import.meta.url` here so validation errors point at the file that
 declared the failing variable (e.g. "features/payments/env.schema.ts")
-instead of just the short `name` label. There is no portable way for
-`createEnv` to discover its caller's module URL on its own: this is
-always correct and never goes stale, since it's supplied by the JS
-engine rather than hand-typed.
+instead of the short `name` label. `createEnv` has no portable way to
+discover its caller's module URL. The JS engine supplies
+`import.meta.url`, so it is always correct and never goes stale.
 
 ***
 
@@ -679,9 +678,8 @@ The validation contexts active for this run (e.g. `["server",
 "production"]`): entirely application-defined; env-cap never
 detects or infers these, the caller always computes and passes them
 explicitly. A variable whose `context` isn't in this list is skipped
-entirely (no default/processor/validator runs for it, and it stays in
-its not-ready state, exactly as if this run had never happened for
-it): see ADR 0022. A variable with no `context` always participates,
+(ADR 0022). No default, processor or validator runs for it. It stays
+not ready, as if this run had never happened. A variable with no `context` always participates,
 regardless of what's passed here. Omitted (the default) behaves as an
 empty list: only variables with no `context` participate.
 
@@ -702,9 +700,9 @@ manifest: readonly EnvContract<any>[];
 
 Every contract to validate: typically the `contracts` array imported
 from a generated manifest (see [build.generateEnvManifest](build.md#generateenvmanifest)). Pass all of them
-in one call: [validateEnv](#validateenv) only ever initializes once per process, so
-a second call returns the first call's cached result without
-re-running anything, even if it passes a different manifest.
+in one call. [validateEnv](#validateenv) initializes once per process. A second call
+returns the first call's cached result without re-running anything, even if
+it passes a different manifest.
 
 ##### values
 
@@ -1060,8 +1058,8 @@ undefined.
 #### Remarks
 
 The union is redundant at the type level (`unknown` alone already accepts a
-function). It's kept because this type is public API: collapsing it to bare `unknown`
-would erase the one thing a reader of the generated `.d.ts` needs to learn here.
+function). It's kept because this type is public API. A reader of the generated `.d.ts`
+learns the thunk form from it, and bare `unknown` would hide that.
 
 ***
 
@@ -1098,9 +1096,9 @@ Returns the redacted `EnvContract("name")` representation, never resolved values
 
 #### Remarks
 
-`toString()` is intersected in (rather than left to the ambient `Object.prototype`
-declaration) because `create.ts` genuinely overrides it to return a redacted
-`EnvContract("name")` representation, never resolved values: see ADR 0006. Declaring
+`toString()` is intersected in, rather than left to the ambient `Object.prototype`
+declaration. `create.ts` overrides it to return a redacted `EnvContract("name")`
+representation, never resolved values (ADR 0006). Declaring
 it here means the type accurately describes what calling `String(contract)` returns.
 
 ***
@@ -1115,9 +1113,9 @@ A schema is a map of variable name -> definition.
 
 #### Remarks
 
-`EnvDefinition<any>` is used only as the generic *bound* here (never surfaced to consumers):
+`EnvDefinition<any>` is used only as the generic *bound* here, never surfaced to consumers.
 TypeScript infers a precise, per-key literal type for `S` from the object passed to
-[createEnv](#createenv), so the resolved contract type (see [InferEnvValue](#inferenvvalue)) stays fully
+[createEnv](#createenv). So the resolved contract type (see [InferEnvValue](#inferenvvalue)) stays fully
 strict. This is the same variance workaround used by schema libraries like zod/trpc for
 heterogeneous generic maps.
 
@@ -1254,9 +1252,8 @@ interpolation. Spreading it or calling `Object.entries()` on it reads every valu
 `createEnv` is runtime-only: `processor`/`validator`/`default` are the
 whole vocabulary, because they're the only fields [validateEnv](#validateenv) actually
 reads. Documentation (description, ownership, lifecycle, category, and
-everything else that only exists to generate docs) lives in a separate
-[documentEnv](#documentenv) call (see `document.ts`), which is entirely optional and
-never required for this to work.
+everything else that only feeds generated docs) lives in a separate
+[documentEnv](#documentenv) call (see `document.ts`). That call is optional.
 
 ***
 
@@ -1370,8 +1367,8 @@ Validates every variable in every contract in `options.manifest` against
 
 #### Remarks
 
-Idempotent: the first successful (or failed) call is authoritative for the life of the
-process; later calls return (or re-throw) that same outcome without re-running any
+Idempotent: the first call's outcome, success or failure, holds for the life of the
+process. Later calls return (or re-throw) that same outcome without re-running any
 processor or validator. Concurrent in-flight calls share one underlying run. Call
 `resetEnvCache()` to validate again, for example between test scenarios.
 

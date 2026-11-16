@@ -4,9 +4,8 @@ import type { DiscoveredContract } from "./link.js"
 
 /**
  * Every validation context declared by any variable in an *active* contract
- * in `contracts` (a variable belonging to a contract documented `active:
- * false` never contributes: same exclusion the `manifest` array itself
- * already applies), sorted and deduplicated. What {@link renderManifest}
+ * in `contracts`, sorted and deduplicated. A contract documented
+ * `active: false` never contributes, as in the `manifest` array. What {@link renderManifest}
  * surfaces as the generated `activeContexts` export. Exported for reuse by
  * anything that needs the same computation (currently just `renderManifest`
  * itself).
@@ -26,8 +25,8 @@ export function discoverValidationContexts(
 
 /**
  * Renders the deterministic manifest source: sorted imports (aliased on name
- * collision) plus a `contracts` array, in the exact banner format schema
- * authors will recognize as generated. No timestamps, no randomness: same
+ * collision) plus a `contracts` array. The banner marks the file as generated
+ * for schema authors. No timestamps, no randomness: same
  * input files always produce byte-identical output.
  *
  * @remarks
@@ -38,9 +37,9 @@ export function discoverValidationContexts(
  * `manifest` and pass it straight through: `validateEnv({ manifest, values, activeContexts })`.
  * It's every context this manifest has, meant as a starting point to narrow
  * per process/deployment, not a pre-scoped default: see the README's
- * "Validation contexts" section. Omitted entirely (not even an empty array)
- * when no variable declares a `context` at all, so generated output for
- * projects that don't use this feature is untouched.
+ * "Validation contexts" section. It is omitted, not even an empty array, when
+ * no variable declares a `context`. So projects that don't use contexts get
+ * unchanged output.
  */
 export function renderManifest(
   contracts: readonly DiscoveredContract[],
@@ -66,10 +65,10 @@ export function renderManifest(
     usedNames.add(localName)
     referenceNames.push(localName)
 
-    // Package-resolved contracts (ADR 0014) import by bare package name:
-    // the resolved file only exists for static analysis and typically lives
-    // inside node_modules, which most consumer build configs don't compile
-    // and isn't a valid runtime import path anyway. Everything else keeps
+    // Package-resolved contracts (ADR 0014) import by bare package name. The
+    // resolved file serves static analysis only and usually lives inside
+    // node_modules. Most consumer builds don't compile that, and it is not a
+    // valid runtime import path. Everything else keeps
     // the existing relative-path behavior unchanged.
     let specifier: string
     if (contract.packageOrigin) {

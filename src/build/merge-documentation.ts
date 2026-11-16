@@ -41,11 +41,10 @@ interface Declaration {
  * Fills what one declaration of a variable leaves unset from the other declarations of the same variable.
  *
  * @remarks
- * A variable can be declared in more than one contract. A package that ships its own contract (see
- * {@link ../README} "Reusable packages") and the application that consumes it both name the same environment
- * variable, because the process has one flat namespace. Writing the explanation twice is how the two drift, so the
- * declaration that carries it can be the one place it is written, and the other adds only what is its own (the
- * application's own `expiresAt`, say).
+ * A variable can be declared in more than one contract. A package that ships a contract (see {@link ../README}
+ * "Reusable packages") and the application that consumes it can name the same environment variable. The process
+ * has one flat namespace. Writing the explanation twice is how the two drift. So one declaration carries it, and
+ * the other adds only its own fields (the application's `expiresAt`, say).
  *
  * Every field a declaration leaves unset is taken from another declaration that sets it, as long as one of the two
  * is a package's contract. When several set it, a package's contract wins over the application's own, and the
@@ -76,8 +75,8 @@ export function mergeSharedDocumentation(
       for (const declaration of mustGet(declarationsByKey, variable.key)) {
         if (declaration.variable === variable) continue
         const fromPackage = declaration.contract.packageOrigin !== undefined
-        // Two of the application's own contracts are siblings, often alternatives (a database it can run on
-        // either of), each documenting the variable for itself: one is never the other's explanation.
+        // Two application contracts are siblings, often alternatives (two databases it can run on). Each
+        // documents the variable for itself, so one never explains the other.
         if (!fromPackage && contract.packageOrigin === undefined) continue
         ;(fromPackage ? fromPackages : fromApplication).push(declaration)
       }
@@ -89,8 +88,8 @@ export function mergeSharedDocumentation(
 }
 
 /**
- * The value to fill a gap with: the first package declaration's that sets it, otherwise the application
- * declarations'; but only when every one of them that sets it agrees. The application's own contracts are often
+ * The value to fill a gap with. It is the first package declaration's value, otherwise the application
+ * declarations' value, and only when every declaration that sets it agrees. The application's own contracts are often
  * alternatives (a database it can run on either of); when they disagree, a package's declaration takes neither.
  */
 function donated(

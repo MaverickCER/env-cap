@@ -50,4 +50,4 @@ Delete `STRIPE_KEY` from `.env` and run `npm start` again. Expect a non-zero exi
 
 ## Why one contract, not several
 
-Capability-owned contracts are an option, not a requirement. One `createEnv()` call, like `src/env.ts` here, is a complete use of the library. A team that is not ready to split its `env.ts` keeps it and still gets every generated report.
+Feature-owned contracts are an option, not a requirement. One `createEnv()` call, like `src/env.ts` here, is a complete use of the library. A team that is not ready to split its `env.ts` keeps it and still gets every generated report.

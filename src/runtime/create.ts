@@ -13,9 +13,8 @@ let anonymousCount = 0
  * `createEnv` is runtime-only: `processor`/`validator`/`default` are the
  * whole vocabulary, because they're the only fields {@link validateEnv} actually
  * reads. Documentation (description, ownership, lifecycle, category, and
- * everything else that only exists to generate docs) lives in a separate
- * {@link documentEnv} call (see `document.ts`), which is entirely optional and
- * never required for this to work.
+ * everything else that only feeds generated docs) lives in a separate
+ * {@link documentEnv} call (see `document.ts`). That call is optional.
  *
  * @returns An {@link EnvContract} exposing one read-only getter per key: there is no
  * global env object, only per-feature contracts like `paymentsEnv.STRIPE_KEY`. Accessing a

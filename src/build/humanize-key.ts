@@ -13,9 +13,9 @@ export function humanizeKey(key: string): string {
 }
 
 /**
- * Formats a `metadata`/`dataResidency` value for display in generated docs/examples: a string
- * renders as-is; anything else (ADR 0035 widened `metadata` to any value) renders as its JSON
- * text, so an object/array value never prints `[object Object]`. Shared by `docs.ts` and
+ * Formats a `metadata`/`dataResidency` value for display in generated docs/examples. A string
+ * renders as-is. Anything else renders as its JSON text, since ADR 0035 widened `metadata` to
+ * any value. So an object or array never prints `[object Object]`. Shared by `docs.ts` and
  * `env-example.ts`, same rationale as {@link humanizeKey}.
  */
 export function renderMetadataValue(value: unknown): string {

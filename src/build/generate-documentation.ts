@@ -58,7 +58,7 @@ export interface GenerateDocumentationOptions {
   liveExpirationDates?: LiveExpirationDates | undefined
 }
 
-/** Everything {@link generateDocumentation} found that isn't fully documented or up to date: never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the "documentation" family) from the persisted evidence artifact and decides for itself. See ADR 0038. */
+/** Everything {@link generateDocumentation} found that isn't fully documented or up to date. It never blocks generation. To gate CI on it, read the "documentation" family of `Finding[]` from the persisted evidence artifact. See ADR 0038. */
 export interface DocumentationFindings {
   /** Contracts with no linked `documentEnv()` call at all. */
   readonly undocumentedContracts: readonly {
@@ -118,8 +118,8 @@ export interface GenerateDocumentationResult {
 /** Default value for {@link GenerateDocumentationOptions.expiringWithinDays}. */
 export const DEFAULT_EXPIRING_WITHIN_DAYS = 30
 
-// The vocabulary lives in a function that both the exported set and the checks below call, so the
-// checks read it at call time instead of from a value frozen when the module loaded.
+// The vocabulary lives in a function that the exported set and the checks below both call. So the
+// checks read it at call time, not from a value frozen at module load.
 function standardSensitivityLevels(): string[] {
   return ["secret", "credential", "pii", "config"]
 }
@@ -154,10 +154,9 @@ export interface NonstandardSensitivityEntry {
  *
  * @remarks
  * A variable's *own* declared level only: never the contract-inherited one
- * `effectiveSensitivity()` would resolve to. Reporting the inherited value
- * would fire this same finding once per variable on a contract that already
- * produced its own contract-level entry, turning one real vocabulary
- * question into N duplicates of it.
+ * `effectiveSensitivity()` would resolve to. The contract already has its
+ * own contract-level entry. Reporting the inherited value would repeat that
+ * one vocabulary question once per variable.
  */
 export function findNonstandardSensitivityLevels(
   contracts: readonly DiscoveredContract[],
@@ -278,8 +277,8 @@ export async function writeDocumentation(
 }
 
 /**
- * Build-time only. Discovers and links `env.schema.ts` files (same static
- * analysis as {@link generateEnvManifest}) and writes the rich Markdown
+ * Build-time only. Discovers and links `env.schema.ts` files, with the static
+ * analysis of {@link generateEnvManifest}. Then it writes the Markdown
  * "Catalog": every variable, its description, default, processor/validator
  * flags, owner, and expiry. Application developers use it as the single
  * onboarding reference for what configuration a feature needs and how to set

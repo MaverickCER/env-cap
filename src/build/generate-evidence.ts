@@ -37,10 +37,10 @@ export interface GenerateEvidenceModelOptions {
   /** See `GenerateEnvManifestOptions.tsconfig`. See ADR 0023. */
   tsconfig?: string | false | undefined
   /**
-   * Where a previously-persisted evidence artifact lives, relative to
-   * `root`: read (never written) as the baseline Change Model diffs
-   * against and dynamic-access citation freshness (ADR 0037) compares
-   * content hashes to. Independent of any `.ts` manifest a project may or
+   * Where a previously persisted evidence artifact lives, relative to
+   * `root`. It is read, never written. Change Model diffs against it, and
+   * dynamic-access citation freshness (ADR 0037) compares content hashes
+   * with it. Independent of any `.ts` manifest a project may or
    * may not also generate: there is no derivation from a manifest's own
    * location. Omitted: treated as the normal first-run state (everything
    * reads as added, no citation-freshness baseline to compare against),
@@ -51,9 +51,9 @@ export interface GenerateEvidenceModelOptions {
   expiringWithinDays?: number | undefined
   /**
    * Supplies expiration metadata from a live source as a post-discovery
-   * override, applied to Lifecycle Model's (and Finding Model's
-   * `expiring-soon` findings') data only: Contract Model still reflects the
-   * schema's own static `expiresAt`. See `live-expirations.ts` and ADR 0012.
+   * override. It applies only to Lifecycle Model and Finding Model's
+   * `expiring-soon` findings. Contract Model still reflects the schema's
+   * static `expiresAt`. See `live-expirations.ts` and ADR 0012.
    */
   liveExpirationDates?: LiveExpirationDates | undefined
   /**
@@ -75,10 +75,9 @@ export interface GenerateEvidenceModelOptions {
  * before being returned.
  *
  * @remarks
- * Deliberately never throws on a data-quality finding (a compatibility
- * issue, an undocumented variable, an abandoned contract, ...): every one
- * of those becomes a `Finding` in the returned model's `finding` field
- * instead. This differs from `generateEnvManifest()`, which throws by
+ * Never throws on a data-quality finding, such as a compatibility issue,
+ * an undocumented variable or an abandoned contract. Each becomes a
+ * `Finding` in the returned model's `finding` field instead. This differs from `generateEnvManifest()`, which throws by
  * default, because that is a "should I write this artifact" gate. Evidence
  * Model assembly is a read-only snapshot. Its purpose is to represent such
  * issues as data for a consumer's own projection to act on (see ADR 0024's
@@ -86,10 +85,9 @@ export interface GenerateEvidenceModelOptions {
  * `EnvProjectGenerationError` for a genuine configuration error:
  * `previousSnapshotLocation` escaping `root`.
  *
- * The dependency-graph scan underlying Dependency Model (via
- * `buildDependencyModel()`) and the one underlying Finding Model's
- * ownership-related findings (via `computeUsage()`) each run their own,
- * independent pass over the repository. That cost is accepted: each half's
+ * Dependency Model (via `buildDependencyModel()`) and Finding Model's
+ * ownership findings (via `computeUsage()`) each run a dependency-graph scan.
+ * The two scans are separate passes over the repository. That cost is accepted: each half's
  * already-tested public building block is called directly, rather than a
  * second copy of either's logic being hand-derived here. Both are Node-only,
  * dev/CI-time-only work (never a runtime hot path), so the redundant I/O is
@@ -128,9 +126,9 @@ export async function generateEvidenceModel(
   const generatedAt = new Date()
   const activeContracts = linkResult.contracts.filter((c) => c.active)
 
-  // Lifecycle Model (and Finding Model's expiring-soon findings) reflect the
-  // freshest live-resolved expiry data, mirroring the docs pass: Contract
-  // Model below still reflects the schema's own static `expiresAt`.
+  // Lifecycle Model and Finding Model's expiring-soon findings use the live-resolved
+  // expiry data, as the docs pass does. Contract Model below still reflects the
+  // schema's static `expiresAt`.
   const lifecycleContracts = options.liveExpirationDates
     ? await resolveLiveExpirationDates(linkResult.contracts, options.liveExpirationDates)
     : linkResult.contracts

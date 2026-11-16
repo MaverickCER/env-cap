@@ -14,26 +14,25 @@ export interface DiscoverOptions {
   readonly exclude: readonly string[]
 }
 
-// A predicate, not a module-level `Set`: a `Set` of string literals is
-// evaluated once at module load, which `perTest` coverage analysis can't
-// attribute to a covering test, so Stryker reports a false Survived.
+// A predicate, not a module-level `Set`. A `Set` of string literals is
+// evaluated once at module load, and `perTest` coverage analysis cannot
+// attribute that to a covering test. Stryker then reports a false Survived.
 function isAlwaysSkippedDirName(name: string): boolean {
   return name === "node_modules" || name === ".git"
 }
 
 // Generously above any legitimate single project's schema-file count. Every
-// fixture and example in this repo uses single digits. A large enterprise
-// monorepo built from many small feature contracts (the tool's intended
-// shape, see ADR 0011) would have to be an extreme outlier to approach four
-// figures. See `discoverSchemaFiles`'s use of it below.
+// fixture and example in this repo uses single digits. A large monorepo of
+// many small feature contracts is the intended shape (ADR 0011). Even that
+// would have to be an extreme outlier to approach four figures. See `discoverSchemaFiles`'s use of it below.
 const MAX_DISCOVERED_SCHEMA_FILES = 1000
 
 /**
  * Finds every file matching `include`/`exclude` under `root`, returned as
  * absolute paths in deterministic (alphabetically sorted) order. No count
- * limit: the usage scan walks every TypeScript source file, which a large
- * project legitimately has thousands of; {@link discoverSchemaFiles} adds the
- * schema-specific sanity limit on top.
+ * limit: the usage scan walks every TypeScript source file, and a large
+ * project has thousands. The schema-specific sanity limit lives in
+ * {@link discoverSchemaFiles}.
  *
  * @remarks
  * No external glob dependency. Directories are pruned *during* the walk
@@ -58,9 +57,9 @@ export async function discoverFiles(options: DiscoverOptions): Promise<string[]>
 }
 
 /**
- * Finds every schema file matching `include`/`exclude` under `root`, returned
- * as absolute paths in deterministic (alphabetically sorted) order: the
- * same walk as `discoverFiles`, plus a sanity limit on the count.
+ * Finds every schema file matching `include`/`exclude` under `root`, as
+ * absolute paths in alphabetical order. It is the walk of `discoverFiles`,
+ * plus a sanity limit on the count.
  *
  * @remarks
  * No external glob dependency. Directories are pruned *during* the walk
@@ -110,9 +109,9 @@ async function walkDirectory(
     // test/build/discover.test.ts's symlink-cycle regression test.
     if (entry.isDirectory()) {
       if (isAlwaysSkippedDirName(entry.name)) continue
-      // Test as a directory (trailing slash) so a pattern like "**/node_modules/**":
-      // which is meant to match *files inside* the directory; also prunes
-      // the directory itself before we ever read its contents.
+      // Test as a directory (trailing slash). Then a pattern like "**/node_modules/**",
+      // written to match the files inside, also prunes the directory before
+      // its contents are read.
       const relativeDir = `${toPosixRelative(root, fullPath)}/`
       if (matchesAnyPattern(relativeDir, exclude)) continue
       results.push(...(await walkDirectory(fullPath, root, exclude, fs)))

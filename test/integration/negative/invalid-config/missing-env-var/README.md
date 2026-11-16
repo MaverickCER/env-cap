@@ -1,6 +1,6 @@
 # missing-env-var example
 
-This example is deliberately broken, on purpose. Two capability-owned contracts:
+This example is deliberately broken, on purpose. Two feature-owned contracts:
 
 ```
 features/
@@ -21,12 +21,12 @@ never set. Running this example demonstrates two things at once:
    `EnvValidationError` naming exactly `STRIPE_KEY` and the `payments` contract
    that owns it. It is not a generic "something is wrong" message, and not a raw
    stack trace from deep inside application code.
-2. **A working capability doesn't get to run because it wasn't the broken
+2. **A working feature doesn't get to run because it wasn't the broken
    one.** `database`'s `DATABASE_URL` is completely valid. Even so, `src/app.ts`
    never executes at all (it would read both `databaseEnv.DATABASE_URL` and
    `paymentsEnv.STRIPE_KEY`). `validateEnv()` validates every registered
-   capability together, once, before any capability code runs. There is no
-   partial-success state where the capabilities with valid configuration
+   feature together, once, before any feature code runs. There is no
+   partial-success state where the features with valid configuration
    proceed while only the broken one is blocked.
 
 ## Run it
@@ -48,7 +48,7 @@ then boots `src/app.ts`. Its first line is a side-effect import of
 
 Add a `STRIPE_KEY` line to `.env` and re-run `npm start`. Any non-empty value
 satisfies the schema's validator; this example has no format requirement on it.
-Both capabilities now validate successfully and `src/app.ts` prints both
+Both features now validate successfully and `src/app.ts` prints both
 resolved values.
 
 ## Why this is its own example, not a variation on an existing one

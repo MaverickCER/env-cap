@@ -27,7 +27,7 @@ jobs:
       pull-requests: write
     # Bump this SHA together with the internal-package-contract devDependency pin, in one pull request,
     # because the `suites` and `install-dirs` inputs must exist at the pinned commit.
-    uses: MaverickCER/internal-package-contract/.github/workflows/benchmark-pr.yml@06350a159d3a1e68beea70a035421492f0203f3c # v0.20.0
+    uses: MaverickCER/internal-package-contract/.github/workflows/benchmark-pr.yml@76d1b66571db3c0970869106b3e8ac96b3cf017a # v0.21.0
     with:
       suites: |
         Runtime|benchmarks/performance-runtime|benchmarks/history/runtime.json
@@ -182,9 +182,8 @@ jobs:
             exit 1
           fi
 
-  # The package declares `typescript: ^5 || ^6 || ^7` as a peer and the development toolchain is on 6, so the
-  # type-check and the tests also run against the newest TypeScript 5. The oldest declared floor is not
-  # covered here.
+  # The development toolchain is on TypeScript 6, so the type-check and the tests also run against the newest
+  # TypeScript 5. `typescript-compat` covers the floor of the `typescript` peer range.
   typescript-5:
     runs-on: ubuntu-latest
     steps:
@@ -202,9 +201,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-  # Packs the package and installs it next to a root `typescript` of 5, 6 and 7. The scanner must run from
-  # its ESM and CJS entry points (under 7 through the bundled TypeScript 6, ADR 0049). The shipped
-  # declarations must type-check in a consumer. See scripts/typescript-compat.mjs.
+  # Packs the package and installs it next to the lowest and newest release of each major in the `typescript`
+  # peer range (scripts/peer-range-versions.mjs). The scanner must run from its ESM and CJS entry points
+  # (under 7 through the bundled TypeScript 6, ADR 0049). The shipped declarations must type-check in an ES
+  # module and a CommonJS consumer. See scripts/typescript-compat.mjs.
   typescript-compat:
     runs-on: ubuntu-latest
     steps:
@@ -219,6 +219,24 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run typescript-compat
+
+  # Packs the package and runs both lint rules on the floor and the newest release of each ESLint major in
+  # the `eslint` peer range, then on the `@typescript-eslint/utils` floor beside the ESLint floor.
+  # scripts/peer-range-versions.mjs derives the versions from package.json.
+  eslint-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.x
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run eslint-compat
 
   cross-runtime:
     runs-on: ubuntu-latest
@@ -418,6 +436,7 @@ jobs:
       - contract
       - typescript-5
       - typescript-compat
+      - eslint-compat
       - cross-runtime
       - examples
       - integration-fixtures

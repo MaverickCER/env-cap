@@ -23,9 +23,9 @@ function envCap(): GeneratedBannerOptions {
 const banner = createGeneratedBanner(envCap)
 
 /**
- * Regeneration instruction for a report the CLI does not write (ADR 0046): it is produced by the project's own
- * script calling the `@maverickcer/env-cap/build` generators, so naming `npx env-cap` there would send a reader to a command that
- * cannot regenerate it.
+ * Regeneration instruction for a report the CLI does not write (ADR 0046). The project's script produces it
+ * with the `@maverickcer/env-cap/build` generators. Naming `npx env-cap` would send a reader to a command
+ * that cannot regenerate it.
  * @returns The instruction, as a sentence.
  */
 export function reportRegenerateHint(): string {

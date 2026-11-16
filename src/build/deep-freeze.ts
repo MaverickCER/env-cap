@@ -4,14 +4,12 @@
  * structure throws instead of silently succeeding.
  *
  * @remarks
- * Generalized from `live-expirations.ts`'s former `DiscoveredContract[]`-
- * hardcoded `deepFreezeContracts()` (see ADR 0012) into a truly generic
- * utility, so Evidence Model's own immutability guarantee (a later phase)
- * can reuse it instead of duplicating the recursion.
+ * Generic, so the live-expiration override (ADR 0012) and Evidence Model's
+ * immutability guarantee share one recursion.
  *
- * Only recurses into arrays and plain objects (`{}` or `Object.create(null)`):
- * a `Map`, `Set`, or class instance is frozen at its own top level but not
- * walked further. This codebase's fact models are plain JSON-serializable
+ * Only recurses into arrays and plain objects (`{}` or `Object.create(null)`).
+ * A `Map`, `Set` or class instance is frozen at its top level but not walked
+ * further. This codebase's fact models are plain JSON-serializable
  * data, never class instances, so this is deliberately narrow rather than a
  * general-purpose deep-freeze library. A `WeakSet` guards against infinite
  * recursion if a cyclic reference is ever passed in.

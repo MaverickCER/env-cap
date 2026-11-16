@@ -13,9 +13,9 @@ import type {
 
 /**
  * The fourth of env-cap's seven canonical fact models (ADR 0024): every
- * rule violation and derived risk signal, unified behind one shape, with a
- * stable `code` and a structured {@link EvidenceReference} instead of four
- * independently-shaped finding families. See ADR 0026.
+ * rule violation and derived risk signal behind one shape. Each has a stable
+ * `code` and a structured {@link EvidenceReference}, replacing four
+ * differently shaped finding families. See ADR 0026.
  */
 
 /** Every stable `code` a {@link Finding} can carry. A superset of {@link CompatibilityIssueCode} plus one code per non-compatibility source family this model adapts. */
@@ -44,12 +44,11 @@ export type FindingFamily = "compatibility" | "drift" | "documentation" | "owner
 /** One rule violation or derived signal, in the Finding Model's canonical shape. */
 export interface Finding {
   /**
-   * `"error"` for a provable, always-blocking violation (e.g. an
-   * exclusive-group conflict); `"warning"` for everything gated by
-   * `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default "warn"
-   * behavior; `"info"` for an observation that is never actionable enough to
-   * block anything, even under `--strict`: see `INFO_ONLY_CODES` in
-   * `generate-env-artifacts.ts`.
+   * `"error"` for a provable, always-blocking violation, such as an
+   * exclusive-group conflict. `"warning"` for everything gated by the default
+   * "warn" of `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`.
+   * `"info"` for an observation that never blocks, even under `--strict` (see
+   * `INFO_ONLY_CODES` in `generate-env-artifacts.ts`).
    */
   readonly severity: "error" | "warning" | "info"
   /** Stable, machine-readable identifier: always set, unlike {@link CompatibilityIssue.code} which stays optional on that narrower, pre-existing type. */
@@ -72,10 +71,10 @@ export interface FindingModel {
 }
 
 /**
- * Every source a {@link buildFindingModel} call can adapt, all optional:
- * a caller passes whichever of `generateEnvArtifacts()`'s `manifest`/`docs`/
- * `usage` results it actually requested, exactly like that result's own
- * top-level fields are each independently optional.
+ * Every source a {@link buildFindingModel} call can adapt, all optional. A
+ * caller passes whichever `manifest`/`docs`/`usage` results of
+ * `generateEnvArtifacts()` it requested. Those top-level result fields are
+ * optional in the same way.
  */
 export interface BuildFindingModelInput {
   /** Every `EvidenceReference.file` below is rendered relative to this, matching every other rendered path in this package's output: see `displayPath()`. */
@@ -100,9 +99,9 @@ export interface BuildFindingModelInput {
   readonly dynamicAccessCitationProblems?: readonly DynamicAccessCitationProblem[] | undefined
 }
 
-// No input of this file (`CompatibilityIssue`, the `DocumentationFindings`
-// sub-types, the `usage-report.ts` finding types) carries a `SourcePosition`
-// yet, although the discovered contracts they come from do (ADR 0036). Every
+// No input of this file carries a `SourcePosition` yet: not `CompatibilityIssue`,
+// the `DocumentationFindings` sub-types or the `usage-report.ts` finding types.
+// The discovered contracts they come from do (ADR 0036). Every
 // `EvidenceReference` below therefore reports `position: undefined`, which its
 // type allows, until its upstream finding type carries a position.
 const NO_POSITION = undefined

@@ -1,14 +1,13 @@
 /**
  * SARIF export: an adapter over Finding Model, not a new fact source.
  * Produces a minimal, spec-conformant SARIF 2.1.0 log
- * (https://docs.oasis-open.org/sarif/sarif/v2.1.0/) so env-cap's findings can
- * be consumed by any SARIF-aware tool (GitHub code scanning, most CI security
- * dashboards) without a bespoke integration.
+ * (https://docs.oasis-open.org/sarif/sarif/v2.1.0/). Any SARIF-aware tool can
+ * then read env-cap's findings, such as GitHub code scanning or a CI security
+ * dashboard.
  *
- * Pure and synchronous: every input is already computed by the time this
- * runs, so this never re-derives a finding, never reads the filesystem, and
- * never decides what is or isn't a problem; it only re-shapes what
- * `buildFindingModel()` already concluded.
+ * Pure and synchronous: every input is computed before this runs. It never
+ * re-derives a finding, reads the filesystem or decides what is a problem.
+ * It only re-shapes what `buildFindingModel()` concluded.
  */
 
 import type { Finding, FindingModel } from "./finding-model.js"
@@ -50,8 +49,8 @@ function sarifLocations(finding: Finding): readonly SarifLocation[] | undefined 
   const location = finding.location
   // A change-model location (a generated artifact) has no position inside it.
   const { position } = location as { readonly position?: SourcePosition | undefined }
-  // A position names its own file (a stale citation's line is in the cited file, not the contract
-  // file), so the artifact is the file the line belongs to.
+  // A position names its file: a stale citation's line is in the cited file, not the contract file.
+  // So the artifact is the file the line belongs to.
   const file = position?.file ?? (location.model === "change" ? location.path : location.file)
   if (file === undefined) return undefined
   return [
@@ -95,10 +94,9 @@ export interface SarifLog {
  *
  * @remarks
  * `rules` lists every distinct `FindingCode` actually present in this run,
- * sorted: not the full `FindingCode` union. A SARIF consumer treats the
- * rules array as "what this tool reported", and advertising rules that
- * produced no result makes a clean run look like it has unexplained silent
- * rules. `results` preserves Finding Model's own order, which a caller wanting
+ * sorted: not the full `FindingCode` union. A SARIF consumer reads the rules
+ * array as "what this tool reported". Rules with no result would make a clean
+ * run look like it has unexplained silent rules. `results` preserves Finding Model's own order, which a caller wanting
  * a different one sorts themselves.
  */
 export function buildSarifLog(findingModel: FindingModel): SarifLog {

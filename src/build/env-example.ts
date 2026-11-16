@@ -23,8 +23,8 @@ export interface EnvExampleResult {
   readonly writtenPath: string | undefined
   /**
    * Set when a file already existed at the requested location and was left
-   * untouched: with the default `"keep-sibling"`, `writtenPath` is a fresh
-   * timestamped sibling instead; with `"skip"`, this is the only outcome and
+   * untouched. With the default `"keep-sibling"`, `writtenPath` is a fresh
+   * timestamped sibling instead. With `"skip"`, this is the only outcome and
    * `writtenPath` is `undefined`. Always `undefined` with `"overwrite"`.
    */
   readonly skippedExistingPath: string | undefined
@@ -58,9 +58,9 @@ function defaultLiteralFor(variable: DiscoveredVariable): string | undefined {
 
 /**
  * Renders one variable's documentation comments + `KEY=value` line. `commented`
- * comments out the `KEY=value` line itself (documentation lines are always
- * comments regardless); `note` adds a leading comment explaining why:
- * used for both cross-feature duplicates and disabled-feature entries.
+ * comments out the `KEY=value` line (documentation lines are always comments).
+ * `note` adds a leading comment that says why. Cross-feature duplicates and
+ * disabled-feature entries both use it.
  *
  * Data comes from the linked `documentEnv()` call, if any: never from the
  * schema itself, which only ever carries `processor`/`validator`/`default`.
@@ -250,11 +250,10 @@ function renderReconciliationHeader(reconciliation: Reconciliation): string[] {
  * Writes a rendered `.env.example` to `location`. Behavior when a file
  * already exists there is governed by `options.onExisting` (default
  * `"keep-sibling"`, see `EnvExampleOnExisting`):
- *  - `"keep-sibling"`: the existing file is left alone; freshly generated
- *    content is written to a timestamped sibling instead
- *    (`<location>.<epoch-ms>`), prefixed with a reconciliation header
- *    comparing it against the existing file (omitted when there's nothing
- *    to report).
+ *  - `"keep-sibling"`: the existing file is left alone. Fresh content goes
+ *    to a timestamped sibling (`<location>.<epoch-ms>`) instead. A
+ *    reconciliation header compares it with the existing file, unless there
+ *    is nothing to report.
  *  - `"overwrite"`: the existing file is replaced directly with freshly
  *    rendered content; no reconciliation header (the changes it would
  *    describe are already applied).
@@ -317,9 +316,9 @@ export async function writeEnvExample(
     }
   }
 
-  // Only "keep-sibling" embeds the reconciliation as an in-file header:
-  // "overwrite" already applies the changes directly, so "remove/comment/add
-  // the following" instructions would just describe work already done.
+  // Only "keep-sibling" embeds the reconciliation as an in-file header.
+  // "overwrite" applies the changes directly, so "remove/comment/add the
+  // following" instructions would describe work already done.
   const headerLines =
     onExisting === "keep-sibling" ? renderReconciliationHeader(reconciliation) : []
   const content = renderEnvExample(contracts, headerLines)

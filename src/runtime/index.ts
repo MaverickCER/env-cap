@@ -7,8 +7,8 @@
  * Node imports, `process.` and `Buffer.`, but a third-party import would pass unnoticed.
  * Discovery and manifest generation live in `@maverickcer/env-cap/build`, never here.
  *
- * `documentEnv` is exported here, not from `./build`, because it is called inline in the same
- * schema file as `createEnv`, which may end up in any bundle. It must be as cheap to import as
+ * `documentEnv` is exported here, not from `./build`. It is called inline in the same schema file
+ * as `createEnv`, and that file may end up in any bundle. It must be as cheap to import as
  * `createEnv` (see `document.ts`).
  *
  * @packageDocumentation

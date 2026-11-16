@@ -43,7 +43,7 @@ You can continue using:
 The migration path is:
 
 1. Keep `dotenv` responsible for loading values.
-2. Create capability-owned environment schemas.
+2. Create feature-owned environment schemas.
 3. Replace direct `process.env` access with validated contracts.
 4. Add documentation metadata when needed.
 5. Generate configuration artifacts through build tooling.
@@ -84,11 +84,11 @@ This creates several problems:
 - validation logic is duplicated
 - ownership is unclear
 - variables can disappear from documentation
-- unused variables remain after capabilities are removed
+- unused variables remain after features are removed
 
-## After: capability-owned environment contracts
+## After: feature-owned environment contracts
 
-Move configuration requirements alongside the capability that uses them.
+Move configuration requirements alongside the feature that uses them.
 
 Example:
 
@@ -119,7 +119,7 @@ documentEnv(paymentsSchema, {
 })
 ```
 
-The capability now owns its configuration:
+The feature now owns its configuration:
 
 ```ts
 import { paymentsEnv } from "./env.schema"
@@ -146,7 +146,7 @@ process.env
 env-cap validation
     |
     v
-capability-owned environment contract
+feature-owned environment contract
 ```
 
 Example startup:
@@ -182,7 +182,7 @@ Search for:
 process.env
 ```
 
-Identify which capability owns each variable.
+Identify which feature owns each variable.
 
 Example:
 
@@ -198,9 +198,9 @@ features/payments/
 
 not a global configuration file.
 
-### Step 2: Create capability schemas
+### Step 2: Create feature schemas
 
-Move variables into capability-owned schemas:
+Move variables into feature-owned schemas:
 
 ```text
 features/
@@ -229,7 +229,7 @@ After:
 const key = paymentsEnv.STRIPE_SECRET_KEY
 ```
 
-The capability now receives a validated value instead of an unknown string.
+The feature now receives a validated value instead of an unknown string.
 
 ### Step 4: Add documentation metadata
 
@@ -341,7 +341,7 @@ dotenv
 process.env
  |
  v
-capability-owned env contracts
+feature-owned env contracts
  |
  v
 validated application code

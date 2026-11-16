@@ -1,32 +1,51 @@
-// CI's `typescript-compat` job runs this after `npm run build`: it packs the package exactly as
-// `npm publish` would, then, for each TypeScript major a consumer might have installed as their root
-// `typescript`, installs the tarball into a scratch project and proves two things:
+// CI's `typescript-compat` job runs this after `npm run build`. It packs the package exactly as
+// `npm publish` would. The TypeScript releases come from the `typescript` peer range in package.json
+// (`peerRangeBoundaries` in scripts/peer-range-versions.mjs): the lowest release of each major the range
+// admits, and the newest. For each one as a consumer's root `typescript`, it installs the tarball into a
+// scratch project and proves two things:
 //
 //   1. The build-time scanner (`@maverickcer/env-cap/build`) runs from BOTH its ESM and CJS entry
-//      points. TypeScript 7 ships no programmatic compiler API, so under a 7 root the scanner has to
-//      fall back to the bundled `@typescript/typescript6` (src/build/typescript.ts): the case no
-//      unit test can reach, because it needs a real TypeScript 7 root in `node_modules`.
-//   2. The shipped `.d.ts` files type-check in a consumer under `moduleResolution: nodenext`,
-//      `strict` and full library checking (no `skipLibCheck`), every entry point but `./eslint-plugin`
-//      (its declarations type themselves from the `@typescript-eslint/utils` peer, whose TypeScript
-//      support applies) included. Under a 7
-//      root the `types@>=7` export conditions serve `dist/.dts7`, whose compiler-API types come from
-//      the bundled `@typescript/typescript6` (TypeScript 7's own package ships none); under 5 and 6 the
-//      primary declarations typed from the consumer's `typescript` are served (ADR 0049).
+//      points. TypeScript 7 ships no programmatic compiler API. So under a 7 root the scanner falls
+//      back to the bundled `@typescript/typescript6` (src/build/typescript.ts). No unit test can
+//      reach that case, because it needs a real TypeScript 7 root in `node_modules`.
+//   2. The shipped declarations type-check in an ES module consumer and in a CommonJS consumer, under
+//      `moduleResolution: nodenext`, `strict` and full library checking (no `skipLibCheck`). That covers
+//      every entry point but `./eslint-plugin`, whose declarations take their types from the
+//      `@typescript-eslint/utils` peer. Under a 7 root the `types@>=7` export conditions serve `dist/.dts7`.
+//      Its compiler-API types come from the bundled `@typescript/typescript6`, since TypeScript 7's package
+//      ships none. Under 5 and 6 the primary declarations, typed from the consumer's `typescript`, are
+//      served (ADR 0049).
+//
+// The CommonJS consumer sets the floor at 5.8. Each `dist/*.d.cts` re-exports ES module declarations. Under
+// 5.0 to 5.7 that fails with TS1479; 5.8 is the first release to allow it under `nodenext`.
 //
 // Under a 7 root it also removes the bundled compiler and asserts the readable failure, so the
 // "no usable compiler" message cannot rot unseen.
 //
-// Usage: node scripts/typescript-compat.mjs [version ...]   (default: 5 6 7)
+// Usage: node scripts/typescript-compat.mjs [version ...]   (default: derived from package.json)
+// A full version installs the lowest release at or above it in its major; a bare major, the newest.
 
 import { spawnSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { nodeTypesFor, peerRangeBoundaries, sortReleases } from "./peer-range-versions.mjs"
 
-const versions = process.argv.slice(2).length > 0 ? process.argv.slice(2) : ["5", "6", "7"]
-const PACKAGE = "@maverickcer/env-cap"
 const repoRoot = path.resolve(import.meta.dirname, "..")
+const manifest = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"))
+const PACKAGE = manifest.name
+const specs =
+  process.argv.slice(2).length > 0
+    ? process.argv.slice(2)
+    : peerRangeBoundaries(manifest.peerDependencies.typescript)
 
 function run(command, args, cwd, { allowFailure = false } = {}) {
   // --traceResolution under TypeScript 7 prints several MB; the 1 MiB default kills the child (exit null).
@@ -39,17 +58,43 @@ function run(command, args, cwd, { allowFailure = false } = {}) {
   return result
 }
 
-const packDir = mkdtempSync(path.join(tmpdir(), "env-cap-pack-"))
+/**
+ * The exact release one specifier stands for. TypeScript never publishes `X.Y.0`, so a floor such as
+ * `5.8.0` installs the lowest release at or above it in that major (5.8.2).
+ */
+function release(spec) {
+  const range = spec.includes(".") ? `^${spec}` : spec
+  const found = sortReleases(
+    JSON.parse(run("npm", ["view", `typescript@${range}`, "version", "--json"], repoRoot).stdout),
+  )
+  return spec.includes(".") ? found[0] : found.at(-1)
+}
+
+// Each release once, with the @types/node its specifier calls for. A floor and a newest release can coincide.
+const targets = [
+  ...new Map(
+    specs.map((spec) => [
+      release(spec),
+      { spec, nodeTypes: nodeTypesFor(spec, manifest.engines.node) },
+    ]),
+  ),
+]
+console.log(
+  `typescript releases: ${targets.map(([version, { spec }]) => `${version} (from ${spec})`).join(", ")}`,
+)
+
+// realpathSync: on macOS the temp directory is a symlink (/var -> /private/var).
+const packDir = realpathSync(mkdtempSync(path.join(tmpdir(), "env-cap-pack-")))
 run("npm", ["pack", "--ignore-scripts", "--pack-destination", packDir], repoRoot)
 const tarball = path.join(
   packDir,
   readdirSync(packDir).find((f) => f.endsWith(".tgz")),
 )
 
-// The scanner, run from both entry formats over every committed `env.schema.ts` fixture (the example
-// applications and the integration fixtures: 23 files, from one-liners to multi-call schemas with
-// documentation metadata). Each TypeScript root writes what it found, and the three outputs must be
-// byte-identical: TypeScript 5, 6 and the bundled 6 under a 7 root parse the same corpus the same way.
+// The scanner, run from both entry formats over every committed `env.schema.ts` fixture. The
+// fixtures are the example applications and the integration fixtures: 23 files, from one-liners to
+// multi-call schemas with documentation metadata. Each TypeScript root writes what it found. Every
+// output must be byte-identical, so each tested 5 and 6 and the bundled 6 parse the corpus alike.
 const scanScript = `import { createRequire } from "node:module"
 import { readFileSync, writeFileSync } from "node:fs"
 const require = createRequire(import.meta.url)
@@ -95,8 +140,8 @@ function schemaFixtures() {
       if (entry.isDirectory()) walk(rel)
       else if (entry.name === "env.schema.ts") {
         const source = readFileSync(path.join(repoRoot, rel), "utf8")
-        // examples/application keeps two schema files as commented-out reference material (their
-        // header says so); it declares nothing, so the scanner is right to find no call in it.
+        // examples/application keeps two schema files as commented-out reference material, as their
+        // header says. They declare nothing, so the scanner is right to find no call in them.
         if (!source.startsWith("// REFERENCE ONLY")) out[rel] = source
       }
     }
@@ -125,6 +170,17 @@ const kind: number = result.sourceFile.kind
 console.log(typeof createEnv, typeof helpers, typeof node, result.createEnvCalls.length, kind, typeof evidence)
 `
 
+// The same entry points from a CommonJS file, which resolves the `require` conditions and `dist/*.d.cts`.
+const commonJsConsumer = `import envCap = require("${PACKAGE}")
+import helpers = require("${PACKAGE}/helpers")
+import node = require("${PACKAGE}/node")
+import build = require("${PACKAGE}/build")
+import evidence = require("${PACKAGE}/evidence")
+const result = build.parseSchemaFile("a.ts", "export const e = 1")
+const kind: number = result.sourceFile.kind
+console.log(typeof envCap.createEnv, typeof helpers, typeof node, result.createEnvCalls.length, kind, typeof evidence)
+`
+
 function tsconfig(file) {
   return JSON.stringify({
     compilerOptions: {
@@ -140,8 +196,9 @@ function tsconfig(file) {
 }
 
 try {
-  for (const version of versions) {
-    const dir = mkdtempSync(path.join(tmpdir(), `env-cap-tscompat-${version}-`))
+  for (const [version, { nodeTypes }] of targets) {
+    const major = version.split(".")[0]
+    const dir = realpathSync(mkdtempSync(path.join(tmpdir(), `env-cap-tscompat-${version}-`)))
     try {
       console.log(`\n== typescript@${version} as the consumer's root compiler`)
       writeFileSync(
@@ -151,7 +208,14 @@ try {
       // A plain install (no --legacy-peer-deps): proves the widened peer range resolves for this root.
       run(
         "npm",
-        ["install", "--no-audit", "--no-fund", tarball, `typescript@${version}`, "@types/node"],
+        [
+          "install",
+          "--no-audit",
+          "--no-fund",
+          tarball,
+          `typescript@${version}`,
+          `@types/node@${nodeTypes}`,
+        ],
         dir,
       )
 
@@ -162,8 +226,8 @@ try {
       ).version
       console.log(`root typescript ${rootVersion}`)
       // Installing this package must not replace the consumer's `tsc`. The bundled TypeScript 6 ships a
-      // `tsc` bin of its own; hoisted as an ordinary dependency, npm links it into `.bin` and every
-      // consumer's `npx tsc` silently becomes TypeScript 6. Bundling keeps it nested and unlinked.
+      // `tsc` bin. Hoisted as an ordinary dependency, npm would link it into `.bin`, and every
+      // consumer's `npx tsc` would silently become TypeScript 6. Bundling keeps it nested and unlinked.
       const linked = run(
         "node",
         [path.join("node_modules", ".bin", "tsc"), "--version"],
@@ -179,31 +243,37 @@ try {
       mkdirSync(path.join(dir, "src"))
       writeFileSync(path.join(dir, "strict.ts"), strictConsumer)
       writeFileSync(path.join(dir, "tsconfig.strict.json"), tsconfig("strict.ts"))
+      writeFileSync(path.join(dir, "strict.cts"), commonJsConsumer)
+      writeFileSync(path.join(dir, "tsconfig.cjs.json"), tsconfig("strict.cts"))
       writeFileSync(path.join(dir, "scan.mjs"), scanScript)
       writeFileSync(path.join(dir, "fixtures.json"), JSON.stringify(fixtures))
 
-      run("node", [tsc, "-p", "tsconfig.strict.json"], dir)
-      console.log(
-        "types ok: every entry point but ./eslint-plugin, full library check, no skipLibCheck",
-      )
+      const nodeTypesVersion = JSON.parse(
+        readFileSync(path.join(dir, "node_modules", "@types", "node", "package.json"), "utf8"),
+      ).version
       // Which declaration set answered: the primary one under 5 and 6, the `types@>=7` one under 7.
-      const trace = run(
-        "node",
-        [tsc, "-p", "tsconfig.strict.json", "--traceResolution"],
-        dir,
-      ).stdout
-      const expected = version === "7" ? "types@>=7" : "types"
-      if (!trace.includes(`Resolved under condition '${expected}'`)) {
-        console.error(
-          `expected the '${expected}' export condition to resolve the declarations under typescript@${version}`,
+      const expected = major === "7" ? "types@>=7" : "types"
+      for (const [format, config] of [
+        ["ES module", "tsconfig.strict.json"],
+        ["CommonJS", "tsconfig.cjs.json"],
+      ]) {
+        run("node", [tsc, "-p", config], dir)
+        const trace = run("node", [tsc, "-p", config, "--traceResolution"], dir).stdout
+        if (!trace.includes(`Resolved under condition '${expected}'`)) {
+          console.error(
+            `expected the '${expected}' export condition to resolve the ${format} declarations under typescript@${version}`,
+          )
+          process.exit(1)
+        }
+        console.log(
+          `${format} types ok with @types/node ${nodeTypesVersion}: every entry point but ./eslint-plugin, ` +
+            `full library check, served under the '${expected}' export condition`,
         )
-        process.exit(1)
       }
-      console.log(`declarations served under the '${expected}' export condition`)
       console.log(run("node", ["scan.mjs"], dir).stdout.trim())
       scanOutputs.set(version, readFileSync(path.join(dir, "scan-output.json"), "utf8"))
 
-      if (version === "7") {
+      if (major === "7") {
         // Bundled inside the package (bundleDependencies), not hoisted into the consumer's node_modules.
         const bundled = path.join(
           dir,
@@ -244,7 +314,9 @@ try {
   console.log(
     `scanner output identical across typescript ${[...scanOutputs.keys()].join(", ")} for ${Object.keys(fixtures).length} schema files`,
   )
-  console.log(`\nTypeScript compat check passed for typescript ${versions.join(", ")}.`)
+  console.log(
+    `\nTypeScript compat check passed for typescript ${[...scanOutputs.keys()].join(", ")}.`,
+  )
 } finally {
   rmSync(packDir, { recursive: true, force: true })
 }

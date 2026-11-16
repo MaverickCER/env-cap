@@ -115,7 +115,7 @@ export default tseslint.config(
       // statements, never an inline `type` modifier on one specifier among
       // others (`import { value, type X }`). This package ships to consumers
       // on a wide range of TypeScript versions and non-tsc toolchains
-      // (`peerDependencies.typescript` is `^5.0.0`, and `isolatedModules`
+      // (`peerDependencies.typescript` starts at `^5.8.0`, and `isolatedModules`
       // transpilers vary in how reliably they elide an inline per-specifier
       // `type` modifier): a whole-statement `import type`/`export type` is
       // erased unambiguously by every one of them. Neither rule is part of

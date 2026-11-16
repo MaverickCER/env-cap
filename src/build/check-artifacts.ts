@@ -44,12 +44,11 @@ function readIfExists(filePath: string, fs: BuildFileSystem): Promise<string | u
 
 /**
  * Parses `text` as an `EvidenceModel` and re-serializes it with
- * `provenance.generatedAt` normalized out (see `normalizeEvidenceSnapshotForComparison()`):
- * so `--check` never reports drift solely because a fresh render's
- * timestamp differs from the committed file's. A parse failure returns
- * `text` unchanged, so a corrupted on-disk file simply fails to match
- * `expected`'s normalized form (reported as `"stale"`), rather than
- * crashing `--check` itself.
+ * `provenance.generatedAt` normalized out (see `normalizeEvidenceSnapshotForComparison()`).
+ * So `--check` never reports drift only because a fresh render has a newer
+ * timestamp. A parse failure returns `text` unchanged. A corrupted file on
+ * disk then fails to match the normalized `expected` and reports as
+ * `"stale"`, instead of crashing `--check`.
  */
 /** @internal Exported for direct unit coverage: reached through `checkEnvArtifacts()`'s `--evidence` pass in production, but the exact "returns text unchanged, not undefined/thrown" catch behavior isn't independently observable through that public path (any malformed `actual` already reads as "stale" against a well-formed `expected`, regardless of the catch's exact return value). */
 export function normalizeEvidenceJsonForComparison(text: string): string {

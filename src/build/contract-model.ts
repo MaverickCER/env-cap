@@ -29,14 +29,13 @@ function relativizePackageOrigin(
  * variable's structural and documentation contract. See ADR 0025.
  *
  * @remarks
- * Deliberately broader than the persisted evidence snapshot's
- * (`evidence-snapshot.ts`) `ManifestChangeReport` scope: that diff is scoped
- * to *active* contracts and *only* the `documentEnv()`-sourced fields,
- * matching `renderManifest()`'s own scope (ADR 0021). This model includes
- * every discovered contract regardless of `active`, plus the AST-derived
- * schema facts (`hasDefault`/`hasProcessor`/etc.) the change report
- * deliberately excludes: both are load-bearing for downstream
- * Finding/Evidence Model work.
+ * Broader than the `ManifestChangeReport` scope of the persisted evidence
+ * snapshot (`evidence-snapshot.ts`). That diff covers *active* contracts and
+ * *only* the `documentEnv()`-sourced fields, the scope of `renderManifest()`
+ * (ADR 0021). This model includes every discovered contract, active or not.
+ * It also includes the AST-derived schema facts (`hasDefault`/`hasProcessor`
+ * and so on) that the change report excludes. Finding Model and Evidence
+ * Model need both.
  */
 
 /** Bump only when a reader could misinterpret the new shape (a field changes

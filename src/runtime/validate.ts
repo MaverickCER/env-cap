@@ -10,8 +10,8 @@ import type { validateEnvOptions, validateEnvResult } from "./types.js"
  * `options.values`, then caches the results.
  *
  * @remarks
- * Idempotent: the first successful (or failed) call is authoritative for the life of the
- * process; later calls return (or re-throw) that same outcome without re-running any
+ * Idempotent: the first call's outcome, success or failure, holds for the life of the
+ * process. Later calls return (or re-throw) that same outcome without re-running any
  * processor or validator. Concurrent in-flight calls share one underlying run. Call
  * `resetEnvCache()` to validate again, for example between test scenarios.
  *
@@ -32,8 +32,8 @@ import type { validateEnvOptions, validateEnvResult } from "./types.js"
 export async function validateEnv(options: validateEnvOptions): Promise<validateEnvResult> {
   const state = getState()
 
-  // A finished run leaves either its `result` or its `error` here, and `resetCache()` replaces the
-  // whole state object, so whichever is set is the outcome every later call returns (or re-throws).
+  // A finished run leaves either its `result` or its `error` here. Only `resetCache()` replaces the
+  // whole state object. So whichever is set is the outcome every later call returns (or re-throws).
   if (state.result) {
     return state.result
   }
@@ -49,19 +49,18 @@ export async function validateEnv(options: validateEnvOptions): Promise<validate
   try {
     return await run
   } finally {
-    // Not `= undefined`: `inFlight` is genuinely optional (absent between
-    // runs), and exactOptionalPropertyTypes distinguishes "key absent" from
-    // "key present holding undefined"; delete is the operation that
-    // actually means the former.
+    // Not `= undefined`: `inFlight` is optional (absent between runs).
+    // exactOptionalPropertyTypes tells "key absent" from "key present
+    // holding undefined", and `delete` is what means the former.
     delete state.inFlight
   }
 }
 
 /**
- * Whether a variable participates in a validation run: unset `context`
- * always participates; otherwise it participates only when `activeContexts`
- * contains that exact string (no prefix matching, no wildcards, no
- * hierarchy; see ADR 0022's Formal Invariants).
+ * Whether a variable participates in a validation run. A variable with no
+ * `context` always participates. Otherwise it participates only when
+ * `activeContexts` contains that exact string. There is no prefix matching,
+ * wildcard or hierarchy (ADR 0022, Formal Invariants).
  */
 function matchesContext(
   variableContext: string | undefined,
@@ -70,11 +69,12 @@ function matchesContext(
   return variableContext === undefined || (activeContexts?.has(variableContext) ?? false)
 }
 
-// `async` is load-bearing here despite no internal `await`: `validateEnv()`
-// assigns this call's return value directly to `state.inFlight` so
-// concurrent callers can share one in-flight run (see its own doc comment).
-// That only works if this returns a Promise. A plain return or throw would
-// break that sharing and change when a validation error surfaces.
+// `async` is load-bearing here despite no internal `await`. `validateEnv()`
+// assigns this call's return value to `state.inFlight` so concurrent callers
+// can share one in-flight run (see its doc comment). That only works if this
+// returns a Promise. A plain return or throw would break that sharing and
+// change when a validation error surfaces.
+//
 // eslint-disable-next-line @typescript-eslint/require-await -- deliberately async so a thrown error becomes a rejection (see the note above).
 async function runValidation(
   options: validateEnvOptions,

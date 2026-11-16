@@ -25,9 +25,9 @@ This approach provides:
 
 `env-cap` does not replace Zod. It addresses a different architectural concern: configuration ownership.
 
-A centralized environment object works well when the entire application has one configuration owner. As applications grow, especially across teams or domains, the environment schema often becomes a shared dependency that every capability must modify.
+A centralized environment object works well when the entire application has one configuration owner. As applications grow, especially across teams or domains, the environment schema often becomes a shared dependency that every feature must modify.
 
-`env-cap` moves configuration ownership to the capability that consumes it while allowing teams to continue using their preferred validation approach.
+`env-cap` moves configuration ownership to the feature that consumes it while allowing teams to continue using their preferred validation approach.
 
 ## Migration goals
 
@@ -35,10 +35,10 @@ A migration from Zod does not require rewriting every validation rule.
 
 The recommended approach is incremental:
 
-1. Identify which capability owns each environment variable.
-2. Move variables from the centralized schema into capability-owned schemas.
+1. Identify which feature owns each environment variable.
+2. Move variables from the centralized schema into feature-owned schemas.
 3. Keep existing validation logic where possible.
-4. Replace global environment access with capability-owned contracts.
+4. Replace global environment access with feature-owned contracts.
 5. Generate project-wide documentation and visibility through build tooling.
 
 ## Before: centralized environment schema
@@ -70,7 +70,7 @@ await stripe.connect(env.STRIPE_SECRET_KEY)
 
 The challenge is not validation. The challenge is ownership.
 
-As capabilities grow:
+As features grow:
 
 ```text
 env.ts
@@ -83,11 +83,11 @@ env.ts
 └── internal tooling variables
 ```
 
-Every capability now depends on the same configuration file.
+Every feature now depends on the same configuration file.
 
-## After: capability-owned contracts
+## After: feature-owned contracts
 
-Move configuration next to the capability that owns it.
+Move configuration next to the feature that owns it.
 
 Example:
 
@@ -130,7 +130,7 @@ import { paymentsEnv } from "./env.schema"
 stripe.connect(paymentsEnv.STRIPE_SECRET_KEY)
 ```
 
-The validation rule remains owned by the payments capability.
+The validation rule remains owned by the payments feature.
 
 ## Keeping Zod validators
 
@@ -157,14 +157,14 @@ const serverSchema = {
 
 The responsibilities become:
 
-| Responsibility          | Tool                       |
-| ----------------------- | -------------------------- |
-| Schema validation       | Zod                        |
-| Value processing        | Zod or custom processors   |
-| Capability ownership    | env-cap                    |
-| Runtime access          | Capability-owned contracts |
-| Documentation           | documentEnv                |
-| Configuration inventory | Build tooling              |
+| Responsibility          | Tool                     |
+| ----------------------- | ------------------------ |
+| Schema validation       | Zod                      |
+| Value processing        | Zod or custom processors |
+| Feature ownership       | env-cap                  |
+| Runtime access          | Feature-owned contracts  |
+| Documentation           | documentEnv              |
+| Configuration inventory | Build tooling            |
 
 ## Handling the generated global environment object
 
@@ -175,7 +175,7 @@ env.DATABASE_URL
 env.STRIPE_SECRET_KEY
 ```
 
-During migration, replace this with imports from the owning capability:
+During migration, replace this with imports from the owning feature:
 
 ```ts
 // Before
@@ -209,7 +209,7 @@ Continue validating existing variables.
 
 ### Step 2: Split variables by ownership
 
-Move one capability at a time:
+Move one feature at a time:
 
 ```text
 features/
@@ -232,7 +232,7 @@ env.SOME_VARIABLE
 to:
 
 ```ts
-capabilityEnv.SOME_VARIABLE
+featureEnv.SOME_VARIABLE
 ```
 
 ### Step 4: Add documentation metadata

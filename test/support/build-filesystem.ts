@@ -16,9 +16,9 @@ export const nodeBuildFs: BuildFileSystem = {
 }
 
 /**
- * The capability reads and writes UTF-8 text only. Node would quietly accept an empty or unknown
- * encoding (a raw buffer read, a default write), so the test doubles reject anything else: a call
- * site that passes the wrong encoding fails here instead of passing unnoticed.
+ * The capability reads and writes UTF-8 text only. Node quietly accepts an empty or unknown
+ * encoding as a raw buffer read or a default write. So the test doubles reject anything else, and
+ * a call site that passes the wrong encoding fails here instead of passing unnoticed.
  * @param encoding - the encoding a call site passed.
  * @returns the encoding, once it is known to be `"utf8"`.
  */

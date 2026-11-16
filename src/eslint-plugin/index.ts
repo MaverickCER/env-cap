@@ -3,7 +3,8 @@
  *
  * `no-raw-process-env` flags direct `process.env` reads outside `env.schema.ts` files. `no-node-fs` flags
  * `node:fs` imports in library code, which should take its file system from the caller. The plugin runs
- * inside the project's own ESLint; CI runs the rules on ESLint 10 only.
+ * inside the project's ESLint. The `eslint-compat` CI job tests it on the lowest and newest release of each
+ * ESLint major in the peer range.
  *
  * @packageDocumentation
  */

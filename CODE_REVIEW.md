@@ -7,7 +7,7 @@ A change is safe to merge when CI is green, no invariant below has moved, and ev
 A change is ready to merge when all of these hold:
 
 - The `contract`, `lint` and `required` checks are green; the branch ruleset requires all three.
-- `required` waits for every gate job in ci.yml: `verify`, `lint`, `contract`, `cross-runtime` (the Bun and Deno suite), `examples`, `integration-fixtures`, `typescript-5`, `typescript-compat`, `package-managers` and `benchmark-pr`.
+- `required` waits for every gate job in ci.yml: `verify`, `lint`, `contract`, `cross-runtime` (the Bun and Deno suite), `examples`, `integration-fixtures`, `typescript-5`, `typescript-compat`, `eslint-compat`, `package-managers` and `benchmark-pr`.
 - Three jobs are outside `required`. `verify-current` tries the newest Node and is informational. `badges` and `deploy` run only after a push to `main`.
 - A `benchmark-pr` failure also fails `contract` in its first step, so it cannot pass as a skip.
 - Every invariant in §2 that the change touches still holds, checked in the code, not the description.

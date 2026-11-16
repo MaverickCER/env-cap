@@ -12,7 +12,7 @@
 
 **Each feature declares the environment variables it needs and their format. Your app validates them all in one place at startup, fails fast on a bad value, and reports how they should be rotated before they expire.**
 
-`env-cap` is a TypeScript library. A feature is a folder or an installable package in your code; the docs also call it a capability. It declares its variables in a **contract**: how to parse and check each value, who owns it and, for a secret, when it expires.
+`env-cap` is a TypeScript library. A feature is a folder or an installable package in your code. It declares its variables in a **contract**: how to parse and check each value, who owns it and, for a secret, when it expires.
 
 A build step lists every contract in the **manifest**, a generated file your app passes to `validateEnv()` at startup. A bad value throws an error that names the variable, never its value.
 
@@ -136,7 +136,9 @@ This is output from [`examples/application`](https://github.com/MaverickCER/env-
 
 ## Install and verify
 
-**Prerequisites:** Node.js `>=22`. Your own TypeScript is optional. The generator uses it when it is version 5 or 6, and otherwise the bundled TypeScript 6 compiler. CI tests the newest 5.x only; the 5.0 floor is untested. The runtime works in plain JavaScript ([requirements](GUIDE.md#requirements)).
+**Prerequisites:** Node.js `>=22`. Your own TypeScript is optional and must be 5.8 or later. The generator uses it when it is version 5 or 6, and otherwise the bundled TypeScript 6 compiler. CI tests the lowest and newest release of each TypeScript major in that range (`typescript-compat`). The runtime works in plain JavaScript ([requirements](GUIDE.md#requirements)).
+
+<!-- quick-start:begin -->
 
 ```sh
 npm install @maverickcer/env-cap
@@ -144,9 +146,9 @@ npx env-cap init                  # writes env.schema.ts and scripts/generate-en
 node scripts/generate-env.mjs
 ```
 
-`init` writes two files and skips any file that already exists. Without a valid `package.json` it exits `1` and writes nothing. `test/cli/init.test.ts` pins these rules and the templates. **Verify it works:** the script prints `Discovered 1 contract(s).` and exits `0`. `test/cli/quick-start.test.ts` runs `init` and the script against the built package and checks that line and each generated file. Report an issue if that line differs.
+<!-- quick-start:end -->
 
-Then validate once at startup and read values through the contract. `init` writes `env.schema.ts` into `src/` when that folder exists, otherwise into the project root; adjust the import path to match:
+`init` writes two files and skips any file that already exists. Without a valid `package.json` it exits `1` and writes nothing. `test/cli/init.test.ts` pins these rules and the templates. **Verify it works:** the script prints `Discovered 1 contract(s).` and exits `0`. `test/cli/quick-start.test.ts` runs `init` and the script against the built package and checks that line and each generated file. Report an issue if that line differs. Then validate once at startup and read values through the contract. `init` writes `env.schema.ts` into `src/` when that folder exists, otherwise into the project root; adjust the import path to match:
 
 ```ts
 import { validateEnv } from "@maverickcer/env-cap"
@@ -163,16 +165,14 @@ exampleEnv.EXAMPLE_API_URL
 
 **What you get:**
 
-- Per-feature contracts with validators, owners, sensitivity and expiry dates ([contracts](GUIDE.md#capability-owned-contracts)).
+- Per-feature contracts with validators, owners, sensitivity and expiry dates ([contracts](GUIDE.md#feature-owned-contracts)).
 - A manifest, environment docs, `.env.example` and an ownership report, from static analysis that never imports your schema files.
 - A persisted evidence file, a CLI, a [GitHub Action](GUIDE.md#github-action), scheduled rotation reports and an [ESLint plugin](GUIDE.md#eslint-plugin).
 - One central schema or one contract per feature or package; the manifest stays project-wide either way.
 
-**How it works:** the runtime and the build tooling are separate entry points. The runtime has no filesystem access, which lint and a tarball scan enforce. The build pass runs only in development and CI ([Architecture](GUIDE.md#runtime-and-build-time-are-intentionally-separate)).
-
-**Runtimes:** Node.js 22 and 24 are tested. Bun, Deno and a browser-style bundle run in CI for the runtime, helpers and evidence entries. Edge runtimes are not tested ([support matrix](GUIDE.md#runtime-support-matrix)).
-
-**Package managers:** npm is supported. pnpm, Yarn 1 and Yarn Berry are tested only for installing the tarball and importing every entry ([details](GUIDE.md#package-managers)).
+- **How it works:** the runtime and the build tooling are separate entry points. The runtime has no filesystem access, which lint and a tarball scan enforce. The build pass runs only in development and CI ([Architecture](GUIDE.md#runtime-and-build-time-are-intentionally-separate)).
+- **Runtimes:** Node.js 22 and 24 are tested. Bun, Deno and a browser-style bundle run in CI for the runtime, helpers and evidence entries. Edge runtimes are not tested ([support matrix](GUIDE.md#runtime-support-matrix)).
+- **Package managers:** npm is supported. pnpm, Yarn 1 and Yarn Berry are tested only for installing the tarball and importing every entry ([details](GUIDE.md#package-managers)).
 
 ## Limits and when not to use it
 
@@ -216,5 +216,4 @@ Pre-1.0; the npm badge shows the current version. Before 1.0, a minor release ma
 - **Evaluate:** read the [Adoption guide](ADOPTION.md), then try env-cap on one real schema.
 - **Integrate:** follow the [Guide](GUIDE.md#core-workflow) and run an [example](https://github.com/MaverickCER/env-cap/tree/main/examples).
 - **Verify:** check the [security model](SECURITY.md#runtime-security-model) against the tests it names.
-
-Contributing: [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and changesets; [CODE_REVIEW.md](CODE_REVIEW.md) covers review. License: MIT, see [LICENSE](LICENSE).
+- **Contribute:** [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and changesets; [CODE_REVIEW.md](CODE_REVIEW.md) covers review. License: MIT, see [LICENSE](LICENSE).

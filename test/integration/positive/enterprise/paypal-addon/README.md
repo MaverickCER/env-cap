@@ -6,7 +6,7 @@ placeholders; there is no real PayPal integration here.
 
 ```
 src/
-  env.schema.ts     <- the capability's contract: createEnv() + documentEnv()
+  env.schema.ts     <- the feature's contract: createEnv() + documentEnv()
   checkout.ts       <- createCheckout()
   subscriptions.ts  <- createSubscription()
   refunds.ts        <- createRefund()
@@ -14,14 +14,14 @@ src/
 ```
 
 This is the same ownership model as a `features/payments/env.schema.ts` in
-`examples/application`. The only difference is that this capability ships as
+`examples/application`. The only difference is that this feature ships as
 its own installable package instead of living in the consuming application's
 source tree. See [`paypal-consumer`](../paypal-consumer/) for an
 application that installs and consumes it.
 
 There is no exported `paypalDoc` or similar. `documentEnv()` returns `void`
 and is inert at runtime by design (see the Guide's
-[Capability-owned contracts](../../../../../GUIDE.md#capability-owned-contracts)
+[Feature-owned contracts](../../../../../GUIDE.md#feature-owned-contracts)
 section). Its only job is to exist as a static marker `generateEnvManifest()`
 can link back to `paypalSchema` during build-time discovery.
 

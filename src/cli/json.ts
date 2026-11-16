@@ -2,22 +2,22 @@ import type { CompatibilityIssue, GenerateEnvArtifactsResult } from "../build/in
 // Imported from the leaf module, not the `../build/index.js` barrel. The
 // barrel eagerly loads its full build-time surface, including (indirectly)
 // `typescript`, an optional peer dependency. Loading it to read a version
-// string would cost EVERY CLI invocation this module is part of, including
-// `env-cap init` and `env-cap --help`, which never touch build-time analysis.
-// src/cli/index.ts imports the barrel lazily for the same reason, and
-// test/cli/init-no-build-import.test.ts guards that.
+// string would slow every CLI invocation that loads this module. That
+// includes `env-cap init` and `env-cap --help`, which never run build-time
+// analysis. src/cli/index.ts imports the barrel lazily for the same reason.
+// test/cli/init-no-build-import.test.ts guards both.
 import { readToolVersion } from "../build/tool-version.js"
 
 /**
- * `--json`'s machine-readable contract lives here, in one place, so it's
- * unit/snapshot-testable without going through `main()`'s stdout spying and
- * doesn't make the CLI's control-flow function the de facto owner of a
- * public contract. See ADR 0013.
+ * The machine-readable contract of `--json` lives here, in one place. Tests
+ * can snapshot it without spying on the stdout of `main()`. And the CLI's
+ * control-flow function does not become the owner of a public contract.
+ * See ADR 0013.
  */
 
 /** Bump only when a consumer written for the previous version could
- *  misinterpret the new payload (a field changes type/meaning, or is
- *  removed): NOT for every additive field. See ADR 0013. */
+ *  misinterpret the new payload: a field changes type or meaning, or is
+ *  removed. An additive field keeps the version. See ADR 0013. */
 export const JSON_SCHEMA_VERSION = 1
 
 // One version source, shared with the `./build` entry: `readToolVersion()`
@@ -31,10 +31,10 @@ const TOOL_VERSION: string = readToolVersion()
  * present.
  *
  * @remarks
- * Without this, `"manifest": undefined` is ambiguous: it could mean "no
- * `--location` was passed" or "the manifest pass ran and produced nothing."
- * Telling those apart would require the CLI flags the run was invoked with,
- * which the envelope itself never carries. A CI step
+ * Without this, `"manifest": undefined` is ambiguous. It could mean that no
+ * `--location` was passed, or that the manifest pass ran and produced nothing.
+ * Telling those apart needs the CLI flags of the run, and the envelope
+ * never carries them. A CI step
  * gating on "did the docs pass run?" would otherwise have to reconstruct the
  * command line. `evidence` records the request specifically (the model itself
  * is always computed, per ADR 0038, but only *included* in this envelope on
@@ -99,17 +99,16 @@ function hasIssues(error: unknown): error is { issues: readonly CompatibilityIss
 
 /**
  * Wraps a completed {@link generateEnvArtifacts} result in the `--json`
- * success envelope. `includeEvidence` (default `false`) controls whether
- * `result.evidence` (always populated on `result` itself, per ADR 0038)
- * is actually included in the envelope; the CLI passes `true` only when the
- * caller requested `--evidence`.
+ * success envelope. `result.evidence` is always populated (ADR 0038).
+ * `includeEvidence` (default `false`) decides whether the envelope carries it.
+ * The CLI passes `true` only when the caller requested `--evidence`.
  *
- * `requested` is supplied by the caller rather than inferred from `result`'s
- * own populated keys: inferring it would reproduce exactly the ambiguity
- * this field exists to remove (see {@link JsonRequestedPasses}). It defaults
- * to deriving each pass from whether its result is present, which is correct
- * for a normal generate run and keeps this callable from a test without
- * threading flags through; the CLI always passes the real flags.
+ * The caller supplies `requested` because inferring it from the populated keys
+ * of `result` would recreate the ambiguity this field removes (see
+ * {@link JsonRequestedPasses}). By default each pass counts as requested when
+ * its result is present. That is correct for a normal generate run, and it
+ * lets a test call this without threading flags through. The CLI always
+ * passes the real flags.
  */
 export function serializeSuccess(
   result: Omit<GenerateEnvArtifactsResult, "evidence"> &

@@ -1,14 +1,13 @@
 /**
- * Every error type here is constructed only from: the variable name, the
- * declaring contract's name, the failure kind, and a message string that the
- * *developer's own* processor/validator produced. Raw or processed environment
- * values are never read into an error: see the Security section in the README.
+ * Every error type here is built from four things only. They are the variable
+ * name, the declaring contract's name, the failure kind, and a message from
+ * the developer's processor or validator. Raw or processed environment values
+ * never reach an error: see the Security section in the README.
  *
  * Documentation (description, owner, etc.) never appears here, even when a
- * {@link documentEnv} call exists for this variable: `documentEnv` is
- * build-time-only and its data is never retained anywhere {@link validateEnv}
- * could read it back out. This is a deliberate consequence of keeping the
- * runtime minimal, not an oversight.
+ * {@link documentEnv} call exists for this variable. `documentEnv` is
+ * build-time-only, and {@link validateEnv} has nowhere to read its data from.
+ * That follows from keeping the runtime minimal.
  */
 
 /** One variable's processing or validation failure, as recorded by {@link validateEnv}. */

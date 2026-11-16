@@ -7,8 +7,8 @@ import type { OwnershipModel } from "./ownership-model.js"
 
 /**
  * Bump only when a reader could misinterpret the new shape of `EvidenceModel`
- * itself (not any one sub-model's own `<MODEL>_SCHEMA_VERSION`, which is
- * versioned independently): same rule every other canonical model follows.
+ * itself. Each sub-model's `<MODEL>_SCHEMA_VERSION` is versioned separately.
+ * Every other canonical model follows the same rule.
  */
 export const EVIDENCE_MODEL_SCHEMA_VERSION = 1
 
@@ -30,11 +30,10 @@ export interface EvidenceProvenance {
  * ADR 0031).
  *
  * @remarks
- * This type is the one intentional exception to `src/build/`'s zero-
- * cross-folder-import rule: `src/evidence/` imports it with `import type`
- * only (fully erased at compile time under `verbatimModuleSyntax`), the same
- * shape as `helpers`' single sanctioned edge onto `runtime`; see
- * `specs/architecture.md`. `src/evidence/` never imports a *value* from
+ * This type is the one exception to the rule that nothing imports across
+ * `src/build/`. `src/evidence/` imports it with `import type` only, which
+ * `verbatimModuleSyntax` erases at compile time. The sanctioned edge from
+ * `helpers` onto `runtime` has the same shape (see `specs/architecture.md`). `src/evidence/` never imports a *value* from
  * here, only this shape, so it stays isomorphic and Node-free. An actual
  * `EvidenceModel` instance is produced by {@link generateEvidenceModel}
  * (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,

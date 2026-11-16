@@ -18,7 +18,7 @@ export type EvidenceReference =
 
 /**
  * The one shape every model in this package uses to point at a declared
- * contract: the file it's declared in, and the binding it's exported as.
+ * contract: its file and its exported binding.
  * Nothing else: see ADR 0039.
  *
  * @remarks
@@ -26,10 +26,10 @@ export type EvidenceReference =
  * concern. A renderer that needs prose resolves it on demand from
  * `ContractModel`, the one model that owns it. A copy on every reference
  * would go stale independently, since the name can change under a
- * `documentEnv()` edit. Deliberately not carrying a
- * pre-formatted `identity` string either: `${file}#${exportName}` is
- * trivially derivable, and a stored copy is one more thing that can disagree
- * with the two fields it was built from. Code that genuinely needs a map key
+ * `documentEnv()` edit. It carries no pre-formatted
+ * `identity` string either, since `${file}#${exportName}` is derivable. A
+ * stored copy could disagree with the two fields it was built from. Code that
+ * needs a map key
  * builds that string locally, at the point of use.
  */
 export interface ContractRef {
@@ -48,7 +48,7 @@ export interface ContractEvidenceReference {
   readonly exportName: string | undefined
   /** The environment variable name, when the finding is variable-level rather than contract-level. */
   readonly variable: string | undefined
-  /** Exact file:line:column this finding is about; the contract's `createEnv()` declaration, its `documentEnv()` declaration, or the specific variable's own declaration, whichever is most relevant to the finding. `undefined` only when no single position is more relevant than another (e.g. an `indeterminate-ownership` finding, which can have multiple candidate sites: see `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list instead). See ADR 0036. */
+  /** Exact file:line:column this finding is about. It is the contract's `createEnv()` declaration, its `documentEnv()` declaration or the variable's declaration, whichever is most relevant. `undefined` only when no single position is more relevant than another. An `indeterminate-ownership` finding is one: `IndeterminateOwnershipFinding.dynamicAccessSites` lists its candidate sites. See ADR 0036. */
   readonly position: SourcePosition | undefined
 }
 

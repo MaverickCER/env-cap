@@ -1,6 +1,6 @@
 # Migrating from a Centralized Environment Schema
 
-This guide explains how to migrate from a centralized environment configuration model into capability-owned environment contracts.
+This guide explains how to migrate from a centralized environment configuration model into feature-owned environment contracts.
 
 Examples of centralized schemas include:
 
@@ -26,15 +26,15 @@ Centralized schemas are a reasonable starting point. They provide a clear locati
 
 As applications grow, however, the centralized file becomes a shared ownership boundary:
 
-- Every capability change modifies the same file.
+- Every feature change modifies the same file.
 - Teams become dependent on whoever owns the schema.
-- Removing capabilities requires finding unused configuration manually.
-- Configuration ownership becomes separated from capability ownership.
+- Removing features requires finding unused configuration manually.
+- Configuration ownership becomes separated from feature ownership.
 - Merge conflicts increase as the application grows.
 
 `env-cap` does not replace your validation system. It changes where environment ownership lives.
 
-You can continue using Zod, Valibot, Joi, custom validators, or simple functions inside capability contracts.
+You can continue using Zod, Valibot, Joi, custom validators, or simple functions inside feature contracts.
 
 The migration goal is:
 
@@ -42,7 +42,7 @@ The migration goal is:
 centralized configuration
           |
           v
-capability-owned contracts
+feature-owned contracts
           |
           v
 generated project-wide visibility
@@ -78,7 +78,7 @@ export const env = createConfig({
 })
 ```
 
-Every capability imports the same object:
+Every feature imports the same object:
 
 ```ts
 import { env } from "./env"
@@ -94,13 +94,13 @@ The problem is not the validation.
 
 The problem is ownership.
 
-The database capability owns `DATABASE_URL`, but the database configuration lives somewhere else.
+The database feature owns `DATABASE_URL`, but the database configuration lives somewhere else.
 
 ---
 
 ## Migration strategy
 
-Migrate one capability at a time.
+Migrate one feature at a time.
 
 Do not move every variable into `env-cap` immediately.
 
@@ -134,7 +134,7 @@ The application can temporarily support both approaches.
 
 ## Step 1: Identify ownership
 
-For each variable, determine which capability requires it.
+For each variable, determine which feature requires it.
 
 Example centralized schema:
 
@@ -160,13 +160,13 @@ Ownership should follow usage, not technical category.
 
 A variable is not "database configuration" because it contains `DATABASE`.
 
-It belongs to the capability that defines how it is consumed.
+It belongs to the feature that defines how it is consumed.
 
 ---
 
-## Step 2: Create capability schemas
+## Step 2: Create feature schemas
 
-Create a schema next to the capability.
+Create a schema next to the feature.
 
 Example:
 
@@ -199,7 +199,7 @@ documentEnv(paymentsSchema, {
 })
 ```
 
-The capability now owns its configuration.
+The feature now owns its configuration.
 
 ---
 
@@ -233,7 +233,7 @@ paymentsEnv
 payments schema
 ```
 
-The capability no longer depends on a global configuration object.
+The feature no longer depends on a global configuration object.
 
 ---
 
@@ -302,7 +302,7 @@ await generateEnvManifest({
 This allows tooling to answer:
 
 - Which variables exist?
-- Which capability owns them?
+- Which feature owns them?
 - Which variables are undocumented?
 - Which variables are expiring?
 - Which variables have possible conflicts?
@@ -317,11 +317,11 @@ The platform view remains centralized.
 
 A common migration concern is:
 
-> "What happens if multiple capabilities use the same environment variable?"
+> "What happens if multiple features use the same environment variable?"
 
 The answer depends on whether the value has the same meaning.
 
-If multiple capabilities consume the same value with identical requirements, create a shared ownership module:
+If multiple features consume the same value with identical requirements, create a shared ownership module:
 
 ```text
 features/
@@ -329,7 +329,7 @@ features/
     └── env.schema.ts
 ```
 
-Other capabilities import the database contract:
+Other features import the database contract:
 
 ```ts
 import { databaseEnv } from "../database/env.schema"
@@ -337,15 +337,15 @@ import { databaseEnv } from "../database/env.schema"
 databaseEnv.DATABASE_URL
 ```
 
-If different capabilities interpret the same raw value differently, keep those interpretations local.
+If different features interpret the same raw value differently, keep those interpretations local.
 
 Example:
 
 ```ts
-// metrics capability
+// metrics feature
 REPORT_INTERVAL_MS -> number
 
-// logging capability
+// logging feature
 REPORT_INTERVAL_MS -> string identifier
 ```
 
@@ -353,7 +353,7 @@ Both consume the same underlying environment value, but their application requir
 
 A centralized schema must choose one global representation.
 
-Capability contracts allow each consumer to define its own validated view.
+Feature contracts allow each consumer to define its own validated view.
 
 ---
 
@@ -411,7 +411,7 @@ features/
     └── env.schema.ts
 ```
 
-Configuration should follow capability ownership.
+Configuration should follow feature ownership.
 
 ---
 
@@ -432,7 +432,7 @@ This recreates the same coupling:
 env.payments.STRIPE_SECRET_KEY
 ```
 
-The capability import itself should define the dependency.
+The feature import itself should define the dependency.
 
 ---
 
@@ -481,9 +481,9 @@ After migration:
 
 | Responsibility     | Location            |
 | ------------------ | ------------------- |
-| Variable ownership | Capability schema   |
-| Validation logic   | Capability schema   |
-| Runtime access     | Capability contract |
+| Variable ownership | Feature schema      |
+| Validation logic   | Feature schema      |
+| Runtime access     | Feature contract    |
 | Documentation      | `documentEnv()`     |
 | Project visibility | Generated artifacts |
 | Platform reporting | Build tooling       |

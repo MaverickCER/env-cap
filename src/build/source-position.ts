@@ -17,10 +17,9 @@ export interface SourcePosition {
 
 /**
  * `node`'s starting line/column within `sourceFile`, both 1-indexed: TypeScript's own
- * `getLineAndCharacterOfPosition()` returns 0-indexed values for both. Callers combine this with
- * the file path they already have in scope to build a full {@link SourcePosition}; this returns
- * only the two numbers so it's usable identically whether the caller's `file` is already
- * root-relative or still absolute.
+ * `getLineAndCharacterOfPosition()` returns 0-indexed values for both. Callers add the file path
+ * they have in scope to build a full {@link SourcePosition}. Returning only the two numbers keeps
+ * it usable whether that path is root-relative or absolute.
  */
 export function positionOf(
   sourceFile: ts.SourceFile,
@@ -33,12 +32,11 @@ export function positionOf(
 /**
  * Parses a developer-supplied `"<relative-path>:<line>:<column>"` citation
  * (a {@link runtime.VariableEvidenceDocs.dynamicAccess} entry) into a
- * {@link SourcePosition}. Splits on the *last* two colons so a path
- * containing colons of its own (rare, but not impossible) still parses:
- * only the trailing `:<line>:<column>` is treated as position syntax.
- * Returns `undefined` for anything that isn't exactly that shape (missing
- * segments, a non-positive-integer line/column, an empty path): callers
- * treat that as a malformed citation, never a thrown error. See ADR 0037.
+ * {@link SourcePosition}. Splits on the *last* two colons, so a path that
+ * contains colons still parses. Only the trailing `:<line>:<column>` is
+ * position syntax. Returns `undefined` for any other shape: missing segments,
+ * a line or column that is not a positive integer, or an empty path. Callers
+ * treat that as a malformed citation, not a thrown error. See ADR 0037.
  */
 export function parsePositionCitation(citation: string): SourcePosition | undefined {
   const match = /^(.+):(\d+):(\d+)$/.exec(citation)
@@ -52,18 +50,17 @@ export function parsePositionCitation(citation: string): SourcePosition | undefi
 
 /**
  * One developer-declared {@link runtime.VariableEvidenceDocs.dynamicAccess} citation's
- * current acknowledgment state: a claim, never an observation. Kept fully
- * separate from `VariableAccessStatus` (which stays exactly 3-valued and
- * purely AST-derived) so a developer's assertion can never make env-cap
- * claim it observed something it didn't. See
+ * current acknowledgment state: a claim, never an observation. It stays
+ * separate from `VariableAccessStatus`, which is 3-valued and AST-derived only.
+ * So a developer's assertion can never make env-cap claim an observation it
+ * did not make. See
  * `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where
  * this is computed) and ADR 0037.
  */
 export interface DynamicAccessAssertion extends SourcePosition {
   /**
-   * `"fresh"`: the cited file currently exists and either matches the
-   * committed baseline hash or has no baseline yet (a brand-new citation,
-   * nothing to contradict it yet). `"stale"`: the cited file exists but its
+   * `"fresh"`: the cited file exists and matches the committed baseline
+   * hash, or has no baseline yet (a new citation). `"stale"`: the cited file exists but its
    * content has changed since the committed baseline. `"missing"`: the
    * cited file no longer exists at all. Re-derived from scratch every run;
    * never cached across runs.

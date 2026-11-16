@@ -436,10 +436,10 @@ one error.
 #### Remarks
 
 Nothing from any pass is written when this throws: see
-`generate-env-artifacts.ts`'s compute-atomic guarantee (ADR 0011). Write-phase failures
-(a real I/O error after all computes already passed) are NOT wrapped in
-this type: they propagate as whatever `fs.writeFile` itself throws,
-since by that point some artifacts may already be on disk.
+`generate-env-artifacts.ts`'s compute-atomic guarantee (ADR 0011). A write-phase
+failure, an I/O error after every compute passed, is not wrapped in this type.
+It propagates as whatever `fs.writeFile` throws, because some artifacts may
+already be on disk by then.
 
 `code` is a stable, Stable-tier discriminant for programmatic handling:
 prefer it over `.name`/`instanceof` when a message-independent switch is needed.
@@ -908,7 +908,7 @@ readonly status: "stale" | "missing" | "ok";
 
 ### AssertedDynamicAccessFinding
 
-A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `"fresh"` developer-declared `dynamicAccess` citation: the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037.
+A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate` but has at least one `"fresh"` developer-declared `dynamicAccess` citation. The raw static status is shown beside the assertion, never replaced by it. See ADR 0037.
 
 #### Properties
 
@@ -1120,10 +1120,10 @@ Write a UTF-8 text file, creating or truncating it. The parent directory must al
 
 ### BuildFindingModelInput
 
-Every source a [buildFindingModel](#buildfindingmodel) call can adapt, all optional:
-a caller passes whichever of `generateEnvArtifacts()`'s `manifest`/`docs`/
-`usage` results it actually requested, exactly like that result's own
-top-level fields are each independently optional.
+Every source a [buildFindingModel](#buildfindingmodel) call can adapt, all optional. A
+caller passes whichever `manifest`/`docs`/`usage` results of
+`generateEnvArtifacts()` it requested. Those top-level result fields are
+optional in the same way.
 
 #### Properties
 
@@ -1583,7 +1583,7 @@ readonly model: "contract";
 readonly position: SourcePosition | undefined;
 ```
 
-Exact file:line:column this finding is about; the contract's `createEnv()` declaration, its `documentEnv()` declaration, or the specific variable's own declaration, whichever is most relevant to the finding. `undefined` only when no single position is more relevant than another (e.g. an `indeterminate-ownership` finding, which can have multiple candidate sites: see `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list instead). See ADR 0036.
+Exact file:line:column this finding is about. It is the contract's `createEnv()` declaration, its `documentEnv()` declaration or the variable's declaration, whichever is most relevant. `undefined` only when no single position is more relevant than another. An `indeterminate-ownership` finding is one: `IndeterminateOwnershipFinding.dynamicAccessSites` lists its candidate sites. See ADR 0036.
 
 ##### variable
 
@@ -2013,7 +2013,7 @@ readonly validatorSource: string | undefined;
 ### ContractRef
 
 The one shape every model in this package uses to point at a declared
-contract: the file it's declared in, and the binding it's exported as.
+contract: its file and its exported binding.
 Nothing else: see ADR 0039.
 
 #### Remarks
@@ -2022,10 +2022,10 @@ Deliberately *not* carrying `contractName`. A display name is a rendering
 concern. A renderer that needs prose resolves it on demand from
 `ContractModel`, the one model that owns it. A copy on every reference
 would go stale independently, since the name can change under a
-`documentEnv()` edit. Deliberately not carrying a
-pre-formatted `identity` string either: `${file}#${exportName}` is
-trivially derivable, and a stored copy is one more thing that can disagree
-with the two fields it was built from. Code that genuinely needs a map key
+`documentEnv()` edit. It carries no pre-formatted
+`identity` string either, since `${file}#${exportName}` is derivable. A
+stored copy could disagree with the two fields it was built from. Code that
+needs a map key
 builds that string locally, at the point of use.
 
 #### Extended by
@@ -3431,7 +3431,7 @@ Well-formed `"path:line:column"` entries from `evidence.dynamicAccess`, if set t
 
 ### DocumentationFindings
 
-Everything [generateDocumentation](#generatedocumentation) found that isn't fully documented or up to date: never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the "documentation" family) from the persisted evidence artifact and decides for itself. See ADR 0038.
+Everything [generateDocumentation](#generatedocumentation) found that isn't fully documented or up to date. It never blocks generation. To gate CI on it, read the "documentation" family of `Finding[]` from the persisted evidence artifact. See ADR 0038.
 
 #### Properties
 
@@ -3502,10 +3502,10 @@ readonly unresolvedLinks: readonly {
 ### DynamicAccessAssertion
 
 One developer-declared [runtime.VariableEvidenceDocs.dynamicAccess](runtime.md#dynamicaccess) citation's
-current acknowledgment state: a claim, never an observation. Kept fully
-separate from `VariableAccessStatus` (which stays exactly 3-valued and
-purely AST-derived) so a developer's assertion can never make env-cap
-claim it observed something it didn't. See
+current acknowledgment state: a claim, never an observation. It stays
+separate from `VariableAccessStatus`, which is 3-valued and AST-derived only.
+So a developer's assertion can never make env-cap claim an observation it
+did not make. See
 `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where
 this is computed) and ADR 0037.
 
@@ -3521,9 +3521,8 @@ this is computed) and ADR 0037.
 readonly acknowledgment: "fresh" | "stale" | "missing";
 ```
 
-`"fresh"`: the cited file currently exists and either matches the
-committed baseline hash or has no baseline yet (a brand-new citation,
-nothing to contradict it yet). `"stale"`: the cited file exists but its
+`"fresh"`: the cited file exists and matches the committed baseline
+hash, or has no baseline yet (a new citation). `"stale"`: the cited file exists but its
 content has changed since the committed baseline. `"missing"`: the
 cited file no longer exists at all. Re-derived from scratch every run;
 never cached across runs.
@@ -3644,8 +3643,8 @@ readonly skippedExistingPath: string | undefined;
 ```
 
 Set when a file already existed at the requested location and was left
-untouched: with the default `"keep-sibling"`, `writtenPath` is a fresh
-timestamped sibling instead; with `"skip"`, this is the only outcome and
+untouched. With the default `"keep-sibling"`, `writtenPath` is a fresh
+timestamped sibling instead. With `"skip"`, this is the only outcome and
 `writtenPath` is `undefined`. Always `undefined` with `"overwrite"`.
 
 ##### staleVariables
@@ -3693,11 +3692,10 @@ ADR 0031).
 
 #### Remarks
 
-This type is the one intentional exception to `src/build/`'s zero-
-cross-folder-import rule: `src/evidence/` imports it with `import type`
-only (fully erased at compile time under `verbatimModuleSyntax`), the same
-shape as `helpers`' single sanctioned edge onto `runtime`; see
-`specs/architecture.md`. `src/evidence/` never imports a *value* from
+This type is the one exception to the rule that nothing imports across
+`src/build/`. `src/evidence/` imports it with `import type` only, which
+`verbatimModuleSyntax` erases at compile time. The sanctioned edge from
+`helpers` onto `runtime` has the same shape (see `specs/architecture.md`). `src/evidence/` never imports a *value* from
 here, only this shape, so it stays isomorphic and Node-free. An actual
 `EvidenceModel` instance is produced by [generateEvidenceModel](#generateevidencemodel)
 (`@maverickcer/env-cap/build`, Node-only), which runs discovery once,
@@ -4067,12 +4065,11 @@ Human-readable explanation, reusing the source finding's own prose where one exi
 readonly severity: "warning" | "error" | "info";
 ```
 
-`"error"` for a provable, always-blocking violation (e.g. an
-exclusive-group conflict); `"warning"` for everything gated by
-`onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default "warn"
-behavior; `"info"` for an observation that is never actionable enough to
-block anything, even under `--strict`: see `INFO_ONLY_CODES` in
-`generate-env-artifacts.ts`.
+`"error"` for a provable, always-blocking violation, such as an
+exclusive-group conflict. `"warning"` for everything gated by the default
+"warn" of `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`.
+`"info"` for an observation that never blocks, even under `--strict` (see
+`INFO_ONLY_CODES` in `generate-env-artifacts.ts`).
 
 ***
 
@@ -4517,11 +4514,10 @@ return type annotations) block generation; everything else is reported as a warn
 packages?: readonly string[];
 ```
 
-Explicit allowlist of installed
-package names whose declared `"envCap": { "schema": "<path>" }` entry
-point should also be discovered, so a contract that ships as its own
-separately-published package (no monorepo required) can be included in
-the manifest. Opt-in only: a package is never considered unless its
+Explicit allowlist of installed package names whose declared
+`"envCap": { "schema": "<path>" }` entry point is also discovered. It lets
+the manifest include a contract published as a separate package, with no
+monorepo required. Opt-in only: a package is never considered unless its
 exact name appears here. See ADR 0014.
 
 ##### root?
@@ -4542,9 +4538,9 @@ Path to a tsconfig.json (relative to `root`)
 whose `compilerOptions.paths`/`baseUrl` resolve aliased import specifiers (e.g.
 `"@/lib/env.schema.js"`) encountered during static analysis, so a contract or consumer
 reached only through an alias isn't misreported as abandoned/unresolved. Defaults to
-`"tsconfig.json"` at `root`: on automatically, no opt-in required, since (unlike
-`packages`) this never crosses a trust/versioning boundary: every resolved file is
-already local, already-trusted project source. Pass `false` to disable entirely. See
+`"tsconfig.json"` at `root`, so it is on with no opt-in. Unlike `packages`, it never
+crosses a trust or versioning boundary: every resolved file is local, trusted project
+source. Pass `false` to disable entirely. See
 ADR 0023.
 
 ***
@@ -4653,9 +4649,9 @@ liveExpirationDates?: LiveExpirationDates;
 ```
 
 Supplies expiration metadata from a live source as a post-discovery
-override, applied to Lifecycle Model's (and Finding Model's
-`expiring-soon` findings') data only: Contract Model still reflects the
-schema's own static `expiresAt`. See `live-expirations.ts` and ADR 0012.
+override. It applies only to Lifecycle Model and Finding Model's
+`expiring-soon` findings. Contract Model still reflects the schema's
+static `expiresAt`. See `live-expirations.ts` and ADR 0012.
 
 ##### packages?
 
@@ -4671,10 +4667,10 @@ See `GenerateEnvManifestOptions.packages`. See ADR 0014.
 previousSnapshotLocation?: string;
 ```
 
-Where a previously-persisted evidence artifact lives, relative to
-`root`: read (never written) as the baseline Change Model diffs
-against and dynamic-access citation freshness (ADR 0037) compares
-content hashes to. Independent of any `.ts` manifest a project may or
+Where a previously persisted evidence artifact lives, relative to
+`root`. It is read, never written. Change Model diffs against it, and
+dynamic-access citation freshness (ADR 0037) compares content hashes
+with it. Independent of any `.ts` manifest a project may or
 may not also generate: there is no derivation from a manifest's own
 location. Omitted: treated as the normal first-run state (everything
 reads as added, no citation-freshness baseline to compare against),
@@ -4843,11 +4839,11 @@ Variables accessed only via dynamic (computed) property access.
 readonly parseWarnings: readonly ParseWarning[];
 ```
 
-Schema-discovery parse warnings plus, since ADR 0014, any `packages`
- resolution failures: surfaced here too (not just from
- `generateEnvManifest`/`generateDocumentation`) so a team relying only
- on `--ownership` output still learns when a cross-package contract
- failed to resolve.
+Schema-discovery parse warnings plus any `packages` resolution failures
+ (ADR 0014). They appear here as well as in
+ `generateEnvManifest`/`generateDocumentation`, so a team that reads only
+ this report still learns when a cross-package contract failed to
+ resolve.
 
 ###### Inherited from
 
@@ -4985,9 +4981,9 @@ liveExpirationDates?: LiveExpirationDates;
 ```
 
 Supplies expiration metadata from a live source as a post-discovery
-override, applied to Lifecycle Model's (and Finding Model's
-`expiring-soon` findings') data only: Contract Model still reflects the
-schema's own static `expiresAt`. See `live-expirations.ts` and ADR 0012.
+override. It applies only to Lifecycle Model and Finding Model's
+`expiring-soon` findings. Contract Model still reflects the schema's
+static `expiresAt`. See `live-expirations.ts` and ADR 0012.
 
 ###### Inherited from
 
@@ -5019,10 +5015,10 @@ See `GenerateEnvManifestOptions.packages`. See ADR 0014.
 previousSnapshotLocation?: string;
 ```
 
-Where a previously-persisted evidence artifact lives, relative to
-`root`: read (never written) as the baseline Change Model diffs
-against and dynamic-access citation freshness (ADR 0037) compares
-content hashes to. Independent of any `.ts` manifest a project may or
+Where a previously persisted evidence artifact lives, relative to
+`root`. It is read, never written. Change Model diffs against it, and
+dynamic-access citation freshness (ADR 0037) compares content hashes
+with it. Independent of any `.ts` manifest a project may or
 may not also generate: there is no derivation from a manifest's own
 location. Omitted: treated as the normal first-run state (everything
 reads as added, no citation-freshness baseline to compare against),
@@ -5743,9 +5739,9 @@ One contract's dependency-ownership summary: who owns it, and who depends on it.
 readonly consumers: readonly string[];
 ```
 
-Files coupled to this contract (imported it, referenced it, or read a
- member from it): contract-level "who depends on this," NOT proof any
- specific variable was read. Blast radius if this contract changes is
+Files coupled to this contract: they import it, reference it, or read a
+ member from it. This answers "who depends on this" per contract; it does
+ not prove any variable was read. Blast radius if this contract changes is
  `consumers.length`, computed by callers/renderers on demand rather than
  stored redundantly here.
 
@@ -6245,10 +6241,9 @@ Schema variables with no matching entry in their contract's linked documentation
 ### RenderUsageReportOptions
 
 Everything [renderUsageReport](#renderusagereport) needs to render the Dependency &
- Ownership Report: deliberately independent of (not derived from)
- `GenerateUsageReportResult` in `generate-usage.js`, the same way
- `RenderDocsOptions` in `docs.ts` doesn't derive from
- `GenerateDocumentationResult`. `generate-usage.ts` composes its own
+ Ownership Report. It is not derived from `GenerateUsageReportResult` in
+ `generate-usage.js`, as `RenderDocsOptions` in `docs.ts` is not derived
+ from `GenerateDocumentationResult`. `generate-usage.ts` composes its own
  public result type from these building blocks instead, keeping this
  renderer module importable without its orchestrator.
 
@@ -6296,11 +6291,11 @@ Variables accessed only via dynamic (computed) property access.
 readonly parseWarnings: readonly ParseWarning[];
 ```
 
-Schema-discovery parse warnings plus, since ADR 0014, any `packages`
- resolution failures: surfaced here too (not just from
- `generateEnvManifest`/`generateDocumentation`) so a team relying only
- on `--ownership` output still learns when a cross-package contract
- failed to resolve.
+Schema-discovery parse warnings plus any `packages` resolution failures
+ (ADR 0014). They appear here as well as in
+ `generateEnvManifest`/`generateDocumentation`, so a team that reads only
+ this report still learns when a cross-package contract failed to
+ resolve.
 
 ##### scannedSurfaces
 
@@ -6563,7 +6558,7 @@ Empty is the *strongest* "looks unused" signal: no developer has ever
 claimed otherwise. A non-empty list means someone specifically claimed
 dynamic access here once, and that claim can no longer be verified. That
 is worth a human check before deleting, not a stronger reason to trust
-"unconsumed." The list holds the raw citations, not a collapsed
+"unconsumed". The list holds the raw citations, not a collapsed
 `high`/`low` label, matching this codebase's "show the receipt" pattern
 (ADR 0036/0037). A reader can judge confidence from the actual evidence
 rather than trusting a derived summary. See ADR 0038.
@@ -6788,9 +6783,9 @@ Which source check produced a [Finding](#finding-1): coarser than `code`, for a 
 type LiveExpirationDates = (variableNames) => Promise<Readonly<Record<string, string>>>;
 ```
 
-Supplies expiration metadata from a live source (a secrets manager, an
-internal inventory API, ...) as a post-discovery override: the one
-sanctioned escape hatch from static-only `expiresAt`.
+Supplies expiration metadata from a live source, such as a secrets manager
+or an inventory API, as a post-discovery override. It is the one sanctioned
+escape hatch from static-only `expiresAt`.
 
 #### Parameters
 
@@ -7015,8 +7010,8 @@ const EVIDENCE_MODEL_SCHEMA_VERSION: 1 = 1;
 ```
 
 Bump only when a reader could misinterpret the new shape of `EvidenceModel`
-itself (not any one sub-model's own `<MODEL>_SCHEMA_VERSION`, which is
-versioned independently): same rule every other canonical model follows.
+itself. Each sub-model's `<MODEL>_SCHEMA_VERSION` is versioned separately.
+Every other canonical model follows the same rule.
 
 ***
 
@@ -7092,9 +7087,9 @@ readonly [`DiscoveredContract`](#discoveredcontract)[]
 #### Remarks
 
 A key absent from `overrides`, or present but not a `parseIsoDate`-parseable
-ISO-8601 string, leaves that variable's static `expiresAt` untouched:
-same "warn/skip, never guess" policy the rest of the generator uses for
-malformed data. Contract-level `expiresAt` is never touched; only
+ISO-8601 string, leaves that variable's static `expiresAt` untouched. The
+rest of the generator treats malformed data the same way: warn or skip,
+never guess. Contract-level `expiresAt` is never touched; only
 variable-level `expiresAt` is in scope for override.
 
 ***
@@ -7112,10 +7107,9 @@ function buildChangeModel(
 Wraps an already-computed `ManifestChangeReport` (e.g.
 `generateEnvArtifacts()`'s internal `evidenceChanges.report`) in the Change Model's versioned
 shape, and correlates renames using the current run's `renamedFrom`
-declarations. `currentContracts` should be the same contracts the
-manifest was generated from (active contracts only, matching
-`renderManifest()`'s own scope: same as every other input to this
-report family).
+declarations. `currentContracts` should be the contracts the manifest was
+generated from: active contracts only, the scope of `renderManifest()`.
+Every other input to this report family uses that scope too.
 
 #### Parameters
 
@@ -7175,8 +7169,8 @@ function buildDependencyModel(
 
 Runs the dependency-ownership engine (`buildDependencyGraph()`, Private)
 and projects its result into the Dependency Model's versioned,
-JSON-serializable shape: including the inverse file-\>contracts index
-neither `dependency-graph.ts` nor `usage-report.ts` exposes today.
+JSON-serializable shape. That shape adds the inverse file-\>contracts index,
+which neither `dependency-graph.ts` nor `usage-report.ts` exposes.
 
 #### Parameters
 
@@ -7294,10 +7288,9 @@ Projects Finding Model into a SARIF 2.1.0 log.
 #### Remarks
 
 `rules` lists every distinct `FindingCode` actually present in this run,
-sorted: not the full `FindingCode` union. A SARIF consumer treats the
-rules array as "what this tool reported", and advertising rules that
-produced no result makes a clean run look like it has unexplained silent
-rules. `results` preserves Finding Model's own order, which a caller wanting
+sorted: not the full `FindingCode` union. A SARIF consumer reads the rules
+array as "what this tool reported". Rules with no result would make a clean
+run look like it has unexplained silent rules. `results` preserves Finding Model's own order, which a caller wanting
 a different one sorts themselves.
 
 ***
@@ -7459,9 +7452,9 @@ decides:
   `lastRotatedAt` and/or `rotationTriggerEvents`), with no `rotationPeriod` and no past-due
   `expiresAt`. Nothing states a time-based obligation this variable could be failing to meet.
 
-`rotationTriggerEvents` (the event-based trigger) deliberately never changes the returned status
-by itself. env-cap cannot observe whether a listed event (a suspected compromise, a personnel
-change, ...) actually occurred. Treating its mere presence as either compliant or overdue would
+`rotationTriggerEvents` (the event-based trigger) never changes the returned status by itself.
+Nothing in env-cap can observe whether a listed event occurred, such as a suspected compromise or
+a personnel change. Treating its mere presence as either compliant or overdue would
 fabricate a signal. It's presence-only evidence that the event-based half of IA-5's
 two-trigger model was at least *declared*. A generator should still surface it, but never fold
 it into this computed status.
@@ -7510,9 +7503,9 @@ a future Finding Model adapter.
 function computeSourceFingerprint(options): Promise<string>;
 ```
 
-SHA-256 over the raw bytes of every schema file and every usage-scan-
-surface file (the same file sets `assembleProject()`/`computeScanSurface()`
-touch), plus env-cap's own installed version: zero AST parsing or
+SHA-256 over the raw bytes of every schema file and every usage-scan
+surface file, plus the installed env-cap version. Those are the file sets
+`assembleProject()`/`computeScanSurface()` touch. It does no AST parsing or
 linking. Still requires the discovery/glob walk itself (fingerprinting has
 to know which files matter), but skips everything after it. Deterministic:
 file paths are deduplicated and sorted before hashing, so the result never
@@ -7593,14 +7586,12 @@ structure throws instead of silently succeeding.
 
 #### Remarks
 
-Generalized from `live-expirations.ts`'s former `DiscoveredContract[]`-
-hardcoded `deepFreezeContracts()` (see ADR 0012) into a truly generic
-utility, so Evidence Model's own immutability guarantee (a later phase)
-can reuse it instead of duplicating the recursion.
+Generic, so the live-expiration override (ADR 0012) and Evidence Model's
+immutability guarantee share one recursion.
 
-Only recurses into arrays and plain objects (`{}` or `Object.create(null)`):
-a `Map`, `Set`, or class instance is frozen at its own top level but not
-walked further. This codebase's fact models are plain JSON-serializable
+Only recurses into arrays and plain objects (`{}` or `Object.create(null)`).
+A `Map`, `Set` or class instance is frozen at its top level but not walked
+further. This codebase's fact models are plain JSON-serializable
 data, never class instances, so this is deliberately narrow rather than a
 general-purpose deep-freeze library. A `WeakSet` guards against infinite
 recursion if a cyclic reference is ever passed in.
@@ -7710,9 +7701,9 @@ e.g. two interchangeable database backends both left enabled at once.
 
 #### Remarks
 
-Unlike `detectCompatibilityIssues`, this is never a heuristic warning: an
-author explicitly declared these contracts mutually exclusive, so any
-violation is always a hard error, regardless of `onIncompatibility`. See
+Unlike `detectCompatibilityIssues`, this is never a heuristic warning. An
+author declared these contracts mutually exclusive, so a violation is
+always a hard error, whatever `onIncompatibility` says. See
 ADR 0009 for why this doesn't follow 0005's warn-by-default policy.
 
 Inactive contracts are ignored entirely here (filtered internally, not by
@@ -7728,9 +7719,9 @@ conflict, since it was never wired into anything.
 function discoverSchemaFiles(options): Promise<string[]>;
 ```
 
-Finds every schema file matching `include`/`exclude` under `root`, returned
-as absolute paths in deterministic (alphabetically sorted) order: the
-same walk as `discoverFiles`, plus a sanity limit on the count.
+Finds every schema file matching `include`/`exclude` under `root`, as
+absolute paths in alphabetical order. It is the walk of `discoverFiles`,
+plus a sanity limit on the count.
 
 #### Parameters
 
@@ -7983,8 +7974,8 @@ evaluates or executes the schema.
 function generateDocumentation(options): Promise<GenerateDocumentationResult>;
 ```
 
-Build-time only. Discovers and links `env.schema.ts` files (same static
-analysis as [generateEnvManifest](#generateenvmanifest)) and writes the rich Markdown
+Build-time only. Discovers and links `env.schema.ts` files, with the static
+analysis of [generateEnvManifest](#generateenvmanifest). Then it writes the Markdown
 "Catalog": every variable, its description, default, processor/validator
 flags, owner, and expiry. Application developers use it as the single
 onboarding reference for what configuration a feature needs and how to set
@@ -8057,11 +8048,11 @@ If any requested output location escapes `root`, or if any requested pass report
 function generateEnvManifest(options): Promise<GenerateEnvManifestResult>;
 ```
 
-Build-time only. Discovers `env.schema.ts` files, statically analyzes them
-(never executes them) to link `createEnv()`/`documentEnv()` calls, checks
-for provable incompatibilities between duplicate variable declarations,
-and writes a deterministic manifest file that re-exports every discovered
-active contract.
+Build-time only. Discovers `env.schema.ts` files and analyzes them
+statically, never executing them, to link `createEnv()`/`documentEnv()`
+calls. It checks duplicate variable declarations for provable
+incompatibilities. Then it writes a deterministic manifest file that
+re-exports every discovered active contract.
 
 #### Parameters
 
@@ -8075,9 +8066,8 @@ active contract.
 
 #### Remarks
 
-Never call this at application startup or import it from
-runtime code: wire it into an npm script, a bundler plugin, or a CI
-step instead.
+Run it from an npm script, a bundler plugin or a CI step. Application
+startup and runtime code never call or import it.
 
 #### Throws
 
@@ -8111,10 +8101,9 @@ before being returned.
 
 #### Remarks
 
-Deliberately never throws on a data-quality finding (a compatibility
-issue, an undocumented variable, an abandoned contract, ...): every one
-of those becomes a `Finding` in the returned model's `finding` field
-instead. This differs from `generateEnvManifest()`, which throws by
+Never throws on a data-quality finding, such as a compatibility issue,
+an undocumented variable or an abandoned contract. Each becomes a
+`Finding` in the returned model's `finding` field instead. This differs from `generateEnvManifest()`, which throws by
 default, because that is a "should I write this artifact" gate. Evidence
 Model assembly is a read-only snapshot. Its purpose is to represent such
 issues as data for a consumer's own projection to act on (see ADR 0024's
@@ -8122,10 +8111,9 @@ mission statement). It still throws
 `EnvProjectGenerationError` for a genuine configuration error:
 `previousSnapshotLocation` escaping `root`.
 
-The dependency-graph scan underlying Dependency Model (via
-`buildDependencyModel()`) and the one underlying Finding Model's
-ownership-related findings (via `computeUsage()`) each run their own,
-independent pass over the repository. That cost is accepted: each half's
+Dependency Model (via `buildDependencyModel()`) and Finding Model's
+ownership findings (via `computeUsage()`) each run a dependency-graph scan.
+The two scans are separate passes over the repository. That cost is accepted: each half's
 already-tested public building block is called directly, rather than a
 second copy of either's logic being hand-derived here. Both are Node-only,
 dev/CI-time-only work (never a runtime hot path), so the redundant I/O is
@@ -8174,12 +8162,11 @@ function getEvidenceModel(options): Promise<GetEvidenceModelResult>;
 ```
 
 Trusts the committed evidence artifact at `options.location` only when its
-paired `.fingerprint` sidecar matches a freshly (cheaply) computed
-[computeSourceFingerprint](#computesourcefingerprint): never on file presence alone, never on
-a timestamp. On any mismatch (stale fingerprint, missing/corrupt evidence
-file, no fingerprint sidecar at all), falls back to a real
-`generateEvidenceModel()` call: never hard-fails, never silently serves
-data that might be stale.
+paired `.fingerprint` sidecar matches a fresh [computeSourceFingerprint](#computesourcefingerprint).
+File presence or a timestamp never earns that trust. On any mismatch (a
+stale fingerprint, a missing or corrupt evidence file, no sidecar), it falls
+back to a real `generateEvidenceModel()` call. So it never fails hard and
+never serves stale data.
 
 #### Parameters
 
@@ -8488,8 +8475,8 @@ function renderManifest(contracts, outputFile): string;
 ```
 
 Renders the deterministic manifest source: sorted imports (aliased on name
-collision) plus a `contracts` array, in the exact banner format schema
-authors will recognize as generated. No timestamps, no randomness: same
+collision) plus a `contracts` array. The banner marks the file as generated
+for schema authors. No timestamps, no randomness: same
 input files always produce byte-identical output.
 
 #### Parameters
@@ -8512,9 +8499,9 @@ own `activeContexts` field, so application code can import it alongside
 `manifest` and pass it straight through: `validateEnv({ manifest, values, activeContexts })`.
 It's every context this manifest has, meant as a starting point to narrow
 per process/deployment, not a pre-scoped default: see the README's
-"Validation contexts" section. Omitted entirely (not even an empty array)
-when no variable declares a `context` at all, so generated output for
-projects that don't use this feature is untouched.
+"Validation contexts" section. It is omitted, not even an empty array, when
+no variable declares a `context`. So projects that don't use contexts get
+unchanged output.
 
 ***
 
@@ -8525,9 +8512,9 @@ function renderUsageReport(computed): string;
 ```
 
 Renders the Dependency & Ownership Report: who owns each variable, which
-features consume each contract, and what the blast radius is if it
-changes; structured around exactly those three questions, never generic
-"dead code"/"unused symbol" language.
+features consume each contract, and the blast radius of a change. It
+answers those three questions, never in generic "dead code" or "unused
+symbol" terms.
 
 #### Parameters
 
@@ -8562,9 +8549,9 @@ Orchestration entry point: the only place `liveExpirationDates` is ever invoked.
 
 #### Remarks
 
-No-ops (returns the exact same array reference, zero invocations)
-when `liveExpirationDates` is undefined, which is what guarantees "omitted ->
-behavior unchanged." Otherwise it collects the unique discovered variable
+When `liveExpirationDates` is undefined it does nothing: it returns the same
+array reference and invokes nothing. That keeps behavior unchanged when the
+option is omitted. Otherwise it collects the unique discovered variable
 names, invokes the callback exactly once and applies the result. It
 deep-freezes the returned structure so no mutation of it can reach
 `contracts` or anything else downstream. `contracts` is used elsewhere too,
@@ -8583,10 +8570,9 @@ function resolveRelativeImport(
 ): Promise<string | undefined>;
 ```
 
-Resolves a relative import specifier (as written in source: `"./schema.js"`,
-matching this codebase's own convention of `.js`-suffixed relative imports
-pointing at `.ts` source files) to an absolute file path, relative to the
-file that contains the import.
+Resolves a relative import specifier, as written in source (`"./schema.js"`),
+to an absolute file path. It resolves against the file that contains the
+import. A `.js` suffix points at the `.ts` source file, as in this codebase.
 
 #### Parameters
 
@@ -8605,11 +8591,11 @@ The resolved absolute path, or `undefined` when the specifier isn't relative or 
 #### Remarks
 
 Deliberately narrow: only handles a direct relative specifier resolving to
-a real `.ts`/`.tsx` file on disk. Bare/package specifiers, namespace
-imports, and anything requiring real module resolution (re-export chains,
-`exports` map lookups, etc.) return `undefined`: the caller treats that
-as "couldn't statically link" and warns rather than guesses, the same
-philosophy `evaluateLiteral` already uses for non-literal expressions.
+a real `.ts`/`.tsx` file on disk. Anything else returns `undefined`: bare
+or package specifiers, namespace imports, and anything that needs real
+module resolution (re-export chains, `exports` map lookups). The caller
+reads that as "couldn't statically link" and warns rather than guesses.
+`evaluateLiteral` treats non-literal expressions the same way.
 
 ***
 
@@ -8627,11 +8613,10 @@ function writeEnvExample(
 Writes a rendered `.env.example` to `location`. Behavior when a file
 already exists there is governed by `options.onExisting` (default
 `"keep-sibling"`, see `EnvExampleOnExisting`):
- - `"keep-sibling"`: the existing file is left alone; freshly generated
-   content is written to a timestamped sibling instead
-   (`<location>.<epoch-ms>`), prefixed with a reconciliation header
-   comparing it against the existing file (omitted when there's nothing
-   to report).
+ - `"keep-sibling"`: the existing file is left alone. Fresh content goes
+   to a timestamped sibling (`<location>.<epoch-ms>`) instead. A
+   reconciliation header compares it with the existing file, unless there
+   is nothing to report.
  - `"overwrite"`: the existing file is replaced directly with freshly
    rendered content; no reconciliation header (the changes it would
    describe are already applied).

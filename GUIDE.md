@@ -19,9 +19,9 @@ For the overview and quick start, read [README.md](README.md). For the reasons b
 
 **What it solves:** your application fails at startup with every bad variable's name, never its value, instead of crashing later in a request.
 
-### Capability-owned contracts
+### Feature-owned contracts
 
-A capability is a feature of your code: a folder or an installable package. Each one declares the variables it owns, next to the validation it needs. This contract is illustrative. The contract CI runs is [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts).
+A feature is a folder or an installable package in your code. Each one declares the variables it owns, next to the validation it needs. This contract is illustrative. The contract CI runs is [`examples/application/src/env.ts`](https://github.com/MaverickCER/env-cap/blob/main/examples/application/src/env.ts).
 
 ```ts
 // features/payments/env.schema.ts
@@ -352,18 +352,18 @@ The exact ranges, generated from `package.json`:
 | Node.js                    | `>=22.0.0`                         | always   |
 | `@typescript-eslint/utils` | `^8.0.0`                           | optional |
 | `eslint`                   | `^8.57.0 \|\| ^9.0.0 \|\| ^10.0.0` | optional |
-| `typescript`               | `^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0`   | optional |
+| `typescript`               | `^5.8.0 \|\| ^6.0.0 \|\| ^7.0.0`   | optional |
 
 <!-- ipc:end supported-versions -->
 
 The `verify` job tests Node.js 22 and 24 and blocks a merge. Node.js 26 runs in `verify-current`, which is informational.
 
-| Need                      | Detail                                                                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| TypeScript (optional)     | The build entry uses yours when it is 5 or 6, and otherwise the bundled TypeScript 6 (`test/build/typescript-bundled.test.ts`)       |
-| TypeScript versions in CI | The newest 5.x, 6.x and 7.x, in `typescript-5` and `typescript-compat`, which `required` waits for; the `^5.0.0` floor is not tested |
-| `moduleResolution`        | `node16`, `nodenext` or `bundler`, checked by the `TypeResolution` check; `node10` cannot resolve subpath exports                    |
-| `./eslint-plugin`         | Also needs `eslint` and `@typescript-eslint/utils`; versions in [ADOPTION's dependency table](ADOPTION.md#security--threat-model)    |
+| Need                      | Detail                                                                                                                            |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript (optional)     | The build entry uses yours when it is 5 or 6, and otherwise the bundled TypeScript 6 (`test/build/typescript-bundled.test.ts`)    |
+| TypeScript versions in CI | The lowest and newest release of each major from the 5.8 floor, in `typescript-compat`, which `required` waits for                |
+| `moduleResolution`        | `node16`, `nodenext` or `bundler`, checked by the `TypeResolution` check; `node10` cannot resolve subpath exports                 |
+| `./eslint-plugin`         | Also needs `eslint` and `@typescript-eslint/utils`; versions in [ADOPTION's dependency table](ADOPTION.md#security--threat-model) |
 
 The bundled TypeScript 6 compiler is the package's one dependency. Only the build entry loads it, and `compiler-isolation` fails the build if a runtime entry can reach it ([ADR 0049](specs/decisions/0049-typescript-7-scanner-uses-a-bundled-typescript-6.md)). It is the price of scanning TypeScript 7 projects, whose compiler has no classic API.
 
@@ -653,7 +653,7 @@ export default [
 ]
 ```
 
-The plugin needs `eslint` and `@typescript-eslint/utils`; [ADOPTION's dependency table](ADOPTION.md#security--threat-model) lists the ranges. Its tests run on ESLint 10 only; the declared ESLint 8.57 and 9 support is untested.
+The plugin needs `eslint` and `@typescript-eslint/utils`; [ADOPTION's dependency table](ADOPTION.md#security--threat-model) lists the ranges. The `eslint-compat` CI job runs both rules on the lowest and newest release of each ESLint major in the `eslint` range. It runs them again with the lowest `@typescript-eslint/utils` release beside the lowest ESLint. It also runs the config above through the ESLint CLI. Where the installed ESLint still ships eslintrc, the job runs the rules there too, with the plugin passed through the API's `plugins` option. `required` waits for `eslint-compat`, so a break blocks a merge.
 
 ### `no-raw-process-env`
 
@@ -692,7 +692,7 @@ The runtime and the build tooling share one contract file and nothing else.
 
 A run goes through four steps, in order:
 
-1. Each capability declares a contract with `createEnv()` and `documentEnv()`.
+1. Each feature declares a contract with `createEnv()` and `documentEnv()`.
 2. The build step parses every contract file and writes the manifest, documents and evidence.
 3. The application imports the manifest and calls `validateEnv()` once at startup.
 4. Code reads typed values through the contract that owns them.
@@ -714,7 +714,7 @@ A project can start with one central contract and split it later; the runtime mo
 
 ³ `bun-version: latest` and Deno `v2.x`, in `cross-runtime`, which `required` waits for.
 
-⁴ `./eslint-plugin`: unit tests block; its ESM and CJS import from the tarball runs only in the `package-managers` job, which `required` waits for.
+⁴ `./eslint-plugin`: unit tests block. Its ESM and CJS import from the tarball runs in the `package-managers` and `eslint-compat` jobs, which `required` waits for.
 
 ESM and CommonJS builds ship for every entry point, and the `PackedConsumer` check imports each one from the packed tarball except `./eslint-plugin`. A dual-package split fails fast with a `TypeError` instead of validating against the wrong schema ([SECURITY.md](SECURITY.md#dual-package-hazard)).
 

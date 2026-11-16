@@ -1,37 +1,34 @@
 #!/usr/bin/env node
 // Regenerates committed generated output from a fresh, real run.
-// Deliberately NOT part of `npm run verify`/CI: for a real code change, this
-// stays a human-invoked "I intentionally changed the output format, here's
-// the new output" step, so a regression can never get silently re-goldened.
+// It is NOT part of `npm run verify` or CI. For a code change it stays a
+// human step that says "I changed the output format on purpose". So a
+// regression can never be re-goldened silently.
 //
-// It IS invoked automatically by `npm run version` (`changeset version &&
-// examples:update-golden`), immediately after Changesets bumps the version;
-// safe specifically because a version-bump commit is, by Changesets' own
-// contract, never bundled with unrelated source changes: the only content
-// that can differ is package.json/CHANGELOG.md plus whatever these goldens
-// embed (toolVersion, generatedAt). There is no code change in that commit
-// for a rewritten golden to accidentally paper over.
+// `npm run version` (`changeset version && examples:update-golden`) runs it
+// right after Changesets bumps the version. That is safe because Changesets
+// never bundles a version-bump commit with source changes. Only
+// package.json, CHANGELOG.md and what the goldens embed (toolVersion,
+// generatedAt) can differ. No code change exists in that commit for a
+// rewritten golden to paper over.
 //
 // Two tiers, handled differently on purpose:
 //
-//  - FLAGSHIPS (`examples/*`) have no `expected/` mirror of env-cap's
+//  - FLAGSHIPS (`examples/<name>`) have no `expected/` mirror of env-cap's
 //    output. Their committed `docs/`, `.env.example`, and
-//    `src/generated/env.manifest.ts` *are* the golden: a reader opening
-//    the example sees the same bytes `test/examples/*.test.ts` asserts on,
-//    with no second copy that could quietly go stale. Regenerating one is
-//    just running its own generation script; there is nothing to copy.
-//    (`enterprise-platform/expected/output.json` is unrelated: the
-//    example's own runtime self-check, not env-cap output.)
-//  - FIXTURES (`test/integration/*`) keep their `expected/` mirrors. Those
-//    are behavioral fixtures with no human reader, where an explicit
-//    side-by-side diff of generator output is exactly the point.
+//    `src/generated/env.manifest.ts` *are* the golden. A reader opening the
+//    example sees the bytes `test/examples/<name>.test.ts` asserts on, with no
+//    second copy to go stale. Regenerating one runs its generation script;
+//    there is nothing to copy. `enterprise-platform/expected/output.json`
+//    is unrelated: it is the example's runtime self-check, not env-cap output.
+//  - FIXTURES (`test/integration/<category>`) keep their `expected/` mirrors.
+//    They are behavioral fixtures with no human reader. An explicit
+//    side-by-side diff of generator output is the point there.
 //
-// Mirrors (duplicates, deliberately: this is a plain Node script, not
-// TypeScript-aware, so it can't import src/build/docs.ts directly) the
-// normalization logic in src/build/docs.ts's normalizeDocsForComparison()
-// and test/support/example-runner.ts's normalizeExampleCliOutput()/
-// normalizeExampleJsonOutput(). Keep all three in sync if renderDocs()'s or
-// the CLI's output format ever changes.
+// This plain Node script cannot import TypeScript, so it duplicates the
+// normalization in src/build/docs.ts's normalizeDocsForComparison() and
+// test/support/example-runner.ts's normalizeExampleCliOutput() and
+// normalizeExampleJsonOutput(). Keep all three in sync when renderDocs()
+// or the CLI's output format changes.
 
 import { execFileSync } from "node:child_process"
 import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs"
@@ -57,22 +54,21 @@ const STANDARD_ARTIFACTS = [
 ]
 
 // The three human-facing flagships, rooted at examples/<name>, each mapped
-// to the npm script that regenerates its own committed output. Two call the
-// `env-cap` CLI directly (`docs`); `enterprise-platform` keeps a
-// hand-written script (`generate:env`) because it does genuine custom
-// reporting: see that script's own "ADVANCED TIER" header.
+// to the npm script that regenerates its committed output. Two call the
+// `env-cap` CLI directly (`docs`). `enterprise-platform` keeps a
+// hand-written script (`generate:env`) because it does custom reporting.
+// That script's "ADVANCED TIER" header explains it.
 const FLAGSHIP_SCRIPTS = {
   application: "docs",
   "team-service": "docs",
   "enterprise-platform": "generate:env",
 }
 
-// The twelve relocated behavioral fixtures, rooted at test/integration/, one
-// entry per fixture directory (path relative to root, not just a bare name:
-// each lives at a different positive/negative/<category> location).
-// multiple-active-exclusive-capabilities is deliberately excluded from this
-// map: by design, generate:env always fails there and nothing is ever
-// successfully generated, so there is nothing to golden.
+// The twelve behavioral fixtures under test/integration/, one entry per
+// fixture directory. Each key is a path from the root, because each fixture
+// lives under a different positive/negative/<category> folder.
+// multiple-active-exclusive-capabilities is left out on purpose. Its
+// generate:env always fails by design, so there is nothing to golden.
 const FIXTURES = {
   // The CLI writes only the manifest and the evidence artifact (ADR 0046): no docs, no .env.example.
   "test/integration/positive/basic/cli-usage": {
@@ -160,10 +156,10 @@ function normalizeCliOutput(output, exampleDir) {
   return normalizeDocsForComparison(collapsedPadding)
 }
 
-// --silent suppresses only npm's own "> script\n> command\n" preamble:
-// required for generate:env:json's captured output to be parseable JSON at
-// all, and keeps every other golden free of npm-version-dependent preamble
-// formatting too. See test/support/example-runner.ts's runNpmScript() docstring.
+// --silent suppresses only npm's "> script\n> command\n" preamble. Without
+// it, generate:env:json's captured output is not parseable JSON. It also
+// keeps every other golden free of preamble text that varies by npm version.
+// See test/support/example-runner.ts's runNpmScript() docstring.
 function run(exampleDir, script) {
   return execFileSync("npm", ["run", "--silent", script], {
     cwd: exampleDir,

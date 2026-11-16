@@ -33,9 +33,9 @@ export interface AssembleProjectOptions {
  * discovery+link pass. It holds the linked contract graph and the
  * import-resolution context. Every later resolution call
  * (`computeScanSurface()`, `buildDependencyModel()`, ...) must reuse that
- * context to agree with `linkResult`. It also holds a shared file-read cache,
- * so a file matched by more than one later pass' glob is read from disk once
- * (e.g. a schema file also matched by the usage pass' broader `SCAN_INCLUDE`).
+ * context to agree with `linkResult`. It also holds a shared file-read cache.
+ * So a file that several later passes match is read from disk once. A schema
+ * file that the usage pass' broader `SCAN_INCLUDE` also matches is one case.
  */
 export interface AssembledProject {
   readonly root: string

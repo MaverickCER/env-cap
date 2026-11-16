@@ -84,8 +84,8 @@ function relativizePosition(root: string, position: SourcePosition): SourcePosit
 /**
  * Runs the dependency-ownership engine (`buildDependencyGraph()`, Private)
  * and projects its result into the Dependency Model's versioned,
- * JSON-serializable shape: including the inverse file-\>contracts index
- * neither `dependency-graph.ts` nor `usage-report.ts` exposes today.
+ * JSON-serializable shape. That shape adds the inverse file-\>contracts index,
+ * which neither `dependency-graph.ts` nor `usage-report.ts` exposes.
  *
  * @param scannedSurfaces - See `buildDependencyGraph()`'s own parameter of
  * the same name: passed straight through to the published model.
@@ -146,13 +146,12 @@ export async function buildDependencyModel(
       byFile.set(consumingFile, refs)
     }
   }
-  // No `.sort(byContractIdentity)` on `refs` here: `modelContracts` (just
-  // above) is already sorted by identity before this file's loop ever runs,
-  // so each file's `refs` are necessarily appended in that same sorted
-  // order already; re-sorting an already-sorted list is a no-op.
-  // Stryker's `MethodExpression` mutator here only re-serializes this exact
-  // chain call with different whitespace (one line vs. broken across lines,
-  // the object literal's properties on one line vs. separate ones). The
+  // No `.sort(byContractIdentity)` on `refs` here. `modelContracts` (just
+  // above) is sorted by identity before this loop runs, so each file's `refs`
+  // are appended in sorted order. Sorting them again would be a no-op.
+  // Stryker's `MethodExpression` mutator here only re-serializes this chain
+  // call with different whitespace. It breaks lines differently or moves the
+  // object literal's properties onto one line. The
   // method, arguments and object shape stay the same, so it is not a
   // semantic change.
   // Hand-verified: mutating to the reported replacement and running the real

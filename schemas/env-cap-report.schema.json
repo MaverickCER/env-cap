@@ -289,7 +289,7 @@
         },
         "skippedExistingPath": {
           "type": "string",
-          "description": "Set when a file already existed at the requested location and was left untouched: with the default `\"keep-sibling\"`, `writtenPath` is a fresh timestamped sibling instead; with `\"skip\"`, this is the only outcome and `writtenPath` is `undefined`. Always `undefined` with `\"overwrite\"`."
+          "description": "Set when a file already existed at the requested location and was left untouched. With the default `\"keep-sibling\"`, `writtenPath` is a fresh timestamped sibling instead. With `\"skip\"`, this is the only outcome and `writtenPath` is `undefined`. Always `undefined` with `\"overwrite\"`."
         },
         "staleVariables": {
           "type": "array",
@@ -623,7 +623,7 @@
         "unresolvedLinks"
       ],
       "additionalProperties": false,
-      "description": "Everything generateDocumentation found that isn't fully documented or up to date: never blocks generation; a team that wants to gate CI on this reads `Finding[]` (the \"documentation\" family) from the persisted evidence artifact and decides for itself. See ADR 0038."
+      "description": "Everything generateDocumentation found that isn't fully documented or up to date. It never blocks generation. To gate CI on it, read the \"documentation\" family of `Finding[]` from the persisted evidence artifact. See ADR 0038."
     },
     "ExpiringEntry": {
       "type": "object",
@@ -736,7 +736,7 @@
           "items": {
             "$ref": "#/definitions/ParseWarning"
           },
-          "description": "Schema-discovery parse warnings plus, since ADR 0014, any `packages` resolution failures: surfaced here too (not just from `generateEnvManifest`/`generateDocumentation`) so a team relying only on `--ownership` output still learns when a cross-package contract failed to resolve."
+          "description": "Schema-discovery parse warnings plus any `packages` resolution failures (ADR 0014). They appear here as well as in `generateEnvManifest`/`generateDocumentation`, so a team that reads only this report still learns when a cross-package contract failed to resolve."
         },
         "scannedSurfaces": {
           "type": "array",
@@ -787,7 +787,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Files coupled to this contract (imported it, referenced it, or read a member from it): contract-level \"who depends on this,\" NOT proof any specific variable was read. Blast radius if this contract changes is `consumers.length`, computed by callers/renderers on demand rather than stored redundantly here."
+          "description": "Files coupled to this contract: they import it, reference it, or read a member from it. This answers \"who depends on this\" per contract; it does not prove any variable was read. Blast radius if this contract changes is `consumers.length`, computed by callers/renderers on demand rather than stored redundantly here."
         }
       },
       "required": [
@@ -866,7 +866,7 @@
           "items": {
             "$ref": "#/definitions/DynamicAccessCitationProblem"
           },
-          "description": "Every `dynamicAccess` citation for this variable that's currently `\"stale\"` or `\"missing\"` (empty when none exist: see ADR 0037). Empty is the *strongest* \"looks unused\" signal: no developer has ever claimed otherwise. A non-empty list means someone specifically claimed dynamic access here once, and that claim can no longer be verified. That is worth a human check before deleting, not a stronger reason to trust \"unconsumed.\" The list holds the raw citations, not a collapsed `high`/`low` label, matching this codebase's \"show the receipt\" pattern (ADR 0036/0037). A reader can judge confidence from the actual evidence rather than trusting a derived summary. See ADR 0038."
+          "description": "Every `dynamicAccess` citation for this variable that's currently `\"stale\"` or `\"missing\"` (empty when none exist: see ADR 0037). Empty is the *strongest* \"looks unused\" signal: no developer has ever claimed otherwise. A non-empty list means someone specifically claimed dynamic access here once, and that claim can no longer be verified. That is worth a human check before deleting, not a stronger reason to trust \"unconsumed\". The list holds the raw citations, not a collapsed `high`/`low` label, matching this codebase's \"show the receipt\" pattern (ADR 0036/0037). A reader can judge confidence from the actual evidence rather than trusting a derived summary. See ADR 0038."
         }
       },
       "required": [
@@ -1015,7 +1015,7 @@
         "dynamicAccessAssertions"
       ],
       "additionalProperties": false,
-      "description": "A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate`, but has at least one `\"fresh\"` developer-declared `dynamicAccess` citation: the raw static status is always shown alongside the assertion, never replaced by it. See ADR 0037."
+      "description": "A variable that would otherwise be reported `unconsumedOwnedVariables`/`indeterminate` but has at least one `\"fresh\"` developer-declared `dynamicAccess` citation. The raw static status is shown beside the assertion, never replaced by it. See ADR 0037."
     },
     "DynamicAccessAssertion": {
       "type": "object",
@@ -1039,7 +1039,7 @@
             "stale",
             "missing"
           ],
-          "description": "`\"fresh\"`: the cited file currently exists and either matches the committed baseline hash or has no baseline yet (a brand-new citation, nothing to contradict it yet). `\"stale\"`: the cited file exists but its content has changed since the committed baseline. `\"missing\"`: the cited file no longer exists at all. Re-derived from scratch every run; never cached across runs."
+          "description": "`\"fresh\"`: the cited file exists and matches the committed baseline hash, or has no baseline yet (a new citation). `\"stale\"`: the cited file exists but its content has changed since the committed baseline. `\"missing\"`: the cited file no longer exists at all. Re-derived from scratch every run; never cached across runs."
         },
         "contentHash": {
           "type": "string",
@@ -1053,7 +1053,7 @@
         "line"
       ],
       "additionalProperties": false,
-      "description": "One developer-declared runtime.VariableEvidenceDocs.dynamicAccess citation's current acknowledgment state: a claim, never an observation. Kept fully separate from `VariableAccessStatus` (which stays exactly 3-valued and purely AST-derived) so a developer's assertion can never make env-cap claim it observed something it didn't. See `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where this is computed) and ADR 0037."
+      "description": "One developer-declared runtime.VariableEvidenceDocs.dynamicAccess citation's current acknowledgment state: a claim, never an observation. It stays separate from `VariableAccessStatus`, which is 3-valued and AST-derived only. So a developer's assertion can never make env-cap claim an observation it did not make. See `evidence-snapshot.ts`'s `computeDynamicAccessAcknowledgments()` (where this is computed) and ADR 0037."
     },
     "ScannedSurface": {
       "type": "object",
@@ -1629,7 +1629,7 @@
         "exportName"
       ],
       "additionalProperties": false,
-      "description": "The one shape every model in this package uses to point at a declared contract: the file it's declared in, and the binding it's exported as. Nothing else: see ADR 0039."
+      "description": "The one shape every model in this package uses to point at a declared contract: its file and its exported binding. Nothing else: see ADR 0039."
     },
     "OwnershipModel": {
       "type": "object",
@@ -1919,7 +1919,7 @@
             "warning",
             "info"
           ],
-          "description": "`\"error\"` for a provable, always-blocking violation (e.g. an exclusive-group conflict); `\"warning\"` for everything gated by `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`'s default \"warn\" behavior; `\"info\"` for an observation that is never actionable enough to block anything, even under `--strict`: see `INFO_ONLY_CODES` in `generate-env-artifacts.ts`."
+          "description": "`\"error\"` for a provable, always-blocking violation, such as an exclusive-group conflict. `\"warning\"` for everything gated by the default \"warn\" of `onIncompatibility`/`onUndocumented`/`onOwnershipIssue`. `\"info\"` for an observation that never blocks, even under `--strict` (see `INFO_ONLY_CODES` in `generate-env-artifacts.ts`)."
         },
         "code": {
           "$ref": "#/definitions/FindingCode",
@@ -2065,7 +2065,7 @@
         },
         "position": {
           "$ref": "#/definitions/SourcePosition",
-          "description": "Exact file:line:column this finding is about; the contract's `createEnv()` declaration, its `documentEnv()` declaration, or the specific variable's own declaration, whichever is most relevant to the finding. `undefined` only when no single position is more relevant than another (e.g. an `indeterminate-ownership` finding, which can have multiple candidate sites: see `IndeterminateOwnershipFinding.dynamicAccessSites` for the full list instead). See ADR 0036."
+          "description": "Exact file:line:column this finding is about. It is the contract's `createEnv()` declaration, its `documentEnv()` declaration or the variable's declaration, whichever is most relevant. `undefined` only when no single position is more relevant than another. An `indeterminate-ownership` finding is one: `IndeterminateOwnershipFinding.dynamicAccessSites` lists its candidate sites. See ADR 0036."
         }
       },
       "required": [

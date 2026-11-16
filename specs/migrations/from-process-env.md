@@ -10,7 +10,7 @@ const stripeKey = process.env.STRIPE_SECRET_KEY
 This approach is flexible and requires no additional tooling. However, as applications grow, direct `process.env` access creates several challenges:
 
 - Environment requirements are scattered throughout the codebase.
-- Validation logic is repeated across capabilities.
+- Validation logic is repeated across features.
 - It is difficult to identify which part of the application owns a variable.
 - Removing unused configuration requires manually searching for references.
 - Platform teams lack a reliable inventory of application configuration.
@@ -26,7 +26,7 @@ process.env
 env-cap validation
     |
     v
-capability-owned environment contract
+feature-owned environment contract
     |
     v
 application code
@@ -37,8 +37,8 @@ application code
 The recommended migration path is incremental:
 
 1. Find existing environment variable usage.
-2. Group variables by the capability that consumes them.
-3. Create capability-owned environment contracts.
+2. Group variables by the feature that consumes them.
+3. Create feature-owned environment contracts.
 4. Replace direct `process.env` reads with validated access.
 5. Generate project-wide configuration artifacts through build tooling.
 
@@ -86,9 +86,9 @@ process.env
 
 Any file can access any value.
 
-## After: capability-owned environment contracts
+## After: feature-owned environment contracts
 
-Move configuration definitions next to the capability that uses them.
+Move configuration definitions next to the feature that uses them.
 
 Example:
 
@@ -119,7 +119,7 @@ documentEnv(paymentsSchema, {
 })
 ```
 
-The capability now owns its requirement:
+The feature now owns its requirement:
 
 ```ts
 import { paymentsEnv } from "./env.schema"
@@ -157,7 +157,7 @@ DATABASE_URL
 
 Do not move variables based only on their names. Move them based on the code that consumes them.
 
-## Step 2: Create capability schemas
+## Step 2: Create feature schemas
 
 Create schemas alongside existing modules:
 
@@ -175,7 +175,7 @@ src/
 │       └── env.schema.ts
 ```
 
-Each schema defines only the variables required by that capability.
+Each schema defines only the variables required by that feature.
 
 ## Step 3: Replace direct reads
 
@@ -191,7 +191,7 @@ After:
 const apiKey = paymentsEnv.STRIPE_SECRET_KEY
 ```
 
-The application no longer receives an unknown value. It receives a value that has passed the capability's validation rules.
+The application no longer receives an unknown value. It receives a value that has passed the feature's validation rules.
 
 ## Step 4: Add startup validation
 
@@ -264,11 +264,11 @@ The validation remains near the code that understands the variable's purpose.
 
 A common concern during migration is:
 
-> "What if multiple capabilities use the same environment variable?"
+> "What if multiple features use the same environment variable?"
 
 The answer depends on whether the variable represents the same concept.
 
-If multiple capabilities truly share the same configuration meaning:
+If multiple features truly share the same configuration meaning:
 
 ```env
 LOG_LEVEL=info
@@ -281,13 +281,13 @@ loggingEnv.LOG_LEVEL
 apiEnv.LOG_LEVEL
 ```
 
-If capabilities process the same raw value differently, each capability can define its own contract:
+If features process the same raw value differently, each feature can define its own contract:
 
 ```env
 CACHE_TIMEOUT=60000
 ```
 
-One capability may need:
+One feature may need:
 
 ```ts
 cacheEnv.CACHE_TIMEOUT
@@ -355,7 +355,7 @@ src/
     └── env.schema.ts
 ```
 
-The environment requirements move with the capabilities that own them.
+The environment requirements move with the features that own them.
 
 ## When direct process.env usage may be enough
 
@@ -370,12 +370,12 @@ Direct `process.env` access can be appropriate when:
 
 ## Summary
 
-Migrating from `process.env` changes configuration from an implicit global dependency into an explicit capability dependency.
+Migrating from `process.env` changes configuration from an implicit global dependency into an explicit feature dependency.
 
 Before:
 
 ```text
-capability
+feature
    |
    v
 process.env.SOME_VARIABLE
@@ -384,10 +384,10 @@ process.env.SOME_VARIABLE
 After:
 
 ```text
-capability
+feature
    |
    v
-capabilityEnv.SOME_VARIABLE
+featureEnv.SOME_VARIABLE
    |
    v
 validated configuration contract

@@ -122,10 +122,10 @@ export class EnvUsageAnalysisError extends Error {
  *
  * @remarks
  * Nothing from any pass is written when this throws: see
- * `generate-env-artifacts.ts`'s compute-atomic guarantee (ADR 0011). Write-phase failures
- * (a real I/O error after all computes already passed) are NOT wrapped in
- * this type: they propagate as whatever `fs.writeFile` itself throws,
- * since by that point some artifacts may already be on disk.
+ * `generate-env-artifacts.ts`'s compute-atomic guarantee (ADR 0011). A write-phase
+ * failure, an I/O error after every compute passed, is not wrapped in this type.
+ * It propagates as whatever `fs.writeFile` throws, because some artifacts may
+ * already be on disk by then.
  *
  * `code` is a stable, Stable-tier discriminant for programmatic handling:
  * prefer it over `.name`/`instanceof` when a message-independent switch is needed.
